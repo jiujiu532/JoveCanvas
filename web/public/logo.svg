@@ -1,21 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="JoveCanvas logo">
   <defs>
-    <linearGradient id="jc-grad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#4f46e5" />
-      <stop offset="0.55" stop-color="#7c3aed" />
-      <stop offset="1" stop-color="#c026d3" />
+    <linearGradient id="jc-planet" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#6366f1" />
+      <stop offset="0.5" stop-color="#8b5cf6" />
+      <stop offset="1" stop-color="#d946ef" />
     </linearGradient>
-    <linearGradient id="jc-orbit" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0" stop-color="#4f46e5" stop-opacity="0.35" />
-      <stop offset="1" stop-color="#c026d3" stop-opacity="0.9" />
+    <linearGradient id="jc-ring" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#6366f1" />
+      <stop offset="1" stop-color="#d946ef" />
     </linearGradient>
+    <clipPath id="jc-planet-clip">
+      <circle cx="200" cy="200" r="118" />
+    </clipPath>
   </defs>
-  <!-- 木星轨道环：JoveCanvas 的 Jove（朱庇特/木星）意象 -->
-  <g transform="rotate(-20 200 236)">
-    <ellipse cx="200" cy="236" rx="158" ry="56" fill="none" stroke="url(#jc-orbit)" stroke-width="14" stroke-linecap="round" stroke-dasharray="640 260" stroke-dashoffset="-70" />
+  <!-- 星球本体 -->
+  <circle cx="200" cy="200" r="118" fill="url(#jc-planet)" />
+  <!-- 木星条纹：柔和的横向云带 -->
+  <g clip-path="url(#jc-planet-clip)" fill="#ffffff">
+    <path d="M 60 150 Q 200 128 340 150 L 340 172 Q 200 150 60 172 Z" opacity="0.22" />
+    <path d="M 60 210 Q 200 190 340 210 L 340 244 Q 200 224 60 244 Z" opacity="0.16" />
+    <path d="M 60 286 Q 200 268 340 286 L 340 306 Q 200 288 60 306 Z" opacity="0.12" />
+    <!-- 大红斑意象：画布上的创作焦点 -->
+    <ellipse cx="258" cy="228" rx="26" ry="15" opacity="0.5" />
   </g>
-  <!-- 字母 J：顶部横梁 + 竖干 + 底部圆钩，画笔笔触式圆头线条 -->
-  <path d="M 172 84 H 268 V 232 A 84 84 0 0 1 100 232 V 218" fill="none" stroke="url(#jc-grad)" stroke-width="46" stroke-linecap="round" stroke-linejoin="round" />
-  <!-- 画布节点：轨道上的创作锚点 -->
-  <circle cx="330" cy="150" r="20" fill="url(#jc-grad)" />
+  <!-- 轨道环：后半段被星球遮挡，前半段跨过星球 -->
+  <g transform="rotate(-18 200 200)">
+    <path d="M 24 200 A 176 62 0 0 1 376 200" fill="none" stroke="url(#jc-ring)" stroke-width="17" stroke-linecap="round" opacity="0.38" />
+    <path d="M 376 200 A 176 62 0 0 1 24 200" fill="none" stroke="url(#jc-ring)" stroke-width="17" stroke-linecap="round" />
+  </g>
+  <!-- 轨道上的创作节点 -->
+  <g transform="rotate(-18 200 200)">
+    <circle cx="366" cy="214" r="21" fill="#d946ef" />
+    <circle cx="366" cy="214" r="21" fill="none" stroke="#ffffff" stroke-opacity="0.85" stroke-width="6" />
+  </g>
 </svg>

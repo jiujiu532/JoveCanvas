@@ -1,19 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="JoveCanvas icon">
   <defs>
     <linearGradient id="jc-bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#4f46e5" />
-      <stop offset="0.55" stop-color="#7c3aed" />
-      <stop offset="1" stop-color="#c026d3" />
+      <stop offset="0" stop-color="#312e81" />
+      <stop offset="1" stop-color="#701a75" />
     </linearGradient>
+    <linearGradient id="jc-planet" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#818cf8" />
+      <stop offset="0.5" stop-color="#a78bfa" />
+      <stop offset="1" stop-color="#e879f9" />
+    </linearGradient>
+    <clipPath id="jc-planet-clip">
+      <circle cx="200" cy="200" r="104" />
+    </clipPath>
   </defs>
-  <!-- 渐变圆角底板：保证 16px 小尺寸下依旧清晰可辨 -->
+  <!-- 深空底板 -->
   <rect x="16" y="16" width="368" height="368" rx="92" fill="url(#jc-bg)" />
-  <!-- 木星轨道环 -->
-  <g transform="rotate(-20 200 232)">
-    <ellipse cx="200" cy="232" rx="132" ry="46" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="12" stroke-linecap="round" stroke-dasharray="520 220" stroke-dashoffset="-60" />
+  <!-- 星球本体 -->
+  <circle cx="200" cy="200" r="104" fill="url(#jc-planet)" />
+  <!-- 木星条纹 -->
+  <g clip-path="url(#jc-planet-clip)" fill="#ffffff">
+    <path d="M 80 158 Q 200 140 320 158 L 320 178 Q 200 160 80 178 Z" opacity="0.28" />
+    <path d="M 80 212 Q 200 194 320 212 L 320 242 Q 200 224 80 242 Z" opacity="0.2" />
+    <ellipse cx="248" cy="226" rx="23" ry="13" opacity="0.55" />
   </g>
-  <!-- 白色字母 J -->
-  <path d="M 178 96 H 262 V 228 A 74 74 0 0 1 114 228 V 216" fill="none" stroke="#ffffff" stroke-width="42" stroke-linecap="round" stroke-linejoin="round" />
-  <!-- 画布节点 -->
-  <circle cx="308" cy="140" r="17" fill="#ffffff" />
+  <!-- 轨道环 -->
+  <g transform="rotate(-18 200 200)">
+    <path d="M 40 200 A 160 56 0 0 1 360 200" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="16" stroke-linecap="round" />
+    <path d="M 360 200 A 160 56 0 0 1 40 200" fill="none" stroke="#ffffff" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round" />
+  </g>
+  <!-- 轨道创作节点 -->
+  <g transform="rotate(-18 200 200)">
+    <circle cx="350" cy="212" r="19" fill="#e879f9" stroke="#ffffff" stroke-width="6" />
+  </g>
 </svg>
