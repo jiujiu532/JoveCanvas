@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth/session";
+import { getAuthSettings } from "@/lib/auth/store";
 import { encryptAuthDbSecretsForStorage } from "@/lib/auth/store-normalizers";
 import { mergeAuthBackupSecrets, sanitizeAuthBackup } from "@/lib/server/admin-backup-policy";
 import { readAdminBackupData, restoreAdminBackupData, type AdminBackupData } from "@/lib/server/admin-backup-store";
 import { getDatabaseProvider } from "@/lib/server/database";
 import { copyDataFile, ensureDataDirectory, listDataDirectory, removeDataPath, resolveDataPath, writeJsonDataFile } from "@/lib/server/data-adapter";
 import { readRequestBodyBytes, RequestBodyTooLargeError } from "@/lib/server/request-body-limit";
+import { siteFileSlug } from "@/lib/site-brand";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,9 +30,10 @@ export async function GET() {
     if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
 
     const exportedAt = new Date().toISOString();
-    const data = await readAdminBackupData();
+    const [data, settings] = await Promise.all([readAdminBackupData(), getAuthSettings()]);
+    const siteTitle = settings.site.title;
     const backup = {
-        app: "VOZEB PRO",
+        app: siteTitle,
         version: 1,
         exportedAt,
         files: {
@@ -44,7 +47,7 @@ export async function GET() {
     return new NextResponse(JSON.stringify(backup, null, 2), {
         headers: {
             "Content-Type": "application/json; charset=utf-8",
-            "Content-Disposition": `attachment; filename="vozeb-pro-data-backup-${exportedAt.slice(0, 10)}.json"`,
+            "Content-Disposition": `attachment; filename="${siteFileSlug(siteTitle)}-data-backup-${exportedAt.slice(0, 10)}.json"`,
             "Cache-Control": "no-store",
         },
     });

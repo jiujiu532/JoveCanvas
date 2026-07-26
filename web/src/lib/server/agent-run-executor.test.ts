@@ -694,6 +694,7 @@ describe("isCanvasConversationPrompt", () => {
 
 function settings(imageModel: string, channelId: string) {
     return {
+        site: { title: "VOZEB PRO" },
         defaultModels: { textModel: "planner", imageModel, videoModel: "", audioModel: "" },
         systemChannels: [
             { id: "planner-channel", name: "规划", enabled: true, baseUrl: "https://api.example.com/v1", apiKey: "planner-secret", models: ["vendor/planner"] },

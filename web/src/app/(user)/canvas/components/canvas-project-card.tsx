@@ -7,10 +7,14 @@ import { Button, Input } from "antd";
 import { useCanvasStore, type CanvasProject } from "../stores/use-canvas-store";
 import { useCanvasUiStore } from "../stores/use-canvas-ui-store";
 import { exportCanvasProjects } from "../utils/canvas-export";
+import { resolveCanvasProjectPrefix } from "@/lib/site-brand";
+import { usePublicSessionStore } from "@/stores/use-public-session-store";
 
 export function CanvasProjectCard({ project }: { project: CanvasProject }) {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", canvasProjectPrefix: "" };
+    const canvasProjectPrefix = resolveCanvasProjectPrefix(site);
     const renameProject = useCanvasStore((state) => state.renameProject);
     const selectedIds = useCanvasUiStore((state) => state.selectedProjectIds);
     const editingId = useCanvasUiStore((state) => state.editingProjectId);
@@ -70,7 +74,7 @@ export function CanvasProjectCard({ project }: { project: CanvasProject }) {
                         </>
                     ) : (
                         <>
-                            <Button type="text" size="small" shape="circle" icon={<Download className="size-4" />} onClick={() => void exportCanvasProjects([project], project.title || "VOZEB PRO 画布")} aria-label="导出" />
+                            <Button type="text" size="small" shape="circle" icon={<Download className="size-4" />} onClick={() => void exportCanvasProjects([project], project.title || `${canvasProjectPrefix} 画布`)} aria-label="导出" />
                             <Button type="text" size="small" shape="circle" icon={<Pencil className="size-4" />} onClick={() => startEditing(project.id, project.title)} aria-label="重命名" />
                             <Button type="text" size="small" shape="circle" icon={<Trash2 className="size-4" />} onClick={() => setDeleteIds([project.id])} aria-label="删除" />
                         </>

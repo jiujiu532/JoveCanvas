@@ -35,6 +35,7 @@ import type { ChannelHealthKind, ChannelHealthResult } from "@/components/admin/
 import { formatAdminMoney, toNumberOrOne, toNumberOrZero, uniqueList } from "@/components/admin/admin-values";
 import {
     ArrowRight,
+    BadgeCheck,
     Copy,
     CreditCard,
     CircleDollarSign,
@@ -172,6 +173,28 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                                     <Input value={settings.site.seoKeywords} maxLength={240} placeholder="VOZEB PRO,AI Agent,AI 绘图,AI 视频,画布,短剧" onChange={(event) => updateSiteSetting("seoKeywords", event.target.value)} />
                                 </LabeledControl>
                             </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-lg border border-stone-200 bg-stone-50/70 p-4 dark:border-stone-800 dark:bg-stone-900/40">
+                        <SectionTitle icon={<BadgeCheck className="size-4" />} title="品牌进阶" />
+                        <div className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">会员产品名、画布项目名前缀、邮件品牌名留空时自动使用网站标题；仓库地址清空会隐藏管理后台的 GitHub 入口，更新检查地址清空会关闭检查更新功能。</div>
+                        <div className="mt-4 grid gap-4 md:grid-cols-2">
+                            <LabeledControl label="会员产品名">
+                                <Input value={settings.site.brandProductName} maxLength={40} placeholder={settings.site.title} onChange={(event) => updateSiteSetting("brandProductName", event.target.value)} />
+                            </LabeledControl>
+                            <LabeledControl label="画布项目名前缀">
+                                <Input value={settings.site.canvasProjectPrefix} maxLength={40} placeholder={settings.site.title} onChange={(event) => updateSiteSetting("canvasProjectPrefix", event.target.value)} />
+                            </LabeledControl>
+                            <LabeledControl label="邮件品牌名">
+                                <Input value={settings.site.mailBrandName} maxLength={40} placeholder={settings.site.title} onChange={(event) => updateSiteSetting("mailBrandName", event.target.value)} />
+                            </LabeledControl>
+                            <LabeledControl label="开源仓库地址">
+                                <Input value={settings.site.repositoryUrl} maxLength={2000} placeholder="https://github.com/your-org/your-repo" onChange={(event) => updateSiteSetting("repositoryUrl", event.target.value)} />
+                            </LabeledControl>
+                            <LabeledControl label="更新检查地址（raw 根路径）">
+                                <Input value={settings.site.versionCheckUrl} maxLength={2000} placeholder="https://raw.githubusercontent.com/your-org/your-repo/main" onChange={(event) => updateSiteSetting("versionCheckUrl", event.target.value)} />
+                            </LabeledControl>
                         </div>
                     </div>
 

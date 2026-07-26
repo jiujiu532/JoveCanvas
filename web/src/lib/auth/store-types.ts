@@ -229,6 +229,12 @@ export type SiteSettings = {
     homeShowcaseItems: SiteShowcaseItem[];
     friendLinks: SiteFriendLink[];
     socials: SiteSocialSettings;
+    // —— 品牌进阶：留空则消费端回落到 title ——
+    brandProductName: string; // 会员产品名，如 "VOZEB PASS"；空串表示跟随站点标题
+    canvasProjectPrefix: string; // 画布默认项目名前缀；空串表示跟随站点标题
+    mailBrandName: string; // 邮件品牌名（验证码/通知邮件）；空串表示跟随站点标题
+    repositoryUrl: string; // 开源仓库地址，留空隐藏 GitHub 入口
+    versionCheckUrl: string; // 更新检查用的 raw 内容根地址，留空关闭检查更新
 };
 
 export type SiteShowcaseMode = "random" | "custom";

@@ -416,6 +416,11 @@ export function normalizeSiteSettings(settings: Partial<SiteSettings> | undefine
         homeShowcaseItems: normalizeSiteShowcaseItems(settings?.homeShowcaseItems),
         friendLinks: normalizeSiteFriendLinks(settings?.friendLinks),
         socials: normalizeSiteSocials(settings?.socials),
+        brandProductName: normalizeOptionalBrandText(settings?.brandProductName, 40),
+        canvasProjectPrefix: normalizeOptionalBrandText(settings?.canvasProjectPrefix, 40),
+        mailBrandName: normalizeOptionalBrandText(settings?.mailBrandName, 40),
+        repositoryUrl: normalizeOptionalExternalUrl(settings?.repositoryUrl, DEFAULT_SITE_SETTINGS.repositoryUrl, 2000),
+        versionCheckUrl: normalizeOptionalExternalUrl(settings?.versionCheckUrl, DEFAULT_SITE_SETTINGS.versionCheckUrl, 2000),
     };
 }
 
@@ -514,6 +519,21 @@ export function normalizeSecretText(value: unknown, fallback: string, maxPlainLe
 export function normalizeText(value: unknown, fallback: string, maxLength: number) {
     const text = typeof value === "string" ? repairKnownMojibakeText(value.trim()) : "";
     return (text || fallback).slice(0, maxLength);
+}
+
+// 品牌进阶文本字段：允许空字符串原样入库（不烙印默认值），回落到 site.title 的逻辑放在消费端（见 lib/site-brand.ts）
+export function normalizeOptionalBrandText(value: unknown, maxLength: number) {
+    const text = typeof value === "string" ? repairKnownMojibakeText(value.trim()) : "";
+    return text.slice(0, maxLength);
+}
+
+// 品牌进阶 URL 字段：未传值（旧数据/undefined）回落默认地址；显式传空字符串视为"主动关闭"，原样保留空串
+export function normalizeOptionalExternalUrl(value: unknown, fallback: string, maxLength: number) {
+    if (value === undefined || value === null) return fallback;
+    const url = typeof value === "string" ? value.trim() : "";
+    if (!url) return "";
+    if (url.startsWith("https://") || url.startsWith("http://")) return url.slice(0, maxLength);
+    return fallback;
 }
 
 export function repairKnownMojibakeText(value: string) {

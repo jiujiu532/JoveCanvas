@@ -7,6 +7,7 @@ import { Download, FileUp, Plus } from "lucide-react";
 
 import { readZip } from "@/lib/zip";
 import { APP_EXPORT_ID } from "@/lib/storage-keys";
+import { resolveCanvasProjectPrefix } from "@/lib/site-brand";
 import { uploadMediaFile } from "@/services/file-storage";
 import { uploadImage } from "@/services/image-storage";
 import { CanvasDeleteProjectsDialog } from "./components/canvas-delete-projects-dialog";
@@ -15,6 +16,7 @@ import type { CanvasExportFile } from "./export-types";
 import { useCanvasStore } from "./stores/use-canvas-store";
 import { useCanvasUiStore } from "./stores/use-canvas-ui-store";
 import { useUserStore } from "@/stores/use-user-store";
+import { usePublicSessionStore } from "@/stores/use-public-session-store";
 import { exportCanvasProjects } from "./utils/canvas-export";
 
 export default function CanvasPage() {
@@ -25,6 +27,8 @@ export default function CanvasPage() {
     const autoOpenRef = useRef(false);
     const [creating, setCreating] = useState(false);
     const userId = useUserStore((state) => state.user?.id || "");
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", canvasProjectPrefix: "" };
+    const canvasProjectPrefix = resolveCanvasProjectPrefix(site);
     const hydrated = useCanvasStore((state) => state.hydrated);
     const hydratedUserId = useCanvasStore((state) => state.hydratedUserId);
     const hydrate = useCanvasStore((state) => state.hydrate);
@@ -45,7 +49,7 @@ export default function CanvasPage() {
         if (creating) return;
         setCreating(true);
         try {
-            enterProject(await createProject(`VOZEB PRO 画布 ${projects.length + 1}`));
+            enterProject(await createProject(`${canvasProjectPrefix} 画布 ${projects.length + 1}`));
         } catch (error) {
             message.error(error instanceof Error ? error.message : "画布创建失败");
         } finally {
@@ -92,7 +96,7 @@ export default function CanvasPage() {
         autoOpenRef.current = true;
         void (async () => {
             try {
-                const id = mode === "new" ? await createProject(`VOZEB PRO 画布 ${projects.length + 1}`) : projects[0]?.id || (await createProject(`VOZEB PRO 画布 ${projects.length + 1}`));
+                const id = mode === "new" ? await createProject(`${canvasProjectPrefix} 画布 ${projects.length + 1}`) : projects[0]?.id || (await createProject(`${canvasProjectPrefix} 画布 ${projects.length + 1}`));
                 enterProject(id);
             } catch (error) {
                 autoOpenRef.current = false;
@@ -120,7 +124,7 @@ export default function CanvasPage() {
                                     onClick={() =>
                                         void exportCanvasProjects(
                                             projects.filter((project) => selectedIds.includes(project.id)),
-                                            `VOZEB-PRO-${selectedIds.length}个项目`,
+                                            `${canvasProjectPrefix}-${selectedIds.length}个项目`,
                                         )
                                     }
                                 >

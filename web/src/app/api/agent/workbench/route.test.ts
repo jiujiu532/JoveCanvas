@@ -554,6 +554,7 @@ function workbenchRequest(body: unknown) {
 }
 
 const settings = {
+    site: { title: "VOZEB PRO" },
     defaultModels: { textModel: "planner", imageModel: "image-logical", videoModel: "", audioModel: "" },
     agentSkills: [],
     systemChannels: [{ id: "main", name: "主渠道", baseUrl: "https://api.example.com/v1", apiKey: "server-only", apiFormat: "openai", models: ["vendor/planner", "vendor/image"], enabled: true }],

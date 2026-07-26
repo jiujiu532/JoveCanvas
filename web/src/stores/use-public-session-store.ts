@@ -17,6 +17,10 @@ type PublicSiteSettings = {
     homeShowcaseItems?: Array<{ id: string; title: string; coverUrl: string; prompt: string; tags: string[]; category: string }>;
     friendLinks?: Array<{ id: string; label: string; url: string; enabled: boolean }>;
     socials?: Record<string, { enabled: boolean; label: string; url: string }>;
+    brandProductName?: string;
+    canvasProjectPrefix?: string;
+    repositoryUrl?: string;
+    versionCheckUrl?: string;
 };
 
 type PublicSessionPayload = {

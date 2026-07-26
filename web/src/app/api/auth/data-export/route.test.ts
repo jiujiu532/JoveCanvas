@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ getCurrentUser: vi.fn(), checkRateLimit: vi.fn(), rateLimitHeaders: vi.fn(), buildUserDataExport: vi.fn() }));
+const mocks = vi.hoisted(() => ({ getCurrentUser: vi.fn(), checkRateLimit: vi.fn(), rateLimitHeaders: vi.fn(), buildUserDataExport: vi.fn(), getAuthSettings: vi.fn() }));
 
 vi.mock("@/lib/auth/session", () => ({ getCurrentUser: mocks.getCurrentUser }));
+vi.mock("@/lib/auth/store", () => ({ getAuthSettings: mocks.getAuthSettings }));
 vi.mock("@/lib/server/security", () => ({ checkRateLimit: mocks.checkRateLimit, rateLimitHeaders: mocks.rateLimitHeaders }));
 vi.mock("@/lib/server/user-data-export-service", () => ({ buildUserDataExport: mocks.buildUserDataExport }));
 
@@ -14,6 +15,7 @@ describe("GET /api/auth/data-export", () => {
         mocks.checkRateLimit.mockResolvedValue({ allowed: true, remaining: 2, resetAt: Date.now() + 1000 });
         mocks.rateLimitHeaders.mockReturnValue({ "Retry-After": "60" });
         mocks.buildUserDataExport.mockResolvedValue({ format: "vozeb-pro-personal-data", version: 1 });
+        mocks.getAuthSettings.mockResolvedValue({ site: { title: "VOZEB PRO" } });
     });
 
     it("requires an authenticated user", async () => {

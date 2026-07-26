@@ -4,9 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { App } from "antd";
 import { APP_VERSION } from "@/constant/env";
 import { parseChangelog, type ReleaseInfo } from "@/lib/release";
+import { usePublicSessionStore } from "@/stores/use-public-session-store";
 
-const latestVersionUrl = "https://raw.githubusercontent.com/csyqlz/VOZEB-PRO/main/VERSION";
-const latestChangelogUrl = "https://raw.githubusercontent.com/csyqlz/VOZEB-PRO/main/CHANGELOG.md";
 const currentReleaseMajor = toVersionParts(APP_VERSION)?.[0] ?? 0;
 
 function readLocalReleases(): ReleaseInfo[] {
@@ -58,6 +57,10 @@ function filterCurrentReleaseLine(releases: ReleaseInfo[]) {
 export function useVersionCheck() {
     const currentVersion = APP_VERSION;
     const { message } = App.useApp();
+    const versionCheckUrl = usePublicSessionStore((state) => state.payload?.settings?.site?.versionCheckUrl) || "";
+    const configured = Boolean(versionCheckUrl);
+    const latestVersionUrl = configured ? `${versionCheckUrl}/VERSION` : "";
+    const latestChangelogUrl = configured ? `${versionCheckUrl}/CHANGELOG.md` : "";
     const localReleases = useMemo(readLocalReleases, []);
     const [latestVersion, setLatestVersion] = useState(currentVersion);
     const [releases, setReleases] = useState<ReleaseInfo[]>(localReleases);
@@ -66,6 +69,7 @@ export function useVersionCheck() {
     const hasNewVersion = isNewerVersion(latestVersion, currentVersion);
 
     const checkLatestVersion = useCallback(async () => {
+        if (!configured) return false;
         try {
             const response = await fetch(latestVersionUrl);
             if (!response.ok) return false;
@@ -76,10 +80,14 @@ export function useVersionCheck() {
         } catch {
             return false;
         }
-    }, [currentVersion]);
+    }, [configured, currentVersion, latestVersionUrl]);
 
     const checkLatestRelease = useCallback(
         async (showMessage = false) => {
+            if (!configured) {
+                if (showMessage) message.warning("未配置更新检查源，无法检查更新");
+                return false;
+            }
             setChecking(true);
             try {
                 const [versionResponse, changelogResponse] = await Promise.all([fetch(latestVersionUrl), fetch(latestChangelogUrl)]);
@@ -102,12 +110,13 @@ export function useVersionCheck() {
                 setChecking(false);
             }
         },
-        [currentVersion, localReleases, message],
+        [configured, currentVersion, latestChangelogUrl, latestVersionUrl, localReleases, message],
     );
 
     useEffect(() => {
+        if (!configured) return;
         void checkLatestVersion();
-    }, [checkLatestVersion]);
+    }, [checkLatestVersion, configured]);
 
     const openReleaseModal = useCallback(() => {
         setOpen(true);
@@ -122,6 +131,7 @@ export function useVersionCheck() {
         releases,
         checking,
         hasNewVersion,
+        configured,
         checkLatestRelease,
     };
 }

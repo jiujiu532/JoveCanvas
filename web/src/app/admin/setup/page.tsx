@@ -7,6 +7,7 @@ import { AuthUserHydrator } from "@/components/auth/auth-user-hydrator";
 import { UserStatusActions } from "@/components/layout/user-status-actions";
 import { getAdminSetupSummary, type AdminSetupAccent, type AdminSetupStepStatus } from "@/lib/server/admin-setup-status";
 import { getAuthenticatedPageAccess } from "@/lib/server/page-access";
+import { getPublicSiteSettings } from "@/lib/server/site-metadata";
 
 const accentClasses: Record<AdminSetupAccent, { icon: string; text: string; border: string }> = {
     blue: { icon: "bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950", text: "text-zinc-700 dark:text-zinc-300", border: "border-zinc-200 dark:border-zinc-800" },
@@ -30,6 +31,7 @@ export default async function AdminSetupPage() {
 
     const setup = await getAdminSetupSummary();
     const nextStep = setup.steps.find((step) => step.status !== "done") || setup.steps[setup.steps.length - 1];
+    const site = await getPublicSiteSettings();
 
     return (
         <AuthUserHydrator
@@ -64,7 +66,7 @@ export default async function AdminSetupPage() {
                             <div className="flex flex-wrap items-center gap-2">
                                 <span className="inline-flex items-center gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-sm font-medium text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
                                     <Sparkles className="size-4" />
-                                    VOZEB PRO
+                                    {site.title}
                                 </span>
                                 <span className="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">安装后初始化中心</span>
                             </div>

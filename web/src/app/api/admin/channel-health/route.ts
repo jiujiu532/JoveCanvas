@@ -97,10 +97,10 @@ export async function POST(request: Request) {
             kind === "text"
                 ? await testText(providerBaseUrl, apiKey, model, globalPreset)
                 : kind === "image"
-                  ? await testImage(providerBaseUrl, apiKey, model, globalPreset)
+                  ? await testImage(providerBaseUrl, apiKey, model, settings.site.title, globalPreset)
                   : kind === "audio"
-                    ? await testAudio(providerBaseUrl, apiKey, model)
-                    : await testVideo(providerBaseUrl, apiKey, model, globalPreset);
+                    ? await testAudio(providerBaseUrl, apiKey, model, settings.site.title)
+                    : await testVideo(providerBaseUrl, apiKey, model, settings.site.title, globalPreset);
         return NextResponse.json({ result });
     } catch (error) {
         const message = isProviderTimeoutError(error) ? "上游接口请求超时" : sanitizeProviderMessage(error instanceof Error ? error.message : "接口测试失败", [apiKey]);
@@ -148,7 +148,7 @@ async function testText(baseUrl: string, apiKey: string, model: string, globalPr
     };
 }
 
-async function testImage(baseUrl: string, apiKey: string, model: string, globalPreset?: GlobalAiOpcPreset): Promise<HealthResult> {
+async function testImage(baseUrl: string, apiKey: string, model: string, siteTitle: string, globalPreset?: GlobalAiOpcPreset): Promise<HealthResult> {
     if (globalPreset?.capability === "image") return testGlobalAiOpcImage(baseUrl, apiKey, model, globalPreset);
     for (const responseFormat of ["url", "b64_json"] as const) {
         const response = await fetch(apiUrl(baseUrl, "/images/generations"), {
@@ -177,7 +177,7 @@ async function testImage(baseUrl: string, apiKey: string, model: string, globalP
                 createPath: "/images/generations",
                 requestTemplate: '{"model":"{{model}}","prompt":"{{prompt}}","size":"{{size}}","response_format":"url"}',
                 resultField: "data[0].url / data[0].b64_json",
-                referenceRule: "图生图使用 /images/edits；VOZEB PRO 会按 multipart、image、images、image_url、input_image 等常见字段自动兼容。",
+                referenceRule: `图生图使用 /images/edits；${siteTitle} 会按 multipart、image、images、image_url、input_image 等常见字段自动兼容。`,
                 supportsReferenceImage: true,
                 ...imageHealthReferenceConfig(baseUrl),
                 remoteUrl: findStringByKeys(payload, [
@@ -209,11 +209,11 @@ async function testImage(baseUrl: string, apiKey: string, model: string, globalP
     return { ok: false, kind: "image", model, status: 0, error: "图片测试失败" };
 }
 
-async function testAudio(baseUrl: string, apiKey: string, model: string): Promise<HealthResult> {
+async function testAudio(baseUrl: string, apiKey: string, model: string, siteTitle: string): Promise<HealthResult> {
     const response = await fetch(apiUrl(baseUrl, "/audio/speech"), {
         method: "POST",
         headers: jsonHeaders(apiKey),
-        body: JSON.stringify({ model, input: "VOZEB PRO audio health check.", voice: "alloy", response_format: "mp3" }),
+        body: JSON.stringify({ model, input: `${siteTitle} audio health check.`, voice: "alloy", response_format: "mp3" }),
         cache: "no-store",
         signal: AbortSignal.timeout(HEALTH_REQUEST_TIMEOUT_MS),
     });
@@ -267,7 +267,7 @@ function imageHealthReferenceConfig(baseUrl: string): Partial<HealthResult> {
     return {};
 }
 
-async function testVideo(baseUrl: string, apiKey: string, model: string, globalPreset?: GlobalAiOpcPreset): Promise<HealthResult> {
+async function testVideo(baseUrl: string, apiKey: string, model: string, siteTitle: string, globalPreset?: GlobalAiOpcPreset): Promise<HealthResult> {
     if (globalPreset?.capability === "video") return testGlobalAiOpcVideo(baseUrl, apiKey, model, globalPreset);
     const basePayload = {
         model,
@@ -285,7 +285,7 @@ async function testVideo(baseUrl: string, apiKey: string, model: string, globalP
         generate_audio: false,
         watermark: false,
     };
-    return testVideoPayloads(baseUrl, apiKey, model, buildVideoHealthPayloads(basePayload), false);
+    return testVideoPayloads(baseUrl, apiKey, model, siteTitle, buildVideoHealthPayloads(basePayload), false);
 }
 
 async function testGlobalAiOpcImage(baseUrl: string, apiKey: string, model: string, preset: GlobalAiOpcPreset): Promise<HealthResult> {
@@ -355,7 +355,7 @@ async function testGlobalAiOpcVideo(baseUrl: string, apiKey: string, model: stri
     };
 }
 
-async function testVideoPayloads(baseUrl: string, apiKey: string, model: string, payloads: Array<Record<string, unknown>>, allowReferenceRetry: boolean): Promise<HealthResult> {
+async function testVideoPayloads(baseUrl: string, apiKey: string, model: string, siteTitle: string, payloads: Array<Record<string, unknown>>, allowReferenceRetry: boolean): Promise<HealthResult> {
     for (const path of videoHealthPaths(baseUrl, model)) {
         for (const payload of videoHealthPayloadsForPath(path, payloads)) {
             const response = await fetch(apiUrl(baseUrl, path), {
@@ -367,7 +367,7 @@ async function testVideoPayloads(baseUrl: string, apiKey: string, model: string,
             });
             const data = await readPayload(response);
             if (response.ok && !isProviderBusinessError(data)) {
-                const config = videoHealthConfig(baseUrl, model, path);
+                const config = videoHealthConfig(baseUrl, model, path, siteTitle);
                 return {
                     ok: true,
                     kind: "video",
@@ -408,7 +408,7 @@ async function testVideoPayloads(baseUrl: string, apiKey: string, model: string,
             if (/not found|not implemented|route|endpoint|unsupported|no such|cannot post|invalid url|404/i.test(message)) break;
             if (shouldRetryVideoHealthPayload(response.status, message)) continue;
             if (path !== GLOBAL_AIOPC_VIDEO_CREATE_PATH && path !== SEEDANCE_VIDEO_CREATE_PATH && !allowReferenceRetry && shouldRetryVideoHealthWithReference(message)) {
-                return testVideoPayloads(baseUrl, apiKey, model, buildVideoHealthPayloads(payload, true), true);
+                return testVideoPayloads(baseUrl, apiKey, model, siteTitle, buildVideoHealthPayloads(payload, true), true);
             }
             return failed("video", model, response.status, data, apiKey);
         }
@@ -448,7 +448,7 @@ function videoHealthPayloadsForPath(path: string, payloads: Array<Record<string,
     return payloads;
 }
 
-function videoHealthConfig(baseUrl: string, model: string, path: string): Partial<HealthResult> {
+function videoHealthConfig(baseUrl: string, model: string, path: string, siteTitle: string): Partial<HealthResult> {
     if (path === GLOBAL_AIOPC_VIDEO_CREATE_PATH) {
         return {
             protocolKey: "globalaiopc",
@@ -491,7 +491,7 @@ function videoHealthConfig(baseUrl: string, model: string, path: string): Partia
             resultField: "/videos/:task_id/content",
             statusField: "status",
             durationRange: "按上游模型限制",
-            referenceRule: "参考图使用 multipart 文件上传，由 VOZEB PRO 自动组装。",
+            referenceRule: `参考图使用 multipart 文件上传，由 ${siteTitle} 自动组装。`,
             supportsReferenceImage: true,
             supportsReferenceVideo: false,
             supportsReferenceAudio: false,

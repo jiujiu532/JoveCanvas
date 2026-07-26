@@ -10,6 +10,7 @@ import { nanoid } from "nanoid";
 import { refreshUserPointsIfSystem } from "@/services/api/points";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore } from "@/stores/use-user-store";
+import { usePublicSessionStore } from "@/stores/use-public-session-store";
 import { imageReferenceLabel } from "@/lib/image-reference-prompt";
 import { DiaTextReveal } from "@/components/ui/dia-text-reveal";
 import { CreativeAgentControls, CreativeAgentSkillCard, type CreativeAgentModelOption } from "@/components/agent/creative-agent-controls";
@@ -76,6 +77,7 @@ export function CanvasAssistantPanel({
 }: CanvasAssistantPanelProps) {
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
     const user = useUserStore((state) => state.user);
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", logoUrl: "/logo.svg" };
     const { skills, skillsLoading, models } = useCreativeAgentOptions("canvas");
     const [width, setWidth] = useState(520);
     const [view, setView] = useState<OnlineAgentTab>("chat");
@@ -445,8 +447,8 @@ export function CanvasAssistantPanel({
                 ) : (
                     <div className="flex h-full flex-col items-center justify-center px-1 text-center">
                         <div className="relative font-serif text-4xl font-bold italic tracking-normal" style={{ color: theme.node.text }}>
-                            <span>VOZEB PRO Canvas</span>
-                            <DiaTextReveal className="absolute inset-0" colors={["#A97CF8", "#F38CB8", "#FDCC92"]} textColor="transparent" duration={1.8} startOnView={false} text="VOZEB PRO Canvas" />
+                            <span>{site.title} Canvas</span>
+                            <DiaTextReveal className="absolute inset-0" colors={["#A97CF8", "#F38CB8", "#FDCC92"]} textColor="transparent" duration={1.8} startOnView={false} text={`${site.title} Canvas`} />
                         </div>
                         <div className="mt-3 font-serif text-base italic tracking-wide opacity-60">One canvas, many ideas</div>
                     </div>

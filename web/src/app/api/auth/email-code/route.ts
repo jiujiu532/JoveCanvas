@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { createEmailVerificationCode, getAuthSettings, isAuthInputError, type EmailCodePurpose } from "@/lib/auth/store";
 import { sendSmtpMail } from "@/lib/mail/smtp";
 import { checkRateLimit, getClientIp } from "@/lib/server/security";
+import { resolveMailBrandName } from "@/lib/site-brand";
 
 export const runtime = "nodejs";
 
@@ -32,11 +33,12 @@ export async function POST(request: Request) {
             userId: purpose === "email-change" ? currentUser?.id : undefined,
         });
         const settings = await getAuthSettings();
+        const brand = resolveMailBrandName(settings.site);
         await sendSmtpMail({
             mail: settings.mail,
             to: email,
-            subject: `VOZEB PRO ${purposeText[purpose]}验证码`,
-            text: [`你的 VOZEB PRO ${purposeText[purpose]}验证码是：${code}`, "", "验证码 10 分钟内有效，请勿转发给他人。"].join("\r\n"),
+            subject: `${brand} ${purposeText[purpose]}验证码`,
+            text: [`你的 ${brand} ${purposeText[purpose]}验证码是：${code}`, "", "验证码 10 分钟内有效，请勿转发给他人。"].join("\r\n"),
         });
         return NextResponse.json({ ok: true });
     } catch (error) {

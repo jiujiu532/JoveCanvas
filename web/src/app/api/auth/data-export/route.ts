@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth/session";
+import { getAuthSettings } from "@/lib/auth/store";
 import { checkRateLimit, rateLimitHeaders } from "@/lib/server/security";
 import { buildUserDataExport } from "@/lib/server/user-data-export-service";
+import { siteFileSlug } from "@/lib/site-brand";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,7 +18,8 @@ export async function GET() {
 
     try {
         const exportedAt = new Date();
-        const fileName = `vozeb-pro-personal-data-${exportedAt.toISOString().slice(0, 10)}.json`;
+        const settings = await getAuthSettings();
+        const fileName = `${siteFileSlug(settings.site.title)}-personal-data-${exportedAt.toISOString().slice(0, 10)}.json`;
         const data = await buildUserDataExport(currentUser.id);
         return new NextResponse(JSON.stringify(data, null, 2), {
             headers: {

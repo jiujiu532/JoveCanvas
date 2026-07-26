@@ -5,6 +5,8 @@ import { ArrowUpRight, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { CreditSymbol, formatCreditAmount } from "@/constant/credits";
+import { resolveBrandProductName } from "@/lib/site-brand";
+import { usePublicSessionStore } from "@/stores/use-public-session-store";
 import type { BillingProduct } from "@/services/api/billing";
 
 type BillingPlanGridProps = {
@@ -14,6 +16,7 @@ type BillingPlanGridProps = {
 };
 
 export function BillingPlanGrid({ products, onSelect, variant = "page" }: BillingPlanGridProps) {
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", brandProductName: "" };
     const recommendedId = products.find((product) => productMetadata(product).recommended)?.id || products[Math.min(1, products.length - 1)]?.id;
     const [activeProductId, setActiveProductId] = useState(recommendedId);
 
@@ -65,19 +68,28 @@ export function BillingPlanGrid({ products, onSelect, variant = "page" }: Billin
             </div>
 
             <div className="sm:hidden">
-                {activeProduct ? <PlanCard product={activeProduct} index={products.findIndex((item) => item.id === activeProduct.id)} recommended={activeProduct.id === recommendedId} variant={variant} onSelect={onSelect} /> : null}
+                {activeProduct ? (
+                    <PlanCard
+                        product={activeProduct}
+                        index={products.findIndex((item) => item.id === activeProduct.id)}
+                        recommended={activeProduct.id === recommendedId}
+                        variant={variant}
+                        onSelect={onSelect}
+                        brandProductName={resolveBrandProductName(site)}
+                    />
+                ) : null}
             </div>
 
             <div className={`hidden sm:grid ${gridClass(products.length)}`}>
                 {products.map((product, index) => {
-                    return <PlanCard key={product.id} product={product} index={index} recommended={product.id === recommendedId} variant={variant} onSelect={onSelect} />;
+                    return <PlanCard key={product.id} product={product} index={index} recommended={product.id === recommendedId} variant={variant} onSelect={onSelect} brandProductName={resolveBrandProductName(site)} />;
                 })}
             </div>
         </>
     );
 }
 
-function PlanCard({ product, index, recommended, variant, onSelect }: { product: BillingProduct; index: number; recommended: boolean; variant: "modal" | "page"; onSelect: (product: BillingProduct) => void }) {
+function PlanCard({ product, index, recommended, variant, onSelect, brandProductName }: { product: BillingProduct; index: number; recommended: boolean; variant: "modal" | "page"; onSelect: (product: BillingProduct) => void; brandProductName: string }) {
     const metadata = productMetadata(product);
     const isPointsProduct = product.productKind === "points";
     const features = featureLines(product, metadata.features).slice(0, variant === "modal" ? 3 : 4);
@@ -89,7 +101,9 @@ function PlanCard({ product, index, recommended, variant, onSelect }: { product:
         >
             <div className="pointer-events-none absolute -right-16 -top-20 size-48 rounded-full bg-[#66758e]/10 blur-3xl dark:bg-[#66758e]/12" />
             <div className="relative flex items-center justify-between gap-3">
-                <span className="text-[10px] font-semibold tracking-[0.14em] text-stone-400 sm:text-[11px] sm:tracking-[0.16em] dark:text-stone-500">VOZEB PASS · {String(index + 1).padStart(2, "0")}</span>
+                <span className="text-[10px] font-semibold tracking-[0.14em] text-stone-400 sm:text-[11px] sm:tracking-[0.16em] dark:text-stone-500">
+                    {brandProductName} · {String(index + 1).padStart(2, "0")}
+                </span>
                 {recommended ? (
                     <span className="rounded-full border border-[#cfd7e3] bg-[#eef2f7] px-2 py-0.5 text-[10px] font-semibold text-[#52627a] sm:px-3 sm:py-1 sm:text-[11px] dark:border-[#52627a]/60 dark:bg-[#66758e]/15 dark:text-[#d8dee8]">推荐方案</span>
                 ) : metadata.highlight ? (

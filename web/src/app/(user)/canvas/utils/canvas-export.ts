@@ -8,7 +8,7 @@ import { exportFileExtension, safeExportFileName } from "@/lib/export-file";
 import type { CanvasExportAsset, CanvasExportFile } from "../export-types";
 import type { CanvasProject } from "../stores/use-canvas-store";
 
-export async function exportCanvasProjects(projects: CanvasProject[], fileName = "VOZEB PRO 画布") {
+export async function exportCanvasProjects(projects: CanvasProject[], fileName = "画布") {
     const zipFiles: { name: string; data: BlobPart }[] = [];
     const exportedProjects = await Promise.all(
         projects.map(async (project) => {

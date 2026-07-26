@@ -11,13 +11,13 @@ export function selectAgentSkills(settings: AuthSettings, surface: CreativeSurfa
     );
 }
 
-export function agentPlannerSystemPrompt(surface: CreativeSurface, fallbackExample: string, skillPrompt: string) {
+export function agentPlannerSystemPrompt(surface: CreativeSurface, fallbackExample: string, skillPrompt: string, siteTitle: string) {
     const identity =
         surface === "canvas"
-            ? "你是 VOZEB PRO 画布创作 Agent，也能进行普通对话。"
+            ? `你是 ${siteTitle} 画布创作 Agent，也能进行普通对话。`
             : surface === "drama"
-              ? "你是 VOZEB PRO 短剧项目创作 Agent，负责围绕当前项目规划文本、图片、视频和音频产物，也能进行普通对话。"
-              : "你是 VOZEB PRO 统一创作 Agent，负责通过一个对话入口规划并生成文本、图片、视频和音频产物，也能进行普通对话。";
+              ? `你是 ${siteTitle} 短剧项目创作 Agent，负责围绕当前项目规划文本、图片、视频和音频产物，也能进行普通对话。`
+              : `你是 ${siteTitle} 统一创作 Agent，负责通过一个对话入口规划并生成文本、图片、视频和音频产物，也能进行普通对话。`;
     const surfaceRules =
         surface === "canvas"
             ? "明确要求创建、修改、删除、移动、连接画布节点，或生成媒体产物时为 generation。用户要求修改已有画布产物时必须填写该节点真实 targetNodeId。"

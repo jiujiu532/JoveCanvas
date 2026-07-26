@@ -14,7 +14,7 @@ const foundation = { complexity: "simple" as const, brief: { objective: "生成�
 describe("creative review service", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        getAuthSettings.mockResolvedValue({ defaultModels: { textModel: "planner" } });
+        getAuthSettings.mockResolvedValue({ defaultModels: { textModel: "planner" }, site: { title: "VOZEB PRO" } });
         resolveLogicalModel.mockReturnValue({ upstreamModel: "vendor-planner", channel: { id: "text-channel" } });
     });
 

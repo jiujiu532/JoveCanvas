@@ -45,7 +45,7 @@ export async function planWorkbenchAgent(input: { requestUrl: string; cookie: st
     } catch (error) {
         throw new WorkbenchPlanningError(error instanceof Error ? error.message : "创作会话不可用", errorStatus(error, 404));
     }
-    const messages = createWorkbenchPlanningMessages({ userId: input.userId, prompt: input.prompt, body, workspace, referenceRequired, conversationOnly, skills, conversationContext });
+    const messages = createWorkbenchPlanningMessages({ userId: input.userId, prompt: input.prompt, body, workspace, referenceRequired, conversationOnly, skills, conversationContext, siteTitle: settings.site.title });
     const origin = resolveInternalOrigin(new URL(input.requestUrl).origin);
     const headers = { "Content-Type": "application/json", cookie: input.cookie };
     let finalized: ReturnType<typeof finalizeWorkbenchPlan> | undefined;

@@ -17,6 +17,7 @@ import { userAvatarFallback } from "@/lib/user-avatar";
 import { canvasThemes } from "@/lib/canvas-theme";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useUserStore, type LocalUser } from "@/stores/use-user-store";
+import { usePublicSessionStore } from "@/stores/use-public-session-store";
 import { resetClientSessionState } from "@/lib/client-session-reset";
 
 type UserStatusActionsProps = {
@@ -35,6 +36,7 @@ export function UserStatusActions({ variant = "default", onOpenShortcuts, initia
     const rootRef = useRef<HTMLDivElement>(null);
     const storeUser = useUserStore((state) => state.user);
     const user = storeUser || initialUser || null;
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", logoUrl: "/logo.svg" };
     const theme = useThemeStore((state) => state.theme);
     const setTheme = useThemeStore((state) => state.setTheme);
     const canvasTheme = canvasThemes[theme];
@@ -71,7 +73,7 @@ export function UserStatusActions({ variant = "default", onOpenShortcuts, initia
                         )}
                         <div className="min-w-0 flex-1">
                             <div className="truncate text-sm font-semibold text-stone-950 dark:text-stone-100">{accountName}</div>
-                            {accountSecondary ? <div className="mt-0.5 truncate text-xs text-stone-400 dark:text-stone-500">{accountSecondary}</div> : <div className="mt-0.5 text-xs text-stone-400 dark:text-stone-500">VOZEB 创作账户</div>}
+                            {accountSecondary ? <div className="mt-0.5 truncate text-xs text-stone-400 dark:text-stone-500">{accountSecondary}</div> : <div className="mt-0.5 text-xs text-stone-400 dark:text-stone-500">{site.title} 创作账户</div>}
                         </div>
                     </div>
                     <div className="mt-3 rounded-xl border border-stone-200 bg-stone-50 p-3 dark:border-stone-800 dark:bg-stone-900/70">

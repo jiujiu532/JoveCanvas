@@ -90,6 +90,11 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
     homeShowcaseItems: [],
     friendLinks: DEFAULT_SITE_FRIEND_LINKS,
     socials: DEFAULT_SITE_SOCIALS,
+    brandProductName: "",
+    canvasProjectPrefix: "",
+    mailBrandName: "",
+    repositoryUrl: "https://github.com/csyqlz/VOZEB-PRO",
+    versionCheckUrl: "https://raw.githubusercontent.com/csyqlz/VOZEB-PRO/main",
 };
 export const DEFAULT_MAIL_SETTINGS: MailSettings = {
     provider: "QQ 邮箱",
