@@ -13,7 +13,7 @@ import { usePublicSessionStore } from "@/stores/use-public-session-store";
 export function CanvasProjectCard({ project }: { project: CanvasProject }) {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", canvasProjectPrefix: "" };
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", canvasProjectPrefix: "" };
     const canvasProjectPrefix = resolveCanvasProjectPrefix(site);
     const renameProject = useCanvasStore((state) => state.renameProject);
     const selectedIds = useCanvasUiStore((state) => state.selectedProjectIds);

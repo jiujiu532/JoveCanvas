@@ -16,7 +16,7 @@ type BillingPlanGridProps = {
 };
 
 export function BillingPlanGrid({ products, onSelect, variant = "page" }: BillingPlanGridProps) {
-    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", brandProductName: "" };
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", brandProductName: "" };
     const recommendedId = products.find((product) => productMetadata(product).recommended)?.id || products[Math.min(1, products.length - 1)]?.id;
     const [activeProductId, setActiveProductId] = useState(recommendedId);
 

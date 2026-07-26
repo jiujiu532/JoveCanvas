@@ -9,7 +9,7 @@ import { APP_VERSION } from "@/constant/env";
 import { usePublicSessionStore } from "@/stores/use-public-session-store";
 
 export function UpdateCenterPanel() {
-    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", repositoryUrl: "" };
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", repositoryUrl: "" };
     const repositoryUrl = site.repositoryUrl || "";
     const releaseLinks = repositoryUrl
         ? [

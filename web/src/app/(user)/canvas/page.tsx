@@ -27,7 +27,7 @@ export default function CanvasPage() {
     const autoOpenRef = useRef(false);
     const [creating, setCreating] = useState(false);
     const userId = useUserStore((state) => state.user?.id || "");
-    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", canvasProjectPrefix: "" };
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", canvasProjectPrefix: "" };
     const canvasProjectPrefix = resolveCanvasProjectPrefix(site);
     const hydrated = useCanvasStore((state) => state.hydrated);
     const hydratedUserId = useCanvasStore((state) => state.hydratedUserId);

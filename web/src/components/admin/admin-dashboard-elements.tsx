@@ -243,7 +243,7 @@ export function cdkStatusTone(code: PublicCdkCode) {
     return code.redeemedCount > 0 ? "blue" : "gold";
 }
 
-export function formatCreatedCdkExport(codes: CreatedCdkCode[], siteTitle = "VOZEB PRO") {
+export function formatCreatedCdkExport(codes: CreatedCdkCode[], siteTitle = "JoveCanvas") {
     const lines = [
         `${siteTitle} CDK 导出`,
         `导出时间：${new Date().toLocaleString("zh-CN", { hour12: false })}`,

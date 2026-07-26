@@ -22,7 +22,7 @@ const providers = [
 export function BillingCheckoutPage({ productId }: { productId: string }) {
     const { message } = App.useApp();
     const copyText = useCopyText();
-    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", brandProductName: "" };
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", brandProductName: "" };
     const brandProductName = resolveBrandProductName(site);
     const [product, setProduct] = useState<BillingProduct | null>(null);
     const [paymentProviders, setPaymentProviders] = useState<string[]>([]);

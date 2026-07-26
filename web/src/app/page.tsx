@@ -60,10 +60,10 @@ const defaultSite: {
     friendLinks: SiteFriendLink[];
     socials: SiteSocialSettings;
 } = {
-    title: "VOZEB PRO",
+    title: "JoveCanvas",
     logoUrl: "/logo.svg",
     seoDescription: "面向 Agent、图片、视频、画布与短剧生产的一体化 AI 创作工作台",
-    footerCopyright: "© 2026 VOZEB PRO. All rights reserved.",
+    footerCopyright: "© 2026 JoveCanvas. All rights reserved.",
     termsUrl: "/terms",
     privacyUrl: "/privacy",
     homeShowcaseMode: "random",
@@ -138,7 +138,7 @@ export default function HomePage() {
     const showcaseCards = homeShowcaseItems;
     const previewItems = promptShowcase.filter((item) => item.coverUrl);
     const hasVerifiedUser = sessionReady && Boolean(user);
-    const siteTitle = site.title || "VOZEB PRO";
+    const siteTitle = site.title || "JoveCanvas";
 
     const moveNavIndicator = useCallback((index: number) => {
         const item = navItemRefs.current[index];

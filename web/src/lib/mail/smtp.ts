@@ -24,7 +24,7 @@ export async function sendSmtpTestMail({ mail, to, brandName }: SendTestMailInpu
     const username = mail.username.trim();
     const fromEmail = (mail.fromEmail || username).trim();
     const recipient = (to || fromEmail || username).trim();
-    const brand = brandName || "VOZEB PRO";
+    const brand = brandName || "JoveCanvas";
     await sendSmtpMail({
         mail,
         to: recipient,
@@ -40,7 +40,7 @@ export async function sendSmtpMail({ mail, to, subject, text }: SendSmtpMailInpu
     const password = mail.password;
     const fromEmail = (mail.fromEmail || username).trim();
     const recipient = to.trim();
-    const fromName = (mail.fromName || "VOZEB PRO").trim();
+    const fromName = (mail.fromName || "JoveCanvas").trim();
 
     if (!host) throw new Error("请填写 SMTP 服务器");
     if (!username) throw new Error("请填写邮箱账号");

@@ -77,7 +77,7 @@ export function CanvasAssistantPanel({
 }: CanvasAssistantPanelProps) {
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
     const user = useUserStore((state) => state.user);
-    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", logoUrl: "/logo.svg" };
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", logoUrl: "/logo.svg" };
     const { skills, skillsLoading, models } = useCreativeAgentOptions("canvas");
     const [width, setWidth] = useState(520);
     const [view, setView] = useState<OnlineAgentTab>("chat");

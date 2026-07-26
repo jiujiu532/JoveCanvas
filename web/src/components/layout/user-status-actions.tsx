@@ -36,7 +36,7 @@ export function UserStatusActions({ variant = "default", onOpenShortcuts, initia
     const rootRef = useRef<HTMLDivElement>(null);
     const storeUser = useUserStore((state) => state.user);
     const user = storeUser || initialUser || null;
-    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", logoUrl: "/logo.svg" };
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", logoUrl: "/logo.svg" };
     const theme = useThemeStore((state) => state.theme);
     const setTheme = useThemeStore((state) => state.setTheme);
     const canvasTheme = canvasThemes[theme];

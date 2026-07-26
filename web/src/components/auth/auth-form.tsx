@@ -27,7 +27,7 @@ type AuthFormProps = {
 export function AuthForm({ mode, nextPath = "/create", registrationEnabled = true, emailRegistrationEnabled = false, firstUser = false, variant = "page", className, headerSlot, authError }: AuthFormProps) {
     const router = useRouter();
     const { message } = App.useApp();
-    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", logoUrl: "/logo.svg" };
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", logoUrl: "/logo.svg" };
     const setUser = useUserStore((state) => state.setUser);
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");

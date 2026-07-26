@@ -48,7 +48,7 @@ export function useCanvasNavigationActions({ state }: { state: CanvasPageState }
         viewportRef,
     } = state;
 
-    const site = usePublicSessionStore((stateValue) => stateValue.payload?.settings?.site) || { title: "VOZEB PRO", canvasProjectPrefix: "" };
+    const site = usePublicSessionStore((stateValue) => stateValue.payload?.settings?.site) || { title: "JoveCanvas", canvasProjectPrefix: "" };
     const canvasProjectPrefix = resolveCanvasProjectPrefix(site);
 
     const resetViewport = useCallback(() => {

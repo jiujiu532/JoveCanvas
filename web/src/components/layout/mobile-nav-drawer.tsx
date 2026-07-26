@@ -19,7 +19,7 @@ type MobileNavDrawerProps = {
 export function MobileNavDrawer({ open, activeToolSlug, onClose }: MobileNavDrawerProps) {
     const pathname = usePathname();
     const router = useRouter();
-    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", logoUrl: "/logo.svg" };
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", logoUrl: "/logo.svg" };
     const helpActive = pathname.startsWith("/help");
 
     return (
@@ -27,7 +27,7 @@ export function MobileNavDrawer({ open, activeToolSlug, onClose }: MobileNavDraw
             title={
                 <Link href="/create" onClick={onClose} className="inline-flex min-w-0 items-center gap-2.5 text-base font-semibold leading-none text-[#20242a] dark:text-[#f3f5f7]">
                     <SiteLogo logoUrl={site.logoUrl} className="size-8" />
-                    <span className="truncate">{site.title || "VOZEB PRO"}</span>
+                    <span className="truncate">{site.title || "JoveCanvas"}</span>
                 </Link>
             }
             placement="left"
