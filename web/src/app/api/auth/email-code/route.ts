@@ -7,6 +7,7 @@ import { sendSmtpMail } from "@/lib/mail/smtp";
 import { checkRateLimit, getClientIp } from "@/lib/server/security";
 import { resolveMailBrandName } from "@/lib/site-brand";
 
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 
 const purposeText: Record<EmailCodePurpose, string> = {
@@ -22,10 +23,10 @@ export async function POST(request: Request) {
         if (!purpose) return NextResponse.json({ error: "验证码用途不正确" }, { status: 400 });
         const emailKey = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
         const limit = await checkRateLimit(`email-code:${getClientIp(request)}:${purpose}:${emailKey}`, { maxRequests: 5, windowMs: 60 * 60 * 1000 });
-        if (!limit.allowed) return NextResponse.json({ error: "验证码发送过于频繁，请稍后重试", retryAfter: Math.ceil((limit.resetAt - Date.now()) / 1000) }, { status: 429 });
+        if (!limit.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "验证码发送" }), retryAfter: Math.ceil((limit.resetAt - Date.now()) / 1000) }, { status: 429 });
 
         const currentUser = await getCurrentUser();
-        if (purpose === "email-change" && !currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+        if (purpose === "email-change" && !currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
         const { code, email } = await createEmailVerificationCode({
             purpose,
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
         });
         return NextResponse.json({ ok: true });
     } catch (error) {
-        if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Send email code failed", error);
         return NextResponse.json({ error: "发送验证码失败，请稍后重试" }, { status: 400 });
     }

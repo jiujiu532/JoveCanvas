@@ -67,6 +67,7 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 import { nanoid } from "nanoid";
+import { useTranslations } from "next-intl";
 
 import { formatCreditAmount } from "@/constant/credits";
 import { imagePreviewUrl } from "@/lib/media-image-url";
@@ -154,6 +155,7 @@ import type { AdminDashboardDataActions } from "./use-admin-dashboard-data-actio
 import type { AdminDashboardSettingsActions } from "./use-admin-dashboard-settings-actions";
 
 export function useAdminDashboardTableModel({ state, data, settingsActions }: { state: AdminDashboardState; data: AdminDashboardDataActions; settingsActions: AdminDashboardSettingsActions }) {
+    const t = useTranslations("admin");
     const { currentUser, setupSummary, userForm, settings, updatingUserId, deletingPromptId, setViewingGenerationLog, setViewingCdkCode, editingUser, setEditingUser, creatingUser, setCreatingUser, activeSection } = state;
     const { updateUser, createUser, deleteUser, deletePrompt, deleteGenerationLogsByIds, deleteCdkById, copyCdkPlainCode } = data;
     const {} = settingsActions;
@@ -204,7 +206,7 @@ export function useAdminDashboardTableModel({ state, data, settingsActions }: { 
 
     const userColumns: TableColumnsType<PublicUser> = [
         {
-            title: "用户",
+            title: t("users.table.user"),
             dataIndex: "displayName",
             render: (_, record) => (
                 <div className="min-w-0">
@@ -213,84 +215,90 @@ export function useAdminDashboardTableModel({ state, data, settingsActions }: { 
                         <span className="truncate">{record.displayName}</span>
                     </div>
                     <div className="mt-1 text-xs text-stone-500">@{record.username}</div>
-                    <div className="mt-0.5 truncate text-xs text-stone-400">{record.email || "未绑定邮箱"}</div>
+                    <div className="mt-0.5 truncate text-xs text-stone-400">{record.email || t("users.table.noEmail")}</div>
                     <div className="mt-2 flex flex-wrap gap-1 sm:hidden">
-                        <Tag color={record.role === "admin" ? "blue" : "default"}>{record.role === "admin" ? "管理员" : "普通用户"}</Tag>
-                        <Tag color={record.status === "active" ? "green" : "red"}>{record.status === "active" ? "可用" : "已禁用"}</Tag>
+                        <Tag color={record.role === "admin" ? "blue" : "default"}>{record.role === "admin" ? t("users.table.roleAdmin") : t("users.table.roleUser")}</Tag>
+                        <Tag color={record.status === "active" ? "green" : "red"}>{record.status === "active" ? t("users.table.statusActive") : t("users.table.statusDisabled")}</Tag>
                     </div>
                     <div className="mt-2 space-y-1 text-xs text-stone-500 sm:hidden dark:text-stone-400">
                         <div>
-                            总计 <span className="font-semibold text-stone-950 dark:text-stone-100">{formatCreditAmount(record.pointsBalance)}</span> · 今日 {formatCreditAmount(record.dailyPointsBalance)} · 永久{" "}
-                            {formatCreditAmount(record.permanentPointsBalance)}
+                            {t("users.table.total")} <span className="font-semibold text-stone-950 dark:text-stone-100">{formatCreditAmount(record.pointsBalance)}</span> · {t("users.table.today")} {formatCreditAmount(record.dailyPointsBalance)} ·{" "}
+                            {t("users.table.permanent")} {formatCreditAmount(record.permanentPointsBalance)}
                         </div>
-                        <div>注册 {formatAdminLogTime(record.createdAt)}</div>
-                        <div>活跃 {record.lastLoginAt ? formatAdminLogTime(record.lastLoginAt) : "从未登录"}</div>
+                        <div>
+                            {t("users.table.registered")} {formatAdminLogTime(record.createdAt)}
+                        </div>
+                        <div>
+                            {t("users.table.active")} {record.lastLoginAt ? formatAdminLogTime(record.lastLoginAt) : t("users.table.neverLoggedIn")}
+                        </div>
                     </div>
                 </div>
             ),
         },
         {
-            title: "角色",
+            title: t("users.table.role"),
             dataIndex: "role",
             width: 120,
             responsive: ["sm"],
-            render: (role: UserRole) => <Tag color={role === "admin" ? "blue" : "default"}>{role === "admin" ? "管理员" : "普通用户"}</Tag>,
+            render: (role: UserRole) => <Tag color={role === "admin" ? "blue" : "default"}>{role === "admin" ? t("users.table.roleAdmin") : t("users.table.roleUser")}</Tag>,
         },
         {
-            title: "状态",
+            title: t("users.table.status"),
             dataIndex: "status",
             width: 120,
             responsive: ["sm"],
-            render: (status: UserStatus) => <Tag color={status === "active" ? "green" : "red"}>{status === "active" ? "可用" : "已禁用"}</Tag>,
+            render: (status: UserStatus) => <Tag color={status === "active" ? "green" : "red"}>{status === "active" ? t("users.table.statusActive") : t("users.table.statusDisabled")}</Tag>,
         },
         {
-            title: "积分",
+            title: t("users.table.points"),
             dataIndex: "pointsBalance",
             width: 170,
             responsive: ["sm"],
             render: (pointsBalance: number, record) => (
                 <div className="text-xs text-stone-500 dark:text-stone-400">
-                    <div className="font-semibold text-stone-950 dark:text-stone-100">总计 {formatCreditAmount(pointsBalance)}</div>
+                    <div className="font-semibold text-stone-950 dark:text-stone-100">
+                        {t("users.table.total")} {formatCreditAmount(pointsBalance)}
+                    </div>
                     <div className="mt-1">
-                        今日 {formatCreditAmount(record.dailyPointsBalance)} · 永久 {formatCreditAmount(record.permanentPointsBalance)}
+                        {t("users.table.today")} {formatCreditAmount(record.dailyPointsBalance)} · {t("users.table.permanent")} {formatCreditAmount(record.permanentPointsBalance)}
                     </div>
                 </div>
             ),
         },
         {
-            title: "时间",
+            title: t("users.table.time"),
             width: 210,
             responsive: ["sm"],
             render: (_, record) => (
                 <div className="space-y-1 text-xs text-stone-500 dark:text-stone-400">
                     <div>
-                        <span className="mr-2 text-stone-400 dark:text-stone-500">注册</span>
+                        <span className="mr-2 text-stone-400 dark:text-stone-500">{t("users.table.registered")}</span>
                         {formatAdminLogTime(record.createdAt)}
                     </div>
                     <div>
-                        <span className="mr-2 text-stone-400 dark:text-stone-500">活跃</span>
-                        {record.lastLoginAt ? formatAdminLogTime(record.lastLoginAt) : "从未登录"}
+                        <span className="mr-2 text-stone-400 dark:text-stone-500">{t("users.table.active")}</span>
+                        {record.lastLoginAt ? formatAdminLogTime(record.lastLoginAt) : t("users.table.neverLoggedIn")}
                     </div>
                 </div>
             ),
         },
         {
-            title: "操作",
+            title: t("users.table.actions"),
             width: 150,
             render: (_, record) => (
                 <Space size={6}>
                     <Button size="small" icon={<SlidersHorizontal className="size-3.5" />} loading={updatingUserId === record.id} onClick={() => openUserEditor(record)}>
-                        管理
+                        {t("users.table.manage")}
                     </Button>
-                    <Popconfirm title="删除该用户？" description="会同时清理该用户会话、积分、额度记录、生成日志和服务器副本。" okText="删除" cancelText="取消" onConfirm={() => void deleteUser(record.id)}>
+                    <Popconfirm title={t("users.table.deleteConfirmTitle")} description={t("users.table.deleteConfirmDescription")} okText={t("users.table.deleteOk")} cancelText={t("users.table.deleteCancel")} onConfirm={() => void deleteUser(record.id)}>
                         <Button
                             size="small"
                             danger
                             disabled={record.id === currentUser.id}
                             loading={updatingUserId === record.id}
                             icon={<Trash2 className="size-3.5" />}
-                            aria-label={`删除用户 ${record.displayName}`}
-                            title={`删除用户 ${record.displayName}`}
+                            aria-label={t("users.table.deleteAriaLabel", { name: record.displayName })}
+                            title={t("users.table.deleteAriaLabel", { name: record.displayName })}
                         />
                     </Popconfirm>
                 </Space>
@@ -300,7 +308,7 @@ export function useAdminDashboardTableModel({ state, data, settingsActions }: { 
 
     const promptColumns: TableColumnsType<Prompt> = [
         {
-            title: "提示词",
+            title: t("prompts.table.title"),
             dataIndex: "title",
             render: (_, record) => (
                 <div className="flex min-w-0 gap-3">
@@ -323,36 +331,43 @@ export function useAdminDashboardTableModel({ state, data, settingsActions }: { 
                 </div>
             ),
         },
-        { title: "分类", dataIndex: "category", width: 140 },
+        { title: t("prompts.table.category"), dataIndex: "category", width: 140 },
         {
-            title: "操作",
+            title: t("prompts.table.actions"),
             width: 90,
             render: (_, record) => (
-                <Popconfirm title="删除公共提示词？" okText="删除" cancelText="取消" onConfirm={() => deletePrompt(record.id)}>
-                    <Button size="small" danger loading={deletingPromptId === record.id} icon={<Trash2 className="size-3.5" />} aria-label={`删除提示词 ${record.title}`} title={`删除提示词 ${record.title}`} />
+                <Popconfirm title={t("prompts.table.deleteConfirmTitle")} okText={t("prompts.table.deleteOk")} cancelText={t("prompts.table.deleteCancel")} onConfirm={() => deletePrompt(record.id)}>
+                    <Button
+                        size="small"
+                        danger
+                        loading={deletingPromptId === record.id}
+                        icon={<Trash2 className="size-3.5" />}
+                        aria-label={t("prompts.table.deleteAriaLabel", { name: record.title })}
+                        title={t("prompts.table.deleteAriaLabel", { name: record.title })}
+                    />
                 </Popconfirm>
             ),
         },
     ];
     const generationLogColumns: TableColumnsType<StoredGenerationLog> = [
         {
-            title: "时间",
+            title: t("logs.table.time"),
             dataIndex: "createdAt",
             width: 170,
             render: (value) => <span className="text-sm text-stone-700 dark:text-stone-200">{formatAdminLogTime(String(value))}</span>,
         },
         {
-            title: "类型",
+            title: t("logs.table.kind"),
             dataIndex: "kind",
             width: 92,
             render: (_, record) => (
                 <Tag className="m-0" color={record.kind === "video" ? "purple" : "blue"}>
-                    {generationKindLabel(record.kind)}
+                    {generationKindLabel(record.kind, t)}
                 </Tag>
             ),
         },
         {
-            title: "用户",
+            title: t("logs.table.user"),
             width: 150,
             render: (_, record) => (
                 <div className="min-w-0">
@@ -362,36 +377,36 @@ export function useAdminDashboardTableModel({ state, data, settingsActions }: { 
             ),
         },
         {
-            title: "入口",
+            title: t("logs.table.source"),
             dataIndex: "source",
             width: 120,
-            render: (value) => <span className="text-sm text-stone-600 dark:text-stone-300">{generationSourceLabel(String(value))}</span>,
+            render: (value) => <span className="text-sm text-stone-600 dark:text-stone-300">{generationSourceLabel(String(value), t)}</span>,
         },
         {
-            title: "模型",
+            title: t("logs.table.model"),
             dataIndex: "model",
             width: 160,
             render: (value) => <span className="line-clamp-1 text-sm text-stone-600 dark:text-stone-300">{formatGenerationLogModel(String(value || ""))}</span>,
         },
         {
-            title: "耗时",
+            title: t("logs.table.duration"),
             dataIndex: "durationMs",
             width: 90,
             render: (value) => <span className="text-sm tabular-nums text-stone-700 dark:text-stone-200">{formatAdminLogDuration(Number(value) || 0)}</span>,
         },
         {
-            title: "状态",
+            title: t("logs.table.status"),
             dataIndex: "status",
             width: 92,
-            render: (_, record) => <span className={generationStatusClass(record.status)}>{generationStatusLabel(record.status)}</span>,
+            render: (_, record) => <span className={generationStatusClass(record.status)}>{generationStatusLabel(record.status, t)}</span>,
         },
         {
-            title: "结果",
+            title: t("logs.table.result"),
             width: 100,
             render: (_, record) => <GenerationLogAssetPreview log={record} />,
         },
         {
-            title: "提示词",
+            title: t("logs.table.prompt"),
             dataIndex: "prompt",
             width: 360,
             render: (_, record) => (
@@ -402,17 +417,17 @@ export function useAdminDashboardTableModel({ state, data, settingsActions }: { 
             ),
         },
         {
-            title: "操作",
+            title: t("logs.table.actions"),
             width: 176,
             fixed: "right",
             render: (_, record) => (
                 <div className="admin-generation-log-actions">
                     <Button size="small" type="text" icon={<Eye className="size-3.5" />} onClick={() => setViewingGenerationLog(record)}>
-                        详情
+                        {t("logs.table.detail")}
                     </Button>
-                    <Popconfirm title="删除这条生成日志？" okText="删除" cancelText="取消" onConfirm={() => void deleteGenerationLogsByIds([record.id])}>
+                    <Popconfirm title={t("logs.table.deleteConfirmTitle")} okText={t("logs.table.deleteOk")} cancelText={t("logs.table.deleteCancel")} onConfirm={() => void deleteGenerationLogsByIds([record.id])}>
                         <Button size="small" type="text" danger icon={<Trash2 className="size-3.5" />}>
-                            删除
+                            {t("logs.table.deleteOk")}
                         </Button>
                     </Popconfirm>
                 </div>
@@ -434,80 +449,78 @@ export function useAdminDashboardTableModel({ state, data, settingsActions }: { 
                     </div>
                     <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone-500 dark:text-stone-400">
                         <Button className="h-6 px-1.5 text-xs" size="small" type="text" icon={<Copy className="size-3.5" />} onClick={() => void copyCdkPlainCode(code)}>
-                            复制
+                            {t("cdk.table.copy")}
                         </Button>
-                        {code.note ? <span className="min-w-0 max-w-full truncate">备注：{code.note}</span> : null}
+                        {code.note ? <span className="min-w-0 max-w-full truncate">{t("cdk.table.note", { note: code.note })}</span> : null}
                     </div>
                 </div>
             ),
         },
         {
-            title: "兑换规则",
+            title: t("cdk.table.rules"),
             width: 190,
             render: (_, code) => (
                 <div className="text-sm leading-6 text-stone-700 dark:text-stone-200">
-                    <div>{formatCreditAmount(code.points)} 积分</div>
-                    <div className="text-xs text-stone-500 dark:text-stone-400">
-                        已兑 {code.redeemedCount}/{code.maxRedemptions}
-                    </div>
+                    <div>{t("cdk.table.points", { count: formatCreditAmount(code.points) })}</div>
+                    <div className="text-xs text-stone-500 dark:text-stone-400">{t("cdk.table.redeemed", { count: code.redeemedCount, max: code.maxRedemptions })}</div>
                 </div>
             ),
         },
         {
-            title: "最近兑换",
+            title: t("cdk.table.latestRedemption"),
             width: 260,
             render: (_, code) => {
                 const latest = [...code.redemptions].sort((a, b) => Date.parse(b.redeemedAt) - Date.parse(a.redeemedAt))[0];
-                if (!latest) return <span className="text-sm text-stone-500 dark:text-stone-400">暂无兑换</span>;
+                if (!latest) return <span className="text-sm text-stone-500 dark:text-stone-400">{t("cdk.table.noRedemption")}</span>;
                 return (
                     <div className="min-w-0 text-sm leading-6 text-stone-700 dark:text-stone-200">
                         <div className="truncate font-medium">
                             {latest.displayName}
                             <span className="ml-1 font-normal text-stone-500 dark:text-stone-400">@{latest.username}</span>
                         </div>
-                        <div className="text-xs text-stone-500 dark:text-stone-400">{new Date(latest.redeemedAt).toLocaleString("zh-CN")}</div>
+                        <div className="text-xs text-stone-500 dark:text-stone-400">{new Date(latest.redeemedAt).toLocaleString()}</div>
                     </div>
                 );
             },
         },
         {
-            title: "有效期",
+            title: t("cdk.table.validity"),
             width: 190,
             render: (_, code) => (
                 <div className="text-sm text-stone-700 dark:text-stone-200">
                     {code.expiresAt ? (
                         <>
-                            <div>{new Date(code.expiresAt).toLocaleString("zh-CN")}</div>
-                            <div className="text-xs text-stone-500 dark:text-stone-400">创建 {new Date(code.createdAt).toLocaleDateString("zh-CN")}</div>
+                            <div>{new Date(code.expiresAt).toLocaleString()}</div>
+                            <div className="text-xs text-stone-500 dark:text-stone-400">{t("cdk.table.created", { date: new Date(code.createdAt).toLocaleDateString() })}</div>
                         </>
                     ) : (
                         <>
-                            <div>长期有效</div>
-                            <div className="text-xs text-stone-500 dark:text-stone-400">创建 {new Date(code.createdAt).toLocaleDateString("zh-CN")}</div>
+                            <div>{t("cdk.table.longTermValid")}</div>
+                            <div className="text-xs text-stone-500 dark:text-stone-400">{t("cdk.table.created", { date: new Date(code.createdAt).toLocaleDateString() })}</div>
                         </>
                     )}
                 </div>
             ),
         },
         {
-            title: "操作",
+            title: t("cdk.table.actions"),
             width: 200,
             fixed: "right",
             render: (_, code) => (
                 <Space size={6} wrap>
                     <Button size="small" type="text" icon={<Eye className="size-3.5" />} onClick={() => setViewingCdkCode(code)}>
-                        明细
+                        {t("cdk.table.detail")}
                     </Button>
-                    <Popconfirm title="删除这个 CDK？" description="删除后用户将不能再兑换这个密钥，已有积分流水不会被删除。" okText="删除" cancelText="取消" onConfirm={() => void deleteCdkById(code.id)}>
+                    <Popconfirm title={t("cdk.table.deleteConfirmTitle")} description={t("cdk.table.deleteConfirmDescription")} okText={t("cdk.table.deleteOk")} cancelText={t("cdk.table.deleteCancel")} onConfirm={() => void deleteCdkById(code.id)}>
                         <Button size="small" danger icon={<Trash2 className="size-3.5" />}>
-                            删除
+                            {t("cdk.table.deleteOk")}
                         </Button>
                     </Popconfirm>
                 </Space>
             ),
         },
     ];
-    const activeSectionInfo = adminSections.find((section) => section.key === activeSection) || adminSections[0];
+    const activeSectionInfo = adminSections(t).find((section) => section.key === activeSection) || adminSections(t)[0];
     const nextSetupStep = setupSummary?.steps.find((step) => step.status !== "done") || setupSummary?.steps[setupSummary.steps.length - 1];
     return {
         openUserEditor,

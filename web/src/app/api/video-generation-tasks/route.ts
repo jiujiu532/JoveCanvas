@@ -20,6 +20,7 @@ import { normalizeVideoResult } from "@/lib/server/video-result-normalizer";
 import { checkGenerationRateLimit, rateLimitHeaders } from "@/lib/server/security";
 import { mediaTaskSource } from "@/lib/media-management-contract";
 
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -27,16 +28,16 @@ const CREATE_PATHS = ["/video/generations", "/videos/generations", "/videos/vide
 
 export async function POST(request: Request) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const rate = await checkGenerationRateLimit(user.id, request, "video");
-    if (!rate.allowed) return NextResponse.json({ error: "视频生成请求过于频繁，请稍后重试" }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "视频生成请求" }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const settings = await getAuthSettings();
     const response = await withGenerationConcurrencyLimit(user.id, "video", 10 * 60 * 1000, settings.generationConcurrency.video, async () => {
         let body: { config?: Record<string, unknown>; prompt?: string; references?: Array<{ type?: string; url?: string }>; source?: string; context?: GenerationTaskContext };
         try {
             body = await readJsonBody(request);
         } catch (error) {
-            if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+            if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
             throw error;
         }
         const requestedModel = typeof body.config?.model === "string" && body.config.model.trim() ? body.config.model : settings.defaultModels.videoModel;

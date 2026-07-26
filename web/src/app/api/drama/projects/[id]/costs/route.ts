@@ -4,11 +4,12 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getDramaProjectCostSummary } from "@/lib/server/drama-project-cost-service";
 import { DramaProjectServiceError } from "@/lib/server/drama-project-service";
 
+import { serverMessage } from "@/lib/server/server-messages";
 type Context = { params: Promise<{ id: string }> };
 
 export async function GET(_: Request, context: Context) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     try {
         const summary = await getDramaProjectCostSummary(user.id, (await context.params).id);
         return NextResponse.json({ code: 0, data: { summary }, msg: "OK" });

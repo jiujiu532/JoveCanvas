@@ -10,6 +10,7 @@ import { createVideoTask } from "@/lib/server/video-task-store";
 import { sanitizeRegisteredVideoUpstream, type RegisteredVideoUpstreamInput } from "@/lib/server/video-task-registration";
 import { checkGenerationRateLimit, rateLimitHeaders } from "@/lib/server/security";
 
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -20,16 +21,16 @@ type CreateVideoTaskBody = {
 
 export async function POST(request: Request) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const rate = await checkGenerationRateLimit(user.id, request, "video");
-    if (!rate.allowed) return NextResponse.json({ error: "视频任务请求过于频繁，请稍后重试" }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "视频任务请求" }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const settings = await getAuthSettings();
     const response = await withGenerationConcurrencyLimit(user.id, "video", 10 * 60 * 1000, settings.generationConcurrency.video, async () => {
         let body: CreateVideoTaskBody;
         try {
             body = await readJsonBody(request);
         } catch (error) {
-            if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+            if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
             throw error;
         }
         const resolved = resolveLogicalModel(settings, "video", body.config?.model || settings.defaultModels.videoModel);

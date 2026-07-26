@@ -15,6 +15,7 @@ import { checkGenerationRateLimit, isSafeOutboundUrl, rateLimitHeaders } from "@
 import { withGenerationConcurrencyLimit } from "@/lib/server/generation-task-store";
 import { registerGenerationTaskAssetsForUser } from "@/lib/server/creative-runtime-service";
 
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -22,9 +23,9 @@ type RenderShot = { videoUrl?: unknown; audioMode?: unknown; audioUrl?: unknown;
 
 export async function POST(request: Request) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const rate = await checkGenerationRateLimit(user.id, request, "render");
-    if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: "成片合成请求过于频繁，请稍后重试" }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: "成片合成请求" }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const renderLimit = (await getAuthSettings()).generationConcurrency.render;
     const response = await withGenerationConcurrencyLimit(user.id, "render", 60 * 60_000, renderLimit, async () => {
         if (!(await ffmpegAvailable())) return NextResponse.json({ code: 503, data: null, msg: "当前服务器未安装 FFmpeg" }, { status: 503 });
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
         try {
             body = await readJsonBody(request);
         } catch (error) {
-            if (isAuthInputError(error)) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
+            if (isAuthInputError(error)) return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });
             throw error;
         }
         const projectId = text(body.projectId, 120);

@@ -9,6 +9,7 @@ import { getLocalMediaRegistration } from "@/lib/server/local-media-registry";
 import { createExternalMediaReadUrl } from "@/lib/server/object-storage-service";
 import { checkLocalMediaRateLimit, rateLimitHeaders } from "@/lib/server/security";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -18,11 +19,11 @@ type RouteContext = {
 
 export async function GET(request: Request, context: RouteContext) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const { path } = await context.params;
     const rate = await checkLocalMediaRateLimit(`user:${currentUser.id}`, request);
-    if (!rate.allowed) return NextResponse.json({ error: "媒体访问过于频繁，请稍后重试" }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "媒体访问" }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const root = resolve(getServerDataDir(), "generation-assets");
     const filePath = resolve(root, ...(path || []));
     if (!isInsideRoot(filePath, root)) return NextResponse.json({ error: "资源不存在" }, { status: 404 });

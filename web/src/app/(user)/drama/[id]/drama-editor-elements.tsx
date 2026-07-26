@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Tag } from "antd";
+import { useTranslations } from "next-intl";
 
 const compactTagClass = "!m-0 !inline-flex !h-6 !min-w-max !shrink-0 !items-center !whitespace-nowrap !rounded-md !border-0 !px-2 !text-xs !leading-6";
 
@@ -14,50 +15,32 @@ export function SectionTitle({ title, description, className = "" }: { title: st
     );
 }
 export function GenerationTag({ status = "idle" }: { status?: string }) {
-    const values: Record<string, { color: string; label: string }> = {
-        idle: { color: "default", label: "未生成" },
-        queued: { color: "blue", label: "排队中" },
-        running: { color: "processing", label: "生成中" },
-        success: { color: "success", label: "已完成" },
-        error: { color: "error", label: "失败" },
-        cancelled: { color: "default", label: "已取消" },
-    };
-    const item = values[status] || values.idle;
+    const t = useTranslations("drama");
+    const colors: Record<string, string> = { idle: "default", queued: "blue", running: "processing", success: "success", error: "error", cancelled: "default" };
+    const key = colors[status] ? status : "idle";
     return (
-        <Tag bordered={false} className={compactTagClass} color={item.color}>
-            {item.label}
+        <Tag bordered={false} className={compactTagClass} color={colors[key]}>
+            {t(`storyboard.status.generation.${key}`)}
         </Tag>
     );
 }
 export function StoryboardTag({ status = "idle" }: { status?: string }) {
-    const values: Record<string, { color: string; label: string }> = {
-        idle: { color: "default", label: "待分镜图" },
-        queued: { color: "geekblue", label: "分镜排队" },
-        running: { color: "processing", label: "分镜图生成中" },
-        success: { color: "success", label: "分镜图完成" },
-        error: { color: "error", label: "分镜图失败" },
-        cancelled: { color: "default", label: "分镜图取消" },
-    };
-    const item = values[status] || values.idle;
+    const t = useTranslations("drama");
+    const colors: Record<string, string> = { idle: "default", queued: "geekblue", running: "processing", success: "success", error: "error", cancelled: "default" };
+    const key = colors[status] ? status : "idle";
     return (
-        <Tag bordered={false} className={compactTagClass} color={item.color}>
-            {item.label}
+        <Tag bordered={false} className={compactTagClass} color={colors[key]}>
+            {t(`storyboard.status.storyboard.${key}`)}
         </Tag>
     );
 }
 export function AudioTag({ status = "idle" }: { status?: string }) {
-    const values: Record<string, { color: string; label: string }> = {
-        idle: { color: "default", label: "未配音" },
-        queued: { color: "cyan", label: "配音排队" },
-        running: { color: "processing", label: "配音中" },
-        success: { color: "success", label: "配音完成" },
-        error: { color: "error", label: "配音失败" },
-        cancelled: { color: "default", label: "配音取消" },
-    };
-    const item = values[status] || values.idle;
+    const t = useTranslations("drama");
+    const colors: Record<string, string> = { idle: "default", queued: "cyan", running: "processing", success: "success", error: "error", cancelled: "default" };
+    const key = colors[status] ? status : "idle";
     return (
-        <Tag bordered={false} className={compactTagClass} color={item.color}>
-            {item.label}
+        <Tag bordered={false} className={compactTagClass} color={colors[key]}>
+            {t(`storyboard.status.audio.${key}`)}
         </Tag>
     );
 }
@@ -73,17 +56,18 @@ export function AssetPanel({ icon, title, children }: { icon: ReactNode; title: 
     );
 }
 export function AssetList({ items }: { items: Array<{ id: string; name: string; description: string }> }) {
+    const t = useTranslations("drama");
     return items.length ? (
         <div className="mt-4 space-y-3 sm:mt-6 sm:space-y-4">
             {items.map((item) => (
                 <div key={item.id} className="rounded-xl border border-border bg-card p-3 sm:p-4">
                     <div className="text-sm font-semibold">{item.name}</div>
-                    <div className="mt-2 text-xs leading-5 text-muted-foreground">{item.description || "暂无描述"}</div>
+                    <div className="mt-2 text-xs leading-5 text-muted-foreground">{item.description || t("assets.noDescription")}</div>
                 </div>
             ))}
         </div>
     ) : (
-        <p className="mt-6 text-sm text-muted-foreground">暂未添加</p>
+        <p className="mt-6 text-sm text-muted-foreground">{t("assets.notAddedYet")}</p>
     );
 }
 

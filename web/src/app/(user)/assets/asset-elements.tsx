@@ -4,6 +4,7 @@ import { Copy, Download, PencilLine, Search, Trash2, Upload } from "lucide-react
 import { useEffect, useMemo, useRef, useState, type DragEvent as ReactDragEvent } from "react";
 import { App, Button, Card, Drawer, Empty, Form, Image, Input, Modal, Pagination, Select, Space, Tag, Typography } from "antd";
 import { saveAs } from "file-saver";
+import { useTranslations } from "next-intl";
 
 import { useCopyText } from "@/hooks/use-copy-text";
 import { droppedFiles, leftDropTarget, preventFileDragEvent } from "@/lib/file-drop";
@@ -16,8 +17,9 @@ import { useUserStore } from "@/stores/use-user-store";
 import { exportAssets, readAssetPackage } from "./asset-transfer";
 
 export function AssetCard({ asset, onOpen, onEdit, onCopy, onDownload, onDelete }: { asset: Asset; onOpen: () => void; onEdit: () => void; onCopy: (asset: Asset) => void; onDownload: (asset: Asset) => void; onDelete: () => void }) {
+    const t = useTranslations("workspace.assets");
     const cover = asset.coverUrl || (asset.kind === "image" ? asset.data.dataUrl : "");
-    const summary = assetSummary(asset);
+    const summary = assetSummary(asset, t("unknownDuration"));
     return (
         <Card
             hoverable
@@ -29,7 +31,7 @@ export function AssetCard({ asset, onOpen, onEdit, onCopy, onDownload, onDelete 
                         <img src={imagePreviewUrl(cover, 640)} alt={asset.title} className="aspect-[16/9] w-full object-cover sm:aspect-[4/3]" />
                     ) : (
                         <div className="flex aspect-[16/9] items-center justify-center bg-stone-100 p-2.5 text-center text-xs leading-5 text-stone-600 sm:aspect-[4/3] sm:p-5 sm:text-sm sm:leading-6 dark:bg-stone-900 dark:text-stone-300">
-                            {asset.kind === "text" ? asset.data.content : "暂无封面"}
+                            {asset.kind === "text" ? asset.data.content : t("noCover")}
                         </div>
                     )}
                 </button>
@@ -41,10 +43,10 @@ export function AssetCard({ asset, onOpen, onEdit, onCopy, onDownload, onDelete 
                         <div className="min-w-0">
                             <h2 className="line-clamp-1 text-sm font-semibold text-stone-950 dark:text-stone-100">{asset.title}</h2>
                             <Typography.Text type="secondary" className="mt-1 block text-xs">
-                                {asset.source || "未标注来源"}
+                                {asset.source || t("noSource")}
                             </Typography.Text>
                         </div>
-                        <Tag className="m-0 shrink-0 text-[11px]">{assetKindLabel(asset.kind)}</Tag>
+                        <Tag className="m-0 shrink-0 text-[11px]">{assetKindLabel(asset.kind, t)}</Tag>
                     </div>
                     <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-stone-500 sm:mt-2 sm:line-clamp-3 dark:text-stone-400">{summary}</p>
                     <div className="mt-1.5 flex flex-wrap gap-1 sm:mt-3 sm:gap-1.5">
@@ -53,31 +55,31 @@ export function AssetCard({ asset, onOpen, onEdit, onCopy, onDownload, onDelete 
                                 {tag}
                             </Tag>
                         ))}
-                        {!asset.tags?.length ? <Tag className="m-0 text-[11px]">无标签</Tag> : null}
+                        {!asset.tags?.length ? <Tag className="m-0 text-[11px]">{t("cardNoTag")}</Tag> : null}
                     </div>
                 </div>
             </button>
             <div className="flex items-center gap-1 px-2 pb-2 sm:gap-2 sm:px-4 sm:pb-4">
                 <Button size="small" onClick={onOpen}>
-                    查看
+                    {t("view")}
                 </Button>
                 {asset.kind !== "video" ? (
                     <Button size="small" icon={<PencilLine className="size-3.5" />} onClick={onEdit}>
-                        编辑
+                        {t("edit")}
                     </Button>
                 ) : null}
                 {asset.kind === "text" ? (
                     <Button size="small" icon={<Copy className="size-3.5" />} onClick={() => void onCopy(asset)}>
-                        复制
+                        {t("copy")}
                     </Button>
                 ) : null}
                 {asset.kind !== "text" ? (
                     <Button size="small" icon={<Download className="size-3.5" />} onClick={() => onDownload(asset)}>
-                        下载
+                        {t("download")}
                     </Button>
                 ) : null}
                 <Button size="small" danger icon={<Trash2 className="size-3.5" />} onClick={onDelete}>
-                    删除
+                    {t("delete")}
                 </Button>
             </div>
         </Card>
@@ -85,22 +87,23 @@ export function AssetCard({ asset, onOpen, onEdit, onCopy, onDownload, onDelete 
 }
 
 export function AssetDrawer({ asset, onClose, onCopy, onDownload }: { asset: Asset | null; onClose: () => void; onCopy: (asset: Asset) => void; onDownload: (asset: Asset) => void }) {
+    const t = useTranslations("workspace.assets");
     const cover = asset ? asset.coverUrl || (asset.kind === "image" ? asset.data.dataUrl : "") : "";
     return (
-        <Drawer title="素材详情" open={Boolean(asset)} size="large" onClose={onClose}>
+        <Drawer title={t("assetDetailTitle")} open={Boolean(asset)} size="large" onClose={onClose}>
             {asset ? (
                 <div className="space-y-5">
                     {cover ? (
                         <Image src={imagePreviewUrl(cover, 960)} alt={asset.title} className="rounded-lg" preview={{ src: imagePreviewUrl(cover, 1920) }} />
                     ) : (
-                        <div className="rounded-lg border border-stone-200 bg-stone-50 p-5 text-sm leading-6 text-stone-600 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300">{asset.kind === "text" ? asset.data.content : "暂无封面"}</div>
+                        <div className="rounded-lg border border-stone-200 bg-stone-50 p-5 text-sm leading-6 text-stone-600 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300">{asset.kind === "text" ? asset.data.content : t("noCover")}</div>
                     )}
                     <div>
                         <Typography.Title level={4} className="!mb-2">
                             {asset.title}
                         </Typography.Title>
                         <Space size={[4, 4]} wrap>
-                            <Tag>{assetKindLabel(asset.kind)}</Tag>
+                            <Tag>{assetKindLabel(asset.kind, t)}</Tag>
                             {(asset.tags || []).map((tag) => (
                                 <Tag key={tag}>{tag}</Tag>
                             ))}
@@ -108,7 +111,7 @@ export function AssetDrawer({ asset, onClose, onCopy, onDownload }: { asset: Ass
                     </div>
                     <div className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
                         <Typography.Text type="secondary" className="block text-xs">
-                            内容
+                            {t("content")}
                         </Typography.Text>
                         {asset.kind === "text" ? (
                             <Typography.Paragraph className="mt-2 whitespace-pre-wrap">{asset.data.content}</Typography.Paragraph>
@@ -124,19 +127,19 @@ export function AssetDrawer({ asset, onClose, onCopy, onDownload }: { asset: Ass
                     </div>
                     {asset.note ? (
                         <div>
-                            <Typography.Text type="secondary">备注</Typography.Text>
+                            <Typography.Text type="secondary">{t("fieldNote")}</Typography.Text>
                             <Typography.Paragraph className="mt-1">{asset.note}</Typography.Paragraph>
                         </div>
                     ) : null}
                     <Space>
                         {asset.kind === "text" ? (
                             <Button type="primary" icon={<Copy className="size-4" />} onClick={() => onCopy(asset)}>
-                                复制文本
+                                {t("copyText")}
                             </Button>
                         ) : null}
                         {asset.kind !== "text" ? (
                             <Button type="primary" icon={<Download className="size-4" />} onClick={() => onDownload(asset)}>
-                                {asset.kind === "video" ? "下载视频" : asset.kind === "audio" ? "下载音频" : "下载图片"}
+                                {asset.kind === "video" ? t("downloadVideo") : asset.kind === "audio" ? t("downloadAudio") : t("downloadImage")}
                             </Button>
                         ) : null}
                     </Space>
@@ -146,9 +149,9 @@ export function AssetDrawer({ asset, onClose, onCopy, onDownload }: { asset: Ass
     );
 }
 
-export function assetSummary(asset: Asset) {
+export function assetSummary(asset: Asset, unknownDurationLabel = "") {
     if (asset.kind === "text") return asset.data.content;
-    if (asset.kind === "audio") return `${formatDuration(asset.data.durationMs)} · ${formatBytes(asset.data.bytes)} · ${asset.data.mimeType}`;
+    if (asset.kind === "audio") return `${formatDuration(asset.data.durationMs, unknownDurationLabel)} · ${formatBytes(asset.data.bytes)} · ${asset.data.mimeType}`;
     return `${asset.data.width}x${asset.data.height} · ${formatBytes(asset.data.bytes)} · ${asset.data.mimeType}`;
 }
 
@@ -156,12 +159,12 @@ export function assetSearchText(asset: Asset) {
     return [asset.title, asset.source || "", asset.note || "", (asset.tags || []).join(" "), asset.kind === "text" ? asset.data.content : asset.data.mimeType].join(" ").toLowerCase();
 }
 
-function assetKindLabel(kind: Asset["kind"]) {
-    return kind === "image" ? "图片" : kind === "video" ? "视频" : kind === "audio" ? "音频" : "文本";
+function assetKindLabel(kind: Asset["kind"], t: ReturnType<typeof useTranslations>) {
+    return kind === "image" ? t("kindImage") : kind === "video" ? t("kindVideo") : kind === "audio" ? t("kindAudio") : t("kindText");
 }
 
-function formatDuration(durationMs?: number) {
-    if (!durationMs) return "未知时长";
+function formatDuration(durationMs?: number, unknownLabel = "") {
+    if (!durationMs) return unknownLabel;
     const seconds = Math.max(1, Math.round(durationMs / 1000));
     return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }

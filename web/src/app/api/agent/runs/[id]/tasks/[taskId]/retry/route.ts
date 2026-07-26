@@ -7,9 +7,10 @@ import { getAgentRun, updateAgentRunById } from "@/lib/server/agent-run-store";
 import { withGenerationConcurrencyLimit } from "@/lib/server/generation-task-store";
 import { resolveInternalOrigin } from "@/lib/server/internal-origin";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export async function POST(request: Request, { params }: { params: Promise<{ id: string; taskId: string }> }) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const { id, taskId } = await params;
     const run = await getAgentRun(id);
     if (!run || (run.userId !== user.id && user.role !== "admin")) return NextResponse.json({ code: 404, data: null, msg: "Agent 任务不存在" }, { status: 404 });

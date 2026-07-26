@@ -7,20 +7,21 @@ import { AccountDeletionRequestError, getOwnAccountDeletionRequest, submitAccoun
 import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-log-store";
 import { checkRateLimit, rateLimitHeaders } from "@/lib/server/security";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     return NextResponse.json({ code: 0, data: await getOwnAccountDeletionRequest(currentUser.id), msg: "OK" }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const limit = await checkRateLimit(`account-deletion-submit:${currentUser.id}`, { maxRequests: 5, windowMs: 60 * 60 * 1000 });
-    if (!limit.allowed) return NextResponse.json({ code: 429, data: null, msg: "操作过于频繁，请稍后再试" }, { status: 429, headers: rateLimitHeaders(limit) });
+    if (!limit.allowed) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureAgain", { feature: "操作" }) }, { status: 429, headers: rateLimitHeaders(limit) });
 
     try {
         const body = await readJsonBody<{ currentPassword?: unknown; note?: unknown }>(request);
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     try {
         const data = await withdrawOwnAccountDeletionRequest(currentUser.id);
         await safeRecordAuditLog({

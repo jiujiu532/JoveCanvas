@@ -6,18 +6,19 @@ import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-lo
 import { isBillingInputError, listBillingProducts, upsertBillingProduct } from "@/lib/server/billing-service";
 import type { BillingProductInput } from "@/lib/server/billing-service";
 
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     try {
         return NextResponse.json({ products: await listBillingProducts(true) });
     } catch (error) {
-        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin list billing products failed", error);
         return NextResponse.json({ error: "获取套餐商品失败" }, { status: 500 });
     }
@@ -25,8 +26,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     try {
         const product = await upsertBillingProduct(await readJsonBody<BillingProductInput>(request));
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
             target: { type: "billing_product" },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin upsert billing product failed", error);
         return NextResponse.json({ error: "保存套餐商品失败" }, { status: 500 });
     }

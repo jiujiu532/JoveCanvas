@@ -2,6 +2,7 @@
 
 import { Button } from "antd";
 import { Save } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Panel, PanelHeader } from "@/components/admin/admin-panel";
 import { QuotaRuleTable } from "@/components/admin/admin-quota-rules";
@@ -9,6 +10,7 @@ import { QuotaRuleTable } from "@/components/admin/admin-quota-rules";
 import type { AdminDashboardController } from "./use-admin-dashboard-controller";
 
 export function AdminPointsSection({ controller }: { controller: AdminDashboardController }) {
+    const t = useTranslations("admin");
     const {
         activeSection,
         settings,
@@ -29,15 +31,15 @@ export function AdminPointsSection({ controller }: { controller: AdminDashboardC
     return (
         <Panel>
             <PanelHeader
-                title="积分规则"
-                description="统一配置免费用户每日额度、模型基础扣费与图片、视频参数倍率。"
+                title={t("points.title")}
+                description={t("points.description")}
                 actions={
                     <Button
                         type="primary"
                         loading={settingsLoading}
                         icon={<Save className="size-4" />}
-                        aria-label="保存积分规则"
-                        title="保存积分规则"
+                        aria-label={t("points.save")}
+                        title={t("points.save")}
                         onClick={() =>
                             saveSettings(
                                 {
@@ -46,12 +48,12 @@ export function AdminPointsSection({ controller }: { controller: AdminDashboardC
                                     modelPointCosts: settings.modelPointCosts,
                                     generationPointMultipliers: settings.generationPointMultipliers,
                                 },
-                                "积分规则已保存",
+                                t("points.saved"),
                             )
                         }
                     >
-                        <span className="sm:hidden">保存</span>
-                        <span className="hidden sm:inline">保存积分规则</span>
+                        <span className="sm:hidden">{t("common.save")}</span>
+                        <span className="hidden sm:inline">{t("points.save")}</span>
                     </Button>
                 }
             />

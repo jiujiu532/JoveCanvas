@@ -8,6 +8,7 @@ import { createExternalMediaReadUrl } from "@/lib/server/object-storage-service"
 import { isReferenceAssetPath, readReferenceAsset } from "@/lib/server/reference-asset-store";
 import { checkLocalMediaRateLimit, rateLimitHeaders } from "@/lib/server/security";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -26,11 +27,11 @@ export async function GET(request: Request, context: RouteContext) {
     let currentUser: Awaited<ReturnType<typeof getCurrentUser>> = null;
     if (!signed) {
         currentUser = await getCurrentUser();
-        if (!currentUser) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+        if (!currentUser) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
         rateIdentity = `user:${currentUser.id}`;
     }
     const rate = await checkLocalMediaRateLimit(rateIdentity, request);
-    if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: "媒体访问过于频繁，请稍后重试" }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: "媒体访问" }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const registration = await getLocalMediaRegistration(storagePath);
     if (!registration) return NextResponse.json({ error: "媒体文件不存在或已过期" }, { status: 404 });
     if (currentUser && currentUser.role !== "admin" && registration.ownerUserId !== currentUser.id) return NextResponse.json({ code: 404, data: null, msg: "媒体文件不存在" }, { status: 404 });

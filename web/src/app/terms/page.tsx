@@ -1,37 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft, CheckCircle2, CloudCog, DatabaseBackup, Scale } from "lucide-react";
 
-const terms = [
-    {
-        title: "开源协议与致谢",
-        body: "VOZEB PRO 是面向 AI 创作、画布、提示词管理和素材沉淀的开源项目。你可以在遵守 AGPL-3.0 协议和原作者致谢要求的前提下部署、修改和分发。",
-        icon: <Scale className="size-5" />,
-    },
-    {
-        title: "服务配置责任",
-        body: "部署者需要自行配置并管理 AI 接口、模型服务、邮箱 SMTP 和第三方存储服务，并遵守对应服务商的条款。由外部接口、模型输出、邮箱服务或部署环境导致的问题，应由部署者自行评估和处理。",
-        icon: <CloudCog className="size-5" />,
-    },
-    {
-        title: "内容与管理规范",
-        body: "管理员可以管理用户、额度、注册策略、邮箱服务、网站信息和公共提示词库。请勿上传、生成或传播违法、侵权、恶意或违反当地法律法规的内容。",
-        icon: <CheckCircle2 className="size-5" />,
-    },
-    {
-        title: "升级与备份建议",
-        body: "本项目仍处于快速迭代阶段。升级前请先从管理员后台导出脱敏业务数据，并按当前部署方式另外备份 PostgreSQL、支付流水、服务器媒体目录和外部对象存储。",
-        icon: <DatabaseBackup className="size-5" />,
-    },
-];
+export async function generateMetadata(): Promise<Metadata> {
+    const t = await getTranslations("public.terms");
+    return {
+        title: t("metaTitle"),
+        description: t("metaDescription"),
+        alternates: { canonical: "/terms" },
+    };
+}
 
-export const metadata: Metadata = {
-    title: "使用条款",
-    description: "查看 VOZEB PRO 的开源协议、服务配置、内容管理与备份使用说明。",
-    alternates: { canonical: "/terms" },
-};
+export default async function TermsPage() {
+    const t = await getTranslations("public.terms");
+    const terms = [
+        { title: t("section1Title"), body: t("section1Body"), icon: <Scale className="size-5" /> },
+        { title: t("section2Title"), body: t("section2Body"), icon: <CloudCog className="size-5" /> },
+        { title: t("section3Title"), body: t("section3Body"), icon: <CheckCircle2 className="size-5" /> },
+        { title: t("section4Title"), body: t("section4Body"), icon: <DatabaseBackup className="size-5" /> },
+    ];
 
-export default function TermsPage() {
     return (
         <main className="app-scroll-page bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.14),transparent_32%),linear-gradient(180deg,#ffffff_0%,#f8fafc_58%,#eef2f7_100%)] text-stone-800 dark:bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_34%),linear-gradient(180deg,#0a0a0a_0%,#101010_58%,#171717_100%)] dark:text-stone-200">
             <div className="mx-auto flex min-h-full w-full max-w-5xl flex-col px-5 py-8 sm:px-8 sm:py-10">
@@ -40,7 +29,7 @@ export default function TermsPage() {
                     className="inline-flex w-fit items-center gap-2 rounded-full border border-stone-200 bg-white/80 px-4 py-2 text-sm font-medium text-stone-700 shadow-sm shadow-stone-200/50 backdrop-blur transition hover:border-cyan-300 hover:text-cyan-700 dark:border-white/10 dark:bg-white/5 dark:text-stone-200 dark:shadow-black/30 dark:hover:border-cyan-500/50 dark:hover:text-cyan-200"
                 >
                     <ArrowLeft className="size-4" />
-                    返回首页
+                    {t("backHome")}
                 </Link>
 
                 <section className="mt-8 overflow-hidden rounded-lg border border-stone-200 bg-white/88 shadow-xl shadow-stone-200/60 backdrop-blur dark:border-white/10 dark:bg-stone-950/78 dark:shadow-black/30">
@@ -49,8 +38,8 @@ export default function TermsPage() {
                             <Scale className="size-3.5" />
                             VOZEB PRO Legal
                         </div>
-                        <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">使用条款</h1>
-                        <p className="mt-4 max-w-2xl text-base leading-8 text-stone-200 dark:text-stone-300">使用、部署或二次开发 VOZEB PRO 前，请确认你已理解开源协议、服务配置责任、内容合规和升级备份要求。</p>
+                        <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">{t("title")}</h1>
+                        <p className="mt-4 max-w-2xl text-base leading-8 text-stone-200 dark:text-stone-300">{t("subtitle")}</p>
                     </div>
 
                     <div className="grid gap-4 p-4 sm:p-6 lg:grid-cols-2">

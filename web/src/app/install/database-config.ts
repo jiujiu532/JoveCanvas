@@ -1,10 +1,11 @@
 export type DeployMode = "local" | "docker" | "baota" | "cloud";
 
-export const modeOptions: Array<{ label: string; value: DeployMode; host: string; ssl: boolean; description: string }> = [
-    { label: "本机", value: "local", host: "localhost", ssl: false, description: "Web 与 PostgreSQL 都直接运行在当前系统，不使用 Docker；配置保存到 web/.env.local。" },
-    { label: "Docker", value: "docker", host: "postgres", ssl: false, description: "Web 与项目自带 PostgreSQL 分别运行在容器中，由默认 docker-compose.yml 一起启动。" },
-    { label: "宝塔", value: "baota", host: "127.0.0.1", ssl: false, description: "Web 运行在容器中，连接宝塔宿主机已经安装的 PostgreSQL；不会再启动一套数据库。" },
-    { label: "云数据库", value: "cloud", host: "db.example.com", ssl: true, description: "Web 连接云厂商提供的远程 PostgreSQL，需要填写服务商地址并按要求启用 SSL。" },
+// 模式的展示文案（label/description）随语言切换，由调用方通过 next-intl 翻译后再渲染，这里只保留纯数据字段
+export const modeOptions: Array<{ value: DeployMode; host: string; ssl: boolean }> = [
+    { value: "local", host: "localhost", ssl: false },
+    { value: "docker", host: "postgres", ssl: false },
+    { value: "baota", host: "127.0.0.1", ssl: false },
+    { value: "cloud", host: "db.example.com", ssl: true },
 ];
 
 type DatabaseConfig = {

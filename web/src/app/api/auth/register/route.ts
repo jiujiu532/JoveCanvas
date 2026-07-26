@@ -6,6 +6,7 @@ import { serializeCurrentUser, setSessionCookie } from "@/lib/auth/session";
 import { checkRateLimit, getClientIp } from "@/lib/server/security";
 import { getInstallStatus } from "@/lib/server/install-status";
 
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
             .toLowerCase()
             .slice(0, 160);
         const limit = await checkRateLimit(`register:${getClientIp(request)}:${registrationIdentity}`, { maxRequests: 10, windowMs: 60 * 60 * 1000 });
-        if (!limit.allowed) return NextResponse.json({ error: "注册请求过于频繁，请稍后重试", retryAfter: Math.ceil((limit.resetAt - Date.now()) / 1000) }, { status: 429 });
+        if (!limit.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "注册请求" }), retryAfter: Math.ceil((limit.resetAt - Date.now()) / 1000) }, { status: 429 });
         const user = await createUser({
             username: body.username || "",
             email: body.email,
@@ -35,8 +36,8 @@ export async function POST(request: Request) {
     }
 }
 
-function authErrorResponse(error: unknown) {
-    if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+async function authErrorResponse(error: unknown) {
+    if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
     console.error("Register failed", error);
     return NextResponse.json({ error: "注册失败，请稍后重试" }, { status: 500 });
 }

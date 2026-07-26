@@ -6,11 +6,12 @@ import { getAgentRun, setAgentRunStatus, type AgentRun, type AgentRunStatus } fr
 import { withGenerationConcurrencyLimit } from "@/lib/server/generation-task-store";
 import { fetchInternalApi, resolveInternalOrigin } from "@/lib/server/internal-origin";
 
+import { serverMessage } from "@/lib/server/server-messages";
 const actions: Record<string, AgentRunStatus> = { pause: "paused", resume: "running", cancel: "cancelled" };
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string; action: string }> }) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const { id, action } = await params;
     const status = actions[action];
     if (!status) return NextResponse.json({ code: 400, data: null, msg: "不支持的 Agent 操作" }, { status: 400 });

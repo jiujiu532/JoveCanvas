@@ -2,6 +2,7 @@
 
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { isCreativeProjectHandoff, type CreativeAsset, type CreativeConversation, type CreativeMessage, type CreativeProjectHandoff } from "@/lib/creative-runtime-contract";
 import {
@@ -23,6 +24,7 @@ import {
 import { getMaterializedCreativeProject, materializeCreativeProjectHandoff, type MaterializedCreativeProject } from "@/services/creative-project-handoff";
 
 export function useCreateAgent() {
+    const t = useTranslations("workspace.create");
     const streamRef = useRef<(() => void) | null>(null);
     const conversationGenerationRef = useRef(0);
     const activeConversationRef = useRef<string | undefined>(undefined);
@@ -162,7 +164,7 @@ export function useCreateAgent() {
             setConversationId(id);
             try {
                 const conversation = await getCreativeConversation(id);
-                if (conversation.surface !== "chat" || conversation.source !== "agent") throw new Error("该记录不属于创作 Agent 工作台");
+                if (conversation.surface !== "chat" || conversation.source !== "agent") throw new Error(t("recordNotAgentWorkbench"));
                 await refreshConversation(id, generation);
                 setConversations((current) => [conversation, ...current.filter((item) => item.id !== conversation.id)].sort((a, b) => b.updatedAt - a.updatedAt));
             } catch (error) {
@@ -187,7 +189,7 @@ export function useCreateAgent() {
             setProjectLinks((current) => ({ ...current, [handoff.id]: result }));
             return result;
         } catch (error) {
-            const text = error instanceof Error ? error.message : "项目创建失败";
+            const text = error instanceof Error ? error.message : t("projectCreateFailed");
             setProjectErrors((current) => ({ ...current, [handoff.id]: text }));
             throw error;
         } finally {
@@ -198,8 +200,8 @@ export function useCreateAgent() {
     const ensureConversation = useCallback(async () => {
         if (activeConversationRef.current) return activeConversationRef.current;
         const generation = conversationGenerationRef.current;
-        const conversation = await createCreativeConversation({ surface: "chat", source: "agent", title: "新对话" });
-        if (generation !== conversationGenerationRef.current) throw new Error("创作入口已切换，请重试");
+        const conversation = await createCreativeConversation({ surface: "chat", source: "agent", title: t("newConversationTitle") });
+        if (generation !== conversationGenerationRef.current) throw new Error(t("createEntrySwitched"));
         activeConversationRef.current = conversation.id;
         setConversationId(conversation.id);
         setConversations((current) => [conversation, ...current.filter((item) => item.id !== conversation.id)]);
@@ -296,7 +298,7 @@ export function useCreateAgent() {
             setMessages((current) => [
                 ...current,
                 { id: temporaryUserId, conversationId: optimisticConversationId, sequence, role: "user", status: "completed", content, metadata: {}, createdAt: now, updatedAt: now },
-                { id: temporaryAssistantId, conversationId: optimisticConversationId, sequence: sequence + 1, role: "assistant", status: "running", content: "正在理解你的需求", metadata: {}, createdAt: now, updatedAt: now },
+                { id: temporaryAssistantId, conversationId: optimisticConversationId, sequence: sequence + 1, role: "assistant", status: "running", content: t("understandingRequest"), metadata: {}, createdAt: now, updatedAt: now },
             ]);
             const assetIds = selectedAssetIds.slice(-20);
             try {
@@ -329,13 +331,13 @@ export function useCreateAgent() {
                 void refreshConversations();
                 return true;
             } catch (error) {
-                updateAssistant(temporaryAssistantId, error instanceof Error ? error.message : "创作请求失败", "failed");
+                updateAssistant(temporaryAssistantId, error instanceof Error ? error.message : t("createRequestFailed"), "failed");
                 setSending(false);
                 submittingRef.current = false;
                 return false;
             }
         },
-        [conversationId, messages, refreshConversations, selectedAssetIds, sending, stopWatching, updateAssistant, watchRun],
+        [conversationId, messages, refreshConversations, selectedAssetIds, sending, stopWatching, t, updateAssistant, watchRun],
     );
 
     const cancel = useCallback(async () => {
@@ -365,13 +367,13 @@ export function useCreateAgent() {
             setRunDetails((current) => ({ ...current, [runId]: result }));
             const assistantMessage = messages.find((item) => item.runId === runId && item.role === "assistant");
             if (assistantMessage) {
-                updateAssistant(assistantMessage.id, "正在重新生成失败任务…");
+                updateAssistant(assistantMessage.id, t("regeneratingFailedTask"));
                 setSending(true);
                 submittingRef.current = true;
                 watchRun(result, assistantMessage.id, conversationGenerationRef.current);
             }
         },
-        [messages, updateAssistant, watchRun],
+        [messages, t, updateAssistant, watchRun],
     );
 
     const renameConversation = useCallback(async (id: string, title: string) => {
@@ -385,9 +387,9 @@ export function useCreateAgent() {
             const results = await Promise.allSettled(uniqueIds.map((id) => archiveCreativeConversation(id)));
             if (uniqueIds.includes(activeConversationRef.current || "")) newConversation();
             await refreshConversations();
-            if (results.some((result) => result.status === "rejected")) throw new Error("部分对话删除失败，请重试");
+            if (results.some((result) => result.status === "rejected")) throw new Error(t("partialDeleteFailed"));
         },
-        [newConversation, refreshConversations],
+        [newConversation, refreshConversations, t],
     );
 
     return {

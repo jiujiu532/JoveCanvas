@@ -53,6 +53,10 @@ import {
 
 export class AuthInputError extends Error {
     status = 400;
+    // i18n 渐进迁移：显式传入时 Route Handler 响应层按当前语言字典渲染，
+    // 未传时按 message 原文反查已知文案表（server-messages.ts），都未命中则原样返回中文 message
+    messageKey?: string;
+    messageParams?: Record<string, string | number>;
 }
 
 export class EmailCodeAttemptError extends AuthInputError {
@@ -61,6 +65,8 @@ export class EmailCodeAttemptError extends AuthInputError {
 
 export class QuotaExceededError extends Error {
     status = 429;
+    messageKey?: string;
+    messageParams?: Record<string, string | number>;
 }
 
 export function isAuthInputError(error: unknown): error is AuthInputError {

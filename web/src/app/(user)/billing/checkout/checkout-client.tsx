@@ -4,6 +4,7 @@ import { App, Button, Empty, QRCode, Spin, Tag } from "antd";
 import { ArrowLeft, Check, CheckCircle2, Copy, CreditCard, ExternalLink, FileText, Landmark, LockKeyhole, Minus, Plus, QrCode, ReceiptText, ShieldCheck, WalletCards } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { CreditSymbol, formatCreditAmount } from "@/constant/credits";
 import { useCopyText } from "@/hooks/use-copy-text";
@@ -11,17 +12,17 @@ import { resolveBrandProductName } from "@/lib/site-brand";
 import { usePublicSessionStore } from "@/stores/use-public-session-store";
 import { createBillingOrder, createPaymentCheckout, listBillingProducts, type BillingProduct, type PaymentCheckout } from "@/services/api/billing";
 
-const providers = [
-    { label: "Stripe", value: "stripe", icon: CreditCard, description: "国际银行卡与数字钱包" },
-    { label: "支付宝", value: "alipay", icon: Landmark, description: "支付宝网页支付" },
-    { label: "微信支付", value: "wechat", icon: QrCode, description: "微信扫码支付" },
-    { label: "PayPly", value: "payply", icon: WalletCards, description: "自定义支付接口" },
-    { label: "人工确认", value: "manual", icon: FileText, description: "线下转账或人工开通" },
-] as const;
-
 export function BillingCheckoutPage({ productId }: { productId: string }) {
     const { message } = App.useApp();
+    const t = useTranslations("workspace.billing.checkout");
     const copyText = useCopyText();
+    const providers = [
+        { label: "Stripe", value: "stripe", icon: CreditCard, description: t("providerStripeDesc") },
+        { label: t("providerAlipay"), value: "alipay", icon: Landmark, description: t("providerAlipayDesc") },
+        { label: t("providerWechat"), value: "wechat", icon: QrCode, description: t("providerWechatDesc") },
+        { label: "PayPly", value: "payply", icon: WalletCards, description: t("providerPayplyDesc") },
+        { label: t("providerManual"), value: "manual", icon: FileText, description: t("providerManualDesc") },
+    ] as const;
     const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", brandProductName: "" };
     const brandProductName = resolveBrandProductName(site);
     const [product, setProduct] = useState<BillingProduct | null>(null);
@@ -45,14 +46,14 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
                 setPaymentProviders(nextProviders);
                 setProvider(nextProviders[0] || "manual");
             })
-            .catch((error) => message.error(error instanceof Error ? error.message : "支付信息加载失败"))
+            .catch((error) => message.error(error instanceof Error ? error.message : t("loadFailed")))
             .finally(() => {
                 if (active) setLoading(false);
             });
         return () => {
             active = false;
         };
-    }, [message, productId]);
+    }, [message, productId, t]);
 
     const totalCents = (product?.amountCents || 0) * quantity;
 
@@ -64,7 +65,7 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
             const result = await createPaymentCheckout(order.order.id, { provider });
             setCheckout(result.checkout);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "创建支付订单失败");
+            message.error(error instanceof Error ? error.message : t("createOrderFailed"));
         } finally {
             setSubmitting(false);
         }
@@ -74,14 +75,14 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
         if (!checkout) return;
         if (checkout.kind === "form" && checkout.formHtml) {
             const popup = window.open("", "_blank");
-            if (!popup) return message.warning("浏览器阻止了支付窗口，请允许弹窗后重试");
+            if (!popup) return message.warning(t("popupBlocked"));
             popup.document.open();
             popup.document.write(checkout.formHtml);
             popup.document.close();
             return;
         }
         if (checkout.url) return void window.open(checkout.url, "_blank", "noopener,noreferrer");
-        message.info("该订单需要管理员人工确认");
+        message.info(t("needManualConfirm"));
     };
 
     if (loading) {
@@ -98,9 +99,9 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
         return (
             <main className="h-full min-h-0 overflow-y-auto bg-[#f4f5f2] px-3 py-4 sm:px-4 sm:py-8 dark:bg-[#0f1012]">
                 <div className="mx-auto max-w-xl rounded-xl border border-stone-200 bg-white p-4 text-center sm:rounded-3xl sm:p-8 dark:border-stone-800 dark:bg-stone-950">
-                    <Empty description="套餐不存在或已下架" />
+                    <Empty description={t("productNotFound")} />
                     <Link href="/profile?section=billing" className="mt-5 inline-flex text-sm font-semibold text-stone-700 hover:text-stone-950 dark:text-stone-300 dark:hover:text-white">
-                        返回套餐中心
+                        {t("backToPlans")}
                     </Link>
                 </div>
             </main>
@@ -115,15 +116,15 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
                         href="/profile?section=billing"
                         className="inline-flex h-9 items-center gap-2 rounded-xl border border-stone-200 bg-white px-3 text-sm font-semibold text-stone-700 shadow-sm transition hover:border-stone-300 hover:bg-stone-50 hover:text-stone-950 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-300 dark:hover:border-stone-700 dark:hover:bg-stone-900 dark:hover:text-white"
                     >
-                        <ArrowLeft className="size-4" /> 返回套餐中心
+                        <ArrowLeft className="size-4" /> {t("backToPlans")}
                     </Link>
                     <span className="inline-flex size-9 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-600 sm:h-auto sm:w-auto sm:gap-1.5 sm:rounded-full sm:px-3 sm:py-1.5 sm:text-xs sm:font-medium dark:border-stone-800 dark:bg-stone-950 dark:text-stone-300">
-                        <ShieldCheck className="size-4 text-emerald-600 sm:size-3.5 dark:text-emerald-300" /> <span className="hidden sm:inline">{brandProductName} 安全结算</span>
+                        <ShieldCheck className="size-4 text-emerald-600 sm:size-3.5 dark:text-emerald-300" /> <span className="hidden sm:inline">{t("securityBadge", { brand: brandProductName })}</span>
                     </span>
                 </header>
 
                 <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-[0_18px_54px_rgba(15,23,42,0.10)] sm:rounded-[1.75rem] sm:shadow-[0_30px_90px_rgba(15,23,42,0.12)] lg:grid lg:grid-cols-[0.86fr_1.14fr] dark:border-stone-800 dark:bg-stone-950 dark:shadow-black/35">
-                    <div className="m-1.5 grid grid-cols-2 gap-1 rounded-lg bg-stone-100 p-0.5 sm:hidden dark:bg-stone-900" role="tablist" aria-label="结算步骤">
+                    <div className="m-1.5 grid grid-cols-2 gap-1 rounded-lg bg-stone-100 p-0.5 sm:hidden dark:bg-stone-900" role="tablist" aria-label={t("checkoutStepsAriaLabel")}>
                         <button
                             type="button"
                             role="tab"
@@ -131,7 +132,7 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
                             className={`inline-flex h-8 items-center justify-center gap-1 rounded-md text-xs font-semibold transition ${mobileSection === "summary" ? "bg-white text-[#344256] shadow-sm dark:bg-[#252d37] dark:text-white" : "text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"}`}
                             onClick={() => setMobileSection("summary")}
                         >
-                            <ReceiptText className={`size-4 ${mobileSection === "summary" ? "text-[#66758e] dark:text-[#d8dee8]" : ""}`} /> 订单明细
+                            <ReceiptText className={`size-4 ${mobileSection === "summary" ? "text-[#66758e] dark:text-[#d8dee8]" : ""}`} /> {t("tabOrderDetail")}
                         </button>
                         <button
                             type="button"
@@ -140,7 +141,7 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
                             className={`inline-flex h-8 items-center justify-center gap-1 rounded-md text-xs font-semibold transition ${mobileSection === "payment" ? "bg-white text-[#344256] shadow-sm dark:bg-[#252d37] dark:text-white" : "text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"}`}
                             onClick={() => setMobileSection("payment")}
                         >
-                            <CreditCard className={`size-4 ${mobileSection === "payment" ? "text-[#66758e] dark:text-[#d8dee8]" : ""}`} /> 支付方式
+                            <CreditCard className={`size-4 ${mobileSection === "payment" ? "text-[#66758e] dark:text-[#d8dee8]" : ""}`} /> {t("tabPaymentMethod")}
                         </button>
                     </div>
 
@@ -154,19 +155,19 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
                             <div className="mt-4 flex items-end gap-1 sm:mt-8">
                                 <span className="pb-1 text-sm">¥</span>
                                 <span className="text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">{formatYuan(totalCents)}</span>
-                                <span className="pb-1 text-sm text-stone-400 dark:text-stone-500">今日需支付</span>
+                                <span className="pb-1 text-sm text-stone-400 dark:text-stone-500">{t("payTodayLabel")}</span>
                             </div>
 
                             <div className="mt-3 overflow-hidden rounded-lg border border-white/10 bg-white/[0.06] sm:mt-8 sm:rounded-2xl dark:border-stone-300 dark:bg-white">
-                                <SummaryRow label="套餐单价" value={`¥ ${formatYuan(product.amountCents)}`} />
-                                <SummaryRow label="购买数量" value={`× ${quantity}`} />
-                                <SummaryRow label={product.productKind === "points" ? "充值积分" : "创作积分"} value={`${formatCreditAmount(product.pointsAmount * quantity)} 积分`} icon={<CreditSymbol />} />
-                                <SummaryRow label="权益周期" value={product.productKind === "points" ? "一次性到账" : product.periodDays ? `${product.periodDays * quantity} 天` : "长期有效"} />
+                                <SummaryRow label={t("unitPriceLabel")} value={`¥ ${formatYuan(product.amountCents)}`} />
+                                <SummaryRow label={t("quantityLabel")} value={`× ${quantity}`} />
+                                <SummaryRow label={product.productKind === "points" ? t("pointsRecharge") : t("pointsCreative")} value={t("pointsValue", { amount: formatCreditAmount(product.pointsAmount * quantity) })} icon={<CreditSymbol />} />
+                                <SummaryRow label={t("periodLabel")} value={product.productKind === "points" ? t("periodOneTime") : product.periodDays ? t("periodDays", { days: product.periodDays * quantity }) : t("periodLongTerm")} />
                             </div>
 
                             <div className="mt-6 flex items-start gap-2 text-xs leading-5 text-stone-400 dark:text-stone-600">
                                 <ReceiptText className="mt-0.5 size-4 shrink-0 text-[#b8c4d6] dark:text-[#66758e]" />
-                                订单创建后可在个人中心查看状态；支付成功后套餐与积分自动更新。
+                                {t("orderNote")}
                             </div>
                         </div>
                     </section>
@@ -174,11 +175,11 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
                     <section className={`${mobileSection === "payment" ? "block" : "hidden"} p-2.5 sm:block sm:p-8`}>
                         <div className="mb-4 flex items-end justify-between gap-3 border-b border-stone-200 pb-3 sm:hidden dark:border-stone-800">
                             <div className="min-w-0">
-                                <div className="text-[10px] font-semibold tracking-[0.16em] text-stone-400 dark:text-stone-500">当前订单</div>
+                                <div className="text-[10px] font-semibold tracking-[0.16em] text-stone-400 dark:text-stone-500">{t("currentOrderLabel")}</div>
                                 <div className="mt-1 truncate text-sm font-semibold text-stone-950 dark:text-white">{product.name}</div>
                             </div>
                             <div className="shrink-0 text-right">
-                                <div className="text-[11px] text-stone-500 dark:text-stone-400">应付金额</div>
+                                <div className="text-[11px] text-stone-500 dark:text-stone-400">{t("amountDueLabel")}</div>
                                 <div className="mt-0.5 text-xl font-semibold tabular-nums text-stone-950 dark:text-white">¥ {formatYuan(totalCents)}</div>
                             </div>
                         </div>
@@ -187,10 +188,10 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
                                 <div>
                                     <div className="text-[11px] font-semibold tracking-[0.18em] text-stone-400 dark:text-stone-500">PAYMENT</div>
                                     <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                                        <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">选择支付方式</h2>
+                                        <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">{t("choosePaymentMethod")}</h2>
                                         <Tag color="green" className="m-0">
                                             <span className="inline-flex items-center gap-1">
-                                                <LockKeyhole className="size-3" /> 安全加密
+                                                <LockKeyhole className="size-3" /> {t("secureEncryption")}
                                             </span>
                                         </Tag>
                                     </div>
@@ -231,15 +232,15 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
                                 <div className="mt-4 border-t border-stone-200 pt-4 sm:mt-7 sm:pt-7 dark:border-stone-800">
                                     <label className="flex items-center justify-between gap-5">
                                         <span className="min-w-0">
-                                            <span className="block text-sm font-semibold">购买数量</span>
-                                            <span className="mt-1 block text-xs text-stone-500 dark:text-stone-400">积分和权益按数量累计</span>
+                                            <span className="block text-sm font-semibold">{t("quantityLabel")}</span>
+                                            <span className="mt-1 block text-xs text-stone-500 dark:text-stone-400">{t("quantityHint")}</span>
                                         </span>
                                         <div className="grid h-9 shrink-0 grid-cols-[2rem_2.5rem_2rem] overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-950">
                                             <button
                                                 type="button"
                                                 className="grid place-items-center text-stone-500 transition hover:bg-stone-100 hover:text-stone-950 disabled:cursor-not-allowed disabled:opacity-35 dark:text-stone-400 dark:hover:bg-stone-900 dark:hover:text-white"
-                                                aria-label="减少购买数量"
-                                                title="减少数量"
+                                                aria-label={t("decreaseQuantity")}
+                                                title={t("decreaseQuantityTitle")}
                                                 disabled={quantity <= 1}
                                                 onClick={() => setQuantity((current) => Math.max(1, current - 1))}
                                             >
@@ -251,8 +252,8 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
                                             <button
                                                 type="button"
                                                 className="grid place-items-center text-stone-500 transition hover:bg-stone-100 hover:text-stone-950 disabled:cursor-not-allowed disabled:opacity-35 dark:text-stone-400 dark:hover:bg-stone-900 dark:hover:text-white"
-                                                aria-label="增加购买数量"
-                                                title="增加数量"
+                                                aria-label={t("increaseQuantity")}
+                                                title={t("increaseQuantityTitle")}
                                                 disabled={quantity >= 24}
                                                 onClick={() => setQuantity((current) => Math.min(24, current + 1))}
                                             >
@@ -264,10 +265,10 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
                                     <div className="mt-4 border-t border-dashed border-stone-200 pt-4 sm:mt-7 sm:pt-6 dark:border-stone-800">
                                         <Button block type="primary" size="large" className="profile-primary-button !h-10 sm:!h-12" loading={submitting} disabled={!provider} onClick={() => void submit()}>
                                             <span className="inline-flex items-center gap-2">
-                                                <LockKeyhole className="size-4" /> 确认订单并继续支付
+                                                <LockKeyhole className="size-4" /> {t("confirmAndPay")}
                                             </span>
                                         </Button>
-                                        <p className="mt-3 text-center text-xs leading-5 text-stone-500 dark:text-stone-400">仅创建支付订单，支付成功后才会开通权益。</p>
+                                        <p className="mt-3 text-center text-xs leading-5 text-stone-500 dark:text-stone-400">{t("payHint")}</p>
                                     </div>
                                 </div>
                             </>
@@ -276,19 +277,19 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
                                 <span className="grid size-16 place-items-center rounded-2xl bg-[#eef2f7] text-[#52627a] dark:bg-[#66758e]/15 dark:text-[#d8dee8]">
                                     <CheckCircle2 className="size-8" />
                                 </span>
-                                <h2 className="mt-5 text-2xl font-semibold">支付订单已创建</h2>
-                                <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">订单号 {checkout.orderNo}</p>
+                                <h2 className="mt-5 text-2xl font-semibold">{t("orderCreated")}</h2>
+                                <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">{t("orderNoDisplay", { orderNo: checkout.orderNo })}</p>
                                 {checkout.qrContent ? <QRCode className="mt-6" value={checkout.qrContent} size={190} /> : null}
                                 <div className="mt-7 grid w-full max-w-md gap-3 sm:grid-cols-2">
-                                    <Button icon={<Copy className="size-4" />} onClick={() => copyText(checkout.qrContent || checkout.url || checkout.orderNo, "支付信息已复制")}>
-                                        复制支付信息
+                                    <Button icon={<Copy className="size-4" />} onClick={() => copyText(checkout.qrContent || checkout.url || checkout.orderNo, t("paymentInfoCopied"))}>
+                                        {t("copyPaymentInfo")}
                                     </Button>
                                     <Button type="primary" className="profile-primary-button" icon={<ExternalLink className="size-4" />} onClick={openCheckout}>
-                                        {checkout.kind === "manual" ? "查看订单说明" : "前往支付"}
+                                        {checkout.kind === "manual" ? t("viewOrderInstructions") : t("goToPay")}
                                     </Button>
                                 </div>
                                 <Link href="/profile?section=orders" className="mt-5 text-sm font-medium text-stone-500 hover:text-stone-950 dark:text-stone-400 dark:hover:text-white">
-                                    返回个人中心查看订单
+                                    {t("backToProfileOrders")}
                                 </Link>
                             </div>
                         )}

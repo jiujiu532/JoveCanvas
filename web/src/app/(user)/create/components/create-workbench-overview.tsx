@@ -3,6 +3,7 @@
 import { ArrowUpRight, CheckCircle2, FileImage, LoaderCircle, Maximize2, RefreshCw, Video } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { AgentMediaPreview } from "@/components/agent/agent-media-preview";
 import { browserReadableMediaUrl } from "@/lib/browser-media-url";
@@ -17,6 +18,7 @@ const sectionHintClass = "mt-1 text-xs text-[#8b949f] dark:text-[#7f8996]";
 const panelClass = "rounded-2xl border border-[#e2e7eb] bg-white dark:border-[#2b3037] dark:bg-[#181b20]";
 
 export function CreateWorkbenchOverview() {
+    const t = useTranslations("workspace.create.overview");
     const { latestProject, runningTasks, recentAssets, loading, error, reload } = useCreateWorkbenchOverview();
 
     return (
@@ -25,12 +27,12 @@ export function CreateWorkbenchOverview() {
                 <div className="flex items-end justify-between gap-3 border-b border-[#e8ebef] pb-3 dark:border-[#292d33]">
                     <div>
                         <h2 id="create-projects-heading" className={sectionTitleClass}>
-                            项目与任务
+                            {t("projectsAndTasks")}
                         </h2>
-                        <p className={sectionHintClass}>回到最近的项目，或查看仍在运行的任务</p>
+                        <p className={sectionHintClass}>{t("projectsAndTasksHint")}</p>
                     </div>
                     <Link href="/canvas" className="inline-flex shrink-0 items-center gap-1 text-xs text-[#697381] transition hover:text-[#20242a] dark:text-[#9aa3af] dark:hover:text-white">
-                        全部项目 <ArrowUpRight className="size-3.5" />
+                        {t("allProjects")} <ArrowUpRight className="size-3.5" />
                     </Link>
                 </div>
                 <div className="mt-2 grid gap-2 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.9fr)] sm:mt-3 sm:gap-3">
@@ -43,15 +45,15 @@ export function CreateWorkbenchOverview() {
                 <div className="flex items-end justify-between gap-3 border-b border-[#e8ebef] pb-3 dark:border-[#292d33]">
                     <div>
                         <h2 id="create-assets-heading" className={sectionTitleClass}>
-                            最近生成
+                            {t("recentGenerations")}
                         </h2>
-                        <p className={sectionHintClass}>点击图片或视频可直接放大查看</p>
+                        <p className={sectionHintClass}>{t("recentGenerationsHint")}</p>
                     </div>
                     <Link href="/assets" className="inline-flex shrink-0 items-center gap-1 text-xs text-[#697381] transition hover:text-[#20242a] dark:text-[#9aa3af] dark:hover:text-white">
-                        查看素材库 <ArrowUpRight className="size-3.5" />
+                        {t("viewAssetLibrary")} <ArrowUpRight className="size-3.5" />
                     </Link>
                 </div>
-                {loading ? <OverviewLoading label="正在读取最近生成..." /> : null}
+                {loading ? <OverviewLoading label={t("loadingRecentGenerations")} /> : null}
                 {!loading && error ? <OverviewError message={error} onRetry={reload} /> : null}
                 {!loading && !error && recentAssets.length ? (
                     <div className="grid grid-cols-2 gap-2 pt-2 sm:grid-cols-3 sm:gap-3 sm:pt-3 lg:grid-cols-4">
@@ -60,19 +62,21 @@ export function CreateWorkbenchOverview() {
                         ))}
                     </div>
                 ) : null}
-                {!loading && !error && !recentAssets.length ? <OverviewEmpty label="完成一次图片或视频生成后，结果会出现在这里" /> : null}
+                {!loading && !error && !recentAssets.length ? <OverviewEmpty label={t("noRecentGenerations")} /> : null}
             </section>
 
-            {loading ? <span className="sr-only">正在加载工作台概览</span> : null}
+            {loading ? <span className="sr-only">{t("loadingOverview")}</span> : null}
         </div>
     );
 }
 
 function LatestProjectCard({ project, loading, error, onRetry }: { project?: ReturnType<typeof useCreateWorkbenchOverview>["latestProject"]; loading: boolean; error?: string; onRetry: () => void }) {
+    const t = useTranslations("workspace.create.overview");
+    const locale = useLocale();
     if (loading)
         return (
             <div className={cn(panelClass, "min-h-24 p-2.5 sm:min-h-48 sm:p-5")}>
-                <OverviewLoading label="正在读取画布项目..." compact />
+                <OverviewLoading label={t("loadingCanvasProjects")} compact />
             </div>
         );
     if (error)
@@ -84,7 +88,7 @@ function LatestProjectCard({ project, loading, error, onRetry }: { project?: Ret
     if (!project)
         return (
             <div className={cn(panelClass, "flex min-h-24 items-center p-2.5 sm:min-h-48 sm:p-5")}>
-                <OverviewEmpty label="创建第一个 Canvas 项目后，会在这里继续" compact />
+                <OverviewEmpty label={t("createFirstCanvasProject")} compact />
             </div>
         );
 
@@ -99,19 +103,17 @@ function LatestProjectCard({ project, loading, error, onRetry }: { project?: Ret
             <div className="relative min-h-28 overflow-hidden bg-[#eef1f4] sm:min-h-44 dark:bg-[#252a31]">
                 <CanvasProjectCover previews={project.previews} />
                 <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-md bg-black/60 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
-                    <Maximize2 className="size-3" /> Canvas 项目
+                    <Maximize2 className="size-3" /> {t("canvasProject")}
                 </span>
             </div>
             <div className="flex min-w-0 flex-col justify-between gap-1.5 p-2.5 sm:gap-4 sm:p-5">
                 <div className="min-w-0">
-                    <p className="text-[11px] text-[#8b949f] dark:text-[#7f8996]">最近编辑 · {formatRecentTime(project.updatedAt)}</p>
-                    <h3 className="mt-2 truncate text-[17px] font-semibold text-[#20242a] dark:text-[#f3f5f7]">{project.title || "未命名项目"}</h3>
-                    <p className="mt-2 text-xs text-[#697381] dark:text-[#9aa3af]">
-                        {project.nodeCount} 个节点 · {project.connectionCount} 条连线
-                    </p>
+                    <p className="text-[11px] text-[#8b949f] dark:text-[#7f8996]">{t("recentlyEdited", { time: formatRecentTime(project.updatedAt, locale) })}</p>
+                    <h3 className="mt-2 truncate text-[17px] font-semibold text-[#20242a] dark:text-[#f3f5f7]">{project.title || t("untitledProject")}</h3>
+                    <p className="mt-2 text-xs text-[#697381] dark:text-[#9aa3af]">{t("nodeConnectionCount", { nodes: project.nodeCount, connections: project.connectionCount })}</p>
                 </div>
                 <span className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-[#20242a] px-2.5 py-1.5 text-xs font-semibold text-white transition group-hover:bg-[#343b44] sm:px-3 sm:py-2 dark:bg-[#f3f5f7] dark:text-[#20242a] dark:group-hover:bg-white">
-                    继续编辑 <ArrowUpRight className="size-3.5" />
+                    {t("continueEditing")} <ArrowUpRight className="size-3.5" />
                 </span>
             </div>
         </Link>
@@ -141,6 +143,7 @@ function CanvasProjectCover({ previews }: { previews: CreateOverviewMedia[] }) {
 }
 
 function RecentAssetCard({ asset }: { asset: CreateOverviewAsset }) {
+    const locale = useLocale();
     return (
         <div className="group min-w-0 overflow-hidden rounded-xl border border-[#e2e7eb] bg-white transition hover:border-[#cbd2d9] hover:shadow-[0_10px_26px_rgba(32,36,42,0.08)] dark:border-[#2b3037] dark:bg-[#181b20] dark:hover:border-[#3b424c] dark:hover:shadow-black/25">
             <div className="relative overflow-hidden bg-[#eef1f4] dark:bg-[#252a31]">
@@ -151,20 +154,21 @@ function RecentAssetCard({ asset }: { asset: CreateOverviewAsset }) {
             </div>
             <div className="min-w-0 px-3 py-2.5">
                 <p className="truncate text-xs font-medium text-[#343b44] dark:text-[#dce1e7]">{asset.title}</p>
-                <p className="mt-1 text-[11px] text-[#9aa2ad] dark:text-[#737d89]">{formatRecentTime(asset.createdAt)}</p>
+                <p className="mt-1 text-[11px] text-[#9aa2ad] dark:text-[#737d89]">{formatRecentTime(asset.createdAt, locale)}</p>
             </div>
         </div>
     );
 }
 
 function RunningTasksCard({ tasks, loading, error, onRetry }: { tasks: CreateOverviewTask[]; loading: boolean; error?: string; onRetry: () => void }) {
+    const t = useTranslations("workspace.create.overview");
     return (
         <div className={cn(panelClass, "min-h-28 p-3 sm:min-h-48 sm:p-5")}>
             <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold text-[#20242a] dark:text-[#f3f5f7]">运行任务</h3>
+                <h3 className="text-sm font-semibold text-[#20242a] dark:text-[#f3f5f7]">{t("runningTasks")}</h3>
                 {tasks.length ? <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-[#edf2ff] px-2 py-1 text-[11px] font-semibold text-[#5471c8] dark:bg-[#29344f] dark:text-[#b8c7ff]">{tasks.length}</span> : null}
             </div>
-            {loading ? <OverviewLoading label="正在读取运行任务..." compact /> : null}
+            {loading ? <OverviewLoading label={t("loadingRunningTasks")} compact /> : null}
             {!loading && error ? <OverviewError message={error} onRetry={onRetry} compact /> : null}
             {!loading && !error && tasks.length ? (
                 <div className="mt-3 divide-y divide-[#edf0f2] dark:divide-[#292d33]">
@@ -176,7 +180,7 @@ function RunningTasksCard({ tasks, loading, error, onRetry }: { tasks: CreateOve
             {!loading && !error && !tasks.length ? (
                 <div className="flex min-h-20 flex-col items-center justify-center gap-1.5 text-center text-xs text-[#9aa2ad] sm:min-h-32 dark:text-[#737d89]">
                     <CheckCircle2 className="size-6 text-[#94a3b8] dark:text-[#64748b]" />
-                    <span>当前没有运行中的任务</span>
+                    <span>{t("noRunningTasks")}</span>
                 </div>
             ) : null}
         </div>
@@ -184,6 +188,8 @@ function RunningTasksCard({ tasks, loading, error, onRetry }: { tasks: CreateOve
 }
 
 function TaskRow({ task }: { task: CreateOverviewTask }) {
+    const t = useTranslations("workspace.create.overview");
+    const locale = useLocale();
     const isImage = task.kind === "image";
     const href = task.source === "canvas" ? "/canvas" : isImage ? "/image" : "/video";
     const Icon = isImage ? FileImage : Video;
@@ -193,8 +199,8 @@ function TaskRow({ task }: { task: CreateOverviewTask }) {
                 <Icon className="size-4" />
             </span>
             <span className="min-w-0 flex-1">
-                <span className="block truncate text-xs font-medium text-[#343b44] group-hover:text-[#20242a] dark:text-[#dce1e7] dark:group-hover:text-white">{task.title || (isImage ? "图片生成" : "视频生成")}</span>
-                <span className="mt-1 block truncate text-[11px] text-[#9aa2ad] dark:text-[#737d89]">{formatRecentTime(task.createdAt)} · 运行中</span>
+                <span className="block truncate text-xs font-medium text-[#343b44] group-hover:text-[#20242a] dark:text-[#dce1e7] dark:group-hover:text-white">{task.title || (isImage ? t("imageGeneration") : t("videoGeneration"))}</span>
+                <span className="mt-1 block truncate text-[11px] text-[#9aa2ad] dark:text-[#737d89]">{t("runningAt", { time: formatRecentTime(task.createdAt, locale) })}</span>
             </span>
             <LoaderCircle className="size-4 shrink-0 animate-spin text-[#6e87db]" />
         </Link>
@@ -215,19 +221,20 @@ function OverviewEmpty({ label, compact = false }: { label: string; compact?: bo
 }
 
 function OverviewError({ message, onRetry, compact = false }: { message: string; onRetry: () => void; compact?: boolean }) {
+    const t = useTranslations("workspace.create.overview");
     return (
         <div className={cn("flex flex-col items-center justify-center gap-2 text-center", compact ? "min-h-20 sm:min-h-32" : "min-h-20 pt-2 sm:min-h-36 sm:pt-3")}>
             <p className="max-w-md text-xs text-[#9a5b5b] dark:text-[#d49a9a]">{message}</p>
             <button type="button" onClick={onRetry} className="inline-flex items-center gap-1.5 text-xs font-medium text-[#697381] transition hover:text-[#20242a] dark:text-[#9aa3af] dark:hover:text-white">
                 <RefreshCw className="size-3.5" />
-                重新读取
+                {t("retryLoading")}
             </button>
         </div>
     );
 }
 
-function formatRecentTime(value: string) {
+function formatRecentTime(value: string, locale: string) {
     const time = Date.parse(value);
-    if (!Number.isFinite(time)) return "刚刚";
-    return new Date(time).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    if (!Number.isFinite(time)) return locale === "zh" ? "刚刚" : "just now";
+    return new Date(time).toLocaleString(locale === "zh" ? "zh-CN" : "en-US", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
 }

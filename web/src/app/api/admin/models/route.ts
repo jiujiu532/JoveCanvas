@@ -10,6 +10,7 @@ import { buildModelsUrl, isModelCatalogUnsupported, parseModels } from "@/lib/se
 import { isProviderBusinessError, readProviderError } from "@/lib/server/provider-task-config";
 import { buildGlobalAiOpcSelection, isGlobalAiOpcBaseUrl, resolveGlobalAiOpcCatalogPresets } from "@/lib/globalaiopc-catalog";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -41,8 +42,8 @@ const modelFetchCooldowns = (globalCooldownStore.__vozebProModelFetchCooldowns ?
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     const [body, settings] = await Promise.all([readJsonBody<ModelsPayload>(request), getAuthSettings()]);
     const { baseUrl, apiKey, apiFormat, savedChannel } = resolveAdminChannelCredentials(settings, body);
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
 
     const cooldownKey = `${currentUser.id}:${baseUrl.toLowerCase()}`;
     const waitMs = (modelFetchCooldowns.get(cooldownKey) || 0) - Date.now();
-    if (waitMs > 0) return NextResponse.json({ error: `拉取模型过于频繁，请 ${Math.ceil(waitMs / 1000)} 秒后再试` }, { status: 429 });
+    if (waitMs > 0) return NextResponse.json({ error: await serverMessage("common.rateLimitedWithSeconds", { feature: "拉取模型", seconds: Math.ceil(waitMs / 1000) }) }, { status: 429 });
     modelFetchCooldowns.set(cooldownKey, Date.now() + MODEL_FETCH_COOLDOWN_MS);
 
     try {

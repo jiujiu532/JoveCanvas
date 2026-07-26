@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { isUsableAdminChannelApiKey } from "@/lib/server/admin-channel-config";
 import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-log-store";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -19,8 +20,8 @@ const noStoreHeaders = {
 
 export async function GET(request: Request, context: RouteContext) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return json({ error: "请先登录" }, 401);
-    if (currentUser.role !== "admin") return json({ error: "需要管理员权限" }, 403);
+    if (!currentUser) return json({ error: await serverMessage("common.pleaseLogin") }, 401);
+    if (currentUser.role !== "admin") return json({ error: await serverMessage("common.adminRequired") }, 403);
 
     try {
         const { id } = await context.params;

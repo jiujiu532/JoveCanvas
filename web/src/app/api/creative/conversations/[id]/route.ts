@@ -4,9 +4,10 @@ import { readJsonBody } from "@/lib/auth/request";
 import { getCurrentUser } from "@/lib/auth/session";
 import { CreativeRuntimeServiceError, getConversationForUser, getWorkbenchSessionForUser, updateConversationForUser } from "@/lib/server/creative-runtime-service";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     try {
         const id = (await params).id;
         const url = new URL(request.url);
@@ -23,7 +24,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     try {
         const conversation = await updateConversationForUser(user.id, (await params).id, await readJsonBody<unknown>(request));
         return NextResponse.json({ code: 0, data: { conversation }, msg: "OK" });

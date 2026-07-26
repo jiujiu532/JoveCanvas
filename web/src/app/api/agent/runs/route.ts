@@ -10,9 +10,10 @@ import { createAgentRun, getAgentRunByClientRequestId, listAgentRuns } from "@/l
 import { CreativeStoreConflict } from "@/lib/server/creative-runtime-store";
 import { resolveInternalOrigin } from "@/lib/server/internal-origin";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export async function GET(request: Request) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const url = new URL(request.url);
     const projectId = url.searchParams.get("projectId")?.trim() || "";
     const conversationId = url.searchParams.get("conversationId")?.trim() || "";
@@ -25,13 +26,13 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     try {
         const input = normalizeCreativeRunRequest(await readJsonBody<unknown>(request));
         const existing = await getAgentRunByClientRequestId(user.id, input.clientRequestId);
         if (existing) return NextResponse.json({ code: 0, data: { run: existing, created: false }, msg: "Agent 任务已存在" });
         const rate = await checkRateLimit(`agent-run:${user.id}`, { maxRequests: 10, windowMs: 60 * 1000 });
-        if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: "Agent 请求过于频繁，请稍后重试" }, { status: 429 });
+        if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: "Agent 请求" }) }, { status: 429 });
         const settings = await getAuthSettings();
         const response = await withGenerationConcurrencyLimit(user.id, "agent", 10 * 60 * 1000, settings.generationConcurrency.agent, async () => {
             const created = await createAgentRun(user.id, input);

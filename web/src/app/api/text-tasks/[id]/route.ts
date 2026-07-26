@@ -5,6 +5,7 @@ import { getTextTask, transitionTextTask } from "@/lib/server/text-task-store";
 import { pointsResponseHeaders } from "@/lib/server/points-response";
 import { generationModelId } from "@/lib/server/generation-channel";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ type RouteContext = {
 
 export async function GET(_request: Request, context: RouteContext) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const { id } = await context.params;
     const task = await getTextTask(id);

@@ -6,12 +6,13 @@ import { pointsResponseHeaders } from "@/lib/server/points-response";
 import { fetchInternalApi, resolveInternalOrigin } from "@/lib/server/internal-origin";
 import { generationModelId } from "@/lib/server/generation-channel";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const task = await getAudioTask((await params).id);
     if (!task || (task.userId !== user.id && user.role !== "admin")) return NextResponse.json({ error: "任务不存在或已过期" }, { status: 404 });
     const shouldRefund = Boolean(task.billing?.pointsCost && !task.billing.refunded && (task.status === "error" || task.status === "cancelled"));

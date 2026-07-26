@@ -5,13 +5,14 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { isBillingInputError, listAdminBillingOrders } from "@/lib/server/billing-service";
 import type { BillingOrderStatus } from "@/lib/server/database";
 
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     try {
         const params = request.nextUrl.searchParams;
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
         });
         return NextResponse.json({ orders: result.items, total: result.total, page: result.page, pageSize: result.pageSize });
     } catch (error) {
-        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin list billing orders failed", error);
         return NextResponse.json({ error: "获取订单失败" }, { status: 500 });
     }

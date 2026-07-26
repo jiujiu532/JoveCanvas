@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Bell, ChevronDown, Megaphone, RotateCcw, X } from "lucide-react";
 import { Modal } from "antd";
+import { useTranslations } from "next-intl";
 
 import { useAnnouncementReadState } from "@/hooks/use-announcement-read-state";
 import { useAnnouncements } from "@/hooks/use-announcements";
@@ -13,6 +14,7 @@ import { cn } from "@/lib/utils";
 import type { PublicAnnouncement } from "@/services/api/announcements";
 
 export function AnnouncementNotificationCenter({ compact, buttonClassName, buttonStyle, onOpen }: { compact: boolean; buttonClassName: string; buttonStyle?: CSSProperties; onOpen?: () => void }) {
+    const t = useTranslations("layout");
     const { data: announcements = [], error, isFetching, refetch } = useAnnouncements();
     const { readIds, hydrated, markRead } = useAnnouncementReadState();
     const [open, setOpen] = useState(false);
@@ -40,8 +42,8 @@ export function AnnouncementNotificationCenter({ compact, buttonClassName, butto
             className={cn(buttonClassName, "relative")}
             style={buttonStyle}
             onClick={() => handleOpenChange(true)}
-            aria-label={unreadAnnouncements.length ? `公告通知，${unreadAnnouncements.length} 条未读` : "公告通知"}
-            title="公告通知"
+            aria-label={unreadAnnouncements.length ? t("announcementCenter.unreadAria", { count: unreadAnnouncements.length }) : t("announcementCenter.ariaDefault")}
+            title={t("announcementCenter.title")}
             aria-expanded={open}
         >
             <Bell className="size-4" />
@@ -103,24 +105,25 @@ function AnnouncementPanel({
     onExpand: (id: string) => void;
     onRetry: () => void;
 }) {
+    const t = useTranslations("layout");
     return (
-        <section className="flex max-h-[72dvh] min-h-0 w-full flex-col bg-white text-[#20242a] dark:bg-[#15181d] dark:text-[#f3f5f7] sm:max-h-[560px]" aria-label="公告通知中心">
+        <section className="flex max-h-[72dvh] min-h-0 w-full flex-col bg-white text-[#20242a] dark:bg-[#15181d] dark:text-[#f3f5f7] sm:max-h-[560px]" aria-label={t("announcementCenter.ariaLabel")}>
             <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#e8ebef] px-4 py-3.5 dark:border-[#2a2f36]">
                 <div className="flex min-w-0 items-center gap-3">
                     <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#eef1f5] text-[#536178] dark:bg-[#232831] dark:text-[#d8dee8]">
                         <Megaphone className="size-[17px]" />
                     </span>
                     <div className="min-w-0">
-                        <h2 className="text-sm font-semibold tracking-tight">通知中心</h2>
-                        <p className="mt-0.5 text-[11px] text-[#8a939f] dark:text-[#8f98a5]">站点更新与服务公告</p>
+                        <h2 className="text-sm font-semibold tracking-tight">{t("announcementCenter.centerTitle")}</h2>
+                        <p className="mt-0.5 text-[11px] text-[#8a939f] dark:text-[#8f98a5]">{t("announcementCenter.centerSubtitle")}</p>
                     </div>
                 </div>
                 <button
                     type="button"
                     className="grid size-8 shrink-0 place-items-center rounded-lg text-[#7c8591] transition hover:bg-[#f1f3f5] hover:text-[#20242a] dark:text-[#9aa3af] dark:hover:bg-[#22262c] dark:hover:text-white"
                     onClick={onClose}
-                    aria-label="关闭通知中心"
-                    title="关闭"
+                    aria-label={t("announcementCenter.closeCenter")}
+                    title={t("announcementCenter.close")}
                 >
                     <X className="size-4" />
                 </button>
@@ -139,8 +142,8 @@ function AnnouncementPanel({
                     <div className="grid min-h-40 place-items-center px-5 py-10 text-center">
                         <div>
                             <Bell className="mx-auto size-5 text-[#a4acb6]" />
-                            <p className="mt-3 text-sm font-medium">暂时没有新公告</p>
-                            <p className="mt-1 text-xs text-[#8a939f] dark:text-[#8f98a5]">后续通知会在这里集中展示</p>
+                            <p className="mt-3 text-sm font-medium">{t("announcementCenter.emptyTitle")}</p>
+                            <p className="mt-1 text-xs text-[#8a939f] dark:text-[#8f98a5]">{t("announcementCenter.emptyDesc")}</p>
                         </div>
                     </div>
                 ) : null}
@@ -150,7 +153,7 @@ function AnnouncementPanel({
                 onClick={onClose}
                 className="flex h-11 shrink-0 items-center justify-center border-t border-[#e8ebef] text-xs font-semibold text-[#59677d] transition hover:bg-[#f7f8fa] hover:text-[#20242a] dark:border-[#2a2f36] dark:text-[#c2c8d1] dark:hover:bg-[#1d2127] dark:hover:text-white"
             >
-                查看全部公告
+                {t("announcementCenter.viewAll")}
             </Link>
         </section>
     );
@@ -173,8 +176,9 @@ function AnnouncementRow({ announcement, expanded, unread, onExpand }: { announc
 }
 
 function AnnouncementLoading() {
+    const t = useTranslations("layout");
     return (
-        <div className="divide-y divide-[#edf0f3] dark:divide-[#272c33]" aria-label="公告加载中">
+        <div className="divide-y divide-[#edf0f3] dark:divide-[#272c33]" aria-label={t("announcementCenter.loadingAria")}>
             {[0, 1, 2].map((item) => (
                 <div key={item} className="animate-pulse px-4 py-4">
                     <div className="ml-5 h-3 w-2/3 rounded bg-[#e8ebef] dark:bg-[#2a3038]" />
@@ -187,16 +191,17 @@ function AnnouncementLoading() {
 }
 
 function AnnouncementError({ onRetry }: { onRetry: () => void }) {
+    const t = useTranslations("layout");
     return (
         <div className="grid min-h-40 place-items-center px-5 py-10 text-center">
             <div>
-                <p className="text-sm font-medium">公告暂时无法加载</p>
+                <p className="text-sm font-medium">{t("announcementCenter.errorTitle")}</p>
                 <button
                     type="button"
                     className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#dfe3e8] px-3 text-xs font-semibold text-[#59616c] transition hover:bg-[#f3f5f7] hover:text-[#20242a] dark:border-[#343a43] dark:text-[#c4cad2] dark:hover:bg-[#22262c] dark:hover:text-white"
                     onClick={onRetry}
                 >
-                    <RotateCcw className="size-3.5" /> 重新加载
+                    <RotateCcw className="size-3.5" /> {t("announcementCenter.retry")}
                 </button>
             </div>
         </div>

@@ -5,6 +5,7 @@ import { readJsonBody } from "@/lib/auth/request";
 import { getCurrentUser } from "@/lib/auth/session";
 import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-log-store";
 
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -14,8 +15,8 @@ type RouteContext = {
 
 async function requireAdmin() {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return { response: NextResponse.json({ error: "请先登录" }, { status: 401 }) };
-    if (currentUser.role !== "admin") return { response: NextResponse.json({ error: "需要管理员权限" }, { status: 403 }) };
+    if (!currentUser) return { response: NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 }) };
+    if (currentUser.role !== "admin") return { response: NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 }) };
     return { currentUser };
 }
 
@@ -43,7 +44,7 @@ export async function PATCH(request: Request, context: RouteContext) {
             target: { type: "cdk" },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Update CDK failed", error);
         return NextResponse.json({ error: "更新 CDK 失败" }, { status: 500 });
     }
@@ -72,7 +73,7 @@ export async function DELETE(request: Request, context: RouteContext) {
             target: { type: "cdk" },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Delete CDK failed", error);
         return NextResponse.json({ error: "删除 CDK 失败" }, { status: 500 });
     }

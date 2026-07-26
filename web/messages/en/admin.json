@@ -1,1 +1,308 @@
-{}
+{
+    "overview": {
+        "metrics": {
+            "totalUsers": "Total Users",
+            "totalUsersDetail": "{count} active accounts",
+            "channelConfig": "Endpoint Config",
+            "channelConfigDetail": "{count} channels total",
+            "paidAmount": "Amount Received",
+            "paidAmountDetail": "{count} paid orders",
+            "dailyCalls": "Today's Requests",
+            "dailyCallsDetail": "{count} requests over the last {days} days"
+        },
+        "breakdown": {
+            "title": "Operations Breakdown",
+            "description": "Bring users, revenue, model capabilities, and setup progress into one dashboard for business-style monitoring.",
+            "admins": "Admins {count}",
+            "prompts": "Prompts {count}",
+            "assets": "Assets {count}"
+        },
+        "resource": {
+            "successCalls": "Successful Calls",
+            "successRateDetail": "Success rate {rate}%",
+            "activeUsers": "Active Users",
+            "activeUsersDetail": "Unique users over the last {days} days",
+            "enabledProducts": "Products Live",
+            "enabledProductsDetail": "{count} plans on sale",
+            "localAssets": "Local Preview Assets",
+            "awaitingStats": "Awaiting stats",
+            "timesValue": "{count} calls",
+            "peopleValue": "{count} users",
+            "countValue": "{count}"
+        },
+        "modelDistribution": {
+            "title": "Model Distribution",
+            "description": "Request share by model over the last 7 days, to help tune default models and plan costs.",
+            "totalLabel": "Total Requests",
+            "model": "Model",
+            "requests": "Requests",
+            "percent": "Share",
+            "empty": "No model requests yet"
+        },
+        "entrySource": {
+            "title": "Entry Source",
+            "description": "See whether requests come from the canvas, image workbench, or video studio.",
+            "empty": "No entry records yet",
+            "totalLabel": "Entry Requests"
+        },
+        "contentType": {
+            "title": "Content Type",
+            "description": "Track generation types like image and video for operations insight.",
+            "empty": "No type records yet",
+            "totalLabel": "Type Requests"
+        },
+        "businessHealth": {
+            "title": "Business Health",
+            "description": "The dashboard homepage only shows operational signals; media file maintenance has moved to the Local Media page.",
+            "plansOnSale": "Plans On Sale",
+            "plansOnSaleDetail": "{count} users on a plan",
+            "enabledChannels": "Enabled Model Channels",
+            "failedCalls": "Failed Calls",
+            "failedCallsDetail": "Use this to investigate model, quota, or upstream issues",
+            "assetIssues": "Asset Issues",
+            "assetIssuesDetail": "Log entry exists but the file is missing"
+        },
+        "usageTrend": {
+            "title": "Request Trend",
+            "description": "User request curve over the last 7 days, to help judge growth, anomalies, and endpoint stability.",
+            "refresh": "Refresh Trend",
+            "requestVolume": "Request Volume",
+            "peak": "Peak {count}",
+            "loading": "Loading"
+        },
+        "unknownModel": "Unrecorded model",
+        "unknown": "Unrecorded"
+    },
+    "nav": {
+        "consoleLabel": "Admin Console",
+        "returnToCreate": "Back to Agent Studio",
+        "collapseSidebar": "Collapse sidebar",
+        "expandSidebar": "Expand sidebar",
+        "collapseSidebarShort": "Collapse sidebar",
+        "expandSidebarShort": "Expand sidebar",
+        "groups": {
+            "businessAnalytics": "Business Analytics",
+            "productOperations": "Product Operations",
+            "finance": "Finance",
+            "upstreamConfig": "Upstream Config",
+            "system": "System",
+            "storageBackup": "Storage & Backup",
+            "contentOperations": "Content Operations"
+        },
+        "sections": {
+            "overview": { "label": "Dashboard", "description": "View user growth, request trends, revenue overview, and model request distribution.", "shortDescription": "Overview" },
+            "users": { "label": "Users", "description": "Manage user roles, account status, plan assignment, and points balance.", "shortDescription": "Accounts & entitlements" },
+            "logs": { "label": "Activity Log", "description": "Track user generation tasks, model calls, entry sources, and failure reasons.", "shortDescription": "Generation & models" },
+            "generationOperations": { "label": "Generation Ops", "description": "View generation tasks, sessions, projects, channel health, and point costs in one place.", "shortDescription": "Tasks & channels" },
+            "products": { "label": "Products", "description": "Configure plans, pricing, points entitlements, and validity shown in the top-up center.", "shortDescription": "Products & entitlements" },
+            "orders": { "label": "Orders", "description": "Process top-up orders, payment confirmation, refund flags, and basic reconciliation.", "shortDescription": "Payments & aftersales" },
+            "points": { "label": "Points Rules", "description": "Configure free daily points, base model charges, and generation parameter multipliers.", "shortDescription": "Quota & charges" },
+            "payments": { "label": "Payment Channels", "description": "Configure Stripe, Alipay, WeChat Pay, PayPly, and manual confirmation channels.", "shortDescription": "Keys & callbacks" },
+            "cdk": { "label": "CDK Codes", "description": "Generate and manage points or plan redemption codes for promotions and aftersales.", "shortDescription": "Redemption codes" },
+            "wallet": { "label": "Ledger", "description": "View fund flow, points liabilities, and revenue/refund reconciliation.", "shortDescription": "Revenue reconciliation" },
+            "site": { "label": "Site Profile", "description": "Manage the site title, logo, SEO title, description, and keywords.", "shortDescription": "Brand & SEO" },
+            "channels": { "label": "Model Channels", "description": "Add upstream endpoints, fetch models, test availability, and set default models.", "shortDescription": "Upstream endpoints" },
+            "skills": { "label": "Agent Skills", "description": "Manage Agent skills, trigger words, sources, and execution rules.", "shortDescription": "Specialized skills" },
+            "settings": { "label": "Settings", "description": "Manage registration policy, email service, and generation defaults.", "shortDescription": "Account & generation" },
+            "accountDeletion": { "label": "Deletion Requests", "description": "Review account deletion requests, complete identity verification, approve or reject, and keep audit records.", "shortDescription": "User rights requests" },
+            "mediaStorage": { "label": "Local Media", "description": "View server images, videos, and audio files; manage retention and long-term storage.", "shortDescription": "Files & retention" },
+            "externalStorage": { "label": "External Storage", "description": "Configure S3-compatible storage, migrate local media, and manage external objects.", "shortDescription": "S3 & OSS" },
+            "backup": { "label": "Backups", "description": "Export and restore anonymized business data, distinguishing full-database and media backup scope.", "shortDescription": "Import & restore" },
+            "updates": { "label": "Updates", "description": "View version updates, changelogs, and the GitHub open-source repository in one place.", "shortDescription": "Upgrade & maintenance" },
+            "announcements": { "label": "Announcements", "description": "Publish site announcements and set homepage or post-login popup reach.", "shortDescription": "Popup reach" },
+            "prompts": { "label": "Prompt Ops", "description": "Maintain public prompts shown in the user-facing prompt library.", "shortDescription": "Public assets" }
+        }
+    },
+    "common": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "confirm": "Confirm",
+        "edit": "Edit",
+        "close": "Close"
+    },
+    "users": {
+        "title": "User Management",
+        "description": "Adjust roles, account status, and points balance.",
+        "addUser": "Add User",
+        "searchPlaceholder": "Search by nickname, username, email, role, or status",
+        "selected": "Selected",
+        "total": "of",
+        "bulkDelete": "Bulk Delete",
+        "bulkDeleteConfirmTitle": "Bulk delete selected users?",
+        "bulkDeleteConfirmDescription": "This clears each user's sessions, points, and quota records one by one. Your own account and the last remaining admin cannot be deleted.",
+        "cannotSelectSelf": "You can't select the currently signed-in account",
+        "table": {
+            "user": "User",
+            "role": "Role",
+            "roleAdmin": "Admin",
+            "roleUser": "User",
+            "status": "Status",
+            "statusActive": "Active",
+            "statusDisabled": "Disabled",
+            "points": "Points",
+            "total": "Total",
+            "today": "Today",
+            "permanent": "Permanent",
+            "time": "Time",
+            "registered": "Joined",
+            "active": "Last active",
+            "neverLoggedIn": "Never logged in",
+            "noEmail": "No email bound",
+            "actions": "Actions",
+            "manage": "Manage",
+            "deleteConfirmTitle": "Delete this user?",
+            "deleteConfirmDescription": "This also clears the user's sessions, points, quota records, generation logs, and server-side files.",
+            "deleteOk": "Delete",
+            "deleteCancel": "Cancel",
+            "deleteAriaLabel": "Delete user {name}"
+        }
+    },
+    "prompts": {
+        "table": {
+            "title": "Prompt",
+            "category": "Category",
+            "actions": "Actions",
+            "deleteConfirmTitle": "Delete this public prompt?",
+            "deleteOk": "Delete",
+            "deleteCancel": "Cancel",
+            "deleteAriaLabel": "Delete prompt {name}"
+        }
+    },
+    "wallet": {
+        "title": "Ledger",
+        "description": "View revenue, refunds, points liabilities, and reconciliation. Plans, orders, and payment channels are managed separately.",
+        "refresh": "Refresh Ledger",
+        "metrics": {
+            "paidAmount": "Amount Received",
+            "paidAmountDetail": "{count} paid orders",
+            "pendingAmount": "Pending Amount",
+            "pendingAmountDetail": "{count} pending orders",
+            "refundedAmount": "Refund Expense",
+            "refundedAmountDetail": "{count} refunds flagged",
+            "userBalance": "User Points Balance",
+            "userBalanceDetail": "Total current points across all users"
+        },
+        "flow": {
+            "topupIncome": { "title": "Top-up Income", "description": "From {count} paid orders and successful payment records." },
+            "refundExpense": { "title": "Refund Expense", "description": "From {count} refunds flagged, used to reconcile net income." },
+            "netIncome": { "title": "Net Income", "description": "Paid order amount minus refunds flagged; can later connect to the payment provider's actual settlement flow." },
+            "pointsLiability": { "title": "Points Liability", "amount": "{count} points", "description": "Current points balance across all users, representing generation quota the platform still owes." }
+        },
+        "reconciliationNote": {
+            "title": "Ledger Scope Notes",
+            "description": "The ledger only covers revenue, refunds, points liabilities, and reconciliation. Products own product entitlements, Orders own payment and aftersales, and Payment Channels own keys and callbacks."
+        },
+        "mini": {
+            "totalOrdersLabel": "Total Orders",
+            "totalOrders": "{count} orders",
+            "reconciliationIssuesLabel": "Reconciliation Issues",
+            "reconciliationIssues": "{count} items",
+            "plansOnSaleLabel": "Plans On Sale",
+            "plansOnSale": "{count} plans",
+            "planUsersLabel": "Users With Plan",
+            "planUsers": "{count} users"
+        }
+    },
+    "points": {
+        "title": "Points Rules",
+        "description": "Configure free daily quota, base model charges, and image/video parameter multipliers in one place.",
+        "save": "Save Points Rules",
+        "saved": "Points rules saved",
+        "quota": {
+            "freeDailyPoints": {
+                "title": "Free Daily Points",
+                "description": "Users without a plan automatically get this every day, valid same-day only. Plan daily bonuses are set in product config and unaffected by this toggle.",
+                "statusLabel": "Status",
+                "on": "On",
+                "off": "Off",
+                "dailyQuota": "Daily Quota"
+            },
+            "modelCost": {
+                "title": "Base Model Charges",
+                "description": "Base model points are deducted first for each generation. Models with a custom value use it; all others use the shared default.",
+                "defaultLabel": "Default charge per call for other models",
+                "addLabel": "Add a custom charge for a model",
+                "addPlaceholder": "Enter any model name, e.g. grok-imagine-video",
+                "addButton": "Add Model",
+                "currentShowing": "Showing {capability} models. Each value is the base points deducted per call for that model.",
+                "manuallyAdded": "Manually added",
+                "deleteConfig": "Delete charge config",
+                "emptyState": "No {capability} models yet. Configure this capability under Model Channels first."
+            },
+            "multiplier": {
+                "title": "Generation Parameter Multipliers",
+                "description": "Final charge = model cost x image count/video task x matching multiplier. Unmatched custom parameters use a 1x multiplier.",
+                "imageQuality": "Image Quality",
+                "videoQuality": "Video Quality",
+                "videoSeconds": "Video Duration",
+                "smart": "Smart",
+                "customSecondsPlaceholder": "Custom duration",
+                "add": "Add",
+                "deleteCustomSeconds": "Delete custom duration"
+            },
+            "capability": { "text": "Text", "image": "Image", "video": "Video", "audio": "Audio" },
+            "imageQuality": { "auto": "Auto", "low": "Low", "medium": "Medium", "high": "High" }
+        }
+    },
+    "logs": {
+        "table": {
+            "time": "Time",
+            "kind": "Type",
+            "user": "User",
+            "source": "Entry",
+            "model": "Model",
+            "duration": "Duration",
+            "status": "Status",
+            "result": "Result",
+            "prompt": "Prompt",
+            "actions": "Actions",
+            "detail": "Details",
+            "deleteConfirmTitle": "Delete this generation log?",
+            "deleteOk": "Delete",
+            "deleteCancel": "Cancel"
+        },
+        "kind": { "image": "Image", "video": "Video" },
+        "source": {
+            "agent": "Agent Studio",
+            "canvas": "Canvas",
+            "drama": "Short Drama",
+            "videoWorkbench": "Video Studio",
+            "imageWorkbench": "Image Workbench",
+            "unknown": "Unknown entry"
+        },
+        "status": { "success": "Success", "failed": "Failed", "pending": "Generating" },
+        "detail": {
+            "count": "Count",
+            "countValue": "Succeeded {success} / Failed {fail} / Total {total}",
+            "errorInfo": "Error Details",
+            "result": "Generation Result",
+            "resultCount": "{count} results",
+            "noAccessibleMedia": "This log has no accessible media files.",
+            "noSuccessResult": "This log has no successful result, so there's no image or video to preview yet.",
+            "videoIndex": "Video {index}",
+            "imageIndex": "Image {index}",
+            "sizeUnrecorded": "Size not recorded"
+        }
+    },
+    "cdk": {
+        "table": {
+            "copy": "Copy",
+            "note": "Note: {note}",
+            "rules": "Redemption rule",
+            "points": "{count} points",
+            "redeemed": "Redeemed {count}/{max}",
+            "latestRedemption": "Latest redemption",
+            "noRedemption": "No redemptions yet",
+            "validity": "Validity",
+            "longTermValid": "No expiry",
+            "created": "Created {date}",
+            "actions": "Actions",
+            "detail": "Details",
+            "deleteConfirmTitle": "Delete this CDK?",
+            "deleteConfirmDescription": "Once deleted, users can no longer redeem this code. Existing points transactions are not removed.",
+            "deleteOk": "Delete",
+            "deleteCancel": "Cancel"
+        }
+    }
+}

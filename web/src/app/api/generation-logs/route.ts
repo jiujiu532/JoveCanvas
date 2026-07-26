@@ -5,12 +5,13 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { CreativeRuntimeServiceError, registerGenerationLogAssetsForUser } from "@/lib/server/creative-runtime-service";
 import { deleteGenerationLogs, listGenerationLogs, listUserGenerationLogsForDelete, recordGenerationLog, type GenerationLogAsset, type GenerationLogInput } from "@/lib/server/generation-log-store";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const url = new URL(request.url);
     const page = Number(url.searchParams.get("page") || 1);
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const body = await readJsonBody<Omit<GenerationLogInput, "userId" | "username" | "displayName"> & { conversationId?: string }>(request, 32 * 1024 * 1024);
     const conversationId = String(body.conversationId || "")
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const body = await readJsonBody<{ ids?: string[] }>(request);
     const requestedIds = Array.isArray(body.ids) ? Array.from(new Set(body.ids.map((id) => id.trim()).filter(Boolean))) : [];

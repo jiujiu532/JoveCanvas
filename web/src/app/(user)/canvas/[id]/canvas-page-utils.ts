@@ -109,12 +109,15 @@ export function audioExtension(mimeType?: string) {
     return "mp3";
 }
 
+// 纯 ts 模块无法调用 useTranslations，文案由调用方（组件/hook）传入的翻译函数提供
+export type CanvasTranslate = (key: string, values?: Record<string, string | number>) => string;
+
 export async function uploadCanvasImage(input: string | Blob): Promise<UploadedImage> {
     const image = await uploadImage(input);
     return { ...image, url: await resolveStoredImageDataUrl(image.storageKey, image.url) };
 }
 
-export async function uploadGeneratedCanvasImage(url: string, remoteFallback = "", serverFallback = ""): Promise<UploadedImage> {
+export async function uploadGeneratedCanvasImage(url: string, remoteFallback = "", serverFallback = "", t: CanvasTranslate): Promise<UploadedImage> {
     const remoteUrl = isRemoteGeneratedUrl(remoteFallback) ? remoteFallback : isRemoteGeneratedUrl(url) ? url : "";
     const serverUrl = isServerGeneratedUrl(serverFallback) ? serverFallback : isServerGeneratedUrl(url) ? url : "";
     const localUrl = isLocalGeneratedUrl(url) ? url : "";
@@ -127,7 +130,7 @@ export async function uploadGeneratedCanvasImage(url: string, remoteFallback = "
             // Try the next fallback source.
         }
     }
-    throw new Error("图片保存到服务器失败");
+    throw new Error(t("node.errors.saveImageFailed"));
 }
 
 export function imageMetadata(image: UploadedImage): CanvasNodeMetadata {
@@ -342,10 +345,10 @@ export function modelMatchesCanvasGenerationMode(model: string, mode: CanvasNode
     return modelMatchesCapability(model, mode);
 }
 
-export function resetInterruptedGeneration(nodes: CanvasNodeData[]) {
+export function resetInterruptedGeneration(nodes: CanvasNodeData[], t: CanvasTranslate) {
     return nodes.map((node) =>
         node.metadata?.status === "loading" && !node.metadata.videoTask && !node.metadata.imageTask && !node.metadata.textTask
-            ? { ...node, metadata: { ...node.metadata, status: "error" as const, errorDetails: "页面刷新后生成已中断，请重新生成。" } }
+            ? { ...node, metadata: { ...node.metadata, status: "error" as const, errorDetails: t("node.errors.interruptedByRefresh") } }
             : node,
     );
 }
@@ -392,12 +395,12 @@ export function isHiddenBatchConnectionEndpoint(node: CanvasNodeData, nodes: Can
     return Boolean(root && !root.metadata?.imageBatchExpanded);
 }
 
-export function buildAngleLabel(params: CanvasImageAngleParams) {
-    const horizontal = params.horizontalAngle === 0 ? "正面视角" : params.horizontalAngle > 0 ? `向右旋转 ${params.horizontalAngle} 度` : `向左旋转 ${Math.abs(params.horizontalAngle)} 度`;
-    const pitch = params.pitchAngle === 0 ? "水平视角" : params.pitchAngle > 0 ? `俯视 ${params.pitchAngle} 度` : `仰视 ${Math.abs(params.pitchAngle)} 度`;
-    return `AI 多角度：${horizontal}，${pitch}，镜头距离 ${params.cameraDistance.toFixed(1)}，${params.wideAngle ? "广角" : "标准"}镜头`;
+export function buildAngleLabel(params: CanvasImageAngleParams, t: CanvasTranslate) {
+    const horizontal = params.horizontalAngle === 0 ? t("node.angle.front") : params.horizontalAngle > 0 ? t("node.angle.rotateRight", { degree: params.horizontalAngle }) : t("node.angle.rotateLeft", { degree: Math.abs(params.horizontalAngle) });
+    const pitch = params.pitchAngle === 0 ? t("node.angle.level") : params.pitchAngle > 0 ? t("node.angle.pitchDown", { degree: params.pitchAngle }) : t("node.angle.pitchUp", { degree: Math.abs(params.pitchAngle) });
+    return t("node.angle.summary", { horizontal, pitch, distance: params.cameraDistance.toFixed(1), lens: params.wideAngle ? t("node.angle.wide") : t("node.angle.standard") });
 }
 
-export function buildAnglePrompt(params: CanvasImageAngleParams) {
-    return `基于参考图重新生成同一主体的新视角，保持主体、颜色、材质和画面风格一致，不要只做透视变形。${buildAngleLabel(params)}。`;
+export function buildAnglePrompt(params: CanvasImageAngleParams, t: CanvasTranslate) {
+    return t("node.angle.prompt", { label: buildAngleLabel(params, t) });
 }

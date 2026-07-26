@@ -12,6 +12,7 @@ import { resolveGlobalAiOpcPathPreset, resolveGlobalAiOpcPreset } from "@/lib/gl
 import { adaptGlobalAiOpcTextRequest, adaptGlobalAiOpcTextResponse, isGlobalAiOpcChannel } from "@/lib/server/globalaiopc-proxy";
 import { SYSTEM_AI_LOGICAL_MODEL_HEADER, SYSTEM_AI_POINTS_IDEMPOTENCY_HEADER } from "@/lib/server/system-ai-billing";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -53,7 +54,7 @@ export async function DELETE(request: Request, context: RouteContext) {
 
 async function proxySystemRequest(request: Request, context: RouteContext) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const { channelId, path } = await context.params;
     const settings = await getAuthSettings();
@@ -62,7 +63,7 @@ async function proxySystemRequest(request: Request, context: RouteContext) {
 
     if (isMediaProxyPath(path)) {
         const rate = await checkMediaProxyRateLimit(currentUser.id, request);
-        if (!rate.allowed) return NextResponse.json({ error: "媒体访问过于频繁，请稍后重试" }, { status: 429, headers: rateLimitHeaders(rate) });
+        if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "媒体访问" }) }, { status: 429, headers: rateLimitHeaders(rate) });
         return proxySystemMediaRequest(request, channel);
     }
 

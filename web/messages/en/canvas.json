@@ -1,1 +1,40 @@
-{}
+{
+    "list": {
+        "projectsHeading": "Canvas Library",
+        "title": "My Canvases",
+        "exportSelected": "Export Selected",
+        "deleteSelected": "Delete Selected",
+        "deleteAll": "Delete All",
+        "import": "Import Canvas",
+        "create": "New Canvas",
+        "opening": "Opening canvas...",
+        "loading": "Loading canvases...",
+        "emptyTitle": "No canvases yet",
+        "emptyDesc": "Create a canvas to save its nodes, connections, and appearance independently.",
+        "createFailed": "Failed to create canvas",
+        "openFailed": "Failed to open canvas",
+        "importedCount": "Imported {count} canvas(es)",
+        "importFailed": "Import failed, please select a valid canvas package",
+        "notCurrentAppPackage": "Not a canvas package for this app",
+        "defaultProjectName": "{prefix} Canvas {index}",
+        "selectedProjectsFileName": "{prefix}-{count}-projects",
+        "card": {
+            "selectAria": "Select {title}",
+            "nodesConnections": "{nodes} nodes · {connections} connections",
+            "updatedAt": "Updated {date}",
+            "saveTitleAria": "Save name",
+            "cancelRenameAria": "Cancel rename",
+            "exportAria": "Export",
+            "renameAria": "Rename",
+            "deleteAria": "Delete",
+            "defaultExportName": "{prefix} Canvas"
+        },
+        "deleteDialog": {
+            "title": "Delete canvas?",
+            "cancel": "Cancel",
+            "confirm": "Delete",
+            "description": "This will delete {count} canvas(es), along with their nodes and connections.",
+            "failed": "Failed to delete canvas"
+        }
+    }
+}

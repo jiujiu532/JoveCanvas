@@ -10,6 +10,7 @@ import { isSafeOutboundUrl } from "@/lib/server/security";
 import { isProviderBusinessError } from "@/lib/server/provider-task-config";
 import { buildGlobalAiOpcImageRequest, buildGlobalAiOpcVideoRequest, resolveGlobalAiOpcCatalogPresets, resolveGlobalAiOpcPreset, type GlobalAiOpcPreset } from "@/lib/globalaiopc-catalog";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -67,8 +68,8 @@ const healthCooldowns = (globalCooldownStore.__vozebProChannelHealthCooldowns ??
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     const [body, settings] = await Promise.all([readJsonBody<HealthPayload>(request), getAuthSettings()]);
     const { baseUrl, apiKey, savedChannel } = resolveAdminChannelCredentials(settings, body);
@@ -89,7 +90,7 @@ export async function POST(request: Request) {
 
     const cooldownKey = `${currentUser.id}:${baseUrl.toLowerCase()}:${kind}`;
     const waitMs = (healthCooldowns.get(cooldownKey) || 0) - Date.now();
-    if (waitMs > 0) return NextResponse.json({ error: `接口测试过于频繁，请 ${Math.ceil(waitMs / 1000)} 秒后再试` }, { status: 429 });
+    if (waitMs > 0) return NextResponse.json({ error: await serverMessage("common.rateLimitedWithSeconds", { feature: "接口测试", seconds: Math.ceil(waitMs / 1000) }) }, { status: 429 });
     healthCooldowns.set(cooldownKey, Date.now() + HEALTH_COOLDOWN_MS);
 
     try {

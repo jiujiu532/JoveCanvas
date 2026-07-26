@@ -1,1 +1,40 @@
-{}
+{
+    "list": {
+        "projectsHeading": "画布库",
+        "title": "我的画布",
+        "exportSelected": "导出选中",
+        "deleteSelected": "删除选中",
+        "deleteAll": "删除全部",
+        "import": "导入画布",
+        "create": "新建画布",
+        "opening": "正在打开画布...",
+        "loading": "正在加载画布...",
+        "emptyTitle": "还没有画布",
+        "emptyDesc": "新建一个画布后，就可以独立保存节点、连线和画布外观。",
+        "createFailed": "画布创建失败",
+        "openFailed": "画布打开失败",
+        "importedCount": "已导入 {count} 个画布",
+        "importFailed": "导入失败，请选择有效的画布压缩包",
+        "notCurrentAppPackage": "不是当前应用的画布包",
+        "defaultProjectName": "{prefix} 画布 {index}",
+        "selectedProjectsFileName": "{prefix}-{count}个项目",
+        "card": {
+            "selectAria": "选择 {title}",
+            "nodesConnections": "{nodes} 个节点 · {connections} 条连线",
+            "updatedAt": "更新于 {date}",
+            "saveTitleAria": "保存名称",
+            "cancelRenameAria": "取消重命名",
+            "exportAria": "导出",
+            "renameAria": "重命名",
+            "deleteAria": "删除",
+            "defaultExportName": "{prefix} 画布"
+        },
+        "deleteDialog": {
+            "title": "删除画布？",
+            "cancel": "取消",
+            "confirm": "删除",
+            "description": "将删除 {count} 个画布，里面的节点和连线也会一起移除。",
+            "failed": "画布删除失败"
+        }
+    }
+}

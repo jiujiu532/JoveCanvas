@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { limitMediaResponseBody, mediaResponseExceedsLimit } from "@/lib/server/media-response-limit";
 import { checkMediaProxyRateLimit, isPublicIpAddress, rateLimitHeaders } from "@/lib/server/security";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ async function proxyMedia(request: Request, method: "GET" | "HEAD") {
     const currentUser = await getCurrentUser();
     if (!currentUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const rate = await checkMediaProxyRateLimit(currentUser.id, request);
-    if (!rate.allowed) return NextResponse.json({ error: "媒体访问过于频繁，请稍后重试" }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "媒体访问" }) }, { status: 429, headers: rateLimitHeaders(rate) });
 
     const target = await readTargetUrl(request);
     if (!target) return NextResponse.json({ error: "Invalid media url" }, { status: 400 });

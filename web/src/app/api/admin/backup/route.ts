@@ -10,6 +10,7 @@ import { copyDataFile, ensureDataDirectory, listDataDirectory, removeDataPath, r
 import { readRequestBodyBytes, RequestBodyTooLargeError } from "@/lib/server/request-body-limit";
 import { siteFileSlug } from "@/lib/site-brand";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -26,8 +27,8 @@ const RESTORE_IMPORT_BACKUP_PATTERN = /^\d{4}-\d{2}-\d{2}T.+Z$/;
 
 export async function GET() {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     const exportedAt = new Date().toISOString();
     const [data, settings] = await Promise.all([readAdminBackupData(), getAuthSettings()]);
@@ -55,8 +56,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     const contentType = request.headers.get("content-type") || "";
     if (!contentType.toLowerCase().includes("multipart/form-data")) return NextResponse.json({ error: "备份上传格式不正确" }, { status: 400 });

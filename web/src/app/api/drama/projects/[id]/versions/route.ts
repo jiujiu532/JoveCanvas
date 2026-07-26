@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { createDramaProjectVersionForUser, DramaProjectServiceError, listDramaProjectVersionsForUser } from "@/lib/server/drama-project-service";
 
+import { serverMessage } from "@/lib/server/server-messages";
 type Context = { params: Promise<{ id: string }> };
 
 export async function GET(_: Request, context: Context) {
@@ -16,7 +17,7 @@ export async function POST(request: Request, context: Context) {
 
 async function handle(context: Context, action: (userId: string, id: string) => Promise<NextResponse>) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     try {
         return await action(user.id, (await context.params).id);
     } catch (error) {

@@ -6,15 +6,16 @@ import { checkRateLimit, rateLimitHeaders } from "@/lib/server/security";
 import { buildUserDataExport } from "@/lib/server/user-data-export-service";
 import { siteFileSlug } from "@/lib/site-brand";
 
+import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const limit = await checkRateLimit(`personal-data-export:${currentUser.id}`, { maxRequests: 3, windowMs: 60 * 60 * 1000 });
-    if (!limit.allowed) return NextResponse.json({ error: "导出请求过于频繁，请稍后再试" }, { status: 429, headers: rateLimitHeaders(limit) });
+    if (!limit.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureAgain", { feature: "导出请求" }) }, { status: 429, headers: rateLimitHeaders(limit) });
 
     try {
         const exportedAt = new Date();

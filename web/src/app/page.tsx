@@ -1,8 +1,9 @@
 "use client";
 
-import { type PointerEvent as ReactPointerEvent, type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type PointerEvent as ReactPointerEvent, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ArrowRight, Camera, Clapperboard, Image as ImageIcon, Mail, Send, ShoppingBag, Sparkles, WandSparkles } from "lucide-react";
 import { Button, Image, Modal } from "antd";
 
@@ -88,28 +89,76 @@ const socialIconByKey: Record<SiteSocialKey, ReactNode> = {
 const publicPrefetchRoutes = ["/login", "/register", "/forgot-password", "/privacy", "/terms"];
 const authenticatedPrefetchRoutes = navigationTools.map((tool) => `/${tool.slug}`);
 const landingNavTools = navigationTools.slice(0, 4);
-const heroWorkflowItems = ["选场景", "加参考", "写描述", "生成", "微调", "保存"];
-const heroValueItems = [
-    { icon: <ShoppingBag className="size-4" />, label: "电商", tone: "commerce" },
-    { icon: <Clapperboard className="size-4" />, label: "短剧", tone: "comic" },
-    { icon: <ImageIcon className="size-4" />, label: "美颜", tone: "beauty" },
-];
-const heroPipelineItems = [
-    { name: "参考图识别", status: "完成", progress: "100%" },
-    { name: "风格生成", status: "生成中", progress: "76%" },
-    { name: "细节优化", status: "待处理", progress: "42%" },
-];
-const heroOutputItems = [
-    { icon: <ShoppingBag className="size-5" />, label: "电商", title: "上新视觉", detail: "商品展示 / 海报 / 详情", tone: "commerce" },
-    { icon: <Clapperboard className="size-5" />, label: "短剧", title: "角色分镜", detail: "封面 / 连载 / 对话", tone: "comic" },
-    { icon: <ImageIcon className="size-5" />, label: "美颜", title: "人像精修", detail: "肤色 / 光影 / 质感", tone: "beauty" },
-];
-const homeShowcaseItems = [
-    { id: "commerce", icon: <ShoppingBag className="size-5" />, label: "电商", title: "上新主图与详情视觉", text: "商品、背景、卖点和版式可以连续生成，适合日常上新和活动图。", tags: ["商品主图", "活动海报", "详情页"], tone: "commerce" },
-    { id: "comic", icon: <Clapperboard className="size-5" />, label: "短剧", title: "角色封面与分镜", text: "固定角色、画风和镜头节奏，快速生成封面、连载图和剧情分镜。", tags: ["角色设定", "分镜", "封面"], tone: "comic" },
-    { id: "beauty", icon: <ImageIcon className="size-5" />, label: "美颜", title: "自然人像精修", text: "保留人物特征，统一肤色、光影和质感，让头像、写真和展示图更干净。", tags: ["肤色", "光影", "质感"], tone: "beauty" },
-    { id: "style", icon: <WandSparkles className="size-5" />, label: "复用", title: "常用风格一键继续", text: "把好看的参考图、提示和结果保存起来，下次不用从零开始。", tags: ["参考图", "常用风格", "继续创作"], tone: "style" },
-];
+
+// 首页展示数据依赖 next-intl 字典，需在组件内用 t() 构建
+function buildHeroWorkflowItems(t: ReturnType<typeof useTranslations>) {
+    return [t("landing.heroWorkflow.step1"), t("landing.heroWorkflow.step2"), t("landing.heroWorkflow.step3"), t("landing.heroWorkflow.step4"), t("landing.heroWorkflow.step5"), t("landing.heroWorkflow.step6")];
+}
+
+function buildHeroValueItems(t: ReturnType<typeof useTranslations>) {
+    return [
+        { icon: <ShoppingBag className="size-4" />, label: t("landing.heroValue.commerce"), tone: "commerce" },
+        { icon: <Clapperboard className="size-4" />, label: t("landing.heroValue.comic"), tone: "comic" },
+        { icon: <ImageIcon className="size-4" />, label: t("landing.heroValue.beauty"), tone: "beauty" },
+    ];
+}
+
+function buildHeroPipelineItems(t: ReturnType<typeof useTranslations>) {
+    return [
+        { name: t("landing.heroPipeline.recognition.name"), status: t("landing.heroPipeline.recognition.status"), progress: "100%" },
+        { name: t("landing.heroPipeline.styleGeneration.name"), status: t("landing.heroPipeline.styleGeneration.status"), progress: "76%" },
+        { name: t("landing.heroPipeline.detailPolish.name"), status: t("landing.heroPipeline.detailPolish.status"), progress: "42%" },
+    ];
+}
+
+function buildHeroOutputItems(t: ReturnType<typeof useTranslations>) {
+    return [
+        { icon: <ShoppingBag className="size-5" />, label: t("landing.heroOutput.commerce.label"), title: t("landing.heroOutput.commerce.title"), detail: t("landing.heroOutput.commerce.detail"), tone: "commerce" },
+        { icon: <Clapperboard className="size-5" />, label: t("landing.heroOutput.comic.label"), title: t("landing.heroOutput.comic.title"), detail: t("landing.heroOutput.comic.detail"), tone: "comic" },
+        { icon: <ImageIcon className="size-5" />, label: t("landing.heroOutput.beauty.label"), title: t("landing.heroOutput.beauty.title"), detail: t("landing.heroOutput.beauty.detail"), tone: "beauty" },
+    ];
+}
+
+function buildHomeShowcaseItems(t: ReturnType<typeof useTranslations>) {
+    return [
+        {
+            id: "commerce",
+            icon: <ShoppingBag className="size-5" />,
+            label: t("landing.showcase.commerce.label"),
+            title: t("landing.showcase.commerce.title"),
+            text: t("landing.showcase.commerce.text"),
+            tags: [t("landing.showcase.commerce.tag1"), t("landing.showcase.commerce.tag2"), t("landing.showcase.commerce.tag3")],
+            tone: "commerce",
+        },
+        {
+            id: "comic",
+            icon: <Clapperboard className="size-5" />,
+            label: t("landing.showcase.comic.label"),
+            title: t("landing.showcase.comic.title"),
+            text: t("landing.showcase.comic.text"),
+            tags: [t("landing.showcase.comic.tag1"), t("landing.showcase.comic.tag2"), t("landing.showcase.comic.tag3")],
+            tone: "comic",
+        },
+        {
+            id: "beauty",
+            icon: <ImageIcon className="size-5" />,
+            label: t("landing.showcase.beauty.label"),
+            title: t("landing.showcase.beauty.title"),
+            text: t("landing.showcase.beauty.text"),
+            tags: [t("landing.showcase.beauty.tag1"), t("landing.showcase.beauty.tag2"), t("landing.showcase.beauty.tag3")],
+            tone: "beauty",
+        },
+        {
+            id: "style",
+            icon: <WandSparkles className="size-5" />,
+            label: t("landing.showcase.style.label"),
+            title: t("landing.showcase.style.title"),
+            text: t("landing.showcase.style.text"),
+            tags: [t("landing.showcase.style.tag1"), t("landing.showcase.style.tag2"), t("landing.showcase.style.tag3")],
+            tone: "style",
+        },
+    ];
+}
 
 export default function HomePage() {
     const router = useRouter();
@@ -126,13 +175,18 @@ export default function HomePage() {
     const [navActiveIndex, setNavActiveIndex] = useState(0);
     const [navIndicator, setNavIndicator] = useState({ left: 5, width: 0, visible: false });
     const [site, setSite] = useState(defaultSite);
+    const t = useTranslations("public");
     const user = useUserStore((state) => state.user);
     const sessionPayload = usePublicSessionStore((state) => state.payload);
     const sessionReady = usePublicSessionStore((state) => state.ready);
     const theme = useThemeStore((state) => state.theme);
     const setTheme = useThemeStore((state) => state.setTheme);
     const friendLinks = (site.friendLinks || []).filter((link) => link.enabled && link.url);
-    const showcaseCards = homeShowcaseItems;
+    const heroWorkflowItems = useMemo(() => buildHeroWorkflowItems(t), [t]);
+    const heroValueItems = useMemo(() => buildHeroValueItems(t), [t]);
+    const heroPipelineItems = useMemo(() => buildHeroPipelineItems(t), [t]);
+    const heroOutputItems = useMemo(() => buildHeroOutputItems(t), [t]);
+    const showcaseCards = useMemo(() => buildHomeShowcaseItems(t), [t]);
     const previewItems = promptShowcase.filter((item) => item.coverUrl);
     const hasVerifiedUser = sessionReady && Boolean(user);
     const siteTitle = site.title || "JoveCanvas";
@@ -363,11 +417,11 @@ export default function HomePage() {
                             theme={theme}
                             onThemeChange={setTheme}
                             className="landing-theme-toggle landing-moon-theme"
-                            aria-label={theme === "dark" ? "切换到浅色主题" : "切换到深色主题"}
-                            title={theme === "dark" ? "切换到浅色主题" : "切换到深色主题"}
+                            aria-label={theme === "dark" ? t("landing.themeToggleToLight") : t("landing.themeToggleToDark")}
+                            title={theme === "dark" ? t("landing.themeToggleToLight") : t("landing.themeToggleToDark")}
                         />
                         <Button className="landing-login-button landing-moon-login" onClick={() => openProtectedEntry("/create")}>
-                            {hasVerifiedUser ? "进入工作台" : "登录"}
+                            {hasVerifiedUser ? t("landing.navEnterWorkspace") : t("landing.navLogin")}
                         </Button>
                     </div>
                 </header>
@@ -380,11 +434,11 @@ export default function HomePage() {
                             </h1>
                             <div className="landing-hero-badge inline-flex items-center gap-2">
                                 <Sparkles className="size-4" />
-                                <span>Agent 创作入口</span>
+                                <span>{t("landing.heroBadge")}</span>
                             </div>
                         </div>
-                        <p className="landing-hero-description mt-6 max-w-2xl text-stone-600 dark:text-white/68">从商品展示到短剧分镜，再到人像精修，把想法、参考图和常用风格放在同一个入口，快速得到可继续编辑的视觉结果。</p>
-                        <div className="landing-hero-proof-grid mt-7" role="list" aria-label="创作场景">
+                        <p className="landing-hero-description mt-6 max-w-2xl text-stone-600 dark:text-white/68">{t("landing.heroDescription")}</p>
+                        <div className="landing-hero-proof-grid mt-7" role="list" aria-label={t("landing.ariaSceneList")}>
                             <i className="landing-scene-slider" aria-hidden="true" />
                             {heroValueItems.map((item) => (
                                 <div key={item.label} role="listitem" className={cn("landing-scene-tab", `is-${item.tone}`)}>
@@ -406,7 +460,7 @@ export default function HomePage() {
                         </div>
                         <div className="landing-moon-hero-actions mt-8 flex flex-wrap items-center gap-3">
                             <Button className="landing-hero-cta landing-moon-primary" type="primary" size="large" onClick={() => openProtectedEntry(`/${primaryTool.slug}`)} icon={<ArrowRight className="size-5" />} iconPlacement="end">
-                                开始创作
+                                {t("landing.ctaStartCreating")}
                             </Button>
                         </div>
                     </div>
@@ -418,26 +472,26 @@ export default function HomePage() {
                                 <span />
                                 <span />
                                 <strong>{siteTitle} Creative Studio</strong>
-                                <em>创作任务 / 生成中</em>
+                                <em>{t("landing.workbenchTaskStatus")}</em>
                             </div>
                             <div className="landing-moon-canvas">
                                 <div className="landing-creative-board">
                                     <div className="landing-creative-board-head">
                                         <div>
-                                            <span>AI 创作台</span>
-                                            <strong>电商、短剧与美颜</strong>
+                                            <span>{t("landing.creativeBoardLabel")}</span>
+                                            <strong>{t("landing.creativeBoardSubtitle")}</strong>
                                         </div>
                                         <div className="landing-creative-status">
                                             <WandSparkles className="size-4" />
-                                            正在生成
+                                            {t("landing.creativeStatusGenerating")}
                                         </div>
                                     </div>
 
                                     <div className="landing-creative-stage">
                                         <div className="landing-creative-input-card">
-                                            <span>输入</span>
-                                            <strong>参考图 + 一句话</strong>
-                                            <p>保持风格、比例与人物特征，自动拆成多组可编辑结果。</p>
+                                            <span>{t("landing.creativeInputLabel")}</span>
+                                            <strong>{t("landing.creativeInputTitle")}</strong>
+                                            <p>{t("landing.creativeInputDesc")}</p>
                                             <i />
                                         </div>
                                         <div className="landing-creative-output-wall">
@@ -454,10 +508,10 @@ export default function HomePage() {
 
                                     <div className="landing-creative-prompt">
                                         <div>
-                                            <span>当前描述</span>
-                                            <strong>夏季上新、漫画分镜、自然人像光</strong>
+                                            <span>{t("landing.creativePromptLabel")}</span>
+                                            <strong>{t("landing.creativePromptValue")}</strong>
                                         </div>
-                                        <em>12 个结果</em>
+                                        <em>{t("landing.creativeResultsCount", { count: 12 })}</em>
                                     </div>
 
                                     <div className="landing-creative-pipeline">
@@ -484,8 +538,8 @@ export default function HomePage() {
                 <div className="landing-showcase-shell mx-auto max-w-[1200px]">
                     <div className="landing-showcase-header relative z-10 mb-8">
                         <div>
-                            <h2 className="text-2xl font-semibold text-stone-950 sm:text-3xl dark:text-white">常用场景，直接开做</h2>
-                            <p className="mt-3 max-w-2xl text-base leading-7 text-stone-600 dark:text-stone-400">电商、短剧、美颜和常用风格都能保存下来，下次从熟悉的入口继续创作。</p>
+                            <h2 className="text-2xl font-semibold text-stone-950 sm:text-3xl dark:text-white">{t("landing.showcaseSectionTitle")}</h2>
+                            <p className="mt-3 max-w-2xl text-base leading-7 text-stone-600 dark:text-stone-400">{t("landing.showcaseSectionDesc")}</p>
                         </div>
                     </div>
                     <div className="landing-showcase-grid relative z-10 grid auto-rows-[190px] gap-4 sm:grid-cols-2 md:grid-cols-4 sm:auto-rows-[200px] md:auto-rows-[190px]">
@@ -493,7 +547,7 @@ export default function HomePage() {
                             <button
                                 key={item.id}
                                 type="button"
-                                aria-label={`${item.label}：${item.title}`}
+                                aria-label={t("landing.ariaShowcaseCard", { label: item.label, title: item.title })}
                                 onClick={() => openProtectedEntry(`/${primaryTool.slug}`)}
                                 onPointerMove={handleShowcasePointerMove}
                                 onPointerLeave={handleShowcasePointerLeave}
@@ -518,11 +572,11 @@ export default function HomePage() {
                     <div className="landing-prompt-gallery">
                         <div className="landing-prompt-gallery-head" onPointerMove={handlePromptLinkMagnet} onPointerLeave={resetPromptLinkMagnet}>
                             <div>
-                                <h3>{site.homeShowcaseMode === "custom" ? "精选灵感图" : "随机灵感图"}</h3>
+                                <h3>{site.homeShowcaseMode === "custom" ? t("landing.promptGalleryTitleCustom") : t("landing.promptGalleryTitleRandom")}</h3>
                             </div>
                             <span ref={promptLinkRef} className="landing-prompt-gallery-link-magnet">
                                 <Button className="landing-prompt-gallery-link" type="link" href="/prompts" icon={<ArrowRight className="size-4" />} iconPlacement="end">
-                                    公共提示词库
+                                    {t("landing.promptGalleryLink")}
                                 </Button>
                             </span>
                         </div>
@@ -533,7 +587,7 @@ export default function HomePage() {
                                         key={item.id}
                                         type="button"
                                         className={cn("landing-prompt-card group", index === 0 && "is-featured")}
-                                        aria-label={`${item.title}，查看提示词封面`}
+                                        aria-label={t("landing.ariaPromptCard", { title: item.title })}
                                         onClick={() => {
                                             if (!item.coverUrl) return;
                                             setPreviewIndex(
@@ -559,7 +613,7 @@ export default function HomePage() {
                             ) : showcaseLoading ? (
                                 Array.from({ length: 9 }).map((_, index) => <div key={index} className={cn("landing-prompt-card is-loading", index === 0 && "is-featured")} />)
                             ) : (
-                                <div className="landing-prompt-gallery-empty">{site.homeShowcaseMode === "custom" ? "暂无精选内容，请在管理后台添加首页展示。" : "暂时没有可展示的灵感图。"}</div>
+                                <div className="landing-prompt-gallery-empty">{site.homeShowcaseMode === "custom" ? t("landing.promptGalleryEmptyCustom") : t("landing.promptGalleryEmptyRandom")}</div>
                             )}
                         </div>
                     </div>
@@ -594,13 +648,13 @@ export default function HomePage() {
                         <div className="landing-footer-links">
                             <div className="landing-footer-link-row landing-footer-policy-links">
                                 <Link href="/announcements" className="landing-footer-link">
-                                    网站公告
+                                    {t("landing.footerAnnouncements")}
                                 </Link>
                                 <Link href={site.termsUrl || "/terms"} className="landing-footer-link">
-                                    使用条款
+                                    {t("landing.footerTerms")}
                                 </Link>
                                 <Link href={site.privacyUrl || "/privacy"} className="landing-footer-link">
-                                    隐私政策
+                                    {t("landing.footerPrivacy")}
                                 </Link>
                             </div>
                             {friendLinks.length ? (
@@ -635,12 +689,12 @@ export default function HomePage() {
                             <span className="text-2xl font-semibold">{siteTitle}</span>
                         </div>
                         <div className="landing-auth-modal-copy">
-                            <p className="text-sm font-medium text-cyan-700 dark:text-cyan-200">开始创作</p>
-                            <h2 className="mt-3 text-3xl font-semibold leading-tight text-stone-950 dark:text-white">登录后继续创作</h2>
-                            <p className="mt-4 text-sm leading-7 text-stone-500 dark:text-stone-300">进入画布，继续电商、短剧、美颜和提示词创作。</p>
+                            <p className="text-sm font-medium text-cyan-700 dark:text-cyan-200">{t("landing.authModalTag")}</p>
+                            <h2 className="mt-3 text-3xl font-semibold leading-tight text-stone-950 dark:text-white">{t("landing.authModalTitle")}</h2>
+                            <p className="mt-4 text-sm leading-7 text-stone-500 dark:text-stone-300">{t("landing.authModalDesc")}</p>
                         </div>
                         <div className="landing-auth-modal-bullets grid gap-2 text-sm text-stone-600 dark:text-stone-300">
-                            {["多场景视觉创作", "画布持续编辑", "灵感与提示词复用"].map((item) => (
+                            {[t("landing.authModalBullet1"), t("landing.authModalBullet2"), t("landing.authModalBullet3")].map((item) => (
                                 <div key={item} className="flex items-center gap-2">
                                     <span className="size-1.5 rounded-full bg-cyan-300" />
                                     <span>{item}</span>

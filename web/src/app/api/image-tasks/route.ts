@@ -61,6 +61,7 @@ import {
     type ImageEditReferenceMode,
 } from "./image-task-types";
 import { runImageTask, stableMediaUrl, writeImageGenerationLog } from "./image-task-runner";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 import {
     publicTask,
     sanitizeConfigs,
@@ -132,15 +133,15 @@ import {
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
     const settings = currentUser ? await getAuthSettings() : null;
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const rate = await checkGenerationRateLimit(currentUser.id, request, "image");
-    if (!rate.allowed) return NextResponse.json({ error: "生图请求过于频繁，请稍后重试" }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "生图请求" }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const response = await withGenerationConcurrencyLimit(currentUser.id, "image", 10 * 60 * 1000, settings!.generationConcurrency.image, async () => {
         let resolvedBody: CreateImageTaskBody;
         try {
             resolvedBody = await readJsonBody(request, 32 * 1024 * 1024);
         } catch (error) {
-            if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+            if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
             throw error;
         }
         const configs = sanitizeConfigs(resolvedBody.config, settings!);

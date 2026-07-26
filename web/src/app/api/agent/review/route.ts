@@ -9,18 +9,19 @@ import { resolveInternalOrigin } from "@/lib/server/internal-origin";
 import { checkRateLimit } from "@/lib/server/security";
 import { normalizeCreativeReviewAssets } from "./creative-review-assets";
 
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 type ReviewBody = { recordId?: unknown; workspace?: unknown; foundation?: unknown; deliverables?: unknown; assets?: unknown };
 
 export async function POST(request: Request) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const rate = await checkRateLimit(`agent-review:${user.id}`, { maxRequests: 12, windowMs: 60 * 1000 });
-    if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: "复盘请求过于频繁，请稍后重试" }, { status: 429 });
+    if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: "复盘请求" }) }, { status: 429 });
     let body: ReviewBody;
     try {
         body = await readJsonBody(request);
     } catch (error) {
-        if (isAuthInputError(error)) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
+        if (isAuthInputError(error)) return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });
         throw error;
     }
     const workspace = body.workspace === "video" ? "video" : "image";

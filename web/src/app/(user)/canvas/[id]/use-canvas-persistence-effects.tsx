@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useLayoutEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import { CanvasNodeType, isCanvasImageNodeType } from "../types";
 
@@ -16,6 +17,7 @@ import type { CanvasPageState } from "./use-canvas-page-state";
 import type { CanvasTaskRuntime } from "./use-canvas-task-runtime";
 
 export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPageState; tasks: CanvasTaskRuntime }) {
+    const t = useTranslations("canvas");
     const {
         message,
         modal,
@@ -170,7 +172,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
         }
 
         const restore = async () => {
-            const restoredNodes = await hydrateCanvasImages(resetInterruptedGeneration(project.nodes));
+            const restoredNodes = await hydrateCanvasImages(resetInterruptedGeneration(project.nodes, t));
             const restoredSessions = await hydrateAssistantImages(project.chatSessions || []);
             setNodes(restoredNodes);
             setConnections(project.connections);
@@ -196,7 +198,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
             setProjectLoaded(true);
         };
         void restore();
-    }, [hydrated, hydratedUserId, openProject, projectId, router, userId]);
+    }, [hydrated, hydratedUserId, openProject, projectId, router, t, userId]);
 
     useEffect(() => {
         if (!projectLoaded) return;
@@ -211,7 +213,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
             void completeImageTask(node.id, generationConfig, task, controller, node.metadata?.prompt)
                 .catch((error) => {
                     if (isGenerationCanceled(error)) return;
-                    const errorDetails = error instanceof Error ? error.message : "图片生成失败";
+                    const errorDetails = error instanceof Error ? error.message : t("node.errors.imageGenerationFailed");
                     message.error(errorDetails);
                     setNodes((prev) => prev.map((item) => (item.id === node.id ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_ERROR, errorDetails, imageTask: undefined } } : item)));
                 })
@@ -221,7 +223,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
                     setRunningNodeId((current) => (current === node.id ? null : current));
                 });
         });
-    }, [completeImageTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest]);
+    }, [completeImageTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest, t]);
 
     useEffect(() => {
         if (!projectLoaded) return;
@@ -236,7 +238,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
             void completeVideoTask(node.id, generationConfig, task, controller, node.metadata?.prompt)
                 .catch((error) => {
                     if (isGenerationCanceled(error)) return;
-                    const errorDetails = error instanceof Error ? error.message : "视频生成失败";
+                    const errorDetails = error instanceof Error ? error.message : t("node.errors.videoGenerationFailed");
                     message.error(errorDetails);
                     setNodes((prev) => prev.map((item) => (item.id === node.id ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_ERROR, errorDetails, videoTask: undefined } } : item)));
                 })
@@ -246,7 +248,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
                     setRunningNodeId((current) => (current === node.id ? null : current));
                 });
         });
-    }, [completeVideoTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest]);
+    }, [completeVideoTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest, t]);
 
     useEffect(() => {
         if (!projectLoaded) return;
@@ -261,7 +263,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
             void completeTextTask(node.id, generationConfig, task, controller, node.metadata?.prompt)
                 .catch((error) => {
                     if (isGenerationCanceled(error)) return;
-                    const errorDetails = error instanceof Error ? error.message : "文本生成失败";
+                    const errorDetails = error instanceof Error ? error.message : t("node.errors.textGenerationFailed");
                     message.error(errorDetails);
                     setNodes((prev) => prev.map((item) => (item.id === node.id ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_ERROR, errorDetails, textTask: undefined } } : item)));
                 })
@@ -271,7 +273,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
                     setRunningNodeId((current) => (current === node.id ? null : current));
                 });
         });
-    }, [completeTextTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest]);
+    }, [completeTextTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest, t]);
 
     useEffect(() => {
         if (!projectLoaded || applyingHistoryRef.current || historyPausedRef.current) return;

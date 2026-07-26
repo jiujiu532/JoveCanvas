@@ -4,6 +4,7 @@ import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { navigationTools, type NavigationToolSlug } from "@/constant/navigation-tools";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
@@ -16,6 +17,7 @@ import { usePublicSessionStore } from "@/stores/use-public-session-store";
 export function AppTopNav() {
     const pathname = usePathname();
     const router = useRouter();
+    const t = useTranslations("layout");
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const navItemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
     const [navIndicator, setNavIndicator] = useState({ left: 7, width: 0, visible: false });
@@ -57,8 +59,8 @@ export function AppTopNav() {
                                 type="button"
                                 className="ml-3 inline-flex size-8 shrink-0 items-center justify-center text-stone-600 transition hover:text-stone-950 lg:hidden dark:text-stone-300 dark:hover:text-white"
                                 onClick={() => setMobileNavOpen(true)}
-                                aria-label="打开导航菜单"
-                                title="导航菜单"
+                                aria-label={t("openNavMenu")}
+                                title={t("navMenu")}
                             >
                                 <Menu className="size-5" />
                             </button>
@@ -94,7 +96,7 @@ export function AppTopNav() {
                                         className={cn("app-shell-nav-link flex h-10 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium leading-none xl:px-3.5", active && "is-active")}
                                     >
                                         <Icon className="size-[17px]" />
-                                        <span className="truncate">{tool.label}</span>
+                                        <span className="truncate">{t(`nav.${tool.slug}.label`)}</span>
                                     </Link>
                                 );
                             })}

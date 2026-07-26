@@ -7,6 +7,7 @@ import { BillingInputError, isBillingInputError } from "@/lib/server/billing-ser
 import { createPaymentCheckoutForOrder } from "@/lib/server/payment-checkout-service";
 import { readRequestBodyText, RequestBodyTooLargeError } from "@/lib/server/request-body-limit";
 
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ type RouteContext = {
 
 export async function POST(request: NextRequest, context: RouteContext) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const { id } = await context.params;
     try {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
             target: { type: "billing_order", id },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         if (error instanceof RequestBodyTooLargeError) return NextResponse.json({ error: error.message }, { status: error.status });
         console.error("Create payment checkout failed", error);
         return NextResponse.json({ error: "创建支付参数失败" }, { status: 500 });
