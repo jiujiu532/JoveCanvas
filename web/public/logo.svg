@@ -1,29 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="JoveCanvas logo">
   <defs>
     <linearGradient id="jc-sphere" x1="0.25" y1="0.05" x2="0.75" y2="1">
-      <stop offset="0" stop-color="#818cf8" />
-      <stop offset="0.45" stop-color="#7c5cf6" />
-      <stop offset="1" stop-color="#b83af0" />
+      <stop offset="0" stop-color="#38bdf8" />
+      <stop offset="0.45" stop-color="#1d4ed8" />
+      <stop offset="1" stop-color="#0f2a6b" />
     </linearGradient>
     <linearGradient id="jc-ring-front" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#c084fc" />
-      <stop offset="1" stop-color="#e879f9" />
+      <stop offset="0" stop-color="#f59e0b" />
+      <stop offset="1" stop-color="#fbbf24" />
     </linearGradient>
     <radialGradient id="jc-glow" cx="0.32" cy="0.25" r="0.9">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.55" />
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.5" />
       <stop offset="0.45" stop-color="#ffffff" stop-opacity="0" />
     </radialGradient>
   </defs>
   <g transform="rotate(-16 200 200)">
-    <!-- 环-后段（被星球遮住前先画） -->
-    <path d="M 52 200 A 148 44 0 0 1 348 200" fill="none" stroke="#a78bfa" stroke-opacity="0.45" stroke-width="18" stroke-linecap="round" />
+    <!-- 环-后段 -->
+    <path d="M 52 200 A 148 44 0 0 1 348 200" fill="none" stroke="#d97706" stroke-opacity="0.4" stroke-width="18" stroke-linecap="round" />
   </g>
   <!-- 星球 -->
   <circle cx="200" cy="200" r="112" fill="url(#jc-sphere)" />
-  <!-- 高光：左上柔光营造球体感 -->
   <circle cx="200" cy="200" r="112" fill="url(#jc-glow)" />
   <g transform="rotate(-16 200 200)">
-    <!-- 环-前段：跨过星球下缘 -->
+    <!-- 环-前段 -->
     <path d="M 348 200 A 148 44 0 0 1 52 200" fill="none" stroke="url(#jc-ring-front)" stroke-width="18" stroke-linecap="round" />
   </g>
 </svg>

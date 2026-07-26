@@ -1,34 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="JoveCanvas icon">
   <defs>
     <linearGradient id="jc-bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1e1b4b" />
-      <stop offset="1" stop-color="#4a044e" />
+      <stop offset="0" stop-color="#0b1530" />
+      <stop offset="1" stop-color="#12275a" />
     </linearGradient>
     <linearGradient id="jc-sphere" x1="0.25" y1="0.05" x2="0.75" y2="1">
-      <stop offset="0" stop-color="#a5b4fc" />
-      <stop offset="0.45" stop-color="#8b5cf6" />
-      <stop offset="1" stop-color="#d946ef" />
+      <stop offset="0" stop-color="#7dd3fc" />
+      <stop offset="0.45" stop-color="#2563eb" />
+      <stop offset="1" stop-color="#12275a" />
+    </linearGradient>
+    <linearGradient id="jc-ring-front" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f59e0b" />
+      <stop offset="1" stop-color="#fcd34d" />
     </linearGradient>
     <radialGradient id="jc-glow" cx="0.32" cy="0.25" r="0.9">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.5" />
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.45" />
       <stop offset="0.45" stop-color="#ffffff" stop-opacity="0" />
     </radialGradient>
   </defs>
   <!-- 深空底板 -->
   <rect x="16" y="16" width="368" height="368" rx="92" fill="url(#jc-bg)" />
-  <!-- 点缀星光 -->
+  <!-- 星光点缀 -->
   <circle cx="96" cy="96" r="7" fill="#ffffff" opacity="0.85" />
   <circle cx="318" cy="122" r="4" fill="#ffffff" opacity="0.6" />
   <circle cx="112" cy="308" r="4" fill="#ffffff" opacity="0.5" />
   <g transform="rotate(-16 200 206)">
     <!-- 环-后段 -->
-    <path d="M 62 206 A 138 42 0 0 1 338 206" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="17" stroke-linecap="round" />
+    <path d="M 62 206 A 138 42 0 0 1 338 206" fill="none" stroke="#f59e0b" stroke-opacity="0.35" stroke-width="17" stroke-linecap="round" />
   </g>
   <!-- 星球 -->
   <circle cx="200" cy="206" r="102" fill="url(#jc-sphere)" />
   <circle cx="200" cy="206" r="102" fill="url(#jc-glow)" />
   <g transform="rotate(-16 200 206)">
     <!-- 环-前段 -->
-    <path d="M 338 206 A 138 42 0 0 1 62 206" fill="none" stroke="#ffffff" stroke-opacity="0.92" stroke-width="17" stroke-linecap="round" />
+    <path d="M 338 206 A 138 42 0 0 1 62 206" fill="none" stroke="url(#jc-ring-front)" stroke-width="17" stroke-linecap="round" />
   </g>
 </svg>
