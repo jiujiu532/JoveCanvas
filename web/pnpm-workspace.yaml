@@ -1,4 +1,6 @@
 allowBuilds:
-    sharp: true
+  '@parcel/watcher': false
+  '@swc/core': false
+  sharp: true
 overrides:
-    postcss: 8.5.16
+  postcss: 8.5.16
