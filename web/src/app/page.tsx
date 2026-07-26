@@ -68,11 +68,7 @@ const defaultSite: {
     privacyUrl: "/privacy",
     homeShowcaseMode: "random",
     homeShowcaseItems: [],
-    friendLinks: [
-        { id: "vozeb-pro-home", label: "VOZEB PRO", url: "https://www.vozeb.com/", enabled: true },
-        { id: "qq-vozeb-open-source", label: "VOZEB 开源交流 QQ 群", url: "https://qm.qq.com/q/9MVLTxuRd6", enabled: true },
-        { id: "linux-do", label: "Linux.do", url: "https://linux.do/", enabled: true },
-    ],
+    friendLinks: [{ id: "linux-do", label: "Linux.do", url: "https://linux.do/", enabled: true }],
     socials: {
         email: { enabled: true, label: "邮箱联系", url: "mailto:csyqlz@gmail.com" },
         telegram: { enabled: false, label: "Telegram", url: "" },

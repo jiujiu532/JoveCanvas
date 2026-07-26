@@ -273,11 +273,7 @@ export const DEFAULT_SITE_SOCIALS: SiteSocialSettings = {
     instagram: { enabled: false, label: "Instagram", url: "" },
 };
 
-export const DEFAULT_SITE_FRIEND_LINKS: SiteFriendLink[] = [
-    { id: "vozeb-pro-home", label: "VOZEB PRO", url: "https://www.vozeb.com/", enabled: true },
-    { id: "qq-vozeb-open-source", label: "VOZEB 开源交流 QQ 群", url: "https://qm.qq.com/q/9MVLTxuRd6", enabled: true },
-    { id: "linux-do", label: "Linux.do", url: "https://linux.do/", enabled: true },
-];
+export const DEFAULT_SITE_FRIEND_LINKS: SiteFriendLink[] = [{ id: "linux-do", label: "Linux.do", url: "https://linux.do/", enabled: true }];
 
 export type MailSettings = {
     provider: string;

@@ -457,7 +457,7 @@ export function normalizeSiteFriendLinks(settings: unknown): SiteFriendLink[] {
             const value = link as Partial<SiteFriendLink>;
             return {
                 id: normalizeText(value.id, `friend-${index + 1}`, 80),
-                label: normalizeText(value.url?.replace(/\/$/, "") === "https://www.vozeb.com" ? "VOZEB PRO" : value.label, "友情链接", 32),
+                label: normalizeText(value.label, "友情链接", 32),
                 url: normalizeLinkUrl(value.url, ""),
                 enabled: value.enabled !== false,
             };

@@ -1,36 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="JoveCanvas logo">
   <defs>
-    <linearGradient id="jc-planet" x1="0.2" y1="0" x2="0.8" y2="1">
-      <stop offset="0" stop-color="#6366f1" />
-      <stop offset="0.5" stop-color="#8b5cf6" />
-      <stop offset="1" stop-color="#d946ef" />
+    <linearGradient id="jc-sphere" x1="0.25" y1="0.05" x2="0.75" y2="1">
+      <stop offset="0" stop-color="#818cf8" />
+      <stop offset="0.45" stop-color="#7c5cf6" />
+      <stop offset="1" stop-color="#b83af0" />
     </linearGradient>
-    <linearGradient id="jc-ring" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0" stop-color="#6366f1" />
-      <stop offset="1" stop-color="#d946ef" />
+    <linearGradient id="jc-ring-front" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c084fc" />
+      <stop offset="1" stop-color="#e879f9" />
     </linearGradient>
-    <clipPath id="jc-planet-clip">
-      <circle cx="200" cy="200" r="118" />
-    </clipPath>
+    <radialGradient id="jc-glow" cx="0.32" cy="0.25" r="0.9">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.55" />
+      <stop offset="0.45" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
   </defs>
-  <!-- 星球本体 -->
-  <circle cx="200" cy="200" r="118" fill="url(#jc-planet)" />
-  <!-- 木星条纹：柔和的横向云带 -->
-  <g clip-path="url(#jc-planet-clip)" fill="#ffffff">
-    <path d="M 60 150 Q 200 128 340 150 L 340 172 Q 200 150 60 172 Z" opacity="0.22" />
-    <path d="M 60 210 Q 200 190 340 210 L 340 244 Q 200 224 60 244 Z" opacity="0.16" />
-    <path d="M 60 286 Q 200 268 340 286 L 340 306 Q 200 288 60 306 Z" opacity="0.12" />
-    <!-- 大红斑意象：画布上的创作焦点 -->
-    <ellipse cx="258" cy="228" rx="26" ry="15" opacity="0.5" />
+  <g transform="rotate(-16 200 200)">
+    <!-- 环-后段（被星球遮住前先画） -->
+    <path d="M 52 200 A 148 44 0 0 1 348 200" fill="none" stroke="#a78bfa" stroke-opacity="0.45" stroke-width="18" stroke-linecap="round" />
   </g>
-  <!-- 轨道环：后半段被星球遮挡，前半段跨过星球 -->
-  <g transform="rotate(-18 200 200)">
-    <path d="M 24 200 A 176 62 0 0 1 376 200" fill="none" stroke="url(#jc-ring)" stroke-width="17" stroke-linecap="round" opacity="0.38" />
-    <path d="M 376 200 A 176 62 0 0 1 24 200" fill="none" stroke="url(#jc-ring)" stroke-width="17" stroke-linecap="round" />
-  </g>
-  <!-- 轨道上的创作节点 -->
-  <g transform="rotate(-18 200 200)">
-    <circle cx="366" cy="214" r="21" fill="#d946ef" />
-    <circle cx="366" cy="214" r="21" fill="none" stroke="#ffffff" stroke-opacity="0.85" stroke-width="6" />
+  <!-- 星球 -->
+  <circle cx="200" cy="200" r="112" fill="url(#jc-sphere)" />
+  <!-- 高光：左上柔光营造球体感 -->
+  <circle cx="200" cy="200" r="112" fill="url(#jc-glow)" />
+  <g transform="rotate(-16 200 200)">
+    <!-- 环-前段：跨过星球下缘 -->
+    <path d="M 348 200 A 148 44 0 0 1 52 200" fill="none" stroke="url(#jc-ring-front)" stroke-width="18" stroke-linecap="round" />
   </g>
 </svg>
