@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { App, ConfigProvider } from "antd";
 import zhCN from "antd/locale/zh_CN";
+import enUS from "antd/locale/en_US";
+import { useLocale } from "next-intl";
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
 
@@ -23,11 +25,14 @@ const queryClient = new QueryClient({
     },
 });
 
-dayjs.locale("zh-cn");
-
 export function AppProviders({ children }: { children: ReactNode }) {
     const theme = useThemeStore((state) => state.theme);
     const dark = theme === "dark";
+    const locale = useLocale();
+
+    useEffect(() => {
+        dayjs.locale(locale === "zh" ? "zh-cn" : "en");
+    }, [locale]);
 
     useEffect(() => {
         const reloadOnceForChunkError = (reason: unknown) => {
@@ -56,7 +61,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
     }, [dark, theme]);
 
     return (
-        <ConfigProvider locale={zhCN} theme={getAntThemeConfig(dark)}>
+        <ConfigProvider locale={locale === "zh" ? zhCN : enUS} theme={getAntThemeConfig(dark)}>
             <App message={{ top: 84, duration: 2.4, maxCount: 3 }}>
                 <QueryClientProvider client={queryClient}>
                     <ClientRootInit>{children}</ClientRootInit>

@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
 import { navigationTools, type NavigationToolSlug } from "@/constant/navigation-tools";
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
 import { SiteLogo } from "@/components/layout/site-logo";
 import { UserStatusActions } from "@/components/layout/user-status-actions";
@@ -99,7 +100,8 @@ export function AppTopNav() {
                             })}
                         </nav>
 
-                        <div className="app-shell-actions my-auto flex h-9 max-w-[calc(100vw-9rem)] min-w-0 items-center justify-end overflow-visible whitespace-nowrap sm:max-w-[calc(100vw-12rem)] lg:max-w-none">
+                        <div className="app-shell-actions my-auto flex h-9 max-w-[calc(100vw-9rem)] min-w-0 items-center justify-end gap-1.5 overflow-visible whitespace-nowrap sm:max-w-[calc(100vw-12rem)] sm:gap-2 lg:max-w-none">
+                            <LocaleSwitcher className="hidden lg:inline-flex" />
                             <UserStatusActions />
                         </div>
                     </div>

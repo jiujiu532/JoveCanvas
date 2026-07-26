@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { AppProviders } from "@/components/layout/app-providers";
 import { absoluteSiteUrl, getPublicSiteSettings, siteMetadataBase } from "@/lib/server/site-metadata";
 import "antd/dist/reset.css";
@@ -54,13 +56,16 @@ export async function generateMetadata(): Promise<Metadata> {
     };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    const locale = await getLocale();
+    const messages = await getMessages();
+
     return (
-        <html lang="zh-CN" suppressHydrationWarning className="font-sans">
+        <html lang={locale === "zh" ? "zh-CN" : "en"} suppressHydrationWarning className="font-sans">
             <head>
                 <link rel="icon" href="/favicon.ico" />
                 <link rel="shortcut icon" href="/favicon.ico" />
@@ -79,9 +84,11 @@ export default function RootLayout({
                         __html: `try{var s=JSON.parse(localStorage.getItem("vozeb-pro:theme_store")||"{}");var t=s.state&&s.state.theme==="dark"?"dark":"light";document.documentElement.classList.toggle("dark",t==="dark");document.documentElement.style.colorScheme=t}catch(e){}`,
                     }}
                 />
-                <AntdRegistry>
-                    <AppProviders>{children}</AppProviders>
-                </AntdRegistry>
+                <NextIntlClientProvider locale={locale} messages={messages}>
+                    <AntdRegistry>
+                        <AppProviders>{children}</AppProviders>
+                    </AntdRegistry>
+                </NextIntlClientProvider>
             </body>
         </html>
     );

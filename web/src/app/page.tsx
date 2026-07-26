@@ -8,6 +8,7 @@ import { Button, Image, Modal } from "antd";
 
 import { AuthForm } from "@/components/auth/auth-form";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { navigationTools } from "@/constant/navigation-tools";
 import { fetchPrompts, type Prompt } from "@/services/api/prompts";
 import { type LocalUser, useUserStore } from "@/stores/use-user-store";
@@ -357,6 +358,7 @@ export default function HomePage() {
                         ))}
                     </nav>
                     <div className="landing-moon-actions flex items-center justify-end gap-2">
+                        <LocaleSwitcher className="h-[38px] w-[38px] rounded-lg border-black/10 bg-white/92 text-[#1f2937] hover:border-black/16 hover:bg-white dark:border-white/12 dark:bg-white/6 dark:text-[#e5e7eb] dark:hover:border-white/22 dark:hover:bg-white/12" />
                         <AnimatedThemeToggler
                             theme={theme}
                             onThemeChange={setTheme}

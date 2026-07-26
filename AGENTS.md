@@ -60,7 +60,8 @@
 - 组件优先使用函数组件和现有 hooks，不新增大型状态管理方案。
 - UI 图标优先使用 `lucide-react` 或项目已经使用的 Ant Design 图标。
 - 后续通用 UI 可以参考 https://uiverse.io/elements 或用户提供参考图/HTML 的交互和视觉方向，但必须改造成项目现有 Next.js / React / Tailwind / Ant Design 写法；不要直接复制第三方源码、图片、字体、图标、素材、专有 token 命名或受限资源，确需引入第三方资源时必须先确认授权许可证。
-- 页面文案保持中文。
+- 全站已接入 `next-intl`（无路由前缀，语言偏好存 cookie `NEXT_LOCALE`，不引入 `/en` 路由段）：客户端组件用户可见文案禁止硬编码中文/英文字面量，必须通过 `useTranslations("<namespace>")` 从 `web/messages/{zh,en}.json` 对应 namespace 取值；服务端（Route Handler、`lib/server` 面向用户的返回文案）使用 `next-intl/server` 的 `getTranslations`/`getLocale`，但仅限于真正按请求解析 cookie 的执行路径——会被 vitest 直接 `import` 调用（未经 Next.js 真实请求上下文）的 Route Handler 不能在处理函数里直接调用 `getTranslations`，否则会以 `getTranslations is not supported in Client Components` 报错（vitest 环境未设置 `react-server` 解析条件）；新增文案时先在 `zh.json`/`en.json` 同步新增同名 key，保持两语言键值一一对应。
+- antd 组件与 dayjs 必须随 `useLocale()` 联动切换（`antd/locale/zh_CN` ↔ `antd/locale/en_US`、`dayjs.locale("zh-cn" | "en")`），不要单独写死中文 locale。
 - 不要在组件里堆太多无关逻辑；复杂逻辑优先抽成同目录工具函数或小组件。
 - 样式优先由组件自己管理；组件私有样式优先使用 Tailwind className 或少量内联 style，不要为单个组件新增大量全局 CSS。
 - 全局 CSS 只放基础变量、全局重置、跨页面通用样式和少量第三方组件必要覆盖；不要在 `globals.css` 堆页面私有样式。
