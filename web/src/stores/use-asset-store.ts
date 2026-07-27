@@ -3,6 +3,7 @@
 import { create } from "zustand";
 
 import { createClientSessionEpoch, type ClientSessionStamp } from "@/lib/client-session-epoch";
+import { resolveClientStoreLocale } from "@/lib/client-store-locale";
 import type { Asset, CreateLibraryAssetInput } from "@/lib/library-asset-contract";
 import { createLibraryAsset, deleteLibraryAsset, listLibraryAssets, saveLibraryAsset } from "@/services/api/library-assets";
 import { uploadMediaFile } from "@/services/file-storage";
@@ -22,6 +23,26 @@ type AssetStore = {
     removeAsset: (id: string) => Promise<void>;
     reset: () => void;
 };
+
+// Zustand 非 React 上下文：按 cookie 语言读字典，默认中文
+const STORE_MESSAGES = {
+    zh: {
+        loadFailed: "素材加载失败",
+        pleaseLogin: "请先登录",
+        sessionChanged: "登录会话已变更，请重试",
+        notFound: "素材不存在",
+    },
+    en: {
+        loadFailed: "Failed to load assets",
+        pleaseLogin: "Please sign in first",
+        sessionChanged: "Login session changed, please retry",
+        notFound: "Asset not found",
+    },
+} as const;
+
+function storeMessage(key: keyof (typeof STORE_MESSAGES)["zh"]) {
+    return STORE_MESSAGES[resolveClientStoreLocale()][key];
+}
 
 const sessionEpoch = createClientSessionEpoch(() => useUserStore.getState().user?.id || "");
 let hydrateRequestId = 0;
@@ -50,7 +71,7 @@ export const useAssetStore = create<AssetStore>((set, get) => ({
                 set({ assets, hydrated: true, hydratedUserId: userId });
             })
             .catch((error) => {
-                if (isActiveHydrate(session, requestId)) set({ assets: [], hydrated: false, hydratedUserId: userId, syncError: error instanceof Error ? error.message : "Failed to load assets" });
+                if (isActiveHydrate(session, requestId)) set({ assets: [], hydrated: false, hydratedUserId: userId, syncError: error instanceof Error ? error.message : storeMessage("loadFailed") });
             })
             .finally(() => {
                 if (hydrateRequest?.requestId === requestId) hydrateRequest = null;
@@ -61,7 +82,7 @@ export const useAssetStore = create<AssetStore>((set, get) => ({
     addAsset: async (input) => {
         const session = requireSession();
         const prepared = await prepareAssetForServer(input);
-        if (!sessionEpoch.isCurrent(session)) throw new Error("Login session changed, please retry");
+        if (!sessionEpoch.isCurrent(session)) throw new Error(storeMessage("sessionChanged"));
         const asset = await createLibraryAsset(prepared);
         if (sessionEpoch.isCurrent(session)) set((state) => ({ assets: [asset, ...state.assets.filter((item) => item.id !== asset.id)], syncError: undefined }));
         return asset.id;
@@ -69,9 +90,9 @@ export const useAssetStore = create<AssetStore>((set, get) => ({
     updateAsset: async (id, patch) => {
         const session = requireSession();
         const current = get().assets.find((asset) => asset.id === id);
-        if (!current) throw new Error("Asset not found");
+        if (!current) throw new Error(storeMessage("notFound"));
         const prepared = await prepareAssetForServer({ ...current, ...patch } as CreateLibraryAssetInput);
-        if (!sessionEpoch.isCurrent(session)) throw new Error("Login session changed, please retry");
+        if (!sessionEpoch.isCurrent(session)) throw new Error(storeMessage("sessionChanged"));
         const asset = await saveLibraryAsset(id, prepared);
         if (sessionEpoch.isCurrent(session)) set((state) => ({ assets: state.assets.map((item) => (item.id === id ? asset : item)), syncError: undefined }));
     },
@@ -93,7 +114,7 @@ function isActiveHydrate(session: ClientSessionStamp, requestId: number) {
 
 function requireSession() {
     const session = sessionEpoch.capture();
-    if (!session.userId) throw new Error("Please sign in first");
+    if (!session.userId) throw new Error(storeMessage("pleaseLogin"));
     return session;
 }
 

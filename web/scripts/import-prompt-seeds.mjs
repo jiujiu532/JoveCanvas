@@ -89,7 +89,7 @@ async function main() {
     });
 
     const { runSeedImport, SEED_SOURCE_META } = jiti(join(srcRoot, "lib/prompts/seed-import/index.ts"));
-    const { listAllLibraryPromptsForImport, replaceLibrarySeedBatch } = jiti(join(srcRoot, "lib/prompts/store.ts"));
+    const { isLibrarySeedSourceRegistered, listAllLibraryPromptsForImport, replaceLibrarySeedBatch } = jiti(join(srcRoot, "lib/prompts/store.ts"));
 
     if (!(args.source in SEED_SOURCE_META)) {
         console.error("Unknown source");
@@ -98,6 +98,7 @@ async function main() {
     }
 
     const inputPath = resolve(args.input);
+    const meta = SEED_SOURCE_META[args.source];
 
     // Without DATABASE_URL, postgres mode cannot read/write. File provider can still apply to local JSON.
     const hasPostgresUrl = Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL);
@@ -112,6 +113,21 @@ async function main() {
         if (!isFileProvider) {
             process.env.VOZEB_PRO_DATABASE_PROVIDER = "file";
             console.warn("[import] no DATABASE_URL — forced file provider for dry-run baseline");
+        }
+    }
+
+    // Apply path: if this exact versioned source is already registered, skip before any rehost download.
+    if (args.apply) {
+        try {
+            const alreadyRegistered = await isLibrarySeedSourceRegistered(meta.source);
+            if (alreadyRegistered) {
+                console.log(`[import] skipped (source already registered) source=${meta.source}`);
+                return;
+            }
+        } catch (error) {
+            console.error(`[import] failed to check seed source registration: ${error instanceof Error ? error.message : error}`);
+            process.exitCode = 1;
+            return;
         }
     }
 
@@ -133,7 +149,14 @@ async function main() {
         dryRun: !args.apply,
         allowExternalCover: args.allowExternalCover,
         skipRehost: args.skipRehost ?? !args.apply,
+        // Apply path: re-check registration before rehost (CLI already checked once above).
+        skipIfSourceRegistered: Boolean(args.apply),
     });
+
+    if (args.apply && report.skipped?.source_registered) {
+        console.log(`[import] skipped (source already registered) source=${report.source}`);
+        return;
+    }
 
     console.log(
         JSON.stringify(

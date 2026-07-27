@@ -1,4 +1,4 @@
-import { LIBRARY_SEED_SOURCE_WHITELIST, replaceLibrarySeedBatch, type StoredPromptExport } from "@/lib/prompts/store";
+import { LIBRARY_SEED_SOURCE_WHITELIST, isLibrarySeedSourceRegistered, replaceLibrarySeedBatch, type StoredPromptExport } from "@/lib/prompts/store";
 import { AuthInputError } from "@/lib/auth/store";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
     readJson: vi.fn(),
     writeJson: vi.fn(),
     replaceSeeded: vi.fn(),
+    hasSeedSource: vi.fn(),
 }));
 
 vi.mock("@/lib/server/database", () => ({
@@ -55,7 +56,10 @@ describe("replaceLibrarySeedBatch", () => {
             seedSources: ["vozeb-pro/original-author-prompts:v4", "vozeb-pro/youmind-skill:v0"],
         });
         mocks.writeJson.mockResolvedValue(undefined);
-        mocks.createRepos.mockReturnValue({ prompts: { replaceSeededPrompts: mocks.replaceSeeded } });
+        mocks.createRepos.mockReturnValue({
+            prompts: { replaceSeededPrompts: mocks.replaceSeeded, hasSeedSource: mocks.hasSeedSource },
+        });
+        mocks.hasSeedSource.mockResolvedValue(false);
     });
 
     it("exposes independent whitelist prefixes only", () => {
@@ -104,6 +108,17 @@ describe("replaceLibrarySeedBatch", () => {
             prompts: [samplePrompt("youmind-skill-2", "vozeb-pro/youmind-skill:v1")],
         });
         expect(result).toEqual({ written: 0, skipped: true });
+        expect(mocks.writeJson).not.toHaveBeenCalled();
+    });
+
+    it("reports registration via isLibrarySeedSourceRegistered without writing", async () => {
+        mocks.readJson.mockResolvedValue({
+            version: 1,
+            prompts: [],
+            seedSources: ["vozeb-pro/youmind-skill:v1"],
+        });
+        await expect(isLibrarySeedSourceRegistered("vozeb-pro/youmind-skill:v1")).resolves.toBe(true);
+        await expect(isLibrarySeedSourceRegistered("vozeb-pro/youmind-skill:v2")).resolves.toBe(false);
         expect(mocks.writeJson).not.toHaveBeenCalled();
     });
 });

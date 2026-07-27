@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 
+import { resolveClientStoreLocale } from "@/lib/client-store-locale";
 import type { LocalUser } from "@/stores/use-user-store";
 import type { PublicSystemSettings } from "@/stores/use-config-store";
 
@@ -34,6 +35,19 @@ type PublicSessionStore = {
     ready: boolean;
 };
 
+const STORE_MESSAGES = {
+    zh: {
+        loadFailed: "会话加载失败",
+    },
+    en: {
+        loadFailed: "Failed to load session",
+    },
+} as const;
+
+function storeMessage(key: keyof (typeof STORE_MESSAGES)["zh"]) {
+    return STORE_MESSAGES[resolveClientStoreLocale()][key];
+}
+
 export const usePublicSessionStore = create<PublicSessionStore>(() => ({ payload: null, ready: false }));
 
 let sessionRequest: Promise<PublicSessionPayload> | null = null;
@@ -42,7 +56,7 @@ export function loadPublicSession() {
     if (!sessionRequest) {
         sessionRequest = fetch("/api/auth/session", { cache: "no-store" })
             .then(async (response) => {
-                if (!response.ok) throw new Error("Failed to load session");
+                if (!response.ok) throw new Error(storeMessage("loadFailed"));
                 return (await response.json()) as PublicSessionPayload;
             })
             .then((payload) => {

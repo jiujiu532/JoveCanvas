@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { DEFAULT_SITE_SETTINGS } from "./store-foundation";
-import { normalizeSiteSettings } from "./store-normalizers";
+import { DEFAULT_SITE_FRIEND_LINKS } from "./store-types";
+import { normalizeSiteFriendLinks, normalizeSiteSettings } from "./store-normalizers";
 
 describe("site settings", () => {
     it("uses the bundled browser icon when older settings have no icon URL", () => {
@@ -15,14 +16,55 @@ describe("site settings", () => {
         expect(settings.iconUrl).toBe("https://cdn.example.com/favicon.ico");
     });
 
-    it("defaults public contacts to the upstream email and Linux.do friend link", () => {
+    it("defaults public contacts to the upstream email and seeds friend links when unset", () => {
         const settings = normalizeSiteSettings({});
 
         expect(settings.socials.email).toMatchObject({ enabled: true, url: "mailto:csyqlz@gmail.com" });
         expect(settings.socials.telegram).toMatchObject({ enabled: false, url: "" });
         expect(settings.socials.x).toMatchObject({ enabled: false, url: "" });
         expect(settings.socials.instagram).toMatchObject({ enabled: false, url: "" });
-        expect(settings.friendLinks).toContainEqual(expect.objectContaining({ id: "linux-do", url: "https://linux.do/", enabled: true }));
+        expect(settings.friendLinks).toEqual(DEFAULT_SITE_FRIEND_LINKS);
+    });
+});
+
+describe("site friend links", () => {
+    it("seeds default friend links when the field is undefined or null", () => {
+        expect(normalizeSiteFriendLinks(undefined)).toEqual(DEFAULT_SITE_FRIEND_LINKS);
+        expect(normalizeSiteFriendLinks(null)).toEqual(DEFAULT_SITE_FRIEND_LINKS);
+    });
+
+    it("keeps an explicitly empty friend link list empty after save/reload", () => {
+        expect(normalizeSiteFriendLinks([])).toEqual([]);
+        expect(normalizeSiteSettings({ friendLinks: [] }).friendLinks).toEqual([]);
+    });
+
+    it("normalizes a custom list without re-appending or reordering defaults to the front", () => {
+        const settings = normalizeSiteFriendLinks([
+            { id: "custom", label: "自定义", url: "https://example.com/", enabled: true },
+            { id: "linux-do", label: "Linux.do", url: "https://linux.do/", enabled: false },
+        ]);
+
+        expect(settings).toEqual([
+            { id: "custom", label: "自定义", url: "https://example.com/", enabled: true },
+            { id: "linux-do", label: "Linux.do", url: "https://linux.do/", enabled: false },
+        ]);
+        expect(settings[0]?.id).toBe("custom");
+    });
+
+    it("drops invalid entries and caps the list at 12", () => {
+        const settings = normalizeSiteFriendLinks([
+            { id: "bad", label: "坏链", url: "javascript:alert(1)", enabled: true },
+            ...Array.from({ length: 15 }, (_, index) => ({
+                id: `link-${index + 1}`,
+                label: `友链 ${index + 1}`,
+                url: `https://example.com/${index + 1}`,
+                enabled: true,
+            })),
+        ]);
+
+        expect(settings).toHaveLength(12);
+        expect(settings.every((link) => link.url.startsWith("https://example.com/"))).toBe(true);
+        expect(settings.some((link) => link.id === "bad")).toBe(false);
     });
 });
 

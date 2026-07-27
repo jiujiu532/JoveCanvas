@@ -19,7 +19,7 @@ import { countLocalMediaReferences } from "./local-media-references";
 describe("countLocalMediaReferences", () => {
     beforeEach(() => vi.clearAllMocks());
 
-    it("counts all requested keys with one PostgreSQL query", async () => {
+    it("counts all requested keys with one PostgreSQL query including prompts.cover_url", async () => {
         mocks.getDatabaseProvider.mockReturnValue("postgres");
         mocks.postgresQuery.mockResolvedValue({
             rows: [
@@ -37,6 +37,29 @@ describe("countLocalMediaReferences", () => {
             ]),
         );
         expect(mocks.postgresQuery).toHaveBeenCalledTimes(1);
-        expect(mocks.postgresQuery).toHaveBeenCalledWith(expect.stringContaining("unnest($1::text[])"), [["permanent/one.png", "permanent/two.png"]]);
+        const [sql, params] = mocks.postgresQuery.mock.calls[0] as [string, string[][]];
+        expect(sql).toContain("unnest($1::text[])");
+        expect(sql).toMatch(/JOIN prompts p ON position\(r\.storage_key in COALESCE\(p\.cover_url, ''\)\) > 0/i);
+        expect(params).toEqual([["permanent/one.png", "permanent/two.png"]]);
+    });
+
+    it("counts prompt cover references in file provider prompts.json", async () => {
+        mocks.getDatabaseProvider.mockReturnValue("file");
+        mocks.readJsonDataFile.mockImplementation(async (file: string) => {
+            if (file === "prompts.json") {
+                return {
+                    version: 1,
+                    prompts: [{ id: "seed-1", coverUrl: "/api/reference-assets/permanent/seed-cover.png" }],
+                    seedSources: [],
+                };
+            }
+            return {};
+        });
+
+        const result = await countLocalMediaReferences(["permanent/seed-cover.png", "permanent/unused.png"]);
+
+        expect(result.get("permanent/seed-cover.png")).toBe(1);
+        expect(result.get("permanent/unused.png")).toBe(0);
+        expect(mocks.readJsonDataFile).toHaveBeenCalledWith("prompts.json", {});
     });
 });

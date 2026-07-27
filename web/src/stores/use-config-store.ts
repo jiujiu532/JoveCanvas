@@ -4,9 +4,31 @@ import { useMemo } from "react";
 import { create } from "zustand";
 import { nanoid } from "nanoid";
 
+import { resolveClientStoreLocale } from "@/lib/client-store-locale";
 import { flattenPublicCapabilityModels, resolvePublicCapabilityModels } from "@/lib/public-model-catalog";
 import type { GlobalAiOpcPresetId } from "@/lib/globalaiopc-catalog";
 import { materializeLogicalModelPointCosts } from "@/lib/model-point-cost";
+
+// Zustand 非 React 上下文：按 cookie 语言读字典，默认中文
+const STORE_MESSAGES = {
+    zh: {
+        newChannel: "新渠道",
+        defaultChannel: "默认渠道",
+        channelN: (n: number) => `渠道 ${n}`,
+        systemChannelOnly: "客户端只能调用系统模型渠道",
+    },
+    en: {
+        newChannel: "New channel",
+        defaultChannel: "Default channel",
+        channelN: (n: number) => `Channel ${n}`,
+        systemChannelOnly: "Client can only call system model channels",
+    },
+} as const;
+
+function storeMessage<K extends keyof (typeof STORE_MESSAGES)["zh"]>(key: K): (typeof STORE_MESSAGES)["zh"][K] {
+    // en/zh 模板字面量返回类型不同，统一按中文侧签名消费
+    return STORE_MESSAGES[resolveClientStoreLocale()][key] as (typeof STORE_MESSAGES)["zh"][K];
+}
 
 type ApiCallFormat = "openai" | "gemini";
 type SystemChannelProtocol = "auto" | "openai" | "sub2api" | "qingyan" | "globalaiopc" | "seedance" | "compatible";
@@ -400,7 +422,7 @@ export function useEffectiveConfig() {
 function createModelChannel(channel?: Partial<ModelChannel>): ModelChannel {
     return {
         id: channel?.id?.trim() || nanoid(),
-        name: channel?.name?.trim() || "New channel",
+        name: channel?.name?.trim() || storeMessage("newChannel"),
         baseUrl: channel?.baseUrl?.trim() || DEFAULT_SYSTEM_BASE_URL,
         apiKey: channel?.apiKey || "",
         apiFormat: channel?.apiFormat === "gemini" ? "gemini" : "openai",
@@ -491,7 +513,7 @@ export function resolveModelChannel(config: AiConfig, value: string) {
         .sort((a, b) => a.priority - b.priority)
         .find((item) => channels.some((channel) => channel.id === item.channelId));
     const matched = binding ? channels.find((channel) => channel.id === binding.channelId) : decoded ? channels.find((channel) => channel.id === decoded.channelId) : channels.find((channel) => channel.models.includes(model));
-    return matched || channels[0] || createModelChannel({ id: "default", name: "Default channel", models: config.models.map(modelOptionName) });
+    return matched || channels[0] || createModelChannel({ id: "default", name: storeMessage("defaultChannel"), models: config.models.map(modelOptionName) });
 }
 
 export function resolveModelRequestConfig(config: AiConfig, value: string) {
@@ -515,7 +537,7 @@ function normalizeChannels(config: AiConfig) {
             createModelChannel({
                 ...channel,
                 id: channel.id || (index === 0 ? "default" : `channel-${index + 1}`),
-                name: channel.name || (index === 0 ? "Default channel" : `Channel ${index + 1}`),
+                name: channel.name || (index === 0 ? storeMessage("defaultChannel") : storeMessage("channelN")(index + 1)),
                 apiKey: "system",
                 models: uniqueRawModels(channel.models || []),
             }),
@@ -541,7 +563,7 @@ function normalizedModelName(model: string) {
 
 export function buildApiUrl(baseUrl: string, path: string) {
     let normalizedBaseUrl = baseUrl.trim().replace(/\/+$/, "");
-    if (!normalizedBaseUrl.startsWith("/api/ai/system/")) throw new Error("Client can only call system model channels");
+    if (!normalizedBaseUrl.startsWith("/api/ai/system/")) throw new Error(storeMessage("systemChannelOnly"));
     normalizedBaseUrl = normalizeArkPlanBaseUrl(normalizedBaseUrl);
     const lowerBaseUrl = normalizedBaseUrl.toLowerCase();
     const apiBaseUrl = lowerBaseUrl.endsWith("/v1") || lowerBaseUrl.endsWith("/api/v3") || lowerBaseUrl.endsWith("/api/plan/v3") ? normalizedBaseUrl : `${normalizedBaseUrl}/v1`;

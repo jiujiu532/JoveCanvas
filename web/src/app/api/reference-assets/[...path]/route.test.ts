@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
     disposition: vi.fn(),
     rate: vi.fn(),
     externalRead: vi.fn(),
+    getClientIp: vi.fn(() => "203.0.113.50"),
 }));
 
 vi.mock("@/lib/auth/session", () => ({ getCurrentUser: mocks.getCurrentUser }));
@@ -20,7 +21,11 @@ vi.mock("@/lib/server/local-media-response", () => ({
     createLocalMediaResponse: mocks.stream,
     mediaContentDisposition: mocks.disposition,
 }));
-vi.mock("@/lib/server/security", () => ({ checkLocalMediaRateLimit: mocks.rate, rateLimitHeaders: vi.fn(() => ({ "Retry-After": "60" })) }));
+vi.mock("@/lib/server/security", () => ({
+    checkLocalMediaRateLimit: mocks.rate,
+    getClientIp: mocks.getClientIp,
+    rateLimitHeaders: vi.fn(() => ({ "Retry-After": "60" })),
+}));
 vi.mock("@/lib/server/object-storage-service", () => ({ createExternalMediaReadUrl: mocks.externalRead }));
 
 import { GET } from "./route";
@@ -38,6 +43,7 @@ describe("reference asset access", () => {
         mocks.disposition.mockReturnValue('inline; filename="file.png"');
         mocks.rate.mockResolvedValue({ allowed: true, remaining: 239, resetAt: Date.now() + 60_000 });
         mocks.externalRead.mockResolvedValue("https://storage.example/signed");
+        mocks.getClientIp.mockReturnValue("203.0.113.50");
     });
 
     it("does not expose another user's media to an authenticated user", async () => {
@@ -72,6 +78,19 @@ describe("reference asset access", () => {
         expect(mocks.getCurrentUser).not.toHaveBeenCalled();
         expect(mocks.stream).toHaveBeenCalled();
         expect(mocks.rate).toHaveBeenCalled();
+    });
+
+    it("rates public prompt-seed covers by hop-aware client IP, not raw XFF string", async () => {
+        mocks.getCurrentUser.mockResolvedValue(null);
+        mocks.registration.mockResolvedValue({ ownerUserId: "system", storageClass: "permanent", source: "prompt-seed:youmind-skill" });
+        mocks.getClientIp.mockReturnValue("203.0.113.77");
+        const request = new Request("http://localhost/api/reference-assets/permanent/2026/07/20/images/file.png", {
+            headers: { "x-forwarded-for": "198.51.100.1, 203.0.113.77" },
+        });
+        const response = await GET(request, context);
+        expect(response.status).toBe(200);
+        expect(mocks.getClientIp).toHaveBeenCalledWith(request);
+        expect(mocks.rate).toHaveBeenCalledWith("public-prompt-seed:203.0.113.77", request);
     });
 
     it("does not treat temporary prompt-seed media as public", async () => {

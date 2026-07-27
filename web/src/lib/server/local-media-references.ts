@@ -3,8 +3,7 @@ import { ensurePostgresSchema, getDatabaseProvider, postgresQuery } from "@/lib/
 
 /**
  * Count live references for local/object media storage keys.
- * Note (Phase2): does **not** include prompts.cover_url yet — seed covers registered as
- * prompt-seed* permanent media may look unreferenced to GC/admin delete. Follow-up: join prompts.
+ * Includes prompts.cover_url so permanent prompt-seed covers are not treated as unreferenced.
  */
 export async function countLocalMediaReferences(storageKeys: string[]) {
     const keys = Array.from(new Set(storageKeys.map(normalizeKey).filter(Boolean)));
@@ -42,6 +41,11 @@ export async function countLocalMediaReferences(storageKeys: string[]) {
                 JOIN generation_log_assets a ON position(r.storage_key in COALESCE(a.server_url, '')) > 0
                     OR position(r.storage_key in COALESCE(a.url, '')) > 0
                 GROUP BY r.storage_key
+                UNION ALL
+                SELECT r.storage_key, count(*)::int
+                FROM requested r
+                JOIN prompts p ON position(r.storage_key in COALESCE(p.cover_url, '')) > 0
+                GROUP BY r.storage_key
             )
             SELECT r.storage_key, COALESCE(sum(c.total), 0)::int AS total
             FROM requested r
@@ -58,6 +62,7 @@ export async function countLocalMediaReferences(storageKeys: string[]) {
         readJsonDataFile<unknown>("canvas-projects.json", {}),
         readJsonDataFile<unknown>("drama-projects.json", {}),
         readJsonDataFile<unknown>("generation-logs.json", {}),
+        readJsonDataFile<unknown>("prompts.json", {}),
     ]);
     for (const key of keys)
         counts.set(

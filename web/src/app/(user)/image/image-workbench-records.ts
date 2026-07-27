@@ -3,11 +3,36 @@
 import { nanoid } from "nanoid";
 
 import { browserReadableMediaUrl } from "@/lib/browser-media-url";
+import { resolveClientStoreLocale } from "@/lib/client-store-locale";
 import { readImageMeta } from "@/lib/image-utils";
 import { deleteGenerationLogs as deleteServerGenerationLogs, listGenerationLogs, recordGenerationLog, type StoredGenerationLogRecord } from "@/services/api/generation-logs";
 import { resolveImageUrl, uploadImage } from "@/services/image-storage";
 import type { AiConfig } from "@/stores/use-config-store";
 import type { ReferenceImage } from "@/types/image";
+
+// 工作台记录用户可见文案：按 cookie 语言，默认中文
+const STORE_MESSAGES = {
+    zh: {
+        summaryPending: "图片生成中",
+        summaryFailed: "图片生成失败",
+        summaryComplete: "图片生成完成",
+        untitled: "未命名",
+        resultNotSaved: "生成结果未保存到服务器，请重试",
+        generationFailed: "生成失败",
+    },
+    en: {
+        summaryPending: "Image generation in progress",
+        summaryFailed: "Image generation failed",
+        summaryComplete: "Image generation complete",
+        untitled: "Untitled",
+        resultNotSaved: "Generation result was not saved to the server, please retry",
+        generationFailed: "Generation failed",
+    },
+} as const;
+
+function storeMessage(key: keyof (typeof STORE_MESSAGES)["zh"]) {
+    return STORE_MESSAGES[resolveClientStoreLocale()][key];
+}
 
 export type GeneratedImage = {
     id: string;
@@ -314,7 +339,7 @@ export async function recordImageWorkbenchLog(log: GenerationLog) {
         title: log.title,
         prompt: log.prompt,
         model: log.model || log.config.imageModel || log.config.model,
-        summary: log.pendingCount ? "Image generation in progress" : log.failCount && !log.successCount ? "Image generation failed" : "Image generation complete",
+        summary: log.pendingCount ? storeMessage("summaryPending") : log.failCount && !log.successCount ? storeMessage("summaryFailed") : storeMessage("summaryComplete"),
         durationMs: log.durationMs,
         count: log.imageCount || Math.max(1, assets.length + (log.failCount || 0)),
         successCount: log.successCount || assets.length,
@@ -349,7 +374,7 @@ async function normalizeLog(log: Partial<GenerationLog>): Promise<GenerationLog>
         ownerUserId: log.ownerUserId,
         creativeConversationId: log.creativeConversationId,
         createdAt: log.createdAt || Date.now(),
-        title: log.title || log.model || "Untitled",
+        title: log.title || log.model || storeMessage("untitled"),
         prompt: log.prompt || log.title || "",
         time: log.time || new Date().toLocaleString("zh-CN", { hour12: false }),
         model: log.model || config.imageModel || "",
@@ -390,7 +415,7 @@ export async function normalizeGeneratedImage(url: string, remoteFallback = "", 
     const remoteUrl = isRemoteImageUrl(remoteFallback) ? remoteFallback : isRemoteImageUrl(url) ? url : "";
     const serverUrl = isServerImageUrl(serverFallback) ? serverFallback : isServerImageUrl(url) ? url : "";
     const fallbackUrl = serverUrl || (!isLocalImageUrl(url) ? url : "") || remoteUrl;
-    if (!fallbackUrl) throw new Error("Generation result was not saved to the server, please retry");
+    if (!fallbackUrl) throw new Error(storeMessage("resultNotSaved"));
     if (!serverUrl) {
         const stored = await uploadImage(fallbackUrl);
         return { url: stored.url, remoteUrl: remoteUrl || undefined, serverUrl: stored.url, width: stored.width, height: stored.height, bytes: stored.bytes, mimeType: stored.mimeType, storageKey: stored.storageKey };
@@ -431,7 +456,7 @@ export function resultsFromLog(log: GenerationLog): GenerationResult[] {
     (log.failures || []).forEach((failure, fallbackIndex) => {
         if (usedResultIds.has(failure.resultId)) return;
         usedResultIds.add(failure.resultId);
-        entries.push({ index: failure.index ?? entries.length + fallbackIndex, result: { id: failure.resultId, status: "failed", error: failure.error || log.error || "Generation failed" } });
+        entries.push({ index: failure.index ?? entries.length + fallbackIndex, result: { id: failure.resultId, status: "failed", error: failure.error || log.error || storeMessage("generationFailed") } });
     });
     const knownPendingCount = entries.filter((entry) => entry.result.status === "pending").length;
     const missingPendingCount = Math.max(0, (log.pendingCount || 0) - knownPendingCount);
@@ -441,7 +466,7 @@ export function resultsFromLog(log: GenerationLog): GenerationResult[] {
     const knownFailureCount = entries.filter((entry) => entry.result.status === "failed").length;
     const missingFailureCount = Math.max(0, (log.failCount || 0) - knownFailureCount);
     for (let index = 0; index < missingFailureCount; index += 1) {
-        entries.push({ index: entries.length, result: { id: `${log.id}-failed-${index}`, status: "failed", error: log.error || "Generation failed" } });
+        entries.push({ index: entries.length, result: { id: `${log.id}-failed-${index}`, status: "failed", error: log.error || storeMessage("generationFailed") } });
     }
     return entries.sort((a, b) => a.index - b.index).map((entry) => entry.result);
 }
@@ -459,7 +484,7 @@ function normalizeLogConfig(log: Partial<GenerationLog>): GenerationLogConfig {
 export function buildLogFromResults(baseLog: GenerationLog | null, snapshot: GenerationSnapshot, results: GenerationResult[], durationMs: number, count: string, error?: string): GenerationLog {
     const images = results.flatMap((item, index) => (item.status === "success" && item.image ? [{ ...item.image, id: item.id, slotIndex: item.image.slotIndex ?? index }] : []));
     const imageTasks = results.flatMap((item, index) => (item.status === "pending" && item.task ? [{ ...item.task, resultId: item.id, index }] : []));
-    const failures = results.flatMap((item, index) => (item.status === "failed" ? [{ resultId: item.id, index, error: item.error || error || "Generation failed" }] : []));
+    const failures = results.flatMap((item, index) => (item.status === "failed" ? [{ resultId: item.id, index, error: item.error || error || storeMessage("generationFailed") }] : []));
     const pendingCount = results.filter((item) => item.status === "pending").length;
     const failCount = failures.length;
     const logConfig = buildLogConfig(snapshot.config, count);
@@ -528,7 +553,7 @@ function buildLog({
         id: baseLog?.id || nanoid(),
         creativeConversationId: baseLog?.creativeConversationId,
         createdAt: baseLog?.createdAt || Date.now(),
-        title: baseLog?.title || prompt.slice(0, 12) || "Untitled",
+        title: baseLog?.title || prompt.slice(0, 12) || storeMessage("untitled"),
         prompt,
         time: new Date().toLocaleString("zh-CN", { hour12: false }),
         model,

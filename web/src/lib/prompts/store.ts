@@ -593,10 +593,25 @@ function assertLibrarySeedBatchInput(input: { sourcePrefix: string; source: stri
 }
 
 /**
+ * Read-only: whether this exact versioned seed source is already registered.
+ * Used by import CLI/pipeline to skip rehost before any media download.
+ */
+export async function isLibrarySeedSourceRegistered(source: string): Promise<boolean> {
+    const value = (source || "").trim();
+    if (!value) return false;
+    if (isPostgresDatabaseEnabled()) {
+        await ensurePostgresSchema();
+        return createPostgresRepositories().prompts.hasSeedSource(value);
+    }
+    const db = await readPromptDb({ includeSeeds: false });
+    return db.seedSources.includes(value);
+}
+
+/**
  * Replace one independent library seed batch (PG or file).
  * Never accepts original-author prefix.
  * Postgres: same versioned `source` already registered → skip (idempotent; bump :vN to force replace).
- * File: always replace matching prefix rows (user scope untouched by prefix filter).
+ * File: same versioned source already registered → skip without rewrite.
  */
 export async function replaceLibrarySeedBatch(input: { sourcePrefix: string; source: string; prompts: StoredPrompt[] }): Promise<{ written: number; skipped?: boolean }> {
     assertLibrarySeedBatchInput(input);

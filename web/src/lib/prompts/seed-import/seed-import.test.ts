@@ -3,6 +3,7 @@ import { createEmptyDedupIndex, gateDraft, indexExistingLibrary, qualityGate } f
 import { normalizeCoverUrl, normalizePrompt, promptContentHash } from "@/lib/prompts/seed-import/normalize";
 import { mapToScene, sampleBySceneQuota } from "@/lib/prompts/seed-import/scene-map";
 import type { SeedDraft } from "@/lib/prompts/seed-import/types";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -127,19 +128,55 @@ describe("seed-import scene map", () => {
 });
 
 describe("seed-import adapters against research samples", () => {
-    // From web/src/lib/prompts/seed-import → repo root .trellis/...
+    // Optional local research fixtures (gitignored trellis path); skip when absent.
     const samplesDir = join(fileURLToPath(new URL(".", import.meta.url)), "../../../../../.trellis/tasks/07-27-prompt-en-seed-curation/research/_vendor_samples");
 
     it("parses youmind sample3", async () => {
-        const drafts = await loadSeedDrafts("youmind-skill", join(samplesDir, "youmind-app-web-design.sample3.json"));
+        const samplePath = join(samplesDir, "youmind-app-web-design.sample3.json");
+        if (!existsSync(samplePath)) return;
+        const drafts = await loadSeedDrafts("youmind-skill", samplePath);
         expect(drafts.length).toBeGreaterThanOrEqual(2);
         expect(drafts.some((item) => item.title.includes("Macro"))).toBe(true);
         expect(drafts.some((item) => item.title.includes("Redphase"))).toBe(true);
     });
 
     it("parses gptimage2 sample3 wrapper", async () => {
-        const drafts = await loadSeedDrafts("gptimage2-json", join(samplesDir, "gptimage2-prompts.sample3.json"));
+        const samplePath = join(samplesDir, "gptimage2-prompts.sample3.json");
+        if (!existsSync(samplePath)) return;
+        const drafts = await loadSeedDrafts("gptimage2-json", samplePath);
         expect(drafts.length).toBeGreaterThanOrEqual(2);
         expect(drafts[0].coverOriginUrl.startsWith("https://")).toBe(true);
+    });
+});
+
+describe("seed-import rehost SSRF guard", () => {
+    it("rejects private/metadata URLs before fetch", async () => {
+        const { rehostPromptCover } = await import("@/lib/prompts/seed-import/rehost");
+        const result = await rehostPromptCover("http://127.0.0.1/latest/meta-data/", "prompt-seed:test");
+        expect(result).toEqual({ ok: false, reason: "unsafe_url" });
+    });
+
+    it("rejects cloud metadata hostnames", async () => {
+        const { rehostPromptCover } = await import("@/lib/prompts/seed-import/rehost");
+        const result = await rehostPromptCover("http://metadata.google.internal/computeMetadata/v1/", "prompt-seed:test");
+        expect(result).toEqual({ ok: false, reason: "unsafe_url" });
+    });
+});
+
+describe("seed-import pipeline skip-if-registered", () => {
+    it("returns empty prompts without loading drafts when source already registered", async () => {
+        const { runSeedImport } = await import("@/lib/prompts/seed-import/pipeline");
+        const report = await runSeedImport({
+            sourceKey: "youmind-skill",
+            inputPath: "/nonexistent",
+            library: [],
+            dryRun: false,
+            skipRehost: false,
+            skipIfSourceRegistered: true,
+            registeredSeedSources: ["vozeb-pro/youmind-skill:v1"],
+        });
+        expect(report.accepted).toBe(0);
+        expect(report.prompts).toEqual([]);
+        expect(report.skipped.source_registered).toBe(1);
     });
 });

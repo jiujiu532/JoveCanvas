@@ -6,7 +6,7 @@ import { createLocalMediaResponse, mediaContentDisposition } from "@/lib/server/
 import { getLocalMediaRegistration, type LocalMediaRegistration } from "@/lib/server/local-media-registry";
 import { createExternalMediaReadUrl } from "@/lib/server/object-storage-service";
 import { isReferenceAssetPath, readReferenceAsset } from "@/lib/server/reference-asset-store";
-import { checkLocalMediaRateLimit, rateLimitHeaders } from "@/lib/server/security";
+import { checkLocalMediaRateLimit, getClientIp, rateLimitHeaders } from "@/lib/server/security";
 
 import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
@@ -38,7 +38,8 @@ export async function GET(request: Request, context: RouteContext) {
     if (!signed) {
         registration = await getLocalMediaRegistration(storagePath);
         if (registration && isPublicPromptSeedCover(registration)) {
-            rateIdentity = `public-prompt-seed:${request.headers.get("x-forwarded-for") || "anon"}`;
+            // Use hop-aware client IP (never raw XFF string — spoofable).
+            rateIdentity = `public-prompt-seed:${getClientIp(request)}`;
         } else {
             currentUser = await getCurrentUser();
             if (!currentUser) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });

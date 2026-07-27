@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 import { createClientSessionEpoch, type ClientSessionStamp } from "@/lib/client-session-epoch";
+import { resolveClientStoreLocale } from "@/lib/client-store-locale";
 import type { CanvasProject } from "@/lib/canvas-project-contract";
 import { createCanvasProject, deleteCanvasProjects as deleteCanvasProjectsRequest, listCanvasProjects, saveCanvasProject } from "@/services/api/canvas-projects";
 import { useUserStore } from "@/stores/use-user-store";
@@ -52,14 +53,7 @@ const STORE_MESSAGES = {
 } as const;
 
 function storeMessage(key: keyof (typeof STORE_MESSAGES)["zh"]) {
-    const locale = resolveStoreLocale();
-    return STORE_MESSAGES[locale][key];
-}
-
-function resolveStoreLocale(): "zh" | "en" {
-    if (typeof document === "undefined") return "zh";
-    const match = document.cookie.match(/(?:^|;\s*)NEXT_LOCALE=([^;]+)/);
-    return match?.[1] === "en" ? "en" : "zh";
+    return STORE_MESSAGES[resolveClientStoreLocale()][key];
 }
 
 export const useCanvasStore = create<CanvasStore>((set, get) => ({

@@ -9,13 +9,26 @@ describe("SiteLogo", () => {
 
         expect(markup).toContain('src="https://cdn.example.com/brand.svg"');
         expect(markup).toContain('referrerPolicy="no-referrer"');
+        expect(markup).toContain("object-contain");
         expect(markup).not.toContain("url(/logo.svg)");
+        expect(markup).not.toContain("mask");
     });
 
-    it("keeps the bundled mark as a safe loading fallback", () => {
+    it("renders the bundled multicolor mark as a plain image instead of a monochrome mask", () => {
         const markup = renderToStaticMarkup(<SiteLogo logoUrl="/logo.svg" className="size-8" />);
 
-        expect(markup).toContain("url(/logo.svg)");
-        expect(markup).toContain('aria-hidden="true"');
+        expect(markup).toContain('src="/logo.svg"');
+        expect(markup).toContain('referrerPolicy="no-referrer"');
+        expect(markup).toContain("object-contain");
+        expect(markup).not.toContain("url(/logo.svg)");
+        expect(markup).not.toContain("mask");
+        expect(markup).not.toContain('aria-hidden="true"');
+    });
+
+    it("falls back to the bundled mark when logoUrl is empty", () => {
+        const markup = renderToStaticMarkup(<SiteLogo logoUrl="" className="size-8" />);
+
+        expect(markup).toContain('src="/logo.svg"');
+        expect(markup).toContain("object-contain");
     });
 });

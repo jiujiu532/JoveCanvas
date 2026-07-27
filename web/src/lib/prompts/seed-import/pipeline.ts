@@ -3,7 +3,7 @@ import { createEmptyDedupIndex, gateDraft, indexExistingLibrary } from "@/lib/pr
 import { rehostPromptCover } from "@/lib/prompts/seed-import/rehost";
 import { countByScene, sampleBySceneQuota } from "@/lib/prompts/seed-import/scene-map";
 import { SEED_SOURCE_META, type CuratedSeed, type SeedSourceKey, type SkipReason } from "@/lib/prompts/seed-import/types";
-import type { StoredPromptExport } from "@/lib/prompts/store";
+import { isLibrarySeedSourceRegistered, type StoredPromptExport } from "@/lib/prompts/store";
 
 export type ImportReport = {
     sourceKey: SeedSourceKey;
@@ -27,6 +27,14 @@ export type RunImportOptions = {
     dryRun?: boolean;
     allowExternalCover?: boolean;
     skipRehost?: boolean;
+    /**
+     * When true, if the versioned source is already registered, return immediately
+     * without rehost downloads (idempotent apply guard).
+     * Uses `registeredSeedSources` when provided; otherwise queries store.
+     */
+    skipIfSourceRegistered?: boolean;
+    /** Optional preloaded seedSources list (avoids DB in tests). */
+    registeredSeedSources?: string[];
     existingIndex?: ReturnType<typeof createEmptyDedupIndex>;
     now?: string;
 };
@@ -37,6 +45,27 @@ export async function runSeedImport(options: RunImportOptions): Promise<ImportRe
     const target = options.target ?? meta.targetMax;
     const isDryRun = options.dryRun !== false;
     const skipRehost = options.skipRehost ?? isDryRun;
+
+    if (options.skipIfSourceRegistered) {
+        const registered =
+            options.registeredSeedSources !== undefined
+                ? options.registeredSeedSources.includes(meta.source)
+                : await isLibrarySeedSourceRegistered(meta.source);
+        if (registered) {
+            return {
+                sourceKey: options.sourceKey,
+                source: meta.source,
+                sourcePrefix: meta.sourcePrefix,
+                scanned: 0,
+                accepted: 0,
+                skipped: { source_registered: 1 },
+                sceneCounts: {},
+                localeCounts: {},
+                samples: { accept: [], skip: [{ reason: "source_registered" }] },
+                prompts: [],
+            };
+        }
+    }
 
     const index = options.existingIndex || indexExistingLibrary(options.library, createEmptyDedupIndex());
     const drafts = await loadSeedDrafts(options.sourceKey, options.inputPath);

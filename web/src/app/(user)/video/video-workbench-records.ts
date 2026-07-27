@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 
 import { normalizeVideoResolutionValue, normalizeVideoSizeValue } from "@/components/video-settings-panel";
 import { browserReadableMediaUrl, isRemoteMediaUrl } from "@/lib/browser-media-url";
+import { resolveClientStoreLocale } from "@/lib/client-store-locale";
 import { boolConfig, isSeedanceVideoConfig, normalizeSeedanceRatio } from "@/lib/seedance-video";
 import { resolveMediaUrl } from "@/services/file-storage";
 import { resolveImageUrl } from "@/services/image-storage";
@@ -12,6 +13,30 @@ import type { VideoGenerationTask } from "@/services/api/video";
 import type { AiConfig } from "@/stores/use-config-store";
 import type { ReferenceImage } from "@/types/image";
 import type { ReferenceAudio, ReferenceVideo } from "@/types/media";
+
+// 工作台记录用户可见文案：按 cookie 语言，默认中文
+const STORE_MESSAGES = {
+    zh: {
+        summaryPending: "视频生成中",
+        summaryFailed: "视频生成失败",
+        summaryComplete: "视频生成完成",
+        untitled: "未命名",
+        generationFailed: "生成失败",
+        audioDurationLimit: "已忽略不符合时长限制的参考音频：单段须 2-15 秒，总时长不超过 15 秒",
+    },
+    en: {
+        summaryPending: "Video generation in progress",
+        summaryFailed: "Video generation failed",
+        summaryComplete: "Video generation completed",
+        untitled: "Untitled",
+        generationFailed: "Generation failed",
+        audioDurationLimit: "Ignored reference audio outside the duration limits: each clip must be 2-15 seconds, and total duration cannot exceed 15 seconds",
+    },
+} as const;
+
+function storeMessage(key: keyof (typeof STORE_MESSAGES)["zh"]) {
+    return STORE_MESSAGES[resolveClientStoreLocale()][key];
+}
 
 export type GeneratedVideo = {
     id: string;
@@ -134,7 +159,7 @@ export async function serverVideoLogToWorkbenchLog(record: StoredGenerationLogRe
         status: record.status === "pending" ? "pending" : record.status === "failed" ? "failed" : "success",
         video: videos[videos.length - 1],
         videos,
-        failures: record.status === "failed" ? [{ resultId: serverVideoLogId(record), error: record.error || "Generation failed" }] : [],
+        failures: record.status === "failed" ? [{ resultId: serverVideoLogId(record), error: record.error || storeMessage("generationFailed") }] : [],
         error: record.error,
         resultDeleted: !videos.length && record.status === "success",
     });
@@ -168,7 +193,7 @@ export async function recordVideoGenerationLog(log: GenerationLog) {
             title: log.title,
             prompt: log.prompt,
             model: log.model || log.config.videoModel || log.config.model,
-            summary: log.status === "success" ? "Video generation completed" : log.status === "failed" ? "Video generation failed" : "Video generation in progress",
+            summary: log.status === "success" ? storeMessage("summaryComplete") : log.status === "failed" ? storeMessage("summaryFailed") : storeMessage("summaryPending"),
             durationMs: log.durationMs,
             count: Math.max(1, resultsFromLog(log).length),
             successCount: videos.length,
@@ -194,7 +219,7 @@ export async function normalizeLog(log: Partial<GenerationLog>): Promise<Generat
         ownerUserId: log.ownerUserId,
         creativeConversationId: log.creativeConversationId,
         createdAt: log.createdAt || Date.now(),
-        title: log.title || log.model || "Untitled",
+        title: log.title || log.model || storeMessage("untitled"),
         prompt: log.prompt || "",
         time: log.time || new Date().toLocaleString("zh-CN", { hour12: false }),
         model: log.model || config.videoModel || "",
@@ -271,7 +296,7 @@ export function filterAudioReferencesByDuration(existing: ReferenceAudio[], next
         total += item.durationMs || 0;
         accepted.push(item);
     }
-    if (skipped) warn("Ignored reference audio outside the duration limits: each clip must be 2-15 seconds, and total duration cannot exceed 15 seconds");
+    if (skipped) warn(storeMessage("audioDurationLimit"));
     return accepted;
 }
 
@@ -287,7 +312,7 @@ export function replaceResult(results: GenerationResult[], resultId: string, nex
 
 export function buildLogFromVideoResults(baseLog: GenerationLog | null, snapshot: GenerationSnapshot, results: GenerationResult[], durationMs: number, error?: string, pending?: { task: VideoGenerationTask; taskResultId: string }): GenerationLog {
     const videos = results.flatMap((result) => (result.status === "success" && result.video ? [result.video] : []));
-    const failures = results.flatMap((result) => (result.status === "failed" ? [{ resultId: result.id, error: result.error || error || "Generation failed" }] : []));
+    const failures = results.flatMap((result) => (result.status === "failed" ? [{ resultId: result.id, error: result.error || error || storeMessage("generationFailed") }] : []));
     const hasPending = results.some((result) => result.status === "pending");
     const status: GenerationLog["status"] = hasPending ? "pending" : videos.length ? "success" : "failed";
     const latestVideo = videos[videos.length - 1];
@@ -370,7 +395,7 @@ export function buildLog({
         id: baseLog?.id || nanoid(),
         creativeConversationId: baseLog?.creativeConversationId,
         createdAt: baseLog?.createdAt || Date.now(),
-        title: baseLog?.title || prompt.slice(0, 12) || "Untitled",
+        title: baseLog?.title || prompt.slice(0, 12) || storeMessage("untitled"),
         prompt,
         time: new Date().toLocaleString("zh-CN", { hour12: false }),
         model,

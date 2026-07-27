@@ -9,6 +9,20 @@ import { createDramaProject, createDramaProjectVersion, deleteDramaProject, getD
 import { useUserStore } from "@/stores/use-user-store";
 import { dramaT } from "./drama-i18n-runtime";
 
+// 投模型用的默认生成文案固定中文，不随 UI locale 切换
+const MODEL_DEFAULT_CONTEXT_SEPARATOR = "，";
+const MODEL_DEFAULT_PARAGRAPH_BOUNDARY = "段落边界";
+const MODEL_DEFAULT_CAMERA_MOTION = "自然镜头运动";
+const MODEL_DEFAULT_NEGATIVE_PROMPT = "文字、水印、角色身份漂移、服装变化、错误肢体";
+
+function modelDefaultImagePrompt(context: string) {
+    return `${context}，角色与画风保持一致，电影分镜画面`;
+}
+
+function modelDefaultVideoPrompt(context: string) {
+    return `${context}，镜头运动自然，人物动作连续，保持角色一致性`;
+}
+
 type DramaStore = {
     hydrated: boolean;
     hydratedUserId: string;
@@ -519,23 +533,23 @@ function scriptToShots(script: string, project: DramaProject): DramaShot[] {
         .filter(Boolean)
         .slice(0, 24)
         .map((text, index) => {
-            const context = [project.style, project.summary, text].filter(Boolean).join(dramaT()("store.contextSeparator"));
+            const context = [project.style, project.summary, text].filter(Boolean).join(MODEL_DEFAULT_CONTEXT_SEPARATOR);
             return {
                 id: `shot-${nanoid()}`,
                 order: index + 1,
                 title: dramaT()("storyboard.shotTitleFallback", { order: String(index + 1).padStart(2, "0") }),
                 description: text,
                 sourceText: text,
-                shotBoundary: dramaT()("store.paragraphBoundary"),
+                shotBoundary: MODEL_DEFAULT_PARAGRAPH_BOUNDARY,
                 dialogue: "",
                 narration: "",
                 utterances: [],
-                imagePrompt: dramaT()("store.defaultImagePrompt", { context }),
-                videoPrompt: dramaT()("store.defaultVideoPrompt", { context }),
-                cameraMotion: dramaT()("store.defaultCameraMotion"),
+                imagePrompt: modelDefaultImagePrompt(context),
+                videoPrompt: modelDefaultVideoPrompt(context),
+                cameraMotion: MODEL_DEFAULT_CAMERA_MOTION,
                 startFramePrompt: text,
                 endFramePrompt: text,
-                negativePrompt: dramaT()("store.defaultNegativePrompt"),
+                negativePrompt: MODEL_DEFAULT_NEGATIVE_PROMPT,
                 continuity: emptyContinuity(),
                 duration: 5,
                 characterIds: [],

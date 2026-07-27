@@ -4,9 +4,11 @@ import { dirname, resolve } from "node:path";
 import { createDatedMediaPath, REFERENCE_MEDIA_ROOT } from "@/lib/server/local-media-storage";
 import { registerLocalMediaAsset } from "@/lib/server/local-media-registry";
 import { persistExternalMediaIfEnabled } from "@/lib/server/object-storage-service";
+import { isSafeOutboundUrl } from "@/lib/server/security";
 
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 20_000;
+const MAX_REDIRECTS = 3;
 
 export type RehostResult = { ok: true; coverUrl: string; token: string } | { ok: false; reason: string };
 
@@ -14,6 +16,7 @@ export type RehostResult = { ok: true; coverUrl: string; token: string } | { ok:
 export async function rehostPromptCover(originUrl: string, mediaSource: string): Promise<RehostResult> {
     const url = (originUrl || "").trim();
     if (!/^https?:\/\//i.test(url)) return { ok: false, reason: "invalid_url" };
+    if (!(await isSafeOutboundUrl(url))) return { ok: false, reason: "unsafe_url" };
 
     let bytes: Buffer;
     let mimeType: string;
@@ -22,7 +25,8 @@ export async function rehostPromptCover(originUrl: string, mediaSource: string):
         bytes = fetched.bytes;
         mimeType = fetched.mimeType;
     } catch (error) {
-        return { ok: false, reason: error instanceof Error ? error.message : "fetch_failed" };
+        const message = error instanceof Error ? error.message : "fetch_failed";
+        return { ok: false, reason: message === "unsafe_url" ? "unsafe_url" : message };
     }
 
     const ext = extensionFromMime(mimeType);
@@ -67,11 +71,7 @@ async function fetchImageBytes(url: string): Promise<{ bytes: Buffer; mimeType: 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
-        const response = await fetch(url, {
-            signal: controller.signal,
-            redirect: "follow",
-            headers: { Accept: "image/*,*/*;q=0.8", "User-Agent": "vozeb-pro-prompt-seed-import/1.0" },
-        });
+        const response = await fetchSafeImageResponse(url, controller.signal);
         if (!response.ok) throw new Error(`http_${response.status}`);
         const contentType = (response.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
         if (contentType && !contentType.startsWith("image/")) throw new Error(`not_image:${contentType}`);
@@ -85,6 +85,24 @@ async function fetchImageBytes(url: string): Promise<{ bytes: Buffer; mimeType: 
     } finally {
         clearTimeout(timer);
     }
+}
+
+/** Manual redirect chain so each hop is re-checked by isSafeOutboundUrl (SSRF). */
+async function fetchSafeImageResponse(initialUrl: string, signal: AbortSignal): Promise<Response> {
+    let target = initialUrl;
+    for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects += 1) {
+        if (!(await isSafeOutboundUrl(target))) throw new Error("unsafe_url");
+        const response = await fetch(target, {
+            signal,
+            redirect: "manual",
+            headers: { Accept: "image/*,*/*;q=0.8", "User-Agent": "vozeb-pro-prompt-seed-import/1.0" },
+        });
+        if (![301, 302, 303, 307, 308].includes(response.status)) return response;
+        const location = response.headers.get("location");
+        if (!location) throw new Error("redirect_missing_location");
+        target = new URL(location, target).toString();
+    }
+    throw new Error("too_many_redirects");
 }
 
 function extensionFromMime(mimeType: string): string {
