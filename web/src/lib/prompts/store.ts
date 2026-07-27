@@ -569,7 +569,8 @@ function collectCategories(items: StoredPrompt[]) {
 }
 
 function isActiveOption(value: string) {
-    return value && value !== "全部" && value !== "all";
+    // Keep in sync with isAllPromptsOption in facet-labels (client display sentinel + legacy).
+    return Boolean(value) && value !== "全部" && value !== "all" && value !== "All" && value !== "__all__";
 }
 
 function isOriginalAuthorSeedSource(source?: string) {

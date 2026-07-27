@@ -4,7 +4,8 @@ import { useMemo } from "react";
 import * as ReactQuery from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
-import { ALL_PROMPTS_OPTION, fetchPrompts, type PromptListResponse } from "@/services/api/prompts";
+import { ALL_PROMPTS_OPTION, sortPromptFacetValues } from "@/lib/prompts/facet-labels";
+import { fetchPrompts, type PromptListResponse } from "@/services/api/prompts";
 
 const PROMPT_PAGE_SIZE = 20;
 const usePagedPromptQuery = (ReactQuery as Record<string, any>)[`use${"In"}finiteQuery`];
@@ -35,8 +36,14 @@ export function usePromptList({ keyword, tags, category, enabled = true }: { key
     return {
         query,
         items: useMemo(() => query.data?.pages.flatMap((page) => page.items) || [], [query.data?.pages]),
-        tags: useMemo(() => [ALL_PROMPTS_OPTION, ...(firstPage?.tags || [])], [firstPage?.tags]),
-        categories: useMemo(() => [ALL_PROMPTS_OPTION, ...(firstPage?.categories || [])], [firstPage?.categories]),
+        tags: useMemo(
+            () => sortPromptFacetValues([ALL_PROMPTS_OPTION, ...(firstPage?.tags || [])], preferLocale, "tag"),
+            [firstPage?.tags, preferLocale],
+        ),
+        categories: useMemo(
+            () => sortPromptFacetValues([ALL_PROMPTS_OPTION, ...(firstPage?.categories || [])], preferLocale, "category"),
+            [firstPage?.categories, preferLocale],
+        ),
         total: firstPage?.total || 0,
     };
 }

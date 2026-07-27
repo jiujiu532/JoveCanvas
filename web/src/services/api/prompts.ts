@@ -1,3 +1,4 @@
+import { ALL_PROMPTS_OPTION, isAllPromptsOption } from "@/lib/prompts/facet-labels";
 import { compactApiParams, serializeApiParams } from "@/services/api/request";
 
 export type Prompt = {
@@ -16,7 +17,7 @@ export type Prompt = {
     updatedAt: string;
 };
 
-export const ALL_PROMPTS_OPTION = "全部";
+export { ALL_PROMPTS_OPTION, isAllPromptsOption };
 
 export type PromptListResponse = {
     items: Prompt[];
@@ -46,7 +47,7 @@ export async function fetchPrompts({
         compactApiParams({
             ...(keyword ? { keyword } : {}),
             ...(tag.length ? { tag } : {}),
-            ...(category !== ALL_PROMPTS_OPTION ? { category } : {}),
+            ...(!isAllPromptsOption(category) ? { category } : {}),
             ...(random ? { random: "1" } : {}),
             ...(page ? { page } : {}),
             ...(pageSize ? { pageSize } : {}),

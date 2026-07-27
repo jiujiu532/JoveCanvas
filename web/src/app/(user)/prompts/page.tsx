@@ -3,20 +3,22 @@
 import { FolderPlus, Search } from "lucide-react";
 import { type UIEvent, useEffect, useRef, useState } from "react";
 import { App, Button, Input, Select, Spin, Tag } from "antd";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { PromptCard } from "@/components/prompts/prompt-card";
 import { CompactEmptyState } from "@/components/compact-empty-state";
 import { PromptDetailDialog } from "@/components/prompts/prompt-detail-dialog";
 import { usePromptList } from "@/components/prompts/use-prompt-list";
 import { useCopyText } from "@/hooks/use-copy-text";
+import { ALL_PROMPTS_OPTION, isAllPromptsOption, labelPromptCategory, labelPromptTag } from "@/lib/prompts/facet-labels";
 import { cn } from "@/lib/utils";
+import type { Prompt } from "@/services/api/prompts";
 import { useAssetStore } from "@/stores/use-asset-store";
-import { ALL_PROMPTS_OPTION, type Prompt } from "@/services/api/prompts";
 
 export default function PromptsPage() {
     const { message } = App.useApp();
     const t = useTranslations("workspace.prompts");
+    const locale = useLocale();
     const [titleKeyword, setTitleKeyword] = useState("");
     const [selectedTag, setSelectedTag] = useState(ALL_PROMPTS_OPTION);
     const [selectedCategory, setSelectedCategory] = useState(ALL_PROMPTS_OPTION);
@@ -24,9 +26,17 @@ export default function PromptsPage() {
     const scrollContainerRef = useRef<HTMLElement | null>(null);
     const addAsset = useAssetStore((state) => state.addAsset);
     const copyText = useCopyText();
-    const activeTags = selectedTag === ALL_PROMPTS_OPTION ? [] : [selectedTag];
-    const { query, items: promptItems, tags: promptTags, categories: promptCategoryOptions, total: totalPrompts } = usePromptList({ keyword: titleKeyword, tags: activeTags, category: selectedCategory });
-    const activeFilterLabels = [selectedCategory !== ALL_PROMPTS_OPTION ? selectedCategory : "", selectedTag !== ALL_PROMPTS_OPTION ? selectedTag : "", titleKeyword.trim() ? t("searchFilterLabel", { keyword: titleKeyword.trim() }) : ""].filter(Boolean);
+    const activeTags = isAllPromptsOption(selectedTag) ? [] : [selectedTag];
+    const { query, items: promptItems, tags: promptTags, categories: promptCategoryOptions, total: totalPrompts } = usePromptList({
+        keyword: titleKeyword,
+        tags: activeTags,
+        category: selectedCategory,
+    });
+    const activeFilterLabels = [
+        !isAllPromptsOption(selectedCategory) ? labelPromptCategory(selectedCategory, locale) : "",
+        !isAllPromptsOption(selectedTag) ? labelPromptTag(selectedTag, locale) : "",
+        titleKeyword.trim() ? t("searchFilterLabel", { keyword: titleKeyword.trim() }) : "",
+    ].filter(Boolean);
 
     useEffect(() => {
         if (query.isError) {
@@ -42,7 +52,15 @@ export default function PromptsPage() {
 
     const savePromptAsset = async (item: Prompt) => {
         try {
-            await addAsset({ kind: "text", title: item.title, coverUrl: item.coverUrl, tags: item.tags, source: item.category, data: { content: item.prompt }, metadata: { source: "prompt-library", promptId: item.id, githubUrl: item.githubUrl || "" } });
+            await addAsset({
+                kind: "text",
+                title: item.title,
+                coverUrl: item.coverUrl,
+                tags: item.tags,
+                source: item.category,
+                data: { content: item.prompt },
+                metadata: { source: "prompt-library", promptId: item.id, githubUrl: item.githubUrl || "" },
+            });
             message.success(t("addedToAssets"));
         } catch (error) {
             message.error(error instanceof Error ? error.message : t("assetSaveFailed"));
@@ -82,16 +100,33 @@ export default function PromptsPage() {
                                 />
                             </div>
                             <div className="mx-auto mt-2.5 grid max-w-6xl grid-cols-2 gap-1.5 sm:hidden">
-                                <Select aria-label={t("categoryAriaLabel")} value={selectedCategory} options={promptCategoryOptions.map((category) => ({ label: category, value: category }))} onChange={setSelectedCategory} />
-                                <Select showSearch aria-label={t("tagAriaLabel")} optionFilterProp="label" value={selectedTag} options={promptTags.map((tag) => ({ label: tag, value: tag }))} onChange={setSelectedTag} />
+                                <Select
+                                    aria-label={t("categoryAriaLabel")}
+                                    value={selectedCategory}
+                                    options={promptCategoryOptions.map((category) => ({ label: labelPromptCategory(category, locale), value: category }))}
+                                    onChange={setSelectedCategory}
+                                />
+                                <Select
+                                    showSearch
+                                    aria-label={t("tagAriaLabel")}
+                                    optionFilterProp="label"
+                                    value={selectedTag}
+                                    options={promptTags.map((tag) => ({ label: labelPromptTag(tag, locale), value: tag }))}
+                                    onChange={setSelectedTag}
+                                />
                             </div>
                             <div className="mx-auto mt-4 hidden max-w-6xl gap-3 text-left sm:grid">
                                 <div className="grid gap-2 sm:grid-cols-[56px_minmax(0,1fr)] sm:items-start">
                                     <div className="pt-2 text-xs font-medium text-stone-500 dark:text-stone-400">{t("categoryLabel")}</div>
                                     <div className="flex flex-wrap gap-2">
                                         {promptCategoryOptions.map((category) => (
-                                            <Tag.CheckableTag key={category} checked={selectedCategory === category} className={cn("prompt-filter-tag", selectedCategory === category && "is-active")} onChange={() => setSelectedCategory(category)}>
-                                                {category}
+                                            <Tag.CheckableTag
+                                                key={category}
+                                                checked={selectedCategory === category}
+                                                className={cn("prompt-filter-tag", selectedCategory === category && "is-active")}
+                                                onChange={() => setSelectedCategory(category)}
+                                            >
+                                                {labelPromptCategory(category, locale)}
                                             </Tag.CheckableTag>
                                         ))}
                                     </div>
@@ -100,8 +135,13 @@ export default function PromptsPage() {
                                     <div className="pt-2 text-xs font-medium text-stone-500 dark:text-stone-400">{t("tagLabel")}</div>
                                     <div className="thin-scrollbar flex max-h-28 flex-wrap gap-2 overflow-y-auto pr-1">
                                         {promptTags.map((tag) => (
-                                            <Tag.CheckableTag key={tag} checked={tag === selectedTag} className={cn("prompt-filter-tag", tag === selectedTag && "is-active")} onChange={() => toggleTag(tag)}>
-                                                {tag}
+                                            <Tag.CheckableTag
+                                                key={tag}
+                                                checked={tag === selectedTag}
+                                                className={cn("prompt-filter-tag", tag === selectedTag && "is-active")}
+                                                onChange={() => toggleTag(tag)}
+                                            >
+                                                {labelPromptTag(tag, locale)}
                                             </Tag.CheckableTag>
                                         ))}
                                     </div>
