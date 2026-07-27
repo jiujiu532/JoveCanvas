@@ -49,7 +49,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         });
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin user update failed", error);
-        return NextResponse.json({ error: "更新用户失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.userUpdateFailed") }, { status: 500 });
     }
 }
 
@@ -78,6 +78,6 @@ export async function DELETE(request: Request, context: RouteContext) {
         });
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin user delete failed", error);
-        return NextResponse.json({ error: "删除用户失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.userDeleteFailed") }, { status: 500 });
     }
 }

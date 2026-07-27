@@ -17,14 +17,35 @@
             "beauty": "美颜"
         },
         "heroPipeline": {
-            "recognition": { "name": "参考图识别", "status": "完成" },
-            "styleGeneration": { "name": "风格生成", "status": "生成中" },
-            "detailPolish": { "name": "细节优化", "status": "待处理" }
+            "recognition": {
+                "name": "参考图识别",
+                "status": "完成"
+            },
+            "styleGeneration": {
+                "name": "风格生成",
+                "status": "生成中"
+            },
+            "detailPolish": {
+                "name": "细节优化",
+                "status": "待处理"
+            }
         },
         "heroOutput": {
-            "commerce": { "label": "电商", "title": "上新视觉", "detail": "商品展示 / 海报 / 详情" },
-            "comic": { "label": "短剧", "title": "角色分镜", "detail": "封面 / 连载 / 对话" },
-            "beauty": { "label": "美颜", "title": "人像精修", "detail": "肤色 / 光影 / 质感" }
+            "commerce": {
+                "label": "电商",
+                "title": "上新视觉",
+                "detail": "商品展示 / 海报 / 详情"
+            },
+            "comic": {
+                "label": "短剧",
+                "title": "角色分镜",
+                "detail": "封面 / 连载 / 对话"
+            },
+            "beauty": {
+                "label": "美颜",
+                "title": "人像精修",
+                "detail": "肤色 / 光影 / 质感"
+            }
         },
         "workbenchTaskStatus": "创作任务 / 生成中",
         "creativeBoardLabel": "AI 创作台",
@@ -151,9 +172,18 @@
         "wizardTitle": "{site} 安装向导",
         "wizardSubtitle": "三步完成服务器初始化",
         "steps": {
-            "intro": { "title": "安装说明", "description": "确认部署方式和准备事项" },
-            "database": { "title": "配置数据库", "description": "生成配置并初始化 PostgreSQL" },
-            "admin": { "title": "创建管理员", "description": "创建第一个后台账号" }
+            "intro": {
+                "title": "安装说明",
+                "description": "确认部署方式和准备事项"
+            },
+            "database": {
+                "title": "配置数据库",
+                "description": "生成配置并初始化 PostgreSQL"
+            },
+            "admin": {
+                "title": "创建管理员",
+                "description": "创建第一个后台账号"
+            }
         },
         "stepLockedHint": "先完成数据库和加密配置",
         "metricDatabaseLabel": "数据库",
@@ -221,10 +251,22 @@
             "headerTitle": "数据库填写",
             "headerSubtitle": "生成 PostgreSQL 环境变量",
             "modes": {
-                "local": { "label": "本机", "description": "Web 与 PostgreSQL 都直接运行在当前系统，不使用 Docker；配置保存到 web/.env.local。" },
-                "docker": { "label": "Docker", "description": "Web 与项目自带 PostgreSQL 分别运行在容器中，由默认 docker-compose.yml 一起启动。" },
-                "baota": { "label": "宝塔", "description": "Web 运行在容器中，连接宝塔宿主机已经安装的 PostgreSQL；不会再启动一套数据库。" },
-                "cloud": { "label": "云数据库", "description": "Web 连接云厂商提供的远程 PostgreSQL，需要填写服务商地址并按要求启用 SSL。" }
+                "local": {
+                    "label": "本机",
+                    "description": "Web 与 PostgreSQL 都直接运行在当前系统，不使用 Docker；配置保存到 web/.env.local。"
+                },
+                "docker": {
+                    "label": "Docker",
+                    "description": "Web 与项目自带 PostgreSQL 分别运行在容器中，由默认 docker-compose.yml 一起启动。"
+                },
+                "baota": {
+                    "label": "宝塔",
+                    "description": "Web 运行在容器中，连接宝塔宿主机已经安装的 PostgreSQL；不会再启动一套数据库。"
+                },
+                "cloud": {
+                    "label": "云数据库",
+                    "description": "Web 连接云厂商提供的远程 PostgreSQL，需要填写服务商地址并按要求启用 SSL。"
+                }
             },
             "snippetEnvLabel": "环境变量",
             "snippetEnvTitleLocal": "web/.env.local",
@@ -302,5 +344,10 @@
                 }
             }
         }
+    },
+    "notFound": {
+        "title": "页面不存在",
+        "description": "这个地址没有对应的页面，可能已经移动或被合并到其他入口。",
+        "backHome": "返回首页"
     }
 }

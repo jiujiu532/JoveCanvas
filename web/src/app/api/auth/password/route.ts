@@ -13,7 +13,7 @@ export async function PATCH(request: Request) {
     if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const limit = await checkRateLimit(`password-change:${currentUser.id}`, { maxRequests: 5, windowMs: 15 * 60 * 1000 });
-    if (!limit.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "操作" }), retryAfter: Math.ceil((limit.resetAt - Date.now()) / 1000) }, { status: 429 });
+    if (!limit.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.operation") }), retryAfter: Math.ceil((limit.resetAt - Date.now()) / 1000) }, { status: 429 });
 
     try {
         const body = await readJsonBody<{ currentPassword?: unknown; newPassword?: unknown }>(request);
@@ -27,6 +27,6 @@ export async function PATCH(request: Request) {
     } catch (error) {
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Password update failed", error);
-        return NextResponse.json({ error: "修改密码失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.changePasswordFailed") }, { status: 500 });
     }
 }

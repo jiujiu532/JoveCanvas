@@ -30,9 +30,9 @@ export async function POST(request: Request) {
         if (!conversationId) throw new CreativeRuntimeServiceError("创作会话不能为空", 400);
         if (!(file instanceof File)) throw new CreativeRuntimeServiceError("请选择上传文件", 400);
         const asset = await uploadAssetForUser(user.id, conversationId, file);
-        return NextResponse.json({ code: 0, data: { asset }, msg: "素材已上传" });
+        return NextResponse.json({ code: 0, data: { asset }, msg: await serverMessage("media.assetUploaded") });
     } catch (error) {
-        if (error instanceof RequestBodyTooLargeError) return NextResponse.json({ code: error.status, data: null, msg: "单个素材不能超过 20MB" }, { status: error.status });
+        if (error instanceof RequestBodyTooLargeError) return NextResponse.json({ code: error.status, data: null, msg: await serverMessage("media.assetTooLarge20mb") }, { status: error.status });
         if (error instanceof CreativeRuntimeServiceError) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
         throw error;
     }

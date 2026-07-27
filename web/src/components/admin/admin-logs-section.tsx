@@ -67,6 +67,7 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 import { nanoid } from "nanoid";
+import { useTranslations } from "next-intl";
 
 import { formatCreditAmount } from "@/constant/credits";
 import { normalizeDefaultModelsConfig } from "@/lib/model-routing-config";
@@ -103,6 +104,7 @@ import {
 import { PROMPT_PAGE_SIZE, PROMPT_SEARCH_DEBOUNCE_MS, CDK_PAGE_SIZE, GENERATION_LOG_PAGE_SIZE } from "./use-admin-dashboard-controller";
 
 export function AdminLogsSection({ controller }: { controller: AdminDashboardController }) {
+    const t = useTranslations("admin");
     const {
         users,
         generationLogs,
@@ -138,7 +140,7 @@ export function AdminLogsSection({ controller }: { controller: AdminDashboardCon
     if (activeSection !== "logs") return null;
     return (
         <Panel>
-            <PanelHeader title="调用记录" description="查看用户通过画布、图片工作台和视频创作台产生的生成任务、入口来源和调用状态。" />
+            <PanelHeader title={t("nav.sections.logs.label")} description={t("logs.section.description")} />
             <div className="space-y-4 p-4 sm:p-5">
                 <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_286px] xl:items-start">
                     <div className="grid min-w-0 grid-cols-2 gap-2.5 sm:grid-cols-[minmax(220px,300px)_118px_138px_118px_minmax(132px,180px)]">
@@ -146,7 +148,7 @@ export function AdminLogsSection({ controller }: { controller: AdminDashboardCon
                             allowClear
                             className="col-span-2 min-w-0 sm:col-span-1"
                             prefix={<Search className="size-4 text-stone-400" />}
-                            placeholder="搜索日志"
+                            placeholder={t("logs.section.searchPlaceholder")}
                             value={generationLogSearch}
                             onChange={(event) => {
                                 setGenerationLogSearch(event.target.value);
@@ -156,52 +158,52 @@ export function AdminLogsSection({ controller }: { controller: AdminDashboardCon
                         <Select
                             allowClear
                             className="min-w-0"
-                            placeholder="类型"
+                            placeholder={t("logs.table.kind")}
                             value={generationLogKind || undefined}
                             onChange={(value) => {
                                 setGenerationLogKind(value || "");
                                 setGenerationLogPage(1);
                             }}
                             options={[
-                                { label: "图片", value: "image" },
-                                { label: "视频", value: "video" },
+                                { label: t("logs.kind.image"), value: "image" },
+                                { label: t("logs.kind.video"), value: "video" },
                             ]}
                         />
                         <Select
                             allowClear
                             className="min-w-0"
-                            placeholder="入口"
+                            placeholder={t("logs.table.source")}
                             value={generationLogSource || undefined}
                             onChange={(value) => {
                                 setGenerationLogSource(value || "");
                                 setGenerationLogPage(1);
                             }}
                             options={[
-                                { label: "画布", value: "canvas" },
-                                { label: "生图工作台", value: "image-workbench" },
-                                { label: "视频创作台", value: "video-workbench" },
+                                { label: t("logs.source.canvas"), value: "canvas" },
+                                { label: t("logs.source.imageWorkbench"), value: "image-workbench" },
+                                { label: t("logs.source.videoWorkbench"), value: "video-workbench" },
                             ]}
                         />
                         <Select
                             allowClear
                             className="min-w-0"
-                            placeholder="状态"
+                            placeholder={t("logs.table.status")}
                             value={generationLogStatus || undefined}
                             onChange={(value) => {
                                 setGenerationLogStatus(value || "");
                                 setGenerationLogPage(1);
                             }}
                             options={[
-                                { label: "成功", value: "success" },
-                                { label: "失败", value: "failed" },
-                                { label: "生成中", value: "pending" },
+                                { label: t("logs.status.success"), value: "success" },
+                                { label: t("logs.status.failed"), value: "failed" },
+                                { label: t("logs.status.pending"), value: "pending" },
                             ]}
                         />
                         <Select
                             allowClear
                             className="min-w-0"
                             showSearch
-                            placeholder="用户"
+                            placeholder={t("logs.table.user")}
                             value={generationLogUserId || undefined}
                             optionFilterProp="label"
                             onChange={(value) => {
@@ -216,8 +218,8 @@ export function AdminLogsSection({ controller }: { controller: AdminDashboardCon
                         classNames={{ popup: { root: "admin-date-picker-dropdown" } }}
                         allowClear
                         format="YYYY-MM-DD"
-                        placeholder={["开始日期", "结束日期"]}
-                        separator="至"
+                        placeholder={[t("logs.section.startDate"), t("logs.section.endDate")]}
+                        separator={t("logs.section.dateRangeSeparator")}
                         value={generationLogStart || generationLogEnd ? [generationLogStart ? dayjs(generationLogStart) : null, generationLogEnd ? dayjs(generationLogEnd) : null] : null}
                         onChange={(dates) => {
                             setGenerationLogStart(dates?.[0]?.format("YYYY-MM-DD") || "");
@@ -228,22 +230,28 @@ export function AdminLogsSection({ controller }: { controller: AdminDashboardCon
                 </div>
                 <div className="flex flex-col gap-3 rounded-lg border border-stone-200 bg-stone-50/70 px-3 py-3 dark:border-stone-800 dark:bg-stone-900/40 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-wrap items-center gap-2 text-sm text-stone-500 dark:text-stone-400">
-                        <span>共 {generationLogTotal} 条</span>
-                        <span>已选 {selectedGenerationLogs.length} 条</span>
+                        <span>{t("logs.section.totalCount", { count: generationLogTotal })}</span>
+                        <span>{t("logs.section.selectedCount", { count: selectedGenerationLogs.length })}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
                         <Button className="w-full sm:w-auto" icon={<RefreshCw className="size-4" />} loading={generationLogsLoading} onClick={() => void loadGenerationLogs()}>
-                            刷新
+                            {t("cdk.section.refresh")}
                         </Button>
                         <Button className="w-full sm:w-auto" disabled={!generationLogs.length} onClick={() => setSelectedGenerationLogIds(generationLogs.map((log) => log.id))}>
-                            本页全选
+                            {t("logs.section.selectAllOnPage")}
                         </Button>
                         <Button className="w-full sm:w-auto" onClick={resetGenerationLogFilters}>
-                            清除筛选
+                            {t("logs.section.clearFilters")}
                         </Button>
-                        <Popconfirm title="删除选中的生成日志？" description="只删除后台日志和本地日志预览资源，不会删除用户账号或提示词库。" okText="删除" cancelText="取消" onConfirm={() => void deleteGenerationLogsByIds(selectedGenerationLogIds)}>
+                        <Popconfirm
+                            title={t("logs.section.bulkDeleteConfirmTitle")}
+                            description={t("logs.section.bulkDeleteConfirmDescription")}
+                            okText={t("logs.table.deleteOk")}
+                            cancelText={t("logs.table.deleteCancel")}
+                            onConfirm={() => void deleteGenerationLogsByIds(selectedGenerationLogIds)}
+                        >
                             <Button className="w-full sm:w-auto" danger disabled={!selectedGenerationLogIds.length} loading={bulkDeletingGenerationLogs} icon={<Trash2 className="size-4" />}>
-                                删除所选
+                                {t("logs.section.deleteSelected")}
                             </Button>
                         </Popconfirm>
                     </div>
@@ -259,7 +267,7 @@ export function AdminLogsSection({ controller }: { controller: AdminDashboardCon
                             onDelete={() => void deleteGenerationLogsByIds([log.id])}
                         />
                     ))}
-                    {!generationLogs.length && !generationLogsLoading ? <div className="rounded-lg border border-dashed border-stone-300 py-12 text-center text-sm text-stone-500 dark:border-stone-700">暂无生成日志</div> : null}
+                    {!generationLogs.length && !generationLogsLoading ? <div className="rounded-lg border border-dashed border-stone-300 py-12 text-center text-sm text-stone-500 dark:border-stone-700">{t("logs.section.empty")}</div> : null}
                 </div>
                 <div className="hidden md:block">
                     <Table
@@ -273,7 +281,7 @@ export function AdminLogsSection({ controller }: { controller: AdminDashboardCon
                             pageSize: GENERATION_LOG_PAGE_SIZE,
                             total: generationLogTotal,
                             showSizeChanger: false,
-                            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} 条`,
+                            showTotal: (total, range) => t("logs.section.showTotal", { from: range[0], to: range[1], total }),
                             onChange: (page) => setGenerationLogPage(page),
                         }}
                         rowSelection={{

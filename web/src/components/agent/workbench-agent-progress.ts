@@ -41,21 +41,51 @@ export type WorkbenchAgentSession = {
     updatedAt: number;
 };
 
+type ProgressStepKey = "brief" | "direction" | "deliverables" | "submit" | "review";
+
 type ProgressStep = {
-    key: "brief" | "direction" | "deliverables" | "submit" | "review";
+    key: ProgressStepKey;
     label: string;
     status: WorkbenchAgentProgressStepStatus;
 };
 
-const stepDefinitions: Array<Pick<ProgressStep, "key" | "label">> = [
-    { key: "brief", label: "理解当前需求与参考素材" },
-    { key: "direction", label: "检查创作约束" },
-    { key: "deliverables", label: "准备生成任务" },
-    { key: "submit", label: "创建生成任务" },
-    { key: "review", label: "整理生成结果" },
-];
+export type WorkbenchAgentProgressLabels = {
+    brief: string;
+    direction: string;
+    deliverables: string;
+    submit: string;
+    review: string;
+    planning: string;
+    submitting: string;
+    failed: string;
+    cancelled: string;
+    replied: string;
+    analysisDone: string;
+    ready: string;
+    initialText: string;
+};
 
-export function workbenchAgentProgressSteps(progress: WorkbenchAgentProgress): ProgressStep[] {
+// 默认中文文案：供 vitest 与非 React 调用点回落；UI 渲染时传入 t() 结果
+export const DEFAULT_WORKBENCH_AGENT_PROGRESS_LABELS: WorkbenchAgentProgressLabels = {
+    brief: "理解当前需求与参考素材",
+    direction: "检查创作约束",
+    deliverables: "准备生成任务",
+    submit: "创建生成任务",
+    review: "整理生成结果",
+    planning: "正在理解并规划",
+    submitting: "正在创建生成任务",
+    failed: "Agent 执行失败",
+    cancelled: "本次执行已取消",
+    replied: "已回复",
+    analysisDone: "已完成需求分析",
+    ready: "创作任务已就绪",
+    initialText: "正在理解你的需求。",
+};
+
+const stepKeys: ProgressStepKey[] = ["brief", "direction", "deliverables", "submit", "review"];
+
+export function workbenchAgentProgressSteps(progress: WorkbenchAgentProgress, labels: WorkbenchAgentProgressLabels = DEFAULT_WORKBENCH_AGENT_PROGRESS_LABELS): ProgressStep[] {
+    const stepDefinitions = stepKeys.map((key) => ({ key, label: labels[key] }));
     if (progress.intent === "conversation" || (progress.phase === "planning" && !progress.intent)) {
         return [{ ...stepDefinitions[0], status: progress.phase === "completed" ? "completed" : progress.phase === "failed" ? "failed" : progress.phase === "cancelled" ? "cancelled" : "running" }];
     }
@@ -70,20 +100,20 @@ export function workbenchAgentProgressSteps(progress: WorkbenchAgentProgress): P
     }));
 }
 
-export function workbenchAgentProgressHeading(progress: WorkbenchAgentProgress) {
-    if (progress.phase === "planning") return "正在理解并规划";
-    if (progress.phase === "submitting") return "正在创建生成任务";
-    if (progress.phase === "failed") return "Agent 执行失败";
-    if (progress.phase === "cancelled") return "本次执行已取消";
-    if (progress.intent === "conversation") return "已回复";
-    return progress.shouldGenerate === false ? "已完成需求分析" : "创作任务已就绪";
+export function workbenchAgentProgressHeading(progress: WorkbenchAgentProgress, labels: WorkbenchAgentProgressLabels = DEFAULT_WORKBENCH_AGENT_PROGRESS_LABELS) {
+    if (progress.phase === "planning") return labels.planning;
+    if (progress.phase === "submitting") return labels.submitting;
+    if (progress.phase === "failed") return labels.failed;
+    if (progress.phase === "cancelled") return labels.cancelled;
+    if (progress.intent === "conversation") return labels.replied;
+    return progress.shouldGenerate === false ? labels.analysisDone : labels.ready;
 }
 
-export function createWorkbenchAgentProgressMessage(id: string, hasReferences: boolean): WorkbenchAgentMessage {
+export function createWorkbenchAgentProgressMessage(id: string, hasReferences: boolean, labels: WorkbenchAgentProgressLabels = DEFAULT_WORKBENCH_AGENT_PROGRESS_LABELS): WorkbenchAgentMessage {
     return {
         id,
         role: "assistant",
-        text: "正在理解你的需求。",
+        text: labels.initialText,
         progress: { phase: "planning", hasReferences },
     };
 }

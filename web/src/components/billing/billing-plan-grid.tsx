@@ -3,6 +3,7 @@
 import { Button } from "antd";
 import { ArrowUpRight, Check } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { CreditSymbol, formatCreditAmount } from "@/constant/credits";
 import { resolveBrandProductName } from "@/lib/site-brand";
@@ -16,6 +17,7 @@ type BillingPlanGridProps = {
 };
 
 export function BillingPlanGrid({ products, onSelect, variant = "page" }: BillingPlanGridProps) {
+    const t = useTranslations("layout");
     const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", brandProductName: "" };
     const recommendedId = products.find((product) => productMetadata(product).recommended)?.id || products[Math.min(1, products.length - 1)]?.id;
     const [activeProductId, setActiveProductId] = useState(recommendedId);
@@ -33,13 +35,13 @@ export function BillingPlanGrid({ products, onSelect, variant = "page" }: Billin
         <>
             <div className="mb-2 sm:hidden">
                 <div className="mb-2 flex items-center justify-between px-1 text-xs">
-                    <span className="font-medium text-stone-500 dark:text-stone-400">选择方案</span>
+                    <span className="font-medium text-stone-500 dark:text-stone-400">{t("billing.selectPlan")}</span>
                     <span className="tabular-nums text-stone-400 dark:text-stone-500">
                         {products.length ? activeProductIndex + 1 : 0} / {products.length}
                     </span>
                 </div>
                 <div className="-mx-1 px-1 pb-1">
-                    <div className={`grid gap-1.5 ${products.length === 1 ? "grid-cols-1" : "grid-cols-2"}`} role="tablist" aria-label="套餐选择">
+                    <div className={`grid gap-1.5 ${products.length === 1 ? "grid-cols-1" : "grid-cols-2"}`} role="tablist" aria-label={t("billing.planSelectAria")}>
                         {products.map((product) => {
                             const selected = product.id === activeProduct?.id;
                             return (
@@ -90,9 +92,10 @@ export function BillingPlanGrid({ products, onSelect, variant = "page" }: Billin
 }
 
 function PlanCard({ product, index, recommended, variant, onSelect, brandProductName }: { product: BillingProduct; index: number; recommended: boolean; variant: "modal" | "page"; onSelect: (product: BillingProduct) => void; brandProductName: string }) {
+    const t = useTranslations("layout");
     const metadata = productMetadata(product);
     const isPointsProduct = product.productKind === "points";
-    const features = featureLines(product, metadata.features).slice(0, variant === "modal" ? 3 : 4);
+    const features = featureLines(product, metadata.features, t).slice(0, variant === "modal" ? 3 : 4);
     return (
         <article
             className={`relative overflow-hidden rounded-lg border bg-white p-1.5 text-stone-950 shadow-[0_8px_24px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_48px_rgba(15,23,42,0.10)] sm:rounded-[1.4rem] sm:p-6 dark:bg-stone-950 dark:text-white dark:shadow-black/25 ${
@@ -105,7 +108,9 @@ function PlanCard({ product, index, recommended, variant, onSelect, brandProduct
                     {brandProductName} · {String(index + 1).padStart(2, "0")}
                 </span>
                 {recommended ? (
-                    <span className="rounded-full border border-[#cfd7e3] bg-[#eef2f7] px-2 py-0.5 text-[10px] font-semibold text-[#52627a] sm:px-3 sm:py-1 sm:text-[11px] dark:border-[#52627a]/60 dark:bg-[#66758e]/15 dark:text-[#d8dee8]">推荐方案</span>
+                    <span className="rounded-full border border-[#cfd7e3] bg-[#eef2f7] px-2 py-0.5 text-[10px] font-semibold text-[#52627a] sm:px-3 sm:py-1 sm:text-[11px] dark:border-[#52627a]/60 dark:bg-[#66758e]/15 dark:text-[#d8dee8]">
+                        {t("billing.recommended")}
+                    </span>
                 ) : metadata.highlight ? (
                     <span className="rounded-full border border-stone-200 px-3 py-1 text-[11px] font-medium text-stone-500 dark:border-stone-700 dark:text-stone-400">{metadata.highlight}</span>
                 ) : null}
@@ -113,18 +118,18 @@ function PlanCard({ product, index, recommended, variant, onSelect, brandProduct
 
             <div className="relative mt-1 sm:mt-5">
                 <h3 className="text-base font-semibold tracking-tight sm:text-[1.7rem]">{product.name}</h3>
-                <p className="mt-2 hidden line-clamp-2 text-sm leading-6 text-stone-500 sm:block dark:text-stone-400">{product.description || "适合持续完成多媒体创作与商业项目交付。"}</p>
+                <p className="mt-2 hidden line-clamp-2 text-sm leading-6 text-stone-500 sm:block dark:text-stone-400">{product.description || t("billing.defaultDescription")}</p>
             </div>
 
             <div className="relative mt-1 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 border-t border-stone-200 pt-1 sm:mt-5 sm:gap-4 sm:pb-2 sm:pt-5 dark:border-stone-800">
                 <div className="flex items-end gap-1">
                     <span className="pb-1 text-sm font-medium">¥</span>
                     <span className="text-lg font-semibold leading-none tracking-[-0.045em] sm:text-[2.65rem]">{formatYuan(product.amountCents)}</span>
-                    <span className="pb-1 text-sm text-stone-500 dark:text-stone-400">/ {isPointsProduct ? "一次性" : periodLabel(product.periodDays)}</span>
+                    <span className="pb-1 text-sm text-stone-500 dark:text-stone-400">/ {isPointsProduct ? t("billing.perTimeUnit") : periodLabel(product.periodDays, t)}</span>
                 </div>
                 <Button type="primary" size="small" className="profile-primary-button !h-7 !rounded-lg px-1.5 text-xs sm:!h-10 sm:min-w-36 sm:!rounded-xl" onClick={() => onSelect(product)}>
                     <span className="inline-flex items-center gap-2">
-                        {isPointsProduct ? "立即充值" : "购买套餐"} <ArrowUpRight className="size-4" />
+                        {isPointsProduct ? t("billing.buyNow") : t("billing.buyPlan")} <ArrowUpRight className="size-4" />
                     </span>
                 </Button>
             </div>
@@ -135,7 +140,7 @@ function PlanCard({ product, index, recommended, variant, onSelect, brandProduct
                         <CreditSymbol className="text-[10px]" />
                     </span>
                     <span>
-                        <strong className="font-semibold text-stone-950 dark:text-white">{formatCreditAmount(product.pointsAmount)}</strong> {isPointsProduct ? "永久积分" : "创作积分"}
+                        <strong className="font-semibold text-stone-950 dark:text-white">{formatCreditAmount(product.pointsAmount)}</strong> {isPointsProduct ? t("billing.permanentPoints") : t("billing.creativePoints")}
                     </span>
                 </li>
                 {features.map((line) => (
@@ -168,17 +173,17 @@ function productMetadata(product: BillingProduct) {
     };
 }
 
-function featureLines(product: BillingProduct, configured: string[]) {
+function featureLines(product: BillingProduct, configured: string[], t: ReturnType<typeof useTranslations>) {
     if (configured.length) return configured;
-    if (product.productKind === "points") return ["支付成功后一次性到账", "永久积分不会按日过期", "订单与积分流水可查"];
-    return ["图片、视频、音频与 Agent 创作", "适用于个人创作与商业项目交付", "订单、套餐和积分流水统一管理", product.periodDays ? `${product.periodDays} 天完整套餐权益` : "长期有效套餐权益"];
+    if (product.productKind === "points") return [t("billing.pointsFeature1"), t("billing.pointsFeature2"), t("billing.pointsFeature3")];
+    return [t("billing.planFeature1"), t("billing.planFeature2"), t("billing.planFeature3"), product.periodDays ? t("billing.planDaysFeature", { days: product.periodDays }) : t("billing.planLongTermFeature")];
 }
 
-function periodLabel(periodDays: number) {
-    if (!periodDays) return "长期";
-    if (periodDays === 30) return "月";
-    if (periodDays === 365) return "年";
-    return `${periodDays} 天`;
+function periodLabel(periodDays: number, t: ReturnType<typeof useTranslations>) {
+    if (!periodDays) return t("billing.longTerm");
+    if (periodDays === 30) return t("billing.perMonth");
+    if (periodDays === 365) return t("billing.perYear");
+    return t("billing.perDays", { days: periodDays });
 }
 
 function formatYuan(amountCents: number) {

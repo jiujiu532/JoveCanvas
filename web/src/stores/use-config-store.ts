@@ -400,7 +400,7 @@ export function useEffectiveConfig() {
 function createModelChannel(channel?: Partial<ModelChannel>): ModelChannel {
     return {
         id: channel?.id?.trim() || nanoid(),
-        name: channel?.name?.trim() || "新渠道",
+        name: channel?.name?.trim() || "New channel",
         baseUrl: channel?.baseUrl?.trim() || DEFAULT_SYSTEM_BASE_URL,
         apiKey: channel?.apiKey || "",
         apiFormat: channel?.apiFormat === "gemini" ? "gemini" : "openai",
@@ -491,7 +491,7 @@ export function resolveModelChannel(config: AiConfig, value: string) {
         .sort((a, b) => a.priority - b.priority)
         .find((item) => channels.some((channel) => channel.id === item.channelId));
     const matched = binding ? channels.find((channel) => channel.id === binding.channelId) : decoded ? channels.find((channel) => channel.id === decoded.channelId) : channels.find((channel) => channel.models.includes(model));
-    return matched || channels[0] || createModelChannel({ id: "default", name: "默认渠道", models: config.models.map(modelOptionName) });
+    return matched || channels[0] || createModelChannel({ id: "default", name: "Default channel", models: config.models.map(modelOptionName) });
 }
 
 export function resolveModelRequestConfig(config: AiConfig, value: string) {
@@ -515,7 +515,7 @@ function normalizeChannels(config: AiConfig) {
             createModelChannel({
                 ...channel,
                 id: channel.id || (index === 0 ? "default" : `channel-${index + 1}`),
-                name: channel.name || (index === 0 ? "默认渠道" : `渠道 ${index + 1}`),
+                name: channel.name || (index === 0 ? "Default channel" : `Channel ${index + 1}`),
                 apiKey: "system",
                 models: uniqueRawModels(channel.models || []),
             }),
@@ -541,7 +541,7 @@ function normalizedModelName(model: string) {
 
 export function buildApiUrl(baseUrl: string, path: string) {
     let normalizedBaseUrl = baseUrl.trim().replace(/\/+$/, "");
-    if (!normalizedBaseUrl.startsWith("/api/ai/system/")) throw new Error("客户端只能调用后台系统模型渠道");
+    if (!normalizedBaseUrl.startsWith("/api/ai/system/")) throw new Error("Client can only call system model channels");
     normalizedBaseUrl = normalizeArkPlanBaseUrl(normalizedBaseUrl);
     const lowerBaseUrl = normalizedBaseUrl.toLowerCase();
     const apiBaseUrl = lowerBaseUrl.endsWith("/v1") || lowerBaseUrl.endsWith("/api/v3") || lowerBaseUrl.endsWith("/api/plan/v3") ? normalizedBaseUrl : `${normalizedBaseUrl}/v1`;

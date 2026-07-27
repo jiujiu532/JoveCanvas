@@ -3,24 +3,26 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Bot, BookOpen, Check, Circle, CircleStop, History, LoaderCircle, Plus, Search, SlidersHorizontal, XCircle } from "lucide-react";
 import { Button, Input, Popover, Tooltip } from "antd";
+import { useTranslations } from "next-intl";
 
 import { AgentMessageActions } from "@/components/agent/agent-message-actions";
 import { formatAgentMessageText } from "@/components/agent/agent-message-format";
 import { CreativeAgentControls, CreativeAgentSkillCard, type CreativeAgentModelOption } from "@/components/agent/creative-agent-controls";
 import type { AgentSkillSummary } from "@/services/api/agent-skills";
 import { cn } from "@/lib/utils";
-import { workbenchAgentProgressHeading, workbenchAgentProgressSteps, type WorkbenchAgentChoice, type WorkbenchAgentMessage } from "./workbench-agent-progress";
+import { workbenchAgentProgressHeading, workbenchAgentProgressSteps, type WorkbenchAgentChoice, type WorkbenchAgentMessage, type WorkbenchAgentProgressLabels } from "./workbench-agent-progress";
 
 export type { WorkbenchAgentMessage, WorkbenchAgentSession } from "./workbench-agent-progress";
 export type WorkbenchSkillOption = AgentSkillSummary;
 
 export function WorkbenchAgentHeader({ subtitle, historyContent, onNew }: { subtitle: string; historyContent: (query: string, closeHistory: () => void) => ReactNode; onNew: () => void }) {
+    const t = useTranslations("layout");
     const [historyQuery, setHistoryQuery] = useState("");
     const [historyOpen, setHistoryOpen] = useState(false);
     const history = (
         <div className="w-[360px] max-w-[calc(100vw-32px)] p-2">
-            <div className="mb-3 text-base font-semibold">生成记录</div>
-            <Input prefix={<Search className="size-4 text-stone-400" />} placeholder="搜索记录或对话内容" value={historyQuery} onChange={(event) => setHistoryQuery(event.target.value)} allowClear />
+            <div className="mb-3 text-base font-semibold">{t("agent.header.historyTitle")}</div>
+            <Input prefix={<Search className="size-4 text-stone-400" />} placeholder={t("agent.header.historySearchPlaceholder")} value={historyQuery} onChange={(event) => setHistoryQuery(event.target.value)} allowClear />
             <div className="thin-scrollbar mt-3 max-h-[380px] overflow-y-auto">{historyContent(historyQuery.trim(), () => setHistoryOpen(false))}</div>
         </div>
     );
@@ -36,9 +38,9 @@ export function WorkbenchAgentHeader({ subtitle, historyContent, onNew }: { subt
                 </div>
             </div>
             <div className="flex gap-1">
-                <Button className="workbench-agent-icon-button" type="text" shape="circle" icon={<Plus className="size-4" />} onClick={onNew} aria-label="新建对话" />
+                <Button className="workbench-agent-icon-button" type="text" shape="circle" icon={<Plus className="size-4" />} onClick={onNew} aria-label={t("agent.header.newConversation")} />
                 <Popover trigger="click" placement="bottomRight" content={history} open={historyOpen} onOpenChange={setHistoryOpen}>
-                    <Button className="workbench-agent-icon-button" type="text" shape="circle" icon={<History className="size-4" />} aria-label="生成记录" />
+                    <Button className="workbench-agent-icon-button" type="text" shape="circle" icon={<History className="size-4" />} aria-label={t("agent.header.history")} />
                 </Popover>
             </div>
         </header>
@@ -46,14 +48,15 @@ export function WorkbenchAgentHeader({ subtitle, historyContent, onNew }: { subt
 }
 
 export function WorkbenchSkillEmptyState({ skills, onSelect }: { skills: WorkbenchSkillOption[]; onSelect: (skill: WorkbenchSkillOption) => void }) {
+    const t = useTranslations("layout");
     return (
         <div className="flex min-h-12 flex-1 items-center justify-center overflow-hidden px-1 py-1.5 text-center sm:min-h-[180px] sm:px-4 sm:py-4">
             <div className="min-w-0 max-w-full">
                 <div className="mx-auto mb-2 hidden size-8 place-items-center rounded-lg bg-stone-100 sm:mb-3 sm:grid sm:size-10 sm:rounded-xl dark:bg-stone-800">
                     <Bot className="size-4" />
                 </div>
-                <h2 className="text-xs font-semibold sm:text-base">告诉我你想创作什么</h2>
-                <p className="mx-auto mt-1 hidden max-w-[360px] text-xs leading-5 text-stone-500 sm:block dark:text-stone-400">描述你想生成的画面，也可以添加参考素材。</p>
+                <h2 className="text-xs font-semibold sm:text-base">{t("agent.emptyState.title")}</h2>
+                <p className="mx-auto mt-1 hidden max-w-[360px] text-xs leading-5 text-stone-500 sm:block dark:text-stone-400">{t("agent.emptyState.desc")}</p>
                 <div className="mx-auto mt-2 grid w-full max-w-[320px] grid-cols-2 gap-1.5 sm:mt-4 sm:flex sm:max-w-[390px] sm:flex-wrap sm:justify-center sm:gap-2">
                     {skills.map((skill) => (
                         <button
@@ -72,8 +75,9 @@ export function WorkbenchSkillEmptyState({ skills, onSelect }: { skills: Workben
 }
 
 export function WorkbenchBackgroundTaskNotice({ count }: { count: number }) {
+    const t = useTranslations("layout");
     if (!count) return null;
-    return <div className="mx-1 mt-3 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-700 dark:border-sky-500/25 dark:bg-sky-500/10 dark:text-sky-200">有 {count} 个后台生成任务仍在运行，可在历史记录中查看进度。</div>;
+    return <div className="mx-1 mt-3 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-700 dark:border-sky-500/25 dark:bg-sky-500/10 dark:text-sky-200">{t("agent.backgroundTask", { count })}</div>;
 }
 
 export function WorkbenchAgentConversation({
@@ -93,6 +97,15 @@ export function WorkbenchAgentConversation({
     onChoice?: (choice: WorkbenchAgentChoice) => void;
     onEditMessage: (text: string) => void;
 }) {
+    const t = useTranslations("layout");
+    const formatLabels = {
+        default: t("agent.errors.default"),
+        insufficientPoints: t("agent.errors.insufficientPoints"),
+        partialTaskFailure: t("agent.errors.partialTaskFailure"),
+        modelUnavailable: t("agent.errors.modelUnavailable"),
+        taskRunning: t("agent.errors.taskRunning"),
+        taskCompleted: t("agent.errors.taskCompleted"),
+    };
     const scrollRef = useRef<HTMLDivElement>(null);
     const scrollStateRef = useRef<{ firstId?: string; height: number }>({ height: 0 });
     const hasActiveProgress = messages.some((message) => message.progress?.phase === "planning" || message.progress?.phase === "submitting");
@@ -110,12 +123,12 @@ export function WorkbenchAgentConversation({
             {hasOlderMessages ? (
                 <div className="flex justify-center">
                     <Button type="text" size="small" loading={olderMessagesLoading} disabled={olderMessagesLoading} onClick={onLoadOlder}>
-                        加载更早对话
+                        {t("agent.loadOlder")}
                     </Button>
                 </div>
             ) : null}
             {messages.map((message) => {
-                const displayMessage = { ...message, text: formatAgentMessageText(message.text) };
+                const displayMessage = { ...message, text: formatAgentMessageText(message.text, formatLabels) };
                 return (
                     <div key={message.id} className={`group/message flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                         <div className={`flex max-w-[92%] flex-col ${message.role === "user" ? "items-end" : "items-start"}`}>
@@ -132,7 +145,7 @@ export function WorkbenchAgentConversation({
             {running && !hasActiveProgress && messages.at(-1)?.role === "user" ? (
                 <div className="flex items-center gap-2 px-2 text-sm text-stone-500">
                     <LoaderCircle className="size-4 animate-spin" />
-                    Agent 正在处理当前需求…
+                    {t("agent.processing")}
                 </div>
             ) : null}
         </div>
@@ -140,11 +153,27 @@ export function WorkbenchAgentConversation({
 }
 
 function WorkbenchAgentProgressMessage({ message }: { message: WorkbenchAgentMessage }) {
+    const t = useTranslations("layout");
     const progress = message.progress!;
-    const steps = workbenchAgentProgressSteps(progress);
+    const labels: WorkbenchAgentProgressLabels = {
+        brief: t("agent.progress.brief"),
+        direction: t("agent.progress.direction"),
+        deliverables: t("agent.progress.deliverables"),
+        submit: t("agent.progress.submit"),
+        review: t("agent.progress.review"),
+        planning: t("agent.progress.planning"),
+        submitting: t("agent.progress.submitting"),
+        failed: t("agent.progress.failed"),
+        cancelled: t("agent.progress.cancelled"),
+        replied: t("agent.progress.replied"),
+        analysisDone: t("agent.progress.analysisDone"),
+        ready: t("agent.progress.ready"),
+        initialText: t("agent.progress.initialText"),
+    };
+    const steps = workbenchAgentProgressSteps(progress, labels);
     return (
         <div className="w-[320px] max-w-full">
-            <div className="font-semibold text-current">{workbenchAgentProgressHeading(progress)}</div>
+            <div className="font-semibold text-current">{workbenchAgentProgressHeading(progress, labels)}</div>
             <div className="mt-3 space-y-2">
                 {steps.map((step) => (
                     <div key={step.key} className={`flex items-center gap-2 text-xs ${step.status === "pending" ? "text-stone-400 dark:text-stone-500" : "text-current"}`}>
@@ -163,6 +192,7 @@ function WorkbenchAgentProgressMessage({ message }: { message: WorkbenchAgentMes
 }
 
 function WorkbenchAgentResponseMessage({ message, onChoice }: { message: WorkbenchAgentMessage; onChoice?: (choice: WorkbenchAgentChoice) => void }) {
+    const t = useTranslations("layout");
     return (
         <div className="w-[340px] max-w-full">
             <p className="whitespace-pre-wrap">{message.text}</p>
@@ -175,7 +205,7 @@ function WorkbenchAgentResponseMessage({ message, onChoice }: { message: Workben
                             className="block w-full rounded-xl border border-current/15 bg-white/55 px-3 py-2.5 text-left transition hover:-translate-y-0.5 hover:border-current/30 hover:bg-white dark:bg-black/15 dark:hover:bg-black/25"
                             onClick={() => onChoice?.(choice)}
                         >
-                            <span className="block text-xs font-semibold">{index === 0 ? `推荐 · ${choice.label}` : choice.label}</span>
+                            <span className="block text-xs font-semibold">{index === 0 ? t("agent.recommended", { label: choice.label }) : choice.label}</span>
                             <span className="mt-0.5 block text-[11px] leading-5 opacity-65">{choice.description}</span>
                         </button>
                     ))}
@@ -224,13 +254,14 @@ export function WorkbenchComposerFrame({
     defaultModelCapability: CreativeAgentModelOption["capability"];
     submit: ReactNode;
 }) {
+    const t = useTranslations("layout");
     const addMenu = (
         <div className="w-48 space-y-1">
             <Button type="text" block className="!justify-start" icon={<Plus className="size-4" />} onClick={onAdd}>
-                上传文件
+                {t("agent.composer.uploadFile")}
             </Button>
             <Button type="text" block className="!justify-start" icon={<BookOpen className="size-4" />} onClick={onLibrary}>
-                从素材库选择
+                {t("agent.composer.fromLibrary")}
             </Button>
         </div>
     );
@@ -242,7 +273,7 @@ export function WorkbenchComposerFrame({
             </div>
             <div className="workbench-composer-toolbar mt-2 flex min-w-0 items-center gap-1 border-t border-stone-200/80 pt-2 dark:border-stone-700">
                 <Popover trigger="click" placement="topLeft" content={addMenu}>
-                    <Button className="workbench-composer-icon-button !shrink-0" type="text" shape="circle" icon={<Plus className="size-5" />} aria-label="添加素材" />
+                    <Button className="workbench-composer-icon-button !shrink-0" type="text" shape="circle" icon={<Plus className="size-5" />} aria-label={t("agent.composer.addAsset")} />
                 </Popover>
                 <CreativeAgentControls
                     compact
@@ -265,20 +296,20 @@ export function WorkbenchComposerFrame({
                             content={
                                 <div className="w-[336px] max-w-[calc(100vw-24px)]">
                                     <div className="border-b border-stone-200 px-2 pb-2 pt-1 dark:border-stone-700">
-                                        <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">生成参数</p>
-                                        <p className="mt-0.5 truncate text-[11px] text-stone-500 dark:text-stone-400">当前：{summary}</p>
+                                        <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">{t("agent.composer.generationParams")}</p>
+                                        <p className="mt-0.5 truncate text-[11px] text-stone-500 dark:text-stone-400">{t("agent.composer.currentParams", { summary })}</p>
                                     </div>
                                     <div className="thin-scrollbar max-h-[42dvh] overflow-y-auto px-1 pt-3 sm:max-h-[52vh]">{settingsContent}</div>
                                 </div>
                             }
                         >
-                            <Tooltip title={`生成参数：${summary}`}>
+                            <Tooltip title={t("agent.composer.paramsTooltip", { summary })}>
                                 <Button
                                     type="text"
                                     shape="circle"
                                     className="workbench-composer-icon-button !h-8 !w-8 !min-w-8 !shrink-0 text-stone-500 dark:text-stone-400"
                                     icon={<SlidersHorizontal className="size-4" />}
-                                    aria-label={`打开生成参数，当前 ${summary}`}
+                                    aria-label={t("agent.composer.openParamsAria", { summary })}
                                 />
                             </Tooltip>
                         </Popover>

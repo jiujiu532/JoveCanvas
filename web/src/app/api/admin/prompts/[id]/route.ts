@@ -24,7 +24,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     } catch (error) {
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Update admin prompt failed", error);
-        return NextResponse.json({ error: "更新提示词失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("prompts.updateFailed") }, { status: 500 });
     }
 }
 
@@ -39,6 +39,6 @@ export async function DELETE(_request: Request, context: RouteContext) {
     } catch (error) {
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Delete admin prompt failed", error);
-        return NextResponse.json({ error: "删除提示词失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("prompts.deleteFailed") }, { status: 500 });
     }
 }

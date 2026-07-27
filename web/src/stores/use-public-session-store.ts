@@ -42,7 +42,7 @@ export function loadPublicSession() {
     if (!sessionRequest) {
         sessionRequest = fetch("/api/auth/session", { cache: "no-store" })
             .then(async (response) => {
-                if (!response.ok) throw new Error("会话加载失败");
+                if (!response.ok) throw new Error("Failed to load session");
                 return (await response.json()) as PublicSessionPayload;
             })
             .then((payload) => {

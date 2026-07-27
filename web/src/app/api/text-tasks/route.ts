@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
     if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const rate = await checkGenerationRateLimit(currentUser.id, request, "text");
-    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "文本生成请求" }) }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.textGen") }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const settings = await getAuthSettings();
     const response = await withGenerationConcurrencyLimit(currentUser.id, "text", 5 * 60 * 1000, settings.generationConcurrency.text, async () => {
         let body: CreateTextTaskBody;
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
         }
         const configs = sanitizeConfigs(body.config, settings);
         const messages = sanitizeMessages(body.messages);
-        if (!configs.length || !messages.length) return NextResponse.json({ error: "任务参数不完整" }, { status: 400 });
+        if (!configs.length || !messages.length) return NextResponse.json({ error: await serverMessage("tasks.paramsIncomplete") }, { status: 400 });
 
         const task = await createTextTask({ userId: currentUser.id, config: configs[0], candidateConfigs: configs.slice(1), messages });
         const cookie = request.headers.get("cookie") || "";
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ task: publicTask(task) });
     });
-    return response || NextResponse.json({ error: "当前用户文本任务已达到并发上限" }, { status: 429 });
+    return response || NextResponse.json({ error: await serverMessage("tasks.textConcurrencyLimit") }, { status: 429 });
 }
 
 async function runTextTask(task: TextTask, origin: string, cookie: string) {
@@ -109,7 +109,7 @@ async function runTextTask(task: TextTask, origin: string, cookie: string) {
                 }
                 const completed = await transitionTextTask(candidateTask, ["running"], {
                     status: "success",
-                    result: { content: result.content || "没有返回内容" },
+                    result: { content: result.content || (await serverMessage("tasks.noContent")) },
                     pointsRemaining: result.pointsRemaining,
                     messages: [],
                     config: clearSecret(config),
@@ -119,7 +119,7 @@ async function runTextTask(task: TextTask, origin: string, cookie: string) {
                 return;
             } catch (error) {
                 latestError = error;
-                attempts = finishGenerationAttempt(attempts, candidateTask.attemptNo, { status: "failed", error: toSafeGenerationErrorMessage(error, "文本生成失败") });
+                attempts = finishGenerationAttempt(attempts, candidateTask.attemptNo, { status: "failed", error: toSafeGenerationErrorMessage(error, await serverMessage("tasks.textGenFailed")) });
                 await updateTextTask(task.id, { attempts, attemptNo: candidateTask.attemptNo });
                 const current = await getTextTask(task.id);
                 if (current?.status === "cancelled" || current?.status === "success") return;
@@ -129,7 +129,7 @@ async function runTextTask(task: TextTask, origin: string, cookie: string) {
     } catch (error) {
         const current = await getTextTask(task.id);
         if (current?.status === "cancelled") return;
-        const message = toSafeGenerationErrorMessage(error, "文本生成失败");
+        const message = toSafeGenerationErrorMessage(error, await serverMessage("tasks.textGenFailed"));
         await transitionTextTask(current || task, ["running"], { status: "error", error: message, messages: [], config: clearSecret(current?.config || task.config) });
         await updateTextTask(task.id, { config: clearSecret(current?.config || task.config), candidateConfigs: [], attempts });
     } finally {
@@ -148,7 +148,7 @@ async function runOpenAiTextTask(task: TextTask, origin: string, cookie: string)
         cache: "no-store",
     });
     if (!response.ok) {
-        const errorMessage = await readFetchError(response, "文本生成失败");
+        const errorMessage = await readFetchError(response, await serverMessage("tasks.textGenFailed"));
         if (shouldFallbackToChatCompletions(response.status, errorMessage)) return runOpenAiChatCompletionTask(task, origin, cookie);
         throw new Error(errorMessage);
     }
@@ -156,7 +156,7 @@ async function runOpenAiTextTask(task: TextTask, origin: string, cookie: string)
     try {
         validateResponsePayload(payload);
     } catch (error) {
-        const message = error instanceof Error ? error.message : "文本生成失败";
+        const message = error instanceof Error ? error.message : await serverMessage("tasks.textGenFailed");
         await refundChargedTextResponse(task, response.headers);
         if (shouldFallbackToChatCompletions(400, message)) {
             return runOpenAiChatCompletionTask(task, origin, cookie);
@@ -181,7 +181,7 @@ async function runOpenAiChatCompletionTask(task: TextTask, origin: string, cooki
         body: JSON.stringify({ model: config.model, messages: toChatMessages(withSystemMessage(config, task.messages)) }),
         cache: "no-store",
     });
-    if (!response.ok) throw new Error(await readFetchError(response, "文本生成失败"));
+    if (!response.ok) throw new Error(await readFetchError(response, await serverMessage("tasks.textGenFailed")));
     const payload = (await response.json()) as ChatCompletionPayload;
     try {
         validateChatCompletionPayload(payload);
@@ -205,7 +205,7 @@ async function runGeminiTextTask(task: TextTask, origin: string, cookie: string)
         body: JSON.stringify(toGeminiBody(config, task.messages)),
         cache: "no-store",
     });
-    if (!response.ok) throw new Error(await readFetchError(response, "文本生成失败"));
+    if (!response.ok) throw new Error(await readFetchError(response, await serverMessage("tasks.textGenFailed")));
     const payload = (await response.json()) as GeminiPayload;
     try {
         validateGeminiPayload(payload);

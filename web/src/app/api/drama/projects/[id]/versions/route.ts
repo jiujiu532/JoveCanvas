@@ -12,7 +12,10 @@ export async function GET(_: Request, context: Context) {
 
 export async function POST(request: Request, context: Context) {
     const body = await request.json().catch(() => ({}));
-    return handle(context, (userId, id) => createDramaProjectVersionForUser(userId, id, body).then((version) => NextResponse.json({ code: 0, data: { version }, msg: "短剧版本已保存" })));
+    return handle(context, async (userId, id) => {
+        const version = await createDramaProjectVersionForUser(userId, id, body);
+        return NextResponse.json({ code: 0, data: { version }, msg: await serverMessage("drama.versionSaved") });
+    });
 }
 
 async function handle(context: Context, action: (userId: string, id: string) => Promise<NextResponse>) {

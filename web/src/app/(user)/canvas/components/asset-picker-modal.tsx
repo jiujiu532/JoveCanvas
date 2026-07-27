@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Empty, Input, Modal, Pagination, Spin, Tag } from "antd";
 import { Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { imagePreviewUrl } from "@/lib/media-image-url";
@@ -23,9 +24,10 @@ type Props = {
 };
 
 export function AssetPickerModal({ open, onInsert, onClose }: Props) {
+    const t = useTranslations("canvas");
     return (
         <Modal
-            title="选择素材"
+            title={t("assets.selectTitle")}
             open={open}
             onCancel={onClose}
             footer={null}
@@ -40,15 +42,9 @@ export function AssetPickerModal({ open, onInsert, onClose }: Props) {
 
 const PAGE_SIZE = 8;
 
-const kindOptions = [
-    { label: "全部", value: "all" },
-    { label: "文本", value: "text" },
-    { label: "图片", value: "image" },
-    { label: "视频", value: "video" },
-    { label: "音频", value: "audio" },
-];
-
 function PickerCard({ title, kind, cover, onClick }: { title: string; kind: string; cover: string; onClick: () => void }) {
+    const t = useTranslations("canvas");
+    const kindLabel = kind === "image" ? t("kind.image") : kind === "video" ? t("kind.video") : kind === "audio" ? t("kind.audio") : t("kind.text");
     return (
         <button
             type="button"
@@ -63,15 +59,16 @@ function PickerCard({ title, kind, cover, onClick }: { title: string; kind: stri
             <div className="p-2.5">
                 <div className="flex items-center justify-between gap-2">
                     <span className="line-clamp-1 text-xs font-medium text-stone-800 dark:text-stone-200">{title}</span>
-                    <Tag className="m-0 shrink-0 text-[10px]">{kind === "image" ? "图片" : kind === "video" ? "视频" : kind === "audio" ? "音频" : "文本"}</Tag>
+                    <Tag className="m-0 shrink-0 text-[10px]">{kindLabel}</Tag>
                 </div>
             </div>
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-stone-950/0 text-sm font-medium text-white opacity-0 transition group-hover:bg-stone-950/55 group-hover:opacity-100">插入</div>
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-stone-950/0 text-sm font-medium text-white opacity-0 transition group-hover:bg-stone-950/55 group-hover:opacity-100">{t("assets.insert")}</div>
         </button>
     );
 }
 
 function MyAssetsTab({ open, onInsert }: { open: boolean; onInsert: (payload: InsertAssetPayload) => void }) {
+    const t = useTranslations("canvas");
     const userId = useUserStore((state) => state.user?.id || "");
     const assets = useAssetStore((state) => state.assets);
     const hydrated = useAssetStore((state) => state.hydrated);
@@ -81,6 +78,16 @@ function MyAssetsTab({ open, onInsert }: { open: boolean; onInsert: (payload: In
     const [keyword, setKeyword] = useState("");
     const [kindFilter, setKindFilter] = useState("all");
     const [page, setPage] = useState(1);
+    const kindOptions = useMemo(
+        () => [
+            { label: t("assets.kindAll"), value: "all" },
+            { label: t("kind.text"), value: "text" },
+            { label: t("kind.image"), value: "image" },
+            { label: t("kind.video"), value: "video" },
+            { label: t("kind.audio"), value: "audio" },
+        ],
+        [t],
+    );
 
     const filtered = useMemo(() => {
         const query = keyword.trim().toLowerCase();
@@ -120,7 +127,7 @@ function MyAssetsTab({ open, onInsert }: { open: boolean; onInsert: (payload: In
                     className="w-full sm:w-56"
                     size="small"
                     prefix={<Search className="size-3.5 text-stone-400" />}
-                    placeholder="搜索素材"
+                    placeholder={t("assets.searchPlaceholder")}
                     value={keyword}
                     allowClear
                     onChange={(e) => {
@@ -147,17 +154,17 @@ function MyAssetsTab({ open, onInsert }: { open: boolean; onInsert: (payload: In
 
             {!ready && !syncError ? (
                 <div className="grid min-h-32 place-items-center sm:min-h-56">
-                    <Spin size="small" tip="正在加载素材" />
+                    <Spin size="small" tip={t("assets.loading")} />
                 </div>
             ) : syncError ? (
                 <Alert
                     type="error"
                     showIcon
-                    message="素材加载失败"
+                    message={t("assets.loadFailed")}
                     description={syncError}
                     action={
                         <Button size="small" onClick={() => void hydrate(true)}>
-                            重试
+                            {t("hover.retry")}
                         </Button>
                     }
                 />
@@ -168,7 +175,7 @@ function MyAssetsTab({ open, onInsert }: { open: boolean; onInsert: (payload: In
                     ))}
                 </div>
             ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="没有素材" className="!my-6 sm:!my-8" />
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("assets.empty")} className="!my-6 sm:!my-8" />
             )}
 
             {filtered.length > PAGE_SIZE && (

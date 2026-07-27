@@ -12,6 +12,7 @@ import { App, Button, Dropdown, Input, Popover } from "antd";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { BillingPlansModal } from "@/components/billing/billing-plans-modal";
 import { AnnouncementNotificationCenter } from "@/components/layout/announcement-notification-center";
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { CreditSymbol, formatCreditAmount } from "@/constant/credits";
 import { cn } from "@/lib/utils";
 import { userAvatarFallback } from "@/lib/user-avatar";
@@ -258,6 +259,7 @@ export function UserStatusActions({ variant = "default", onOpenShortcuts, initia
                     setAccountOpen(false);
                 }}
             />
+            <LocaleSwitcher className={cn(naturalIconClass, variant === "canvas" && "canvas-locale-action")} style={iconStyle} />
             <AnimatedThemeToggler
                 theme={theme}
                 onThemeChange={setTheme}

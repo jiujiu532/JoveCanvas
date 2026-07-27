@@ -4,6 +4,7 @@ import { App, Button, Checkbox, Form, Image, Input, Modal, Popconfirm, Select, S
 import type { TableColumnsType } from "antd";
 import { Cloud, DatabaseBackup, Download, Eye, File, FileAudio, Film, RefreshCw, Save, Search, ShieldCheck, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { AdminMediaTypeTabs } from "@/components/admin/admin-media-type-tabs";
 import { Panel, PanelHeader } from "@/components/admin/admin-panel";
@@ -14,6 +15,7 @@ import { deleteExternalStorageFiles, getExternalStorageFiles, getObjectStorageSe
 const PAGE_SIZE = 30;
 
 export function AdminExternalStorage() {
+    const t = useTranslations("admin");
     const { message } = App.useApp();
     const [form] = Form.useForm<ObjectStorageSettingsUpdate>();
     const enabled = Form.useWatch("enabled", form);
@@ -42,12 +44,12 @@ export function AdminExternalStorage() {
                 setFiles(await getExternalStorageFiles({ prefix: targetPrefix, cursor: targetCursor, limit: PAGE_SIZE, type: targetType, source: targetSource }));
                 setSelectedKeys([]);
             } catch (error) {
-                message.error(error instanceof Error ? error.message : "外部存储文件加载失败");
+                message.error(error instanceof Error ? error.message : t("externalStorage.loadFilesFailed"));
             } finally {
                 setLoadingFiles(false);
             }
         },
-        [message],
+        [message, t],
     );
 
     useEffect(() => {
@@ -67,7 +69,7 @@ export function AdminExternalStorage() {
                     secretAccessKey: "",
                 });
             })
-            .catch((error) => message.error(error instanceof Error ? error.message : "外部存储配置加载失败"))
+            .catch((error) => message.error(error instanceof Error ? error.message : t("externalStorage.loadSettingsFailed")))
             .finally(() => active && setLoadingSettings(false));
         return () => {
             active = false;
@@ -85,11 +87,11 @@ export function AdminExternalStorage() {
             const next = await saveObjectStorageSettings(values);
             setSettings(next);
             form.setFieldsValue({ accessKeyId: "", secretAccessKey: "" });
-            message.success("外部存储配置已保存");
+            message.success(t("externalStorage.saveSuccess"));
             setCursor("");
             setCursorHistory([]);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "外部存储配置保存失败");
+            message.error(error instanceof Error ? error.message : t("externalStorage.saveFailed"));
         } finally {
             setSaving(false);
         }
@@ -99,9 +101,9 @@ export function AdminExternalStorage() {
         setTesting(true);
         try {
             await testObjectStorageSettings();
-            message.success("外部存储连接正常");
+            message.success(t("externalStorage.testSuccess"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "外部存储连接失败");
+            message.error(error instanceof Error ? error.message : t("externalStorage.testFailed"));
         } finally {
             setTesting(false);
         }
@@ -121,8 +123,8 @@ export function AdminExternalStorage() {
                 setSyncResult({ ...total, errors: [...total.errors] });
                 if (!result.remaining || !result.migrated) break;
             }
-            if (total.failed) message.warning(`已迁移 ${total.migrated} 个文件，${total.failed} 个失败并保留在本地`);
-            else message.success(`已迁移 ${total.migrated} 个本地文件`);
+            if (total.failed) message.warning(t("externalStorage.migratePartial", { migrated: total.migrated, failed: total.failed }));
+            else message.success(t("externalStorage.migrateSuccess", { migrated: total.migrated }));
             if (cursor) {
                 setCursor("");
                 setCursorHistory([]);
@@ -130,7 +132,7 @@ export function AdminExternalStorage() {
                 await loadFiles("", prefix, type, source);
             }
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "本地媒体迁移失败");
+            message.error(error instanceof Error ? error.message : t("externalStorage.migrateFailed"));
         } finally {
             setSyncing(false);
         }
@@ -141,11 +143,11 @@ export function AdminExternalStorage() {
             setDeleting(true);
             try {
                 const result = await deleteExternalStorageFiles(keys);
-                if (result.blocked.length) message.warning(`${result.blocked.length} 个对象仍被业务记录引用，已保留`);
-                else message.success(`已删除 ${result.deleted} 个对象`);
+                if (result.blocked.length) message.warning(t("externalStorage.deleteBlocked", { count: result.blocked.length }));
+                else message.success(t("externalStorage.deleteSuccess", { count: result.deleted }));
                 await loadFiles(cursor, prefix, type, source);
             } catch (error) {
-                message.error(error instanceof Error ? error.message : "外部存储对象删除失败");
+                message.error(error instanceof Error ? error.message : t("externalStorage.deleteFailed"));
             } finally {
                 setDeleting(false);
             }
@@ -156,7 +158,7 @@ export function AdminExternalStorage() {
     const columns = useMemo<TableColumnsType<ExternalStorageFile>>(
         () => [
             {
-                title: "对象",
+                title: t("externalStorage.table.object"),
                 render: (_, file) => (
                     <div className="flex min-w-0 items-center gap-3">
                         <MediaThumbnail file={file} onPreview={setPreview} />
@@ -171,38 +173,38 @@ export function AdminExternalStorage() {
                     </div>
                 ),
             },
-            { title: "大小", width: 110, render: (_, file) => formatBytes(file.bytes) },
+            { title: t("externalStorage.table.size"), width: 110, render: (_, file) => formatBytes(file.bytes) },
             {
-                title: "登记",
+                title: t("externalStorage.table.registry"),
                 width: 150,
                 render: (_, file) => (
                     <div className="space-y-1 text-xs">
-                        <Tag color={file.storageKey ? "green" : "default"}>{file.storageKey ? "业务媒体" : file.variant ? "预览变体" : "独立对象"}</Tag>
-                        {file.referenceCount ? <div className="text-zinc-500">引用 {file.referenceCount}</div> : null}
+                        <Tag color={file.storageKey ? "green" : "default"}>{file.storageKey ? t("externalStorage.table.businessMedia") : file.variant ? t("externalStorage.table.previewVariant") : t("externalStorage.table.standalone")}</Tag>
+                        {file.referenceCount ? <div className="text-zinc-500">{t("externalStorage.table.references", { count: file.referenceCount })}</div> : null}
                     </div>
                 ),
             },
             {
-                title: "用户 / 来源",
+                title: t("externalStorage.table.userSource"),
                 width: 180,
                 render: (_, file) => (
                     <div className="text-xs text-zinc-500">
-                        <div className="truncate">{file.ownerUserId || "未登记"}</div>
+                        <div className="truncate">{file.ownerUserId || t("externalStorage.table.unregistered")}</div>
                         <div className="mt-1 truncate">{mediaSourceLabel(file.source)}</div>
                     </div>
                 ),
             },
-            { title: "更新时间", width: 180, render: (_, file) => formatTime(file.lastModified) },
+            { title: t("externalStorage.table.updatedAt"), width: 180, render: (_, file) => formatTime(file.lastModified) },
             {
-                title: "操作",
+                title: t("externalStorage.table.actions"),
                 width: 128,
                 align: "right",
                 render: (_, file) => (
                     <div className="flex justify-end gap-1">
-                        <Button type="text" shape="circle" aria-label="预览对象" icon={<Eye className="size-4" />} onClick={() => setPreview(file)} />
-                        <Button type="text" shape="circle" aria-label="下载对象" icon={<Download className="size-4" />} href={file.downloadUrl} target="_blank" />
-                        <Popconfirm title="删除这个外部存储对象？" description="仍被业务记录引用时会自动保留。" okText="删除" cancelText="取消" onConfirm={() => void remove([file.key])}>
-                            <Button danger type="text" shape="circle" aria-label="删除对象" icon={<Trash2 className="size-4" />} />
+                        <Button type="text" shape="circle" aria-label={t("externalStorage.previewAria")} icon={<Eye className="size-4" />} onClick={() => setPreview(file)} />
+                        <Button type="text" shape="circle" aria-label={t("externalStorage.downloadAria")} icon={<Download className="size-4" />} href={file.downloadUrl} target="_blank" />
+                        <Popconfirm title={t("externalStorage.deleteTitle")} description={t("externalStorage.deleteDesc")} okText={t("externalStorage.delete")} cancelText={t("externalStorage.cancel")} onConfirm={() => void remove([file.key])}>
+                            <Button danger type="text" shape="circle" aria-label={t("externalStorage.deleteAria")} icon={<Trash2 className="size-4" />} />
                         </Popconfirm>
                     </div>
                 ),
@@ -224,18 +226,25 @@ export function AdminExternalStorage() {
         <div className="grid gap-4 sm:gap-6">
             <Panel>
                 <PanelHeader
-                    title="外部存储配置"
-                    description="启用后新媒体直接写入 S3 兼容存储；关闭后新媒体恢复写入本机。"
+                    title={t("externalStorage.configTitle")}
+                    description={t("externalStorage.configDesc")}
                     actions={
                         <>
-                            <Tooltip title="检测连接">
-                                <Button aria-label="检测外部存储连接" className="!w-8 !px-0 sm:!w-auto sm:!px-3" icon={<ShieldCheck className="size-4" />} loading={testing} disabled={!settings?.bucket} onClick={() => void testConnection()}>
-                                    <span className="hidden sm:inline">检测连接</span>
+                            <Tooltip title={t("externalStorage.testConnection")}>
+                                <Button
+                                    aria-label={t("externalStorage.testConnectionAria")}
+                                    className="!w-8 !px-0 sm:!w-auto sm:!px-3"
+                                    icon={<ShieldCheck className="size-4" />}
+                                    loading={testing}
+                                    disabled={!settings?.bucket}
+                                    onClick={() => void testConnection()}
+                                >
+                                    <span className="hidden sm:inline">{t("externalStorage.testConnection")}</span>
                                 </Button>
                             </Tooltip>
-                            <Tooltip title="保存配置">
-                                <Button type="primary" aria-label="保存外部存储配置" className="!w-8 !px-0 sm:!w-auto sm:!px-3" icon={<Save className="size-4" />} loading={saving} onClick={() => form.submit()}>
-                                    <span className="hidden sm:inline">保存</span>
+                            <Tooltip title={t("externalStorage.saveConfig")}>
+                                <Button type="primary" aria-label={t("externalStorage.saveConfigAria")} className="!w-8 !px-0 sm:!w-auto sm:!px-3" icon={<Save className="size-4" />} loading={saving} onClick={() => form.submit()}>
+                                    <span className="hidden sm:inline">{t("externalStorage.save")}</span>
                                 </Button>
                             </Tooltip>
                         </>
@@ -246,35 +255,35 @@ export function AdminExternalStorage() {
                         <div className="max-w-[1080px]">
                             <div className="mb-5 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-2 border-b border-zinc-200 pb-4 dark:border-zinc-800">
                                 <Cloud className={enabled ? "size-4 text-emerald-600 dark:text-emerald-400" : "size-4 text-zinc-400"} />
-                                <span className="text-xs text-zinc-500 dark:text-zinc-400">写入位置</span>
-                                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{enabled ? "外部存储" : "本机存储"}</span>
+                                <span className="text-xs text-zinc-500 dark:text-zinc-400">{t("externalStorage.writeLocation")}</span>
+                                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{enabled ? t("externalStorage.external") : t("externalStorage.local")}</span>
                                 <Form.Item name="enabled" valuePropName="checked" className="!mb-0">
-                                    <Switch size="small" aria-label="切换外部存储" />
+                                    <Switch size="small" aria-label={t("externalStorage.toggleAria")} />
                                 </Form.Item>
-                                <span className="text-xs text-zinc-400 dark:text-zinc-500">仅影响新文件</span>
+                                <span className="text-xs text-zinc-400 dark:text-zinc-500">{t("externalStorage.newFilesOnly")}</span>
                             </div>
 
                             <div className="grid gap-x-4 md:grid-cols-2 xl:grid-cols-6">
-                                <Form.Item label="Endpoint" name="endpoint" className="!mb-5 xl:col-span-2" extra="AWS S3 可留空；其他服务填写 S3 Endpoint。">
+                                <Form.Item label="Endpoint" name="endpoint" className="!mb-5 xl:col-span-2" extra={t("externalStorage.endpointExtra")}>
                                     <Input placeholder="https://s3.example.com" />
                                 </Form.Item>
-                                <Form.Item label="Region" name="region" className="!mb-5 xl:col-span-2" rules={[{ required: true, message: "请输入 Region" }]}>
+                                <Form.Item label="Region" name="region" className="!mb-5 xl:col-span-2" rules={[{ required: true, message: t("externalStorage.regionRequired") }]}>
                                     <Input placeholder="us-east-1 / auto" />
                                 </Form.Item>
-                                <Form.Item label="Bucket" name="bucket" className="!mb-5 xl:col-span-2" rules={[{ required: enabled, message: "请输入 Bucket" }]}>
+                                <Form.Item label="Bucket" name="bucket" className="!mb-5 xl:col-span-2" rules={[{ required: enabled, message: t("externalStorage.bucketRequired") }]}>
                                     <Input placeholder="media-bucket" />
                                 </Form.Item>
-                                <Form.Item label="对象路径前缀" name="prefix" className="!mb-5 xl:col-span-3" rules={[{ required: true, message: "请输入路径前缀" }]}>
+                                <Form.Item label={t("externalStorage.prefix")} name="prefix" className="!mb-5 xl:col-span-3" rules={[{ required: true, message: t("externalStorage.prefixRequired") }]}>
                                     <Input placeholder="vozeb-pro" />
                                 </Form.Item>
-                                <Form.Item label="Path-style 模式" name="forcePathStyle" valuePropName="checked" className="!mb-5 xl:col-span-3">
-                                    <Switch size="small" aria-label="切换 Path-style 模式" />
+                                <Form.Item label={t("externalStorage.pathStyle")} name="forcePathStyle" valuePropName="checked" className="!mb-5 xl:col-span-3">
+                                    <Switch size="small" aria-label={t("externalStorage.pathStyleAria")} />
                                 </Form.Item>
-                                <Form.Item label="Access Key" name="accessKeyId" className="!mb-0 xl:col-span-3" extra={settings?.hasAccessKeyId ? "已安全保存；留空不会修改。" : undefined}>
-                                    <Input.Password autoComplete="new-password" placeholder={settings?.hasAccessKeyId ? "已配置" : "Access Key ID"} />
+                                <Form.Item label="Access Key" name="accessKeyId" className="!mb-0 xl:col-span-3" extra={settings?.hasAccessKeyId ? t("externalStorage.secretSaved") : undefined}>
+                                    <Input.Password autoComplete="new-password" placeholder={settings?.hasAccessKeyId ? t("externalStorage.configured") : "Access Key ID"} />
                                 </Form.Item>
-                                <Form.Item label="Secret Key" name="secretAccessKey" className="!mb-0 xl:col-span-3" extra={settings?.hasSecretAccessKey ? "已安全保存；留空不会修改。" : undefined}>
-                                    <Input.Password autoComplete="new-password" placeholder={settings?.hasSecretAccessKey ? "已配置" : "Secret Access Key"} />
+                                <Form.Item label="Secret Key" name="secretAccessKey" className="!mb-0 xl:col-span-3" extra={settings?.hasSecretAccessKey ? t("externalStorage.secretSaved") : undefined}>
+                                    <Input.Password autoComplete="new-password" placeholder={settings?.hasSecretAccessKey ? t("externalStorage.configured") : "Secret Access Key"} />
                                 </Form.Item>
                             </div>
                         </div>
@@ -284,33 +293,39 @@ export function AdminExternalStorage() {
 
             <Panel>
                 <PanelHeader
-                    title="外部存储文件"
-                    description={files ? `${files.bucket} / ${files.prefix}` : "保存配置后可查看和管理对象。"}
+                    title={t("externalStorage.filesTitle")}
+                    description={files ? `${files.bucket} / ${files.prefix}` : t("externalStorage.filesDescEmpty")}
                     actions={
                         <>
-                            <Popconfirm title="把已有本地媒体迁移到外部存储？" description="每个文件上传并登记成功后才会删除本地源文件。" okText="开始迁移" cancelText="取消" onConfirm={() => void migrate()}>
-                                <Tooltip title="迁移本地媒体">
-                                    <Button aria-label="迁移本地媒体" className="!w-8 !px-0 sm:!w-auto sm:!px-3" icon={<DatabaseBackup className="size-4" />} loading={syncing} disabled={!settings?.enabled}>
-                                        <span className="hidden sm:inline">迁移本地媒体</span>
+                            <Popconfirm title={t("externalStorage.migrateTitle")} description={t("externalStorage.migrateDesc")} okText={t("externalStorage.migrateStart")} cancelText={t("externalStorage.cancel")} onConfirm={() => void migrate()}>
+                                <Tooltip title={t("externalStorage.migrateLocal")}>
+                                    <Button aria-label={t("externalStorage.migrateLocalAria")} className="!w-8 !px-0 sm:!w-auto sm:!px-3" icon={<DatabaseBackup className="size-4" />} loading={syncing} disabled={!settings?.enabled}>
+                                        <span className="hidden sm:inline">{t("externalStorage.migrateLocal")}</span>
                                     </Button>
                                 </Tooltip>
                             </Popconfirm>
-                            <Tooltip title="刷新">
+                            <Tooltip title={t("externalStorage.refresh")}>
                                 <Button
-                                    aria-label="刷新外部存储文件"
+                                    aria-label={t("externalStorage.refreshAria")}
                                     className="!w-8 !px-0 sm:!w-auto sm:!px-3"
                                     icon={<RefreshCw className="size-4" />}
                                     loading={loadingFiles}
                                     disabled={!settings?.bucket}
                                     onClick={() => void loadFiles(cursor, prefix, type, source)}
                                 >
-                                    <span className="hidden sm:inline">刷新</span>
+                                    <span className="hidden sm:inline">{t("externalStorage.refresh")}</span>
                                 </Button>
                             </Tooltip>
-                            <Popconfirm title={`删除选中的 ${selectedKeys.length} 个对象？`} description="仍被业务记录引用的对象会自动保留。" okText="批量删除" cancelText="取消" onConfirm={() => void remove(selectedKeys)}>
-                                <Tooltip title="批量删除">
-                                    <Button danger aria-label="批量删除外部存储文件" className="!w-8 !px-0 sm:!w-auto sm:!px-3" icon={<Trash2 className="size-4" />} disabled={!selectedKeys.length} loading={deleting}>
-                                        <span className="hidden sm:inline">批量删除</span>
+                            <Popconfirm
+                                title={t("externalStorage.bulkDeleteTitle", { count: selectedKeys.length })}
+                                description={t("externalStorage.bulkDeleteDesc")}
+                                okText={t("externalStorage.bulkDelete")}
+                                cancelText={t("externalStorage.cancel")}
+                                onConfirm={() => void remove(selectedKeys)}
+                            >
+                                <Tooltip title={t("externalStorage.bulkDelete")}>
+                                    <Button danger aria-label={t("externalStorage.bulkDeleteAria")} className="!w-8 !px-0 sm:!w-auto sm:!px-3" icon={<Trash2 className="size-4" />} disabled={!selectedKeys.length} loading={deleting}>
+                                        <span className="hidden sm:inline">{t("externalStorage.bulkDelete")}</span>
                                     </Button>
                                 </Tooltip>
                             </Popconfirm>
@@ -320,10 +335,10 @@ export function AdminExternalStorage() {
                 <div className="p-4 sm:p-5">
                     {syncResult ? (
                         <div className="mb-4 grid grid-cols-2 overflow-hidden rounded-md border border-zinc-200 text-center sm:grid-cols-4 dark:border-zinc-800">
-                            <StatusMetric label="已迁移" value={syncResult.migrated} />
-                            <StatusMetric label="失败" value={syncResult.failed} />
-                            <StatusMetric label="跳过" value={syncResult.skipped} />
-                            <StatusMetric label="剩余" value={syncResult.remaining} />
+                            <StatusMetric label={t("externalStorage.migrated")} value={syncResult.migrated} />
+                            <StatusMetric label={t("externalStorage.failed")} value={syncResult.failed} />
+                            <StatusMetric label={t("externalStorage.skipped")} value={syncResult.skipped} />
+                            <StatusMetric label={t("externalStorage.remaining")} value={syncResult.remaining} />
                         </div>
                     ) : null}
                     <div>
@@ -340,7 +355,7 @@ export function AdminExternalStorage() {
                             <Input
                                 value={prefixInput}
                                 allowClear
-                                placeholder="按对象路径前缀筛选"
+                                placeholder={t("externalStorage.filterPrefixPlaceholder")}
                                 disabled={!settings?.bucket}
                                 onChange={(event) => {
                                     const next = event.target.value;
@@ -349,8 +364,8 @@ export function AdminExternalStorage() {
                                 }}
                                 onPressEnter={(event) => applyPrefixFilter(event.currentTarget.value)}
                             />
-                            <Tooltip title="筛选">
-                                <Button aria-label="筛选外部存储文件" className="!w-10 !px-0" icon={<Search className="size-4" />} disabled={!settings?.bucket} onClick={() => applyPrefixFilter(prefixInput)} />
+                            <Tooltip title={t("externalStorage.filter")}>
+                                <Button aria-label={t("externalStorage.filterAria")} className="!w-10 !px-0" icon={<Search className="size-4" />} disabled={!settings?.bucket} onClick={() => applyPrefixFilter(prefixInput)} />
                             </Tooltip>
                             <Select
                                 className="col-span-2 md:col-span-1"
@@ -383,33 +398,34 @@ export function AdminExternalStorage() {
                             indeterminate={Boolean(files?.items.some((file) => selectedKeys.includes(file.key))) && !files?.items.every((file) => selectedKeys.includes(file.key))}
                             onChange={(event) => setSelectedKeys(event.target.checked ? (files?.items || []).map((file) => file.key) : [])}
                         >
-                            选择本页
+                            {t("externalStorage.selectPage")}
                         </Checkbox>
                         {(files?.items || []).map((file) => (
                             <div key={file.key} className="flex min-w-0 items-center gap-3 rounded-md border border-zinc-200 p-3 dark:border-zinc-800">
                                 <Checkbox
                                     checked={selectedKeys.includes(file.key)}
-                                    aria-label="选择外部存储对象"
+                                    aria-label={t("externalStorage.selectObjectAria")}
                                     onChange={(event) => setSelectedKeys((current) => (event.target.checked ? [...current, file.key] : current.filter((key) => key !== file.key)))}
                                 />
                                 <MediaThumbnail file={file} onPreview={setPreview} />
                                 <div className="min-w-0 flex-1">
                                     <div className="truncate text-sm font-medium">{file.originalName || file.name}</div>
                                     <div className="mt-1 text-xs text-zinc-500">
-                                        {managedMediaTypeLabel(file.type)} · {formatBytes(file.bytes)} · {file.storageKey ? `引用 ${file.referenceCount}` : file.variant ? "预览变体" : "独立对象"}
+                                        {managedMediaTypeLabel(file.type)} · {formatBytes(file.bytes)} ·{" "}
+                                        {file.storageKey ? t("externalStorage.table.references", { count: file.referenceCount }) : file.variant ? t("externalStorage.table.previewVariant") : t("externalStorage.table.standalone")}
                                     </div>
                                     <div className="mt-1 truncate text-xs text-zinc-500">{mediaSourceLabel(file.source)}</div>
                                     <div className="mt-1 truncate font-mono text-[11px] text-zinc-500">{file.key}</div>
                                 </div>
                                 <div className="flex shrink-0 flex-col gap-0.5">
-                                    <Button type="text" shape="circle" aria-label="下载对象" icon={<Download className="size-4" />} href={file.downloadUrl} target="_blank" />
-                                    <Popconfirm title="删除这个外部存储对象？" description="仍被业务记录引用时会自动保留。" okText="删除" cancelText="取消" onConfirm={() => void remove([file.key])}>
-                                        <Button danger type="text" shape="circle" aria-label="删除对象" icon={<Trash2 className="size-4" />} />
+                                    <Button type="text" shape="circle" aria-label={t("externalStorage.downloadAria")} icon={<Download className="size-4" />} href={file.downloadUrl} target="_blank" />
+                                    <Popconfirm title={t("externalStorage.deleteTitle")} description={t("externalStorage.deleteDesc")} okText={t("externalStorage.delete")} cancelText={t("externalStorage.cancel")} onConfirm={() => void remove([file.key])}>
+                                        <Button danger type="text" shape="circle" aria-label={t("externalStorage.deleteAria")} icon={<Trash2 className="size-4" />} />
                                     </Popconfirm>
                                 </div>
                             </div>
                         ))}
-                        {!loadingFiles && !files?.items.length ? <div className="py-10 text-center text-sm text-zinc-500">暂无外部存储对象</div> : null}
+                        {!loadingFiles && !files?.items.length ? <div className="py-10 text-center text-sm text-zinc-500">{t("externalStorage.empty")}</div> : null}
                     </div>
                     <div className="mt-4 flex items-center justify-end gap-2">
                         <Button
@@ -420,7 +436,7 @@ export function AdminExternalStorage() {
                                 setCursor(previous);
                             }}
                         >
-                            上一页
+                            {t("externalStorage.prevPage")}
                         </Button>
                         <Button
                             disabled={!files?.nextCursor || loadingFiles}
@@ -430,19 +446,19 @@ export function AdminExternalStorage() {
                                 setCursor(next);
                             }}
                         >
-                            下一页
+                            {t("externalStorage.nextPage")}
                         </Button>
                     </div>
                 </div>
             </Panel>
 
             <Modal
-                title={preview?.originalName || preview?.name || "对象预览"}
+                title={preview?.originalName || preview?.name || t("externalStorage.previewTitle")}
                 open={Boolean(preview)}
                 footer={
                     preview ? (
                         <Button icon={<Download className="size-4" />} href={preview.downloadUrl} target="_blank">
-                            下载原文件
+                            {t("externalStorage.downloadOriginal")}
                         </Button>
                     ) : null
                 }
@@ -458,11 +474,12 @@ export function AdminExternalStorage() {
 }
 
 function MediaThumbnail({ file, onPreview }: { file: ExternalStorageFile; onPreview: (file: ExternalStorageFile) => void }) {
+    const t = useTranslations("admin");
     return (
         <button
             type="button"
             className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-md border border-zinc-200 bg-zinc-50 text-zinc-500 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-600 dark:hover:text-white"
-            aria-label="预览外部存储对象"
+            aria-label={t("externalStorage.previewObjectAria")}
             onClick={() => onPreview(file)}
         >
             {file.type === "image" ? (
@@ -479,10 +496,11 @@ function MediaThumbnail({ file, onPreview }: { file: ExternalStorageFile; onPrev
 }
 
 function MediaViewer({ file }: { file: ExternalStorageFile }) {
+    const t = useTranslations("admin");
     if (file.type === "image") return <Image src={file.previewUrl} alt={file.originalName || file.name} className="max-h-[70dvh] w-full object-contain" />;
     if (file.type === "video") return <video src={file.previewUrl} controls className="max-h-[70dvh] w-full rounded-md bg-black" />;
     if (file.type === "audio") return <audio src={file.previewUrl} controls className="w-full" />;
-    return <div className="py-12 text-center text-sm text-zinc-500">此对象不支持在线预览</div>;
+    return <div className="py-12 text-center text-sm text-zinc-500">{t("externalStorage.previewUnsupported")}</div>;
 }
 
 function StatusMetric({ label, value }: { label: string; value: number }) {

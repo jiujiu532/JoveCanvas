@@ -14,7 +14,7 @@ describe("image workbench records", () => {
             pendingCount: 1,
             failCount: 1,
             imageCount: 3,
-            status: "生成中",
+            status: "pending",
         });
 
         expect(resultsFromLog(log)).toEqual([
@@ -29,7 +29,7 @@ describe("image workbench records", () => {
 
         expect(log).toMatchObject({
             prompt: "生成图片",
-            status: "失败",
+            status: "failed",
             error: "生成失败",
             successCount: 0,
             failCount: 1,
@@ -110,7 +110,7 @@ function generationLog(overrides: Partial<GenerationLog> = {}): GenerationLog {
         imageCount: Math.max(1, images.length + failures.length + imageTasks.length),
         size: "1:1",
         quality: "high",
-        status: imageTasks.length ? "生成中" : failures.length && !images.length ? "失败" : "成功",
+        status: imageTasks.length ? "pending" : failures.length && !images.length ? "failed" : "success",
         images,
         thumbnails: images.map((item) => item.dataUrl),
         imageTasks,

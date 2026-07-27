@@ -3,7 +3,8 @@
 import { App, Button, Image, Input, InputNumber, Popconfirm, Tag, Tooltip } from "antd";
 import { Check, ChevronDown, ImagePlus, KeyRound, MapPinned, Package, Plus, SlidersHorizontal, Sparkles, Trash2, Upload, Users } from "lucide-react";
 import { nanoid } from "nanoid";
-import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useMemo, useRef, useState } from "react";
 
 import { compileDramaAssetReferencePrompt } from "@/lib/drama-prompt-compiler";
 import type { DramaAssetReference, DramaCharacter, DramaNamedAsset, DramaProject } from "@/lib/drama-project-contract";
@@ -16,15 +17,10 @@ import { SectionTitle, stableTaskUrl } from "./drama-editor-elements";
 
 type AssetKind = "characters" | "scenes" | "props" | "clues";
 
-const definitions: Array<{ kind: AssetKind; title: string; label: string; icon: typeof Users; profileLabels: [string, string, string, string] }> = [
-    { kind: "characters", title: "角色", label: "人物", icon: Users, profileLabels: ["固定外貌", "服装与造型", "标志色", "一致性规则"] },
-    { kind: "scenes", title: "场景", label: "地点", icon: MapPinned, profileLabels: ["空间结构", "陈设与材质", "环境色", "固定空间规则"] },
-    { kind: "props", title: "道具", label: "道具", icon: Package, profileLabels: ["外形识别", "材质与细节", "固定色彩", "使用与一致性规则"] },
-    { kind: "clues", title: "线索", label: "线索", icon: KeyRound, profileLabels: ["视觉识别", "出现形态", "提示色", "前后呼应规则"] },
-];
-
 export function DramaAssetsPanel({ project }: { project: DramaProject }) {
     const { message } = App.useApp();
+    const t = useTranslations("drama");
+    const tc = useTranslations("common");
     const config = useEffectiveConfig();
     const addCharacter = useDramaStore((state) => state.addCharacter);
     const addScene = useDramaStore((state) => state.addScene);
@@ -44,6 +40,60 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
         props: { name: "", description: "", payoff: "" },
         clues: { name: "", description: "", payoff: "" },
     });
+    const definitions = useMemo(
+        () =>
+            [
+                {
+                    kind: "characters" as const,
+                    title: t("assets.kinds.characters.title"),
+                    label: t("assets.kinds.characters.label"),
+                    icon: Users,
+                    profileLabels: [t("assets.profileLabels.characters.visualIdentity"), t("assets.profileLabels.characters.styling"), t("assets.profileLabels.characters.colorPalette"), t("assets.profileLabels.characters.consistencyRules")] as [
+                        string,
+                        string,
+                        string,
+                        string,
+                    ],
+                },
+                {
+                    kind: "scenes" as const,
+                    title: t("assets.kinds.scenes.title"),
+                    label: t("assets.kinds.scenes.label"),
+                    icon: MapPinned,
+                    profileLabels: [t("assets.profileLabels.scenes.visualIdentity"), t("assets.profileLabels.scenes.styling"), t("assets.profileLabels.scenes.colorPalette"), t("assets.profileLabels.scenes.consistencyRules")] as [
+                        string,
+                        string,
+                        string,
+                        string,
+                    ],
+                },
+                {
+                    kind: "props" as const,
+                    title: t("assets.kinds.props.title"),
+                    label: t("assets.kinds.props.label"),
+                    icon: Package,
+                    profileLabels: [t("assets.profileLabels.props.visualIdentity"), t("assets.profileLabels.props.styling"), t("assets.profileLabels.props.colorPalette"), t("assets.profileLabels.props.consistencyRules")] as [
+                        string,
+                        string,
+                        string,
+                        string,
+                    ],
+                },
+                {
+                    kind: "clues" as const,
+                    title: t("assets.kinds.clues.title"),
+                    label: t("assets.kinds.clues.label"),
+                    icon: KeyRound,
+                    profileLabels: [t("assets.profileLabels.clues.visualIdentity"), t("assets.profileLabels.clues.styling"), t("assets.profileLabels.clues.colorPalette"), t("assets.profileLabels.clues.consistencyRules")] as [
+                        string,
+                        string,
+                        string,
+                        string,
+                    ],
+                },
+            ] as const,
+        [t],
+    );
     const definition = definitions.find((item) => item.kind === activeKind)!;
     const ActiveIcon = definition.icon;
     const items = project[activeKind];
@@ -57,7 +107,7 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
 
     const add = () => {
         const draft = drafts[activeKind];
-        if (!draft.name.trim()) return message.warning(`请输入${definition.label}名称`);
+        if (!draft.name.trim()) return message.warning(t("assets.nameRequired", { label: definition.label }));
         const profile = { visualIdentity: "", styling: "", colorPalette: "", consistencyRules: "" };
         const value = { name: draft.name.trim(), description: draft.description.trim(), profile, references: [], ...(activeKind === "clues" ? { payoff: draft.payoff.trim() } : {}) };
         if (activeKind === "characters") addCharacter(project.id, value);
@@ -76,7 +126,7 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
     };
 
     const appendReference = (item: DramaNamedAsset, reference: DramaAssetReference) => {
-        const references = [...assetReferences(item), reference].slice(-12);
+        const references = [...assetReferences(item, t), reference].slice(-12);
         updateAsset(project.id, activeKind, item.id, {
             references,
             primaryReferenceId: reference.id,
@@ -86,7 +136,7 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
     };
 
     const removeReference = (item: DramaNamedAsset, referenceId: string) => {
-        const references = assetReferences(item).filter((reference) => reference.id !== referenceId);
+        const references = assetReferences(item, t).filter((reference) => reference.id !== referenceId);
         const primary = item.primaryReferenceId === referenceId ? references[0] : references.find((reference) => reference.id === item.primaryReferenceId);
         updateAsset(project.id, activeKind, item.id, {
             references,
@@ -103,9 +153,9 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
         try {
             const stored = await uploadImage(file);
             appendReference(item, { id: `reference-${nanoid()}`, url: stored.serverUrl || stored.url, storageKey: stored.storageKey, source: "upload", label: file.name, createdAt: new Date().toISOString() });
-            message.success("参考图已上传并设为基准");
+            message.success(t("assets.uploadSuccess"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "参考图上传失败");
+            message.error(error instanceof Error ? error.message : t("assets.uploadFailed"));
         } finally {
             setUploadingId("");
             setUploadTargetId("");
@@ -114,14 +164,16 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
     };
 
     const generateReference = async (item: DramaNamedAsset) => {
-        if (activeKind === "clues") return message.info("线索参考图建议从剧情画面中截取并上传");
+        if (activeKind === "clues") return message.info(t("assets.clueGenerateHint"));
         setGeneratingId(item.id);
         try {
             const imageConfig = { ...config, model: config.imageModel || config.model, imageModel: config.imageModel || config.model, size: project.ratio, count: "1" };
-            const prompt = compileDramaAssetReferencePrompt(project, item, activeKind === "characters" ? "角色" : activeKind === "scenes" ? "场景" : "道具");
+            // prompt compiler uses Chinese kind labels as model-facing prompt prefixes (not UI copy)
+            const kindForPrompt = activeKind === "characters" ? "角色" : activeKind === "scenes" ? "场景" : "道具";
+            const prompt = compileDramaAssetReferencePrompt(project, item, kindForPrompt);
             const task = await createImageGenerationTask(imageConfig, prompt, [], undefined, {
                 logSource: "drama",
-                logTitle: `${project.title} · ${item.name}设定图`,
+                logTitle: `${project.title} · ${item.name}${t("assets.settingImageSuffix")}`,
                 conversationId: project.creativeConversationId,
                 surface: "drama",
                 projectId: project.id,
@@ -129,11 +181,11 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
             });
             const result = await waitForImageGenerationTask(imageConfig, task);
             const url = stableTaskUrl(result.remoteUrl, result.serverUrl, result.dataUrl);
-            if (!url) throw new Error("生成结果没有可持久化地址");
-            appendReference(item, { id: `reference-${nanoid()}`, url, source: "generated", label: "AI 候选图", createdAt: new Date().toISOString() });
-            message.success("候选图已生成并设为基准");
+            if (!url) throw new Error(t("assets.generateNoUrl"));
+            appendReference(item, { id: `reference-${nanoid()}`, url, source: "generated", label: t("assets.generatedCandidateLabel"), createdAt: new Date().toISOString() });
+            message.success(t("assets.generateSuccess"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "候选图生成失败");
+            message.error(error instanceof Error ? error.message : t("assets.generateFailed"));
         } finally {
             setGeneratingId("");
         }
@@ -141,7 +193,7 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
 
     return (
         <div>
-            <SectionTitle title="视觉资产" description="先固定角色、场景和关键道具，再让镜头提示词自动引用这些设定。" />
+            <SectionTitle title={t("assets.sectionTitle")} description={t("assets.sectionDescription")} />
             <div className="mb-4 grid grid-cols-4 gap-px overflow-hidden rounded-lg border border-border bg-border sm:mb-6">
                 {definitions.map(({ kind, title, icon: Icon }) => (
                     <button
@@ -166,30 +218,35 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2 font-semibold">
                         <ActiveIcon className="size-4 shrink-0" />
-                        <span>{definition.title}设定</span>
+                        <span>{t("assets.sectionTitleTemplate", { title: definition.title })}</span>
                         <Tag className="!m-0">{items.length}</Tag>
                     </div>
                     <Button type="primary" size="small" icon={<Plus className="size-3.5" />} onClick={add}>
-                        添加{definition.label}
+                        {t("assets.addButton", { label: definition.label })}
                     </Button>
                 </div>
                 <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(140px,0.7fr)_minmax(220px,1.3fr)]">
-                    <Input className="!h-10" value={drafts[activeKind].name} onChange={(event) => setDrafts((state) => ({ ...state, [activeKind]: { ...state[activeKind], name: event.target.value } }))} placeholder={`${definition.label}名称`} />
+                    <Input
+                        className="!h-10"
+                        value={drafts[activeKind].name}
+                        onChange={(event) => setDrafts((state) => ({ ...state, [activeKind]: { ...state[activeKind], name: event.target.value } }))}
+                        placeholder={t("assets.namePlaceholder", { label: definition.label })}
+                    />
                     <Input
                         className="!h-10"
                         value={drafts[activeKind].description}
                         onChange={(event) => setDrafts((state) => ({ ...state, [activeKind]: { ...state[activeKind], description: event.target.value } }))}
-                        placeholder="一句话说明剧情身份或用途"
+                        placeholder={t("assets.descriptionPlaceholder")}
                     />
                     {activeKind === "clues" ? (
-                        <Input className="!h-10 sm:col-span-2" value={drafts.clues.payoff} onChange={(event) => setDrafts((state) => ({ ...state, clues: { ...state.clues, payoff: event.target.value } }))} placeholder="线索在何时揭示或回收" />
+                        <Input className="!h-10 sm:col-span-2" value={drafts.clues.payoff} onChange={(event) => setDrafts((state) => ({ ...state, clues: { ...state.clues, payoff: event.target.value } }))} placeholder={t("assets.payoffPlaceholder")} />
                     ) : null}
                 </div>
 
                 <div className="mt-4 divide-y divide-border overflow-hidden rounded-lg border border-border bg-background sm:mt-5">
                     {items.length ? (
                         items.map((item) => {
-                            const references = assetReferences(item);
+                            const references = assetReferences(item, t);
                             const primary = references.find((reference) => reference.id === item.primaryReferenceId) || references[0];
                             const character = activeKind === "characters" ? (item as DramaCharacter) : undefined;
                             const profile = item.profile || { visualIdentity: "", styling: "", colorPalette: "", consistencyRules: "" };
@@ -201,10 +258,10 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
                                             {primary?.url ? (
                                                 <Image
                                                     src={imagePreviewUrl(primary.url, 256)}
-                                                    alt={`${item.name}基准图`}
+                                                    alt={t("assets.baselineImageAlt", { name: item.name })}
                                                     rootClassName="!block !size-full"
                                                     className="!size-full !object-cover"
-                                                    preview={{ mask: <span className="text-xs">查看</span>, src: imagePreviewUrl(primary.url, 1920) }}
+                                                    preview={{ mask: <span className="text-xs">{t("shared.view")}</span>, src: imagePreviewUrl(primary.url, 1920) }}
                                                 />
                                             ) : (
                                                 <ImagePlus className="size-5 text-muted-foreground" />
@@ -218,11 +275,11 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
                                                 value={item.description}
                                                 onChange={(event) => updateAsset(project.id, activeKind, item.id, { description: event.target.value })}
                                                 autoSize={{ minRows: 1, maxRows: 3 }}
-                                                placeholder="剧情身份或用途"
+                                                placeholder={t("assets.itemDescriptionPlaceholder")}
                                             />
                                         </div>
-                                        <Popconfirm title={`删除${definition.label}？`} onConfirm={() => removeAsset(project.id, activeKind, item.id)} okText="删除" cancelText="取消">
-                                            <Button type="text" danger shape="circle" icon={<Trash2 className="size-4" />} aria-label={`删除${definition.label}`} />
+                                        <Popconfirm title={t("assets.deleteConfirmTitle", { label: definition.label })} onConfirm={() => removeAsset(project.id, activeKind, item.id)} okText={tc("delete")} cancelText={tc("cancel")}>
+                                            <Button type="text" danger shape="circle" icon={<Trash2 className="size-4" />} aria-label={t("assets.deleteAria", { label: definition.label })} />
                                         </Popconfirm>
                                     </div>
 
@@ -238,11 +295,11 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
                                                 <span className="grid size-7 shrink-0 place-items-center rounded-md bg-foreground text-background">
                                                     <SlidersHorizontal className="size-3.5" />
                                                 </span>
-                                                <span className="shrink-0 text-sm font-semibold text-foreground">设定档与参考图</span>
-                                                <span className="hidden truncate text-xs text-muted-foreground sm:block">{primary ? `${references.length} 张参考图 · 已设基准` : "补充外观规则与基准图"}</span>
+                                                <span className="shrink-0 text-sm font-semibold text-foreground">{t("assets.profileButtonTitle")}</span>
+                                                <span className="hidden truncate text-xs text-muted-foreground sm:block">{primary ? t("assets.profileSummaryWithBaseline", { count: references.length }) : t("assets.profileSummaryEmpty")}</span>
                                             </span>
                                             <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-foreground">
-                                                {expanded ? "收起" : "展开"}
+                                                {expanded ? t("shared.collapse") : t("shared.expand")}
                                                 <ChevronDown className={`size-4 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} />
                                             </span>
                                         </button>
@@ -263,7 +320,7 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
                                                             className="sm:col-span-2"
                                                             value={"payoff" in item ? item.payoff : ""}
                                                             onChange={(event) => updateAsset(project.id, activeKind, item.id, { payoff: event.target.value })}
-                                                            placeholder="线索回收位置"
+                                                            placeholder={t("assets.payoffEditPlaceholder")}
                                                         />
                                                     ) : null}
                                                 </div>
@@ -277,7 +334,7 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
                                                                     voiceProfile: { voice: event.target.value, speed: character.voiceProfile?.speed || 1, instructions: character.voiceProfile?.instructions || "" },
                                                                 })
                                                             }
-                                                            placeholder="音色 ID，留空用默认"
+                                                            placeholder={t("assets.voiceIdPlaceholder")}
                                                         />
                                                         <InputNumber
                                                             className="!w-full"
@@ -290,14 +347,14 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
                                                                     voiceProfile: { voice: character.voiceProfile?.voice || "", speed: Number(value) || 1, instructions: character.voiceProfile?.instructions || "" },
                                                                 })
                                                             }
-                                                            addonAfter="倍速"
+                                                            addonAfter={t("assets.voiceSpeedUnit")}
                                                         />
                                                         <Input
                                                             value={character.voiceProfile?.instructions || ""}
                                                             onChange={(event) =>
                                                                 updateAsset(project.id, activeKind, item.id, { voiceProfile: { voice: character.voiceProfile?.voice || "", speed: character.voiceProfile?.speed || 1, instructions: event.target.value } })
                                                             }
-                                                            placeholder="语气、年龄感、情绪等配音指令"
+                                                            placeholder={t("assets.voiceInstructionsPlaceholder")}
                                                         />
                                                     </div>
                                                 ) : null}
@@ -312,14 +369,14 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
                                                             fileInputRef.current?.click();
                                                         }}
                                                     >
-                                                        上传候选
+                                                        {t("shared.uploadCandidate")}
                                                     </Button>
                                                     {activeKind !== "clues" ? (
                                                         <Button size="small" icon={<Sparkles className="size-3.5" />} loading={generatingId === item.id} onClick={() => void generateReference(item)}>
-                                                            生成候选
+                                                            {t("shared.generateCandidate")}
                                                         </Button>
                                                     ) : null}
-                                                    {!primary ? <span className="text-xs text-muted-foreground">建议至少设置一张基准图</span> : null}
+                                                    {!primary ? <span className="text-xs text-muted-foreground">{t("assets.suggestBaseline")}</span> : null}
                                                 </div>
 
                                                 {references.length ? (
@@ -337,10 +394,10 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
                                                                             alt={reference.label}
                                                                             rootClassName="!block !aspect-[4/5] !w-full"
                                                                             className="!size-full !object-cover"
-                                                                            preview={{ mask: <span className="text-xs">查看</span>, src: imagePreviewUrl(reference.url, 1920) }}
+                                                                            preview={{ mask: <span className="text-xs">{t("shared.view")}</span>, src: imagePreviewUrl(reference.url, 1920) }}
                                                                         />
                                                                         <div className={`flex h-8 items-stretch ${isPrimary ? "bg-foreground text-background" : "bg-background text-muted-foreground"}`}>
-                                                                            <Tooltip title={isPrimary ? "当前基准图" : "设为基准图"}>
+                                                                            <Tooltip title={isPrimary ? t("assets.currentBaseline") : t("assets.setAsBaseline")}>
                                                                                 <button
                                                                                     type="button"
                                                                                     aria-pressed={isPrimary}
@@ -349,21 +406,21 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
                                                                                     onClick={() => setPrimaryReference(item, reference)}
                                                                                 >
                                                                                     {isPrimary ? <Check className="size-3.5 shrink-0" /> : null}
-                                                                                    {isPrimary ? "基准" : "设为基准"}
+                                                                                    {isPrimary ? t("assets.baselineTag") : t("assets.setAsBaselineShort")}
                                                                                 </button>
                                                                             </Tooltip>
                                                                             <Popconfirm
-                                                                                title="删除这张参考图？"
-                                                                                description={isPrimary ? "删除后将自动使用下一张候选图作为基准。" : undefined}
-                                                                                okText="删除"
-                                                                                cancelText="取消"
+                                                                                title={t("assets.deleteReferenceConfirmTitle")}
+                                                                                description={isPrimary ? t("assets.deleteReferenceConfirmDescription") : undefined}
+                                                                                okText={tc("delete")}
+                                                                                cancelText={tc("cancel")}
                                                                                 onConfirm={() => removeReference(item, reference.id)}
                                                                             >
-                                                                                <Tooltip title="删除参考图">
+                                                                                <Tooltip title={t("assets.deleteReferenceTooltip")}>
                                                                                     <button
                                                                                         type="button"
                                                                                         className={`grid w-8 shrink-0 place-items-center border-l transition ${isPrimary ? "border-background/15 text-background/70 hover:bg-red-500/20 hover:text-red-100" : "border-border text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-300"}`}
-                                                                                        aria-label={`删除参考图：${reference.label}`}
+                                                                                        aria-label={t("assets.deleteReferenceAria", { label: reference.label })}
                                                                                     >
                                                                                         <Trash2 className="size-3.5" />
                                                                                     </button>
@@ -383,7 +440,7 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
                             );
                         })
                     ) : (
-                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">还没有{definition.title}设定</div>
+                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">{t("assets.emptyKind", { title: definition.title })}</div>
                     )}
                 </div>
             </section>
@@ -392,7 +449,7 @@ export function DramaAssetsPanel({ project }: { project: DramaProject }) {
     );
 }
 
-function assetReferences(item: DramaNamedAsset): DramaAssetReference[] {
+function assetReferences(item: DramaNamedAsset, t: (key: string) => string): DramaAssetReference[] {
     if (item.references?.length) return item.references;
     return item.referenceImageUrl
         ? [
@@ -401,7 +458,7 @@ function assetReferences(item: DramaNamedAsset): DramaAssetReference[] {
                   url: item.referenceImageUrl,
                   storageKey: item.referenceStorageKey,
                   source: "library",
-                  label: "原参考图",
+                  label: t("assets.legacyReferenceLabel"),
                   createdAt: new Date(0).toISOString(),
               },
           ]

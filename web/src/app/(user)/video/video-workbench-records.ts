@@ -55,7 +55,7 @@ export type GenerationLog = {
     size: string;
     resolution: string;
     seconds: string;
-    status: "生成中" | "成功" | "失败";
+    status: "pending" | "success" | "failed";
     task?: VideoGenerationTask;
     taskStartedAt?: number;
     taskResultId?: string;
@@ -131,10 +131,10 @@ export async function serverVideoLogToWorkbenchLog(record: StoredGenerationLogRe
         size: "",
         resolution: "",
         seconds: "",
-        status: record.status === "pending" ? "生成中" : record.status === "failed" ? "失败" : "成功",
+        status: record.status === "pending" ? "pending" : record.status === "failed" ? "failed" : "success",
         video: videos[videos.length - 1],
         videos,
-        failures: record.status === "failed" ? [{ resultId: serverVideoLogId(record), error: record.error || "生成失败" }] : [],
+        failures: record.status === "failed" ? [{ resultId: serverVideoLogId(record), error: record.error || "Generation failed" }] : [],
         error: record.error,
         resultDeleted: !videos.length && record.status === "success",
     });
@@ -164,15 +164,15 @@ export async function recordVideoGenerationLog(log: GenerationLog) {
             id: `video-workbench:${log.id}`,
             kind: "video",
             source: "video-workbench",
-            status: log.status === "成功" ? "success" : log.status === "失败" ? "failed" : "pending",
+            status: log.status === "success" ? "success" : log.status === "failed" ? "failed" : "pending",
             title: log.title,
             prompt: log.prompt,
             model: log.model || log.config.videoModel || log.config.model,
-            summary: log.status === "成功" ? "视频生成完成" : log.status === "失败" ? "视频生成失败" : "视频生成中",
+            summary: log.status === "success" ? "Video generation completed" : log.status === "failed" ? "Video generation failed" : "Video generation in progress",
             durationMs: log.durationMs,
             count: Math.max(1, resultsFromLog(log).length),
             successCount: videos.length,
-            failCount: log.failures?.length || (log.status === "失败" ? 1 : 0),
+            failCount: log.failures?.length || (log.status === "failed" ? 1 : 0),
             assets,
             error: log.error,
             createdAt: log.createdAt,
@@ -194,7 +194,7 @@ export async function normalizeLog(log: Partial<GenerationLog>): Promise<Generat
         ownerUserId: log.ownerUserId,
         creativeConversationId: log.creativeConversationId,
         createdAt: log.createdAt || Date.now(),
-        title: log.title || log.model || "未命名",
+        title: log.title || log.model || "Untitled",
         prompt: log.prompt || "",
         time: log.time || new Date().toLocaleString("zh-CN", { hour12: false }),
         model: log.model || config.videoModel || "",
@@ -206,7 +206,7 @@ export async function normalizeLog(log: Partial<GenerationLog>): Promise<Generat
         size: log.size || config.size || "",
         resolution: normalizeResolution(log.resolution || config.vquality || ""),
         seconds: log.seconds || config.videoSeconds || "",
-        status: log.status || "成功",
+        status: log.status || "success",
         task: log.task,
         taskStartedAt: log.taskStartedAt,
         taskResultId: log.taskResultId,
@@ -246,7 +246,7 @@ export function resultsFromLog(log: GenerationLog): GenerationResult[] {
     if (log.resultDeleted) return [];
     const results: GenerationResult[] = (log.videos?.length ? log.videos : log.video ? [log.video] : []).map((video) => ({ id: video.id, status: "success", video }));
     (log.failures || []).forEach((failure) => results.push({ id: failure.resultId, status: "failed", error: failure.error }));
-    if (log.status === "生成中" && log.task) results.push({ id: log.taskResultId || log.id, status: "pending" });
+    if (log.status === "pending" && log.task) results.push({ id: log.taskResultId || log.id, status: "pending" });
     if (!results.length && log.error) results.push({ id: log.id, status: "failed", error: log.error });
     return results;
 }
@@ -271,7 +271,7 @@ export function filterAudioReferencesByDuration(existing: ReferenceAudio[], next
         total += item.durationMs || 0;
         accepted.push(item);
     }
-    if (skipped) warn("已忽略不符合时长要求的参考音频：单个 2-15 秒，总时长不超过 15 秒");
+    if (skipped) warn("Ignored reference audio outside the duration limits: each clip must be 2-15 seconds, and total duration cannot exceed 15 seconds");
     return accepted;
 }
 
@@ -287,9 +287,9 @@ export function replaceResult(results: GenerationResult[], resultId: string, nex
 
 export function buildLogFromVideoResults(baseLog: GenerationLog | null, snapshot: GenerationSnapshot, results: GenerationResult[], durationMs: number, error?: string, pending?: { task: VideoGenerationTask; taskResultId: string }): GenerationLog {
     const videos = results.flatMap((result) => (result.status === "success" && result.video ? [result.video] : []));
-    const failures = results.flatMap((result) => (result.status === "failed" ? [{ resultId: result.id, error: result.error || error || "生成失败" }] : []));
+    const failures = results.flatMap((result) => (result.status === "failed" ? [{ resultId: result.id, error: result.error || error || "Generation failed" }] : []));
     const hasPending = results.some((result) => result.status === "pending");
-    const status: GenerationLog["status"] = hasPending ? "生成中" : videos.length ? "成功" : "失败";
+    const status: GenerationLog["status"] = hasPending ? "pending" : videos.length ? "success" : "failed";
     const latestVideo = videos[videos.length - 1];
     return buildLog({
         baseLog,
@@ -370,7 +370,7 @@ export function buildLog({
         id: baseLog?.id || nanoid(),
         creativeConversationId: baseLog?.creativeConversationId,
         createdAt: baseLog?.createdAt || Date.now(),
-        title: baseLog?.title || prompt.slice(0, 12) || "未命名",
+        title: baseLog?.title || prompt.slice(0, 12) || "Untitled",
         prompt,
         time: new Date().toLocaleString("zh-CN", { hour12: false }),
         model,

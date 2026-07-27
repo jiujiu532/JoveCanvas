@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft, ArrowRight, Check, ChevronRight, Circle, Database, KeyRound, LockKeyhole, PackageCheck, ReceiptText, Server, Settings2, Sparkles } from "lucide-react";
 
 import { AuthUserHydrator } from "@/components/auth/auth-user-hydrator";
@@ -29,9 +30,8 @@ export default async function AdminSetupPage() {
     const currentUser = access.user;
     if (currentUser.role !== "admin") redirect("/");
 
-    const setup = await getAdminSetupSummary();
+    const [setup, site, t] = await Promise.all([getAdminSetupSummary(), getPublicSiteSettings(), getTranslations("admin")]);
     const nextStep = setup.steps.find((step) => step.status !== "done") || setup.steps[setup.steps.length - 1];
-    const site = await getPublicSiteSettings();
 
     return (
         <AuthUserHydrator
@@ -54,7 +54,7 @@ export default async function AdminSetupPage() {
                             <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
                                 <ArrowLeft className="size-4" />
                             </span>
-                            <span className="truncate">初始化配置</span>
+                            <span className="truncate">{t("setup.page.back")}</span>
                         </Link>
                         <UserStatusActions initialUser={currentUser} />
                     </div>
@@ -68,13 +68,13 @@ export default async function AdminSetupPage() {
                                     <Sparkles className="size-4" />
                                     {site.title}
                                 </span>
-                                <span className="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">安装后初始化中心</span>
+                                <span className="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">{t("setup.page.badge")}</span>
                             </div>
-                            <h1 className="mt-5 max-w-2xl text-2xl font-semibold tracking-normal text-zinc-950 sm:text-3xl dark:text-zinc-100">把站点配置到可以上线运营</h1>
-                            <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-500 dark:text-zinc-400">集中检查品牌、模型、套餐、支付、邮件安全和存储。每一项都连接到现有后台配置，适合开源用户在服务器安装完成后继续往商业版部署。</p>
+                            <h1 className="mt-5 max-w-2xl text-2xl font-semibold tracking-normal text-zinc-950 sm:text-3xl dark:text-zinc-100">{t("setup.page.title")}</h1>
+                            <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-500 dark:text-zinc-400">{t("setup.page.subtitle")}</p>
                             <div className="mt-6 max-w-xl">
                                 <div className="flex items-center justify-between text-sm">
-                                    <span className="font-medium text-zinc-600 dark:text-zinc-400">完成度</span>
+                                    <span className="font-medium text-zinc-600 dark:text-zinc-400">{t("setup.page.progress")}</span>
                                     <span className="font-semibold text-zinc-950 dark:text-zinc-100">
                                         {setup.completed}/{setup.total} · {setup.percent}%
                                     </span>
@@ -86,7 +86,7 @@ export default async function AdminSetupPage() {
                         </div>
 
                         <aside className="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-                            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">下一项</p>
+                            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{t("setup.page.nextItem")}</p>
                             <h2 className="mt-2 text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-100">{nextStep.title}</h2>
                             <p className="mt-3 text-sm leading-6 text-zinc-500 dark:text-zinc-400">{nextStep.description}</p>
                             <div className="mt-5 grid gap-2">
@@ -94,14 +94,14 @@ export default async function AdminSetupPage() {
                                     href={`#${nextStep.id}`}
                                     className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white"
                                 >
-                                    查看下一项
+                                    {t("setup.page.viewNext")}
                                     <ArrowRight className="size-4" />
                                 </a>
                                 <Link
                                     href={nextStep.href}
                                     className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900"
                                 >
-                                    打开配置页
+                                    {t("setup.page.openConfig")}
                                     <ChevronRight className="size-4" />
                                 </Link>
                             </div>
@@ -109,14 +109,14 @@ export default async function AdminSetupPage() {
                     </section>
 
                     <section className="mt-4 grid gap-3 md:grid-cols-3">
-                        <SetupMetric icon={<Server className="size-4" />} label="数据库" value={setup.databaseProvider === "postgres" ? "PostgreSQL" : "文件模式"} />
-                        <SetupMetric icon={<KeyRound className="size-4" />} label="模型渠道" value={`${setup.enabledChannels} 个可用`} />
-                        <SetupMetric icon={<ReceiptText className="size-4" />} label="上架商品" value={`${setup.enabledProducts} 个`} />
+                        <SetupMetric icon={<Server className="size-4" />} label={t("setup.page.metricDb")} value={setup.databaseProvider === "postgres" ? "PostgreSQL" : t("setup.page.metricDbFile")} />
+                        <SetupMetric icon={<KeyRound className="size-4" />} label={t("setup.page.metricChannels")} value={t("setup.page.metricChannelsValue", { count: setup.enabledChannels })} />
+                        <SetupMetric icon={<ReceiptText className="size-4" />} label={t("setup.page.metricProducts")} value={t("setup.page.metricProductsValue", { count: setup.enabledProducts })} />
                     </section>
 
                     <section className="mt-5 grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
                         <aside className="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950 lg:sticky lg:top-20 lg:self-start">
-                            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">建议顺序</p>
+                            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{t("setup.page.suggestedOrder")}</p>
                             <div className="mt-4 space-y-3">
                                 {setup.steps.map((step, index) => (
                                     <a key={step.id} href={`#${step.id}`} className="flex items-center gap-3 rounded-md px-2 py-2 transition hover:bg-zinc-50 dark:hover:bg-zinc-900">
@@ -135,7 +135,7 @@ export default async function AdminSetupPage() {
                                 href="/admin"
                                 className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white"
                             >
-                                进入完整后台
+                                {t("setup.page.enterAdmin")}
                                 <ArrowRight className="size-4" />
                             </Link>
                         </aside>

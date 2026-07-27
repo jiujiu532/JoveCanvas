@@ -176,6 +176,7 @@ export default function HomePage() {
     const [navIndicator, setNavIndicator] = useState({ left: 5, width: 0, visible: false });
     const [site, setSite] = useState(defaultSite);
     const t = useTranslations("public");
+    const tLayout = useTranslations("layout");
     const user = useUserStore((state) => state.user);
     const sessionPayload = usePublicSessionStore((state) => state.payload);
     const sessionReady = usePublicSessionStore((state) => state.ready);
@@ -407,7 +408,7 @@ export default function HomePage() {
                                 onFocus={() => moveNavIndicator(index)}
                                 onPointerEnter={() => moveNavIndicator(index)}
                             >
-                                {tool.label}
+                                {tLayout(`nav.${tool.slug}.label`)}
                             </Link>
                         ))}
                     </nav>

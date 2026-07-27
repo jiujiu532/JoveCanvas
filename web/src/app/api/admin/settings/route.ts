@@ -49,7 +49,7 @@ export async function PATCH(request: Request) {
             patch.defaultModels = normalizeDefaultModelsConfig(defaultModels, patch.logicalModels, channels);
         }
         if (Array.isArray(body.agentSkills)) patch.agentSkills = body.agentSkills;
-        if (!Object.keys(patch).length) return NextResponse.json({ error: "没有可更新的设置" }, { status: 400 });
+        if (!Object.keys(patch).length) return NextResponse.json({ error: await serverMessage("admin.noSettingsToUpdate") }, { status: 400 });
 
         const settings = await setAuthSettings(patch);
         if (patch.site) invalidatePublicSiteSettings();
@@ -70,6 +70,6 @@ export async function PATCH(request: Request) {
         });
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin settings update failed", error);
-        return NextResponse.json({ error: "更新设置失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("admin.updateSettingsFailed") }, { status: 500 });
     }
 }

@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const rate = await checkGenerationRateLimit(user.id, request, "video");
-    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "视频生成请求" }) }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.videoGen") }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const settings = await getAuthSettings();
     const response = await withGenerationConcurrencyLimit(user.id, "video", 10 * 60 * 1000, settings.generationConcurrency.video, async () => {
         let body: { config?: Record<string, unknown>; prompt?: string; references?: Array<{ type?: string; url?: string }>; source?: string; context?: GenerationTaskContext };
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
         const requestedModel = typeof body.config?.model === "string" && body.config.model.trim() ? body.config.model : settings.defaultModels.videoModel;
         const channels = resolveLogicalModelCandidates(settings, "video", requestedModel).map(toSystemGenerationChannel);
         const prompt = String(body.prompt || "").trim();
-        if (!channels.length || !prompt) return NextResponse.json({ error: "视频任务参数不完整或渠道不支持" }, { status: 400 });
+        if (!channels.length || !prompt) return NextResponse.json({ error: await serverMessage("tasks.videoParamsOrChannel") }, { status: 400 });
         const publicOrigin = requestPublicOrigin(request);
         const references = (Array.isArray(body.references) ? body.references : []).map((reference) => ({ ...reference, url: signReferenceAssetInputUrl(String(reference.url || ""), publicOrigin) }));
         const providerPrompt = withVideoReferenceFidelity(prompt, references);
@@ -104,14 +104,14 @@ export async function POST(request: Request) {
                 return NextResponse.json({ task: publicTask(task) });
             } catch (error) {
                 lastError = error;
-                attempts = finishGenerationAttempt(attempts, started.attempt.attemptNo, { status: "failed", error: toSafeGenerationErrorMessage(error, "视频任务创建失败") });
+                attempts = finishGenerationAttempt(attempts, started.attempt.attemptNo, { status: "failed", error: toSafeGenerationErrorMessage(error, await serverMessage("tasks.videoCreateFailed")) });
                 if (!(error instanceof SafeCandidateFailure) || index === channels.length - 1) break;
             }
         }
         if (!lastError && capabilityError) return NextResponse.json({ error: capabilityError instanceof Error ? capabilityError.message : "当前渠道不支持参考素材" }, { status: 400 });
-        return NextResponse.json({ error: toSafeGenerationErrorMessage(lastError, "视频任务创建失败") }, { status: 502 });
+        return NextResponse.json({ error: toSafeGenerationErrorMessage(lastError, await serverMessage("tasks.videoCreateFailed")) }, { status: 502 });
     });
-    return response || NextResponse.json({ error: "当前用户视频任务已达到并发上限" }, { status: 429 });
+    return response || NextResponse.json({ error: await serverMessage("tasks.videoConcurrencyLimit") }, { status: 429 });
 }
 
 function ratioValue(value: unknown) {
@@ -307,9 +307,9 @@ async function runVideoTask(task: VideoTask, origin: string, cookie: string) {
     } catch (error) {
         const current = await getVideoTask(task.id);
         if (current?.status !== "cancelled") {
-            const attempts = finishGenerationAttempt(task.attempts || [], task.attempts?.at(-1)?.attemptNo || 1, { status: "failed", error: error instanceof Error ? error.message : "视频生成失败" });
+            const attempts = finishGenerationAttempt(task.attempts || [], task.attempts?.at(-1)?.attemptNo || 1, { status: "failed", error: error instanceof Error ? error.message : await serverMessage("tasks.videoGenFailed") });
             await updateVideoTask(task.id, { attempts });
-            const failed = await transitionVideoTask(task, { status: "error", error: toSafeGenerationErrorMessage(error, "视频生成失败") });
+            const failed = await transitionVideoTask(task, { status: "error", error: toSafeGenerationErrorMessage(error, await serverMessage("tasks.videoGenFailed")) });
             if (failed) await refundVideoTask(task);
         }
     } finally {

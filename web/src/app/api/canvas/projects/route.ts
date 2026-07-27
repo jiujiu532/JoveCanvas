@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     try {
         const project = await createCanvasProjectForUser(user.id, await request.json().catch(() => ({})));
-        return NextResponse.json({ code: 0, data: { project }, msg: "画布项目已创建" });
+        return NextResponse.json({ code: 0, data: { project }, msg: await serverMessage("canvas.projectCreated") });
     } catch (error) {
         const known = canvasProjectError(error);
         if (known) return NextResponse.json({ code: known.status, data: null, msg: known.message }, { status: known.status });
@@ -28,5 +28,5 @@ export async function DELETE(request: Request) {
     if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const body = (await request.json().catch(() => ({}))) as { ids?: unknown };
     const deleted = await deleteCanvasProjectsForUser(user.id, body.ids);
-    return NextResponse.json({ code: 0, data: { deleted }, msg: "画布项目已删除" });
+    return NextResponse.json({ code: 0, data: { deleted }, msg: await serverMessage("canvas.projectDeleted") });
 }

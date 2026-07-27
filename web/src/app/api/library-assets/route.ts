@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     try {
         const asset = await createLibraryAssetForUser(user.id, await request.json().catch(() => ({})));
-        return NextResponse.json({ code: 0, data: { asset }, msg: "素材已保存" });
+        return NextResponse.json({ code: 0, data: { asset }, msg: await serverMessage("media.assetSaved") });
     } catch (error) {
         return serviceError(error);
     }

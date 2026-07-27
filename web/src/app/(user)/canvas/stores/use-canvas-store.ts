@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 import { createClientSessionEpoch, type ClientSessionStamp } from "@/lib/client-session-epoch";
-import type { CanvasProject, CreateCanvasProjectInput } from "@/lib/canvas-project-contract";
+import type { CanvasProject } from "@/lib/canvas-project-contract";
 import { createCanvasProject, deleteCanvasProjects as deleteCanvasProjectsRequest, listCanvasProjects, saveCanvasProject } from "@/services/api/canvas-projects";
 import { useUserStore } from "@/stores/use-user-store";
 
@@ -31,6 +31,37 @@ const sessionEpoch = createClientSessionEpoch(() => useUserStore.getState().user
 let hydrateRequestId = 0;
 let hydrateRequest: (ClientSessionStamp & { requestId: number; promise: Promise<void> }) | null = null;
 
+// Zustand 非 React 上下文：按 cookie 语言读字典，默认中文
+const STORE_MESSAGES = {
+    zh: {
+        loadFailed: "画布项目加载失败",
+        untitled: "未命名画布",
+        importTitle: "导入画布",
+        saveFailed: "画布项目保存失败",
+        pleaseLogin: "请先登录",
+        sessionChanged: "登录会话已变更，请重试",
+    },
+    en: {
+        loadFailed: "Failed to load canvas projects",
+        untitled: "Untitled canvas",
+        importTitle: "Imported canvas",
+        saveFailed: "Failed to save canvas project",
+        pleaseLogin: "Please sign in first",
+        sessionChanged: "Login session changed, please try again",
+    },
+} as const;
+
+function storeMessage(key: keyof (typeof STORE_MESSAGES)["zh"]) {
+    const locale = resolveStoreLocale();
+    return STORE_MESSAGES[locale][key];
+}
+
+function resolveStoreLocale(): "zh" | "en" {
+    if (typeof document === "undefined") return "zh";
+    const match = document.cookie.match(/(?:^|;\s*)NEXT_LOCALE=([^;]+)/);
+    return match?.[1] === "en" ? "en" : "zh";
+}
+
 export const useCanvasStore = create<CanvasStore>((set, get) => ({
     hydrated: false,
     hydratedUserId: "",
@@ -53,7 +84,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
                 set({ projects, hydrated: true, hydratedUserId: userId });
             })
             .catch((error) => {
-                if (isActiveHydrate(session, requestId)) set({ projects: [], hydrated: false, hydratedUserId: userId, syncError: error instanceof Error ? error.message : "画布项目加载失败" });
+                if (isActiveHydrate(session, requestId)) set({ projects: [], hydrated: false, hydratedUserId: userId, syncError: error instanceof Error ? error.message : storeMessage("loadFailed") });
             })
             .finally(() => {
                 if (hydrateRequest?.requestId === requestId) hydrateRequest = null;
@@ -61,16 +92,16 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
         hydrateRequest = { ...session, requestId, promise };
         return promise;
     },
-    createProject: async (title = "未命名画布") => {
+    createProject: async (title) => {
         const session = requireSession();
-        const project = await createCanvasProject({ title });
+        const project = await createCanvasProject({ title: title || storeMessage("untitled") });
         assertCurrent(session);
         set((state) => ({ projects: [project, ...state.projects.filter((item) => item.id !== project.id)], syncError: undefined }));
         return project.id;
     },
     importProject: async (project, sourceHandoffId) => {
         const session = requireSession();
-        const created = await createCanvasProject({ title: project.title || "导入画布", sourceHandoffId, project });
+        const created = await createCanvasProject({ title: project.title || storeMessage("importTitle"), sourceHandoffId, project });
         assertCurrent(session);
         set((state) => ({ projects: [created, ...state.projects.filter((item) => item.id !== created.id)], syncError: undefined }));
         return created.id;
@@ -130,7 +161,7 @@ function queueSave(session: ClientSessionStamp, project: CanvasProject) {
                 } catch (error) {
                     if (!sessionEpoch.isCurrent(session)) return;
                     const latest = useCanvasStore.getState().projects.find((item) => item.id === project.id);
-                    if (latest?.updatedAt === project.updatedAt) useCanvasStore.setState({ syncError: error instanceof Error ? error.message : "画布项目保存失败" });
+                    if (latest?.updatedAt === project.updatedAt) useCanvasStore.setState({ syncError: error instanceof Error ? error.message : storeMessage("saveFailed") });
                 }
             });
             saveQueues.set(key, operation);
@@ -162,12 +193,12 @@ function isActiveHydrate(session: ClientSessionStamp, requestId: number) {
 
 function requireSession() {
     const session = sessionEpoch.capture();
-    if (!session.userId) throw new Error("请先登录");
+    if (!session.userId) throw new Error(storeMessage("pleaseLogin"));
     return session;
 }
 
 function assertCurrent(session: ClientSessionStamp) {
-    if (!sessionEpoch.isCurrent(session)) throw new Error("登录会话已变更，请重试");
+    if (!sessionEpoch.isCurrent(session)) throw new Error(storeMessage("sessionChanged"));
 }
 
 function invalidateSession() {

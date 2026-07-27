@@ -40,6 +40,6 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         });
         if (error instanceof AccountDeletionRequestError) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
         console.error("Account deletion request review failed", error);
-        return NextResponse.json({ code: 500, data: null, msg: "注销申请处理失败" }, { status: 500 });
+        return NextResponse.json({ code: 500, data: null, msg: await serverMessage("auth.deletionRequestFailed") }, { status: 500 });
     }
 }

@@ -11,7 +11,7 @@ export async function PATCH(request: Request, context: Context) {
     if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     try {
         const asset = await updateLibraryAssetForUser(user.id, (await context.params).id, await request.json().catch(() => ({})));
-        return NextResponse.json({ code: 0, data: { asset }, msg: "素材已更新" });
+        return NextResponse.json({ code: 0, data: { asset }, msg: await serverMessage("media.assetUpdated") });
     } catch (error) {
         return serviceError(error);
     }
@@ -22,7 +22,7 @@ export async function DELETE(_request: Request, context: Context) {
     if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     try {
         await deleteLibraryAssetForUser(user.id, (await context.params).id);
-        return NextResponse.json({ code: 0, data: { deleted: true }, msg: "素材已删除" });
+        return NextResponse.json({ code: 0, data: { deleted: true }, msg: await serverMessage("media.assetDeleted") });
     } catch (error) {
         return serviceError(error);
     }

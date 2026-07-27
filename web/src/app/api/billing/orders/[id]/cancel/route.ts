@@ -23,6 +23,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     } catch (error) {
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Cancel billing order failed", error);
-        return NextResponse.json({ error: "取消订单失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.cancelOrderFailed") }, { status: 500 });
     }
 }

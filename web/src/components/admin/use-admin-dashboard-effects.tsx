@@ -67,6 +67,7 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 import { nanoid } from "nanoid";
+import { useTranslations } from "next-intl";
 
 import { formatCreditAmount } from "@/constant/credits";
 import { normalizeDefaultModelsConfig } from "@/lib/model-routing-config";
@@ -153,6 +154,7 @@ import type { AdminDashboardDataActions } from "./use-admin-dashboard-data-actio
 import type { AdminDashboardSettingsActions } from "./use-admin-dashboard-settings-actions";
 
 export function useAdminDashboardEffects({ state, data, settingsActions }: { state: AdminDashboardState; data: AdminDashboardDataActions; settingsActions: AdminDashboardSettingsActions }) {
+    const t = useTranslations("admin");
     const {
         initialSection,
         settings,
@@ -190,7 +192,7 @@ export function useAdminDashboardEffects({ state, data, settingsActions }: { sta
         if (activeSection !== "skills" || settingsLoading) return;
         void fetch("/api/admin/agent-readiness", { cache: "no-store" })
             .then((response) => (response.ok ? response.json() : null))
-            .then((payload) => setAgentReadiness(payload?.data || localAgentReadiness(settings)));
+            .then((payload) => setAgentReadiness(payload?.data || localAgentReadiness(settings, t)));
     }, [activeSection, settingsLoading]);
 
     useEffect(() => {

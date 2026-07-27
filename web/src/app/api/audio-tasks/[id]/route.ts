@@ -14,7 +14,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const task = await getAudioTask((await params).id);
-    if (!task || (task.userId !== user.id && user.role !== "admin")) return NextResponse.json({ error: "任务不存在或已过期" }, { status: 404 });
+    if (!task || (task.userId !== user.id && user.role !== "admin")) return NextResponse.json({ error: await serverMessage("tasks.notFoundOrExpired") }, { status: 404 });
     const shouldRefund = Boolean(task.billing?.pointsCost && !task.billing.refunded && (task.status === "error" || task.status === "cancelled"));
     const settledTask = shouldRefund ? await refundAudioTask(task) : task;
     const refreshedUser = shouldRefund ? await getCurrentUser() : user;
@@ -24,12 +24,12 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser();
     const task = user ? await getAudioTask((await params).id) : null;
-    if (!user || !task || (task.userId !== user.id && user.role !== "admin")) return NextResponse.json({ error: "任务不存在或已过期" }, { status: user ? 404 : 401 });
+    if (!user || !task || (task.userId !== user.id && user.role !== "admin")) return NextResponse.json({ error: await serverMessage("tasks.notFoundOrExpired") }, { status: user ? 404 : 401 });
     const body = (await request.json().catch(() => ({}))) as { status?: string };
-    if (body.status !== "cancelled" || !["pending", "running"].includes(task.status)) return NextResponse.json({ error: "当前任务无法取消" }, { status: 409 });
+    if (body.status !== "cancelled" || !["pending", "running"].includes(task.status)) return NextResponse.json({ error: await serverMessage("tasks.cannotCancel") }, { status: 409 });
     const shouldRefund = Boolean(task.billing?.pointsCost && !task.billing.refunded);
-    const next = await transitionAudioTask(task, ["pending", "running"], { status: "cancelled", error: "任务已取消", config: { ...task.config, apiKey: "" }, billing: task.billing });
-    if (!next) return NextResponse.json({ error: "当前任务无法取消" }, { status: 409 });
+    const next = await transitionAudioTask(task, ["pending", "running"], { status: "cancelled", error: await serverMessage("tasks.cancelled"), config: { ...task.config, apiKey: "" }, billing: task.billing });
+    if (!next) return NextResponse.json({ error: await serverMessage("tasks.cannotCancel") }, { status: 409 });
     const settledTask = shouldRefund ? await refundAudioTask(next) : next;
     after(() => cancelUpstreamAudio(task, resolveInternalOrigin(new URL(request.url).origin), request.headers.get("cookie") || ""));
     const refreshedUser = await getCurrentUser();

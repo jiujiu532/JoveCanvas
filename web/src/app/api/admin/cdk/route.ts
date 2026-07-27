@@ -46,7 +46,7 @@ export async function POST(request: Request) {
         });
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Create CDK failed", error);
-        return NextResponse.json({ error: "生成 CDK 失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.cdkGenerateFailed") }, { status: 500 });
     }
 }
 
@@ -76,6 +76,6 @@ export async function DELETE(request: Request) {
         });
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Delete CDK failed", error);
-        return NextResponse.json({ error: "删除 CDK 失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.cdkDeleteFailed") }, { status: 500 });
     }
 }

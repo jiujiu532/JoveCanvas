@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type DragEvent as ReactDragEvent } from "r
 import { App, Button, Drawer, Modal, Tag, Typography } from "antd";
 import { nanoid } from "nanoid";
 import { saveAs } from "file-saver";
+import { useTranslations } from "next-intl";
 
 import type { InsertAssetPayload } from "@/app/(user)/canvas/components/asset-picker-modal";
 import { AudioSettingsPanel } from "@/components/audio-settings-panel";
@@ -67,6 +68,7 @@ import { UpdateAiConfig, selectVideoModel, GenerationSettings, ResultVideoCard, 
 import { useVideoWorkbenchController } from "./use-video-workbench-controller";
 
 export default function VideoPage() {
+    const t = useTranslations("workspace.video");
     const controller = useVideoWorkbenchController();
     const {
         searchParams,
@@ -199,7 +201,7 @@ export default function VideoPage() {
                 <section className="grid h-auto gap-3 sm:h-full lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] lg:overflow-hidden">
                     <div className="order-1 flex min-h-[9rem] flex-col overflow-hidden rounded-lg border border-border bg-card p-2 sm:min-h-[calc(100dvh-96px)] sm:rounded-xl sm:p-4 lg:order-2 lg:min-h-0">
                         <WorkbenchAgentHeader
-                            subtitle="视频创作助手"
+                            subtitle={t("assistantSubtitle")}
                             onNew={createSession}
                             historyContent={(query, closeHistory) => {
                                 const filteredLogs = logs.filter((log) => {
@@ -238,7 +240,7 @@ export default function VideoPage() {
                                 }}
                                 onEditMessage={(text) => {
                                     setPrompt(text);
-                                    message.info("已回填消息，可修改后重新发送");
+                                    message.info(t("messageRefilled"));
                                 }}
                             />
                         ) : (
@@ -246,7 +248,7 @@ export default function VideoPage() {
                         )}
 
                         <WorkbenchComposerFrame
-                            summary={`${videoSizeLabel(effectiveConfig.size)} · ${normalizeVideoSeconds(effectiveConfig.videoSeconds)} 秒`}
+                            summary={t("composerSummary", { size: videoSizeLabel(effectiveConfig.size), seconds: normalizeVideoSeconds(effectiveConfig.videoSeconds) })}
                             onAdd={() => fileInputRef.current?.click()}
                             onLibrary={() => setAssetPickerOpen(true)}
                             settingsContent={
@@ -268,7 +270,7 @@ export default function VideoPage() {
                             onClearModels={enableSmartPlanning}
                             submit={
                                 agentRunning ? (
-                                    <Button danger shape="circle" className="!h-9 !w-9 !min-w-9" icon={<Square className="size-3.5 fill-current" />} onClick={cancelAgentRun} aria-label="停止 Agent 并取消本次生成" />
+                                    <Button danger shape="circle" className="!h-9 !w-9 !min-w-9" icon={<Square className="size-3.5 fill-current" />} onClick={cancelAgentRun} aria-label={t("stopAgentAriaLabel")} />
                                 ) : (
                                     <Button
                                         type="primary"
@@ -277,9 +279,9 @@ export default function VideoPage() {
                                         disabled={!canGenerate || activeVideoCount >= videoConcurrencyLimit}
                                         icon={<Sparkles className="size-4" />}
                                         onClick={() => void runAgentGenerate()}
-                                        aria-label={`开始生成，消耗 ${formatCreditAmount(pointsCost)} 积分`}
+                                        aria-label={t("generateAriaLabel", { cost: formatCreditAmount(pointsCost) })}
                                     >
-                                        <span className="text-xs font-semibold">生成</span>
+                                        <span className="text-xs font-semibold">{t("generate")}</span>
                                         <span className="hidden text-xs font-semibold opacity-80 sm:inline">· {formatCreditAmount(pointsCost)}</span>
                                     </Button>
                                 )
@@ -287,7 +289,7 @@ export default function VideoPage() {
                         >
                             <WorkbenchPromptEditor
                                 value={prompt}
-                                placeholder="今天我们要创作什么，可直接粘贴文字或素材"
+                                placeholder={t("promptPlaceholder")}
                                 onChange={setPrompt}
                                 onSubmit={() => void runAgentGenerate()}
                                 onPasteFiles={(files) => void addReferences(files)}
@@ -297,13 +299,13 @@ export default function VideoPage() {
 
                             <div className={cn("order-1 min-w-0", !references.length && "hidden")}>
                                 <div className="hidden">
-                                    <span className="text-base font-semibold">参考图</span>
+                                    <span className="text-base font-semibold">{t("referenceImages")}</span>
                                     <div className="flex gap-2">
                                         <Button size="small" icon={<ClipboardPaste className="size-3.5" />} onClick={() => void addReferencesFromClipboard()}>
-                                            剪切板
+                                            {t("clipboardButton")}
                                         </Button>
                                         <Button size="small" icon={<Upload className="size-3.5" />} onClick={() => fileInputRef.current?.click()}>
-                                            上传
+                                            {t("uploadButton")}
                                         </Button>
                                     </div>
                                 </div>
@@ -323,21 +325,21 @@ export default function VideoPage() {
                                                 type="button"
                                                 className="absolute right-1 top-1 flex size-6 items-center justify-center rounded bg-white/95 text-red-600 opacity-90 shadow-sm ring-1 ring-red-200 transition hover:opacity-100 dark:bg-black/70 dark:text-red-200 dark:ring-red-900/60"
                                                 onClick={() => setReferences((value) => value.filter((ref) => ref.id !== item.id))}
-                                                aria-label="移除参考图"
+                                                aria-label={t("removeReferenceImage")}
                                             >
                                                 <Trash2 className="size-3.5" />
                                             </button>
                                         </div>
                                     ))}
-                                    {!references.length ? <div className="flex min-w-full items-center justify-center text-sm text-stone-500">暂无参考图，最多 9 张</div> : null}
+                                    {!references.length ? <div className="flex min-w-full items-center justify-center text-sm text-stone-500">{t("emptyImageHint")}</div> : null}
                                 </div>
                             </div>
 
                             <div className={cn("order-1 min-w-0", !videoReferences.length && "hidden")}>
                                 <div className="hidden">
-                                    <span className="text-base font-semibold">参考视频</span>
+                                    <span className="text-base font-semibold">{t("referenceVideos")}</span>
                                     <Button size="small" icon={<Upload className="size-3.5" />} onClick={() => fileInputRef.current?.click()}>
-                                        上传
+                                        {t("uploadButton")}
                                     </Button>
                                 </div>
                                 <div
@@ -356,21 +358,21 @@ export default function VideoPage() {
                                                 type="button"
                                                 className="absolute right-1 top-1 flex size-6 items-center justify-center rounded bg-white/95 text-red-600 opacity-90 shadow-sm ring-1 ring-red-200 transition hover:opacity-100 dark:bg-black/70 dark:text-red-200 dark:ring-red-900/60"
                                                 onClick={() => setVideoReferences((value) => value.filter((ref) => ref.id !== item.id))}
-                                                aria-label="移除参考视频"
+                                                aria-label={t("removeReferenceVideo")}
                                             >
                                                 <Trash2 className="size-3.5" />
                                             </button>
                                         </div>
                                     ))}
-                                    {!videoReferences.length ? <div className="flex min-w-full items-center justify-center text-sm text-stone-500">暂无参考视频，最多 3 个</div> : null}
+                                    {!videoReferences.length ? <div className="flex min-w-full items-center justify-center text-sm text-stone-500">{t("emptyVideoHint")}</div> : null}
                                 </div>
                             </div>
 
                             <div className={cn("order-1 min-w-0", !audioReferences.length && "hidden")}>
                                 <div className="hidden">
-                                    <span className="text-base font-semibold">参考音频</span>
+                                    <span className="text-base font-semibold">{t("referenceAudio")}</span>
                                     <Button size="small" icon={<Upload className="size-3.5" />} onClick={() => fileInputRef.current?.click()}>
-                                        上传
+                                        {t("uploadButton")}
                                     </Button>
                                 </div>
                                 <div
@@ -393,13 +395,13 @@ export default function VideoPage() {
                                                 type="button"
                                                 className="absolute right-1 top-1 flex size-6 items-center justify-center rounded bg-white/95 text-red-600 opacity-90 shadow-sm ring-1 ring-red-200 transition hover:opacity-100 dark:bg-black/70 dark:text-red-200 dark:ring-red-900/60"
                                                 onClick={() => setAudioReferences((value) => value.filter((ref) => ref.id !== item.id))}
-                                                aria-label="移除参考音频"
+                                                aria-label={t("removeReferenceAudio")}
                                             >
                                                 <Trash2 className="size-3.5" />
                                             </button>
                                         </div>
                                     ))}
-                                    {!audioReferences.length ? <div className="flex min-w-full items-center justify-center text-center text-sm text-stone-500">暂无参考音频，最多 3 个，mp3/wav，单个 15MB 内</div> : null}
+                                    {!audioReferences.length ? <div className="flex min-w-full items-center justify-center text-center text-sm text-stone-500">{t("emptyAudioHint")}</div> : null}
                                 </div>
                             </div>
                         </WorkbenchComposerFrame>
@@ -411,33 +413,26 @@ export default function VideoPage() {
                                         <Sparkles className="size-[17px]" />
                                         <span className="text-sm font-semibold leading-none">{formatCreditAmount(pointsCost)}</span>
                                     </span>
-                                    <span>开始生成</span>
+                                    <span>{t("startGeneration")}</span>
                                 </span>
                             </Button>
-                            {activeVideoCount ? (
-                                <div className="mt-2 text-center text-xs text-stone-500 dark:text-stone-400">
-                                    当前用户运行 {activeVideoCount}/{videoConcurrencyLimit}
-                                </div>
-                            ) : null}
+                            {activeVideoCount ? <div className="mt-2 text-center text-xs text-stone-500 dark:text-stone-400">{t("currentUserRunning", { active: activeVideoCount, limit: videoConcurrencyLimit })}</div> : null}
                         </div>
                     </div>
 
                     <div className="thin-scrollbar order-2 rounded-xl border border-border bg-card p-2.5 lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:p-5 sm:p-4">
                         <div className="mb-2.5 flex items-center justify-between gap-2 sm:mb-4 sm:gap-3">
-                            <h2 className="text-lg font-semibold sm:text-xl">生成结果</h2>
+                            <h2 className="text-lg font-semibold sm:text-xl">{t("resultsTitle")}</h2>
                             <div className="flex flex-wrap items-center justify-end gap-2">
                                 <Button size="small" icon={<CheckSquare className="size-3.5" />} disabled={!results.length} onClick={toggleAllResults}>
-                                    {allResultsSelected ? "取消" : "全选"}
+                                    {allResultsSelected ? t("cancel") : t("selectAll")}
                                 </Button>
                                 <Button size="small" danger icon={<Trash2 className="size-3.5" />} disabled={!selectedVisibleResultIds.length} onClick={() => void deleteSelectedResults()}>
-                                    删除{selectedVisibleResultIds.length ? ` ${selectedVisibleResultIds.length}` : ""}
+                                    {t("delete")}
+                                    {selectedVisibleResultIds.length ? ` ${selectedVisibleResultIds.length}` : ""}
                                 </Button>
                                 {previewPendingCount ? <WorkbenchGenerationActivity kind="video" count={previewPendingCount} /> : null}
-                                {activeVideoCount ? (
-                                    <Tag className="m-0 px-2 py-1">
-                                        运行 {activeVideoCount}/{videoConcurrencyLimit}
-                                    </Tag>
-                                ) : null}
+                                {activeVideoCount ? <Tag className="m-0 px-2 py-1">{t("runningCount", { active: activeVideoCount, limit: videoConcurrencyLimit })}</Tag> : null}
                             </div>
                         </div>
                         {results.length ? (
@@ -454,20 +449,26 @@ export default function VideoPage() {
                                             onSaveAsset={saveResultToAssets}
                                         />
                                     ) : result.status === "failed" ? (
-                                        <FailedVideoCard key={result.id} error={result.error || "生成失败"} selected={selectedResultIds.includes(result.id)} onSelectedChange={(checked) => toggleResultSelected(result.id, checked)} onRetry={retryResult} />
+                                        <FailedVideoCard
+                                            key={result.id}
+                                            error={result.error || t("generationFailed")}
+                                            selected={selectedResultIds.includes(result.id)}
+                                            onSelectedChange={(checked) => toggleResultSelected(result.id, checked)}
+                                            onRetry={retryResult}
+                                        />
                                     ) : (
                                         <PendingVideoCard key={result.id} />
                                     ),
                                 )}
                             </div>
                         ) : (
-                            <CompactEmptyState title="还没有生成视频" description="完成一次生成后，结果会按时间保留在这里。" icon={<VideoIcon className="size-4" />} className="min-h-20 sm:min-h-40 lg:min-h-[360px]" />
+                            <CompactEmptyState title={t("emptyResultsTitle")} description={t("emptyResultsDescription")} icon={<VideoIcon className="size-4" />} className="min-h-20 sm:min-h-40 lg:min-h-[360px]" />
                         )}
                     </div>
                 </section>
             </main>
             <WorkbenchFileInput inputRef={fileInputRef} accept="image/*,video/mp4,video/quicktime,audio/mpeg,audio/wav,audio/x-wav,.mp3,.wav" onFiles={(files) => void addReferences(files)} />
-            <Drawer title="生成记录" placement="bottom" size="min(86dvh, 720px)" open={logsOpen} onClose={() => setLogsOpen(false)} styles={{ body: { padding: 0, overflow: "hidden" } }}>
+            <Drawer title={t("generationHistory")} placement="bottom" size="min(86dvh, 720px)" open={logsOpen} onClose={() => setLogsOpen(false)} styles={{ body: { padding: 0, overflow: "hidden" } }}>
                 <div className="thin-scrollbar h-full overflow-y-auto px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4">
                     <LogPanel
                         logs={logs}
@@ -489,8 +490,8 @@ export default function VideoPage() {
                 onAssetInsert={(payload) => void insertPickedAsset(payload)}
                 onAssetClose={() => setAssetPickerOpen(false)}
             />
-            <Modal title="删除生成记录" open={deleteConfirmOpen} onCancel={() => setDeleteConfirmOpen(false)} onOk={deleteSelectedLogs} okText="删除" okButtonProps={{ danger: true }} cancelText="取消">
-                确定删除选中的 {selectedLogIds.length} 条生成记录吗？
+            <Modal title={t("deleteLogsModalTitle")} open={deleteConfirmOpen} onCancel={() => setDeleteConfirmOpen(false)} onOk={deleteSelectedLogs} okText={t("delete")} okButtonProps={{ danger: true }} cancelText={t("cancel")}>
+                {t("deleteLogsConfirm", { count: selectedLogIds.length })}
             </Modal>
         </div>
     );

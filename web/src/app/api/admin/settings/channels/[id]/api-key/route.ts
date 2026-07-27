@@ -27,8 +27,8 @@ export async function GET(request: Request, context: RouteContext) {
         const { id } = await context.params;
         const settings = await getAuthSettings();
         const channel = settings.systemChannels.find((item) => item.id === id);
-        if (!channel) return json({ error: "接口渠道不存在" }, 404);
-        if (!isUsableAdminChannelApiKey(channel.apiKey)) return json({ error: "该渠道尚未保存可用的 API Key" }, 404);
+        if (!channel) return json({ error: await serverMessage("admin.channelNotFound") }, 404);
+        if (!isUsableAdminChannelApiKey(channel.apiKey)) return json({ error: await serverMessage("admin.channelNoApiKey") }, 404);
 
         await safeRecordAuditLog({
             action: "admin.settings.channel_api_key.view",
@@ -38,7 +38,7 @@ export async function GET(request: Request, context: RouteContext) {
         return json({ apiKey: channel.apiKey });
     } catch (error) {
         console.error("Admin channel API key reveal failed", error);
-        return json({ error: "读取 API Key 失败" }, 500);
+        return json({ error: await serverMessage("admin.readApiKeyFailed") }, 500);
     }
 }
 

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type DragEvent as ReactDragEvent } from "r
 import { App, Button, Drawer, Empty, Modal, Tag, Typography } from "antd";
 import { nanoid } from "nanoid";
 import { saveAs } from "file-saver";
+import { useTranslations } from "next-intl";
 
 import type { InsertAssetPayload } from "@/app/(user)/canvas/components/asset-picker-modal";
 import { AudioSettingsPanel } from "@/components/audio-settings-panel";
@@ -69,6 +70,7 @@ export function selectVideoModel(config: AiConfig, options = selectableModelsByC
 }
 
 export function GenerationSettings({ config, model, updateConfig, openConfigDialog, hideModel = false }: { config: AiConfig; model: string; updateConfig: UpdateAiConfig; openConfigDialog: (shouldPromptContinue?: boolean) => void; hideModel?: boolean }) {
+    const t = useTranslations("workspace.video");
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
     const [audioOpen, setAudioOpen] = useState(false);
 
@@ -76,7 +78,7 @@ export function GenerationSettings({ config, model, updateConfig, openConfigDial
         <>
             {!hideModel ? (
                 <label className="col-span-2 block min-w-0 sm:col-span-1">
-                    <span className="mb-1.5 block text-sm font-semibold sm:mb-2 sm:text-base">模型</span>
+                    <span className="mb-1.5 block text-sm font-semibold sm:mb-2 sm:text-base">{t("modelLabel")}</span>
                     <ModelPicker config={config} value={model} onChange={(value) => updateConfig("videoModel", value)} capability="video" fullWidth onMissingConfig={() => openConfigDialog(true)} />
                 </label>
             ) : null}
@@ -86,7 +88,7 @@ export function GenerationSettings({ config, model, updateConfig, openConfigDial
             <div className="col-span-2 border-t pt-2" style={{ borderColor: theme.node.stroke }}>
                 <button type="button" className="flex h-9 w-full items-center justify-between rounded-lg px-2 text-sm font-medium transition hover:bg-black/5 dark:hover:bg-white/5" onClick={() => setAudioOpen((open) => !open)} aria-expanded={audioOpen}>
                     <span className="flex items-center gap-2">
-                        <Music2 className="size-4" /> 音频设置
+                        <Music2 className="size-4" /> {t("audioSettings")}
                     </span>
                     <ChevronDown className={cn("size-4 transition-transform", audioOpen && "rotate-180")} />
                 </button>
@@ -111,6 +113,7 @@ export function ResultVideoCard({
     onDownload: (video: GeneratedVideo) => void;
     onSaveAsset: (video: GeneratedVideo) => void;
 }) {
+    const t = useTranslations("workspace.video");
     return (
         <div className="relative overflow-hidden rounded-lg border border-stone-200 bg-background dark:border-stone-800">
             <ResultSelectCheckbox selected={selected} onSelectedChange={onSelectedChange} />
@@ -127,10 +130,10 @@ export function ResultVideoCard({
                 </div>
                 <div className="flex shrink-0 gap-1">
                     <Button size="small" icon={<FolderPlus className="size-3.5" />} onClick={() => onSaveAsset(video)}>
-                        添加到素材
+                        {t("addToAssets")}
                     </Button>
                     <Button size="small" icon={<Download className="size-3.5" />} onClick={() => onDownload(video)}>
-                        下载
+                        {t("download")}
                     </Button>
                 </div>
             </div>
@@ -143,7 +146,8 @@ export function PendingVideoCard() {
 }
 
 export function FailedVideoCard({ error, selected, onSelectedChange, onRetry }: { error: string; selected?: boolean; onSelectedChange?: (checked: boolean) => void; onRetry: () => void }) {
-    const failure = videoFailureDisplay(error);
+    const t = useTranslations("workspace.video");
+    const failure = videoFailureDisplay(error, t);
     return (
         <div className="relative overflow-hidden rounded-lg border border-red-200 bg-red-50 dark:border-red-950 dark:bg-red-950/20">
             <ResultSelectCheckbox selected={selected} onSelectedChange={onSelectedChange} />
@@ -156,18 +160,20 @@ export function FailedVideoCard({ error, selected, onSelectedChange, onRetry }: 
             </div>
             <div className="flex justify-end border-t border-red-200 p-2 sm:p-3 dark:border-red-950">
                 <Button size="small" danger onClick={onRetry}>
-                    重试
+                    {t("retry")}
                 </Button>
             </div>
         </div>
     );
 }
 
-export function videoFailureDisplay(error: string) {
-    if (error.startsWith("上游生成阶段失败")) return { title: "上游生成失败", hint: "任务已创建，但上游生成阶段失败。" };
-    if (error.startsWith("视频任务创建失败") || error.startsWith("Seedance 任务创建失败")) return { title: "任务创建失败", hint: "当前请求未能成功创建生成任务。" };
-    if (error.startsWith("视频任务查询失败") || error.startsWith("Seedance 任务查询失败")) return { title: "任务查询失败", hint: "任务已提交后，轮询上游状态失败。" };
-    return { title: "生成失败", hint: "请检查模型、额度和接口返回。" };
+export function videoFailureDisplay(error: string, t: (key: string) => string) {
+    if (error.startsWith("上游生成阶段失败") || error.startsWith("Upstream generation stage failed")) return { title: t("failureUpstreamTitle"), hint: t("failureUpstreamHint") };
+    if (error.startsWith("视频任务创建失败") || error.startsWith("Seedance 任务创建失败") || error.startsWith("Video task creation failed") || error.startsWith("Seedance task creation failed"))
+        return { title: t("failureCreateTitle"), hint: t("failureCreateHint") };
+    if (error.startsWith("视频任务查询失败") || error.startsWith("Seedance 任务查询失败") || error.startsWith("Video task query failed") || error.startsWith("Seedance task query failed"))
+        return { title: t("failurePollTitle"), hint: t("failurePollHint") };
+    return { title: t("failureDefaultTitle"), hint: t("failureDefaultHint") };
 }
 
 export function LogPanel({
@@ -191,6 +197,8 @@ export function LogPanel({
     onRenameLog: (log: GenerationLog, title: string) => void;
     compact?: boolean;
 }) {
+    const t = useTranslations("workspace.video");
+    const statusLabel = (status: GenerationLog["status"]) => (status === "success" ? t("statusSuccess") : status === "pending" ? t("statusPending") : t("statusFailed"));
     return (
         <WorkbenchHistoryPanel
             logs={logs}
@@ -210,8 +218,8 @@ export function LogPanel({
                         <Tag className="m-0 flex h-6 items-center rounded-md px-1.5 text-xs leading-none">{log.seconds}s</Tag>
                     </div>
                     <div className="flex min-w-0 flex-wrap gap-1">
-                        <Tag className="m-0 flex h-6 items-center rounded-md px-1.5 text-xs leading-none" color={log.status === "成功" ? "blue" : log.status === "生成中" ? "processing" : "red"}>
-                            {log.status}
+                        <Tag className="m-0 flex h-6 items-center rounded-md px-1.5 text-xs leading-none" color={log.status === "success" ? "blue" : log.status === "pending" ? "processing" : "red"}>
+                            {statusLabel(log.status)}
                         </Tag>
                         <Tag className="m-0 flex h-6 items-center rounded-md px-1.5 text-xs leading-none" color="green">
                             {formatDuration(log.durationMs)}

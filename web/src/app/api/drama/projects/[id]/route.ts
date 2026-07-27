@@ -12,13 +12,16 @@ export async function GET(_: Request, context: Context) {
 
 export async function PATCH(request: Request, context: Context) {
     const body = await request.json().catch(() => ({}));
-    return handle(context, (userId, id) => updateDramaProjectForUser(userId, id, body).then((project) => NextResponse.json({ code: 0, data: { project }, msg: "短剧项目已保存" })));
+    return handle(context, async (userId, id) => {
+        const project = await updateDramaProjectForUser(userId, id, body);
+        return NextResponse.json({ code: 0, data: { project }, msg: await serverMessage("drama.projectSaved") });
+    });
 }
 
 export async function DELETE(_: Request, context: Context) {
     return handle(context, async (userId, id) => {
         await deleteDramaProjectForUser(userId, id);
-        return NextResponse.json({ code: 0, data: { deleted: true }, msg: "短剧项目已删除" });
+        return NextResponse.json({ code: 0, data: { deleted: true }, msg: await serverMessage("drama.projectDeleted") });
     });
 }
 

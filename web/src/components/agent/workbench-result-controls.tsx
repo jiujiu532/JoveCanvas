@@ -2,6 +2,7 @@
 
 import type { RefObject } from "react";
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function WorkbenchFileInput({ inputRef, accept, onFiles }: { inputRef: RefObject<HTMLInputElement | null>; accept: string; onFiles: (files: FileList | null) => void }) {
     return (
@@ -20,11 +21,12 @@ export function WorkbenchFileInput({ inputRef, accept, onFiles }: { inputRef: Re
 }
 
 export function ResultSelectCheckbox({ selected, onSelectedChange }: { selected?: boolean; onSelectedChange?: (checked: boolean) => void }) {
+    const t = useTranslations("layout");
     if (!onSelectedChange) return null;
     return (
         <button
             type="button"
-            aria-label="选择生成结果"
+            aria-label={t("agent.history.selectResult")}
             aria-pressed={Boolean(selected)}
             className={
                 "absolute left-2 top-2 z-10 inline-flex size-6 items-center justify-center rounded-lg border shadow-sm backdrop-blur transition " +

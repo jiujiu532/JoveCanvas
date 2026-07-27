@@ -63,6 +63,6 @@ export async function POST(request: Request) {
         });
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin user create failed", error);
-        return NextResponse.json({ error: "新增用户失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.userCreateFailed") }, { status: 500 });
     }
 }

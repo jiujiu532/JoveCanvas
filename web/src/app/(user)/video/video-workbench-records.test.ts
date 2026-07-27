@@ -7,7 +7,7 @@ describe("video workbench records", () => {
     it("restores success, failure, and pending results from a log", () => {
         const log = {
             id: "log-1",
-            status: "生成中" as const,
+            status: "pending" as const,
             task: { id: "task-1" },
             taskResultId: "pending-1",
             videos: [video("ok-1")],
@@ -26,7 +26,7 @@ describe("video workbench records", () => {
 
         expect(log).toMatchObject({
             prompt: "生成视频",
-            status: "失败",
+            status: "failed",
             error: "生成失败",
             failures: [{ resultId: "result-1", error: "生成失败" }],
             resultDeleted: false,

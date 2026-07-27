@@ -1,13 +1,37 @@
 {
     "nav": {
-        "create": { "label": "创作 Agent", "description": "统一创作入口" },
-        "canvas": { "label": "我的画布", "description": "节点式多媒体创作" },
-        "drama": { "label": "短剧项目", "description": "剧本、分镜与成片" },
-        "image": { "label": "生图工作台", "description": "图片生成与精调" },
-        "video": { "label": "视频创作台", "description": "视频生成与精调" },
-        "prompts": { "label": "提示词库", "description": "公共提示词" },
-        "my-prompts": { "label": "我的提示词", "description": "个人提示词" },
-        "assets": { "label": "我的素材", "description": "图片、视频与音频" }
+        "create": {
+            "label": "创作 Agent",
+            "description": "统一创作入口"
+        },
+        "canvas": {
+            "label": "我的画布",
+            "description": "节点式多媒体创作"
+        },
+        "drama": {
+            "label": "短剧项目",
+            "description": "剧本、分镜与成片"
+        },
+        "image": {
+            "label": "生图工作台",
+            "description": "图片生成与精调"
+        },
+        "video": {
+            "label": "视频创作台",
+            "description": "视频生成与精调"
+        },
+        "prompts": {
+            "label": "提示词库",
+            "description": "公共提示词"
+        },
+        "my-prompts": {
+            "label": "我的提示词",
+            "description": "个人提示词"
+        },
+        "assets": {
+            "label": "我的素材",
+            "description": "图片、视频与音频"
+        }
     },
     "navGroup": {
         "create": "创作",
@@ -16,6 +40,7 @@
         "assets": "资产"
     },
     "helpCenter": "帮助中心",
+    "copiedDefault": "已复制",
     "sidebar": {
         "navAria": "工作空间导航"
     },
@@ -209,7 +234,9 @@
         },
         "media": {
             "viewLarge": "查看大图",
-            "openVideo": "打开视频：{title}"
+            "openVideo": "打开视频：{title}",
+            "generatedImage": "生成图片",
+            "generatedVideo": "生成视频"
         },
         "skills": {
             "chooseTitle": "选择创作 Skill",
@@ -240,7 +267,9 @@
             "smartPlanningOff": "智能规划：已关闭",
             "smartShort": "智能",
             "selectedModelsCount": "已选择 {count} 个模型",
-            "selectModel": "选择生成模型"
+            "selectModel": "选择生成模型",
+            "smartToggleOnAria": "智能规划已开启，点击关闭",
+            "smartToggleOffAria": "智能规划已关闭，点击开启"
         },
         "header": {
             "historyTitle": "生成记录",
@@ -278,7 +307,10 @@
             "generationParams": "生成参数",
             "currentParams": "当前：{summary}",
             "openParamsAria": "打开生成参数，当前 {summary}",
-            "paramsTooltip": "生成参数：{summary}"
+            "paramsTooltip": "生成参数：{summary}",
+            "promptLabel": "提示词",
+            "viewPromptLibrary": "查看提示词库",
+            "viewMyAssets": "查看我的素材"
         },
         "history": {
             "title": "生成记录",
@@ -287,7 +319,8 @@
             "cancelSelect": "取消",
             "delete": "删除",
             "empty": "暂无生成记录",
-            "editTitleAria": "编辑记录标题"
+            "editTitleAria": "编辑记录标题",
+            "selectResult": "选择生成结果"
         },
         "toggler": {
             "switchTheme": "切换主题"
@@ -319,7 +352,13 @@
         "generationPlaceholder": {
             "imageGenerating": "图片正在生成",
             "videoGenerating": "视频正在生成",
-            "tasksGenerating": "{count} 个{kind}任务正在生成"
+            "tasksGenerating": "{count} 个{kind}任务正在生成",
+            "kindImage": "图片",
+            "kindVideo": "视频"
+        },
+        "mediaLabel": {
+            "image": "图片",
+            "video": "视频"
         }
     },
     "myPrompts": {
@@ -377,5 +416,65 @@
         "loadFailed": "获取提示词失败",
         "useThisPrompt": "使用此提示词",
         "empty": "没有找到匹配的提示词"
+    },
+    "settings": {
+        "audio": {
+            "title": "音频设置",
+            "voice": "声音",
+            "format": "格式",
+            "speed": "语速",
+            "instructions": "声音指令",
+            "instructionsPlaceholder": "例如：自然、温暖、适合旁白。"
+        },
+        "image": {
+            "title": "图像设置",
+            "quality": "质量",
+            "size": "尺寸",
+            "snap16": "16倍数对齐",
+            "snap16Title": "输入完成后自动向上补成 16 的倍数",
+            "aspectRatio": "宽高比",
+            "count": "生成张数",
+            "countUnit": "{count} 张",
+            "qualityAuto": "自动",
+            "qualityHigh": "高",
+            "qualityMedium": "中",
+            "qualityLow": "低"
+        },
+        "video": {
+            "title": "视频设置",
+            "clarity": "清晰度",
+            "size": "尺寸",
+            "seconds": "秒数",
+            "resolution": "分辨率",
+            "ratio": "比例",
+            "duration": "时长",
+            "output": "输出",
+            "generateAudio": "生成声音",
+            "watermark": "添加水印",
+            "smart": "智能",
+            "adaptive": "自适应",
+            "landscape": "横屏",
+            "portrait": "竖屏",
+            "square": "方形",
+            "wide": "宽屏",
+            "tall": "长图",
+            "seedanceFastHint": "fast 模型不支持 1080p，会自动使用 720p。"
+        },
+        "model": {
+            "placeholder": "选择模型",
+            "capabilityImage": "生图",
+            "capabilityVideo": "视频",
+            "capabilityText": "文本",
+            "capabilityAudio": "音频",
+            "noMatching": "暂无匹配的{capability}模型",
+            "contactAdmin": "请联系管理员在后台配置渠道和模型"
+        }
+    },
+    "errors": {
+        "pleaseLogin": "请先登录",
+        "sessionChanged": "登录会话已变更，请重试",
+        "assetLoadFailed": "素材加载失败",
+        "assetNotFound": "素材不存在",
+        "sessionLoadFailed": "会话加载失败"
     }
 }

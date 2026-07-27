@@ -64,7 +64,7 @@ export type GenerationLog = {
     imageCount: number;
     size: string;
     quality: string;
-    status: "成功" | "失败" | "生成中";
+    status: "success" | "failed" | "pending";
     images: GeneratedImage[];
     thumbnails: string[];
     pendingCount?: number;
@@ -276,7 +276,7 @@ export async function serverImageLogToWorkbenchLog(record: StoredGenerationLogRe
         imageCount: record.count || Math.max(1, images.length + (record.failCount || 0)),
         size: "",
         quality: "",
-        status: record.status === "pending" ? "生成中" : record.status === "failed" ? "失败" : "成功",
+        status: record.status === "pending" ? "pending" : record.status === "failed" ? "failed" : "success",
         images,
         thumbnails: images.map((image) => image.dataUrl),
         error: record.error,
@@ -314,7 +314,7 @@ export async function recordImageWorkbenchLog(log: GenerationLog) {
         title: log.title,
         prompt: log.prompt,
         model: log.model || log.config.imageModel || log.config.model,
-        summary: log.pendingCount ? "图片生成中" : log.failCount && !log.successCount ? "图片生成失败" : "图片生成完成",
+        summary: log.pendingCount ? "Image generation in progress" : log.failCount && !log.successCount ? "Image generation failed" : "Image generation complete",
         durationMs: log.durationMs,
         count: log.imageCount || Math.max(1, assets.length + (log.failCount || 0)),
         successCount: log.successCount || assets.length,
@@ -349,7 +349,7 @@ async function normalizeLog(log: Partial<GenerationLog>): Promise<GenerationLog>
         ownerUserId: log.ownerUserId,
         creativeConversationId: log.creativeConversationId,
         createdAt: log.createdAt || Date.now(),
-        title: log.title || log.model || "未命名",
+        title: log.title || log.model || "Untitled",
         prompt: log.prompt || log.title || "",
         time: log.time || new Date().toLocaleString("zh-CN", { hour12: false }),
         model: log.model || config.imageModel || "",
@@ -362,7 +362,7 @@ async function normalizeLog(log: Partial<GenerationLog>): Promise<GenerationLog>
         imageCount: log.imageCount || log.successCount || images.length + failCount + pendingCount,
         size: log.size || config.size || "",
         quality: log.quality || config.quality || "",
-        status: pendingCount ? "生成中" : log.status || "成功",
+        status: pendingCount ? "pending" : log.status || "success",
         images,
         thumbnails: images.map((image) => image.dataUrl).filter(Boolean),
         imageTasks,
@@ -390,7 +390,7 @@ export async function normalizeGeneratedImage(url: string, remoteFallback = "", 
     const remoteUrl = isRemoteImageUrl(remoteFallback) ? remoteFallback : isRemoteImageUrl(url) ? url : "";
     const serverUrl = isServerImageUrl(serverFallback) ? serverFallback : isServerImageUrl(url) ? url : "";
     const fallbackUrl = serverUrl || (!isLocalImageUrl(url) ? url : "") || remoteUrl;
-    if (!fallbackUrl) throw new Error("生成结果未保存到服务器，请重试");
+    if (!fallbackUrl) throw new Error("Generation result was not saved to the server, please retry");
     if (!serverUrl) {
         const stored = await uploadImage(fallbackUrl);
         return { url: stored.url, remoteUrl: remoteUrl || undefined, serverUrl: stored.url, width: stored.width, height: stored.height, bytes: stored.bytes, mimeType: stored.mimeType, storageKey: stored.storageKey };
@@ -431,7 +431,7 @@ export function resultsFromLog(log: GenerationLog): GenerationResult[] {
     (log.failures || []).forEach((failure, fallbackIndex) => {
         if (usedResultIds.has(failure.resultId)) return;
         usedResultIds.add(failure.resultId);
-        entries.push({ index: failure.index ?? entries.length + fallbackIndex, result: { id: failure.resultId, status: "failed", error: failure.error || log.error || "生成失败" } });
+        entries.push({ index: failure.index ?? entries.length + fallbackIndex, result: { id: failure.resultId, status: "failed", error: failure.error || log.error || "Generation failed" } });
     });
     const knownPendingCount = entries.filter((entry) => entry.result.status === "pending").length;
     const missingPendingCount = Math.max(0, (log.pendingCount || 0) - knownPendingCount);
@@ -441,7 +441,7 @@ export function resultsFromLog(log: GenerationLog): GenerationResult[] {
     const knownFailureCount = entries.filter((entry) => entry.result.status === "failed").length;
     const missingFailureCount = Math.max(0, (log.failCount || 0) - knownFailureCount);
     for (let index = 0; index < missingFailureCount; index += 1) {
-        entries.push({ index: entries.length, result: { id: `${log.id}-failed-${index}`, status: "failed", error: log.error || "生成失败" } });
+        entries.push({ index: entries.length, result: { id: `${log.id}-failed-${index}`, status: "failed", error: log.error || "Generation failed" } });
     }
     return entries.sort((a, b) => a.index - b.index).map((entry) => entry.result);
 }
@@ -459,11 +459,11 @@ function normalizeLogConfig(log: Partial<GenerationLog>): GenerationLogConfig {
 export function buildLogFromResults(baseLog: GenerationLog | null, snapshot: GenerationSnapshot, results: GenerationResult[], durationMs: number, count: string, error?: string): GenerationLog {
     const images = results.flatMap((item, index) => (item.status === "success" && item.image ? [{ ...item.image, id: item.id, slotIndex: item.image.slotIndex ?? index }] : []));
     const imageTasks = results.flatMap((item, index) => (item.status === "pending" && item.task ? [{ ...item.task, resultId: item.id, index }] : []));
-    const failures = results.flatMap((item, index) => (item.status === "failed" ? [{ resultId: item.id, index, error: item.error || error || "生成失败" }] : []));
+    const failures = results.flatMap((item, index) => (item.status === "failed" ? [{ resultId: item.id, index, error: item.error || error || "Generation failed" }] : []));
     const pendingCount = results.filter((item) => item.status === "pending").length;
     const failCount = failures.length;
     const logConfig = buildLogConfig(snapshot.config, count);
-    const status: GenerationLog["status"] = pendingCount ? "生成中" : images.length ? "成功" : "失败";
+    const status: GenerationLog["status"] = pendingCount ? "pending" : images.length ? "success" : "failed";
     const errorMessage = error || failures[0]?.error;
     return buildLog({
         baseLog,
@@ -528,7 +528,7 @@ function buildLog({
         id: baseLog?.id || nanoid(),
         creativeConversationId: baseLog?.creativeConversationId,
         createdAt: baseLog?.createdAt || Date.now(),
-        title: baseLog?.title || prompt.slice(0, 12) || "未命名",
+        title: baseLog?.title || prompt.slice(0, 12) || "Untitled",
         prompt,
         time: new Date().toLocaleString("zh-CN", { hour12: false }),
         model,

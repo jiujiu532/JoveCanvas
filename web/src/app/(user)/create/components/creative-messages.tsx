@@ -4,6 +4,7 @@ import { Button, Tooltip } from "antd";
 import { Check, Clapperboard, ExternalLink, LoaderCircle, PanelsTopLeft, Plus, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { SiteLogo } from "@/components/layout/site-logo";
 import type { AgentMediaDownload } from "@/components/agent/agent-media-download";
@@ -56,7 +57,9 @@ export function CreativeMessages({
     const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", logoUrl: "/logo.svg" };
     const user = usePublicSessionStore((state) => state.payload?.user || null);
     const avatarUrl = user?.avatarUrl?.trim();
-    const avatarFallback = userAvatarFallback(user?.displayName || user?.username || "用户");
+    const t = useTranslations("workspace.create.messages");
+    const userFallback = user?.displayName || user?.username || t("userFallback");
+    const avatarFallback = userAvatarFallback(userFallback);
     const assetsByMessage = useMemo(() => {
         const map = new Map<string, CreativeAsset[]>();
         for (const asset of assets) {
@@ -71,14 +74,14 @@ export function CreativeMessages({
         endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }, [assets.length, messages.at(-1)?.id]);
 
-    if (loading) return <div className="grid flex-1 place-items-center text-sm text-stone-400">正在读取会话...</div>;
+    if (loading) return <div className="grid flex-1 place-items-center text-sm text-stone-400">{t("loadingConversation")}</div>;
 
     return (
         <div className="mx-auto w-full max-w-[1120px] space-y-3 px-3 pb-4 pt-6 sm:space-y-8 sm:px-8 sm:pb-10 sm:pt-20">
             {hasOlder ? (
                 <div className="flex justify-center">
                     <Button type="text" loading={olderLoading} onClick={onLoadOlder}>
-                        加载更早消息
+                        {t("loadOlderMessages")}
                     </Button>
                 </div>
             ) : null}
@@ -86,7 +89,7 @@ export function CreativeMessages({
                 const itemAssets = [...(assetsByMessage.get(item.id) || []), ...(item.runId ? assetsByMessage.get(item.runId) || [] : [])].filter((asset, index, list) => list.findIndex((current) => current.id === asset.id) === index);
                 const handoff = isCreativeProjectHandoff(item.metadata.projectHandoff) ? item.metadata.projectHandoff : null;
                 const displayContent = formatAgentMessageText(item.content);
-                const downloads = agentAssetDownloads(itemAssets);
+                const downloads = agentAssetDownloads(itemAssets, t);
                 return (
                     <article key={item.id} className={cn("group/message flex items-start gap-3", item.role === "user" ? "justify-end" : "justify-start")}>
                         {item.role === "assistant" ? (
@@ -113,7 +116,7 @@ export function CreativeMessages({
                             {item.status !== "running" ? <AgentMessageActions text={displayContent} downloads={downloads} onEdit={item.role === "user" ? onEditMessage : undefined} align={item.role === "user" ? "end" : "start"} /> : null}
                         </div>
                         {item.role === "user" ? (
-                            <span className="mt-1 grid size-7 shrink-0 place-items-center overflow-hidden rounded-full" role="img" aria-label={user?.displayName || user?.username || "用户"}>
+                            <span className="mt-1 grid size-7 shrink-0 place-items-center overflow-hidden rounded-full" role="img" aria-label={userFallback}>
                                 {avatarUrl ? (
                                     <img src={avatarUrl} alt="" className="size-full object-cover" referrerPolicy="no-referrer" />
                                 ) : (
@@ -135,13 +138,14 @@ export function CreativeMessages({
 }
 
 function FailedTaskActions({ run, onRetryTask }: { run: CreativeAgentRun; onRetryTask: (runId: string, taskId: string) => void }) {
+    const t = useTranslations("workspace.create.messages");
     const failedTasks = run.tasks.filter((task) => task.status === "failed");
     return (
         <div className="mt-3 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-red-200 bg-red-50 px-2 py-1.5 align-top dark:border-red-900/70 dark:bg-red-950/20">
             {failedTasks.map((task) => (
                 <span key={task.id} className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-xs text-red-700 dark:text-red-200">
                     <span className="max-w-44 truncate">{task.title}</span>
-                    <Tooltip title={`重试「${task.title}」`}>
+                    <Tooltip title={t("retryTaskTitle", { title: task.title })}>
                         <Button
                             type="text"
                             size="small"
@@ -149,7 +153,7 @@ function FailedTaskActions({ run, onRetryTask }: { run: CreativeAgentRun; onRetr
                             className="!size-6 !min-w-6 !text-red-700 hover:!bg-red-100 hover:!text-red-800 dark:!text-red-200 dark:hover:!bg-red-900/50 dark:hover:!text-red-100"
                             icon={<RotateCcw className="size-3.5" />}
                             onClick={() => onRetryTask(run.id, task.id)}
-                            aria-label={`重试 ${task.title}`}
+                            aria-label={t("retryTaskAria", { title: task.title })}
                         />
                     </Tooltip>
                 </span>
@@ -159,8 +163,9 @@ function FailedTaskActions({ run, onRetryTask }: { run: CreativeAgentRun; onRetr
 }
 
 function ProjectHandoffAction({ handoff, project, error, loading, onMaterialize }: { handoff: CreativeProjectHandoff; project?: MaterializedCreativeProject; error?: string; loading: boolean; onMaterialize: () => void }) {
+    const t = useTranslations("workspace.create.messages");
     const Icon = handoff.surface === "canvas" ? PanelsTopLeft : Clapperboard;
-    const label = handoff.surface === "canvas" ? "画布项目" : "短剧项目";
+    const label = handoff.surface === "canvas" ? t("canvasProject") : t("dramaProject");
     return (
         <div className="mt-4 flex min-h-14 items-center gap-3 rounded-md border border-stone-200 bg-stone-50 px-3 py-2.5 dark:border-stone-700 dark:bg-stone-900">
             <span className="grid size-9 shrink-0 place-items-center rounded-md bg-white text-stone-700 dark:bg-stone-800 dark:text-stone-200">
@@ -168,18 +173,18 @@ function ProjectHandoffAction({ handoff, project, error, loading, onMaterialize 
             </span>
             <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium">{handoff.title}</span>
-                <span className={cn("mt-0.5 block text-xs text-stone-500 dark:text-stone-400", error && "text-red-600 dark:text-red-300")}>{error || `${handoff.assets.length} 份资产已交接到${label}`}</span>
+                <span className={cn("mt-0.5 block text-xs text-stone-500 dark:text-stone-400", error && "text-red-600 dark:text-red-300")}>{error || t("handoffAssetsReady", { count: handoff.assets.length, label })}</span>
             </span>
             {project ? (
                 <Link
                     href={project.href}
                     className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-stone-300 bg-white px-3 text-sm font-medium text-stone-800 transition hover:border-stone-400 hover:bg-stone-100 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100 dark:hover:border-stone-500 dark:hover:bg-stone-700"
                 >
-                    打开 <ExternalLink className="size-3.5" />
+                    {t("openProject")} <ExternalLink className="size-3.5" />
                 </Link>
             ) : (
                 <Button className="!h-9 !shrink-0" loading={loading} onClick={onMaterialize}>
-                    {error ? "重试" : "创建项目"}
+                    {error ? t("retry") : t("createProject")}
                 </Button>
             )}
         </div>
@@ -187,6 +192,7 @@ function ProjectHandoffAction({ handoff, project, error, loading, onMaterialize 
 }
 
 function CreativeAssetGrid({ assets, selectedAssetIds, onToggleAsset }: { assets: CreativeAsset[]; selectedAssetIds: string[]; onToggleAsset: (id: string) => void }) {
+    const t = useTranslations("workspace.create.messages");
     const [loadedDimensions, setLoadedDimensions] = useState<Record<string, { width: number; height: number }>>({});
     const media = assets.filter((asset) => asset.type !== "text" && assetUrl(asset));
     const updateDimensions = useCallback((id: string, width: number, height: number) => {
@@ -204,14 +210,14 @@ function CreativeAssetGrid({ assets, selectedAssetIds, onToggleAsset }: { assets
                     <figure key={asset.id} style={layout?.card} className={cn("max-w-full overflow-hidden rounded-lg border border-stone-200 bg-stone-50 dark:border-stone-700 dark:bg-stone-900", !layout && "w-full")}>
                         {asset.type === "audio" ? (
                             <div className="p-3 sm:p-4">
-                                <AgentMediaPreview type={asset.type} url={url} title={asset.title || "生成音频"} />
+                                <AgentMediaPreview type={asset.type} url={url} title={asset.title || t("generatedAudio")} />
                             </div>
                         ) : (
                             <div style={layout?.media} className={cn("w-full overflow-hidden", !layout && asset.type === "video" && "aspect-video")}>
                                 <AgentMediaPreview
                                     type={asset.type}
                                     url={url}
-                                    title={asset.title || (asset.type === "video" ? "生成视频" : "生成图片")}
+                                    title={asset.title || (asset.type === "video" ? t("generatedVideo") : t("generatedImage"))}
                                     className={cn("size-full", asset.type === "image" && "flex items-center justify-center bg-stone-100 dark:bg-stone-950")}
                                     fit={asset.type === "image" ? "contain" : "cover"}
                                     onDimensions={(width, height) => updateDimensions(asset.id, width, height)}
@@ -233,7 +239,7 @@ function CreativeAssetGrid({ assets, selectedAssetIds, onToggleAsset }: { assets
                                     onClick={() => onToggleAsset(asset.id)}
                                 >
                                     {selected ? <Check className="size-3" /> : <Plus className="size-3" />}
-                                    {selected ? "已引用" : "引用素材"}
+                                    {selected ? t("referenced") : t("referenceAsset")}
                                 </button>
                             ) : null}
                         </figcaption>
@@ -248,9 +254,9 @@ function assetUrl(asset: CreativeAsset) {
     return asset.serverUrl || asset.remoteUrl || "";
 }
 
-function agentAssetDownloads(assets: CreativeAsset[]): AgentMediaDownload[] {
+function agentAssetDownloads(assets: CreativeAsset[], t: (key: string) => string): AgentMediaDownload[] {
     return assets.flatMap((asset) => {
         const url = assetUrl(asset);
-        return url && (asset.type === "image" || asset.type === "video") ? [{ type: asset.type, url, title: asset.title || (asset.type === "video" ? "生成视频" : "生成图片") }] : [];
+        return url && (asset.type === "image" || asset.type === "video") ? [{ type: asset.type, url, title: asset.title || (asset.type === "video" ? t("generatedVideo") : t("generatedImage")) }] : [];
     });
 }

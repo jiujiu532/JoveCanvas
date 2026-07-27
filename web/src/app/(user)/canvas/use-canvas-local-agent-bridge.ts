@@ -2,14 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import { App } from "antd";
+import { useTranslations } from "next-intl";
 
 import type { CanvasAgentOp, CanvasAgentSnapshot } from "./utils/canvas-agent-ops";
 
 type CanvasAgentConnection = { endpoint: string; token: string };
 type CanvasAgentToolCall = { requestId: string; name: string; input?: { ops?: CanvasAgentOp[] } };
+type CanvasAgentTranslate = (key: string, values?: Record<string, string | number>) => string;
 
 export function useCanvasLocalAgentBridge({ snapshot, onApplyOps }: { snapshot: CanvasAgentSnapshot; onApplyOps: (ops?: CanvasAgentOp[]) => CanvasAgentSnapshot }) {
     const { message, modal } = App.useApp();
+    const t = useTranslations("canvas.agent");
+    const tRef = useRef(t);
+    tRef.current = t;
     const [connection] = useState(() => resolveCanvasAgentConnection(typeof window === "undefined" ? "" : window.location.search));
     const [connected, setConnected] = useState(false);
     const snapshotRef = useRef(snapshot);
@@ -26,21 +31,21 @@ export function useCanvasLocalAgentBridge({ snapshot, onApplyOps }: { snapshot: 
         const source = new EventSource(`${endpoint}/events?token=${encodeURIComponent(token)}&clientId=${encodeURIComponent(clientId)}`);
         source.addEventListener("hello", () => {
             setConnected(true);
-            void postCanvasAgentState(connection, clientId, snapshotRef.current);
+            void postCanvasAgentState(connection, clientId, snapshotRef.current, tRef.current);
             removeCanvasAgentCredentialsFromUrl();
             if (!notifiedRef.current) {
                 notifiedRef.current = true;
-                message.success("本地 Canvas Agent 已连接");
+                message.success(tRef.current("connected"));
             }
         });
         source.addEventListener("tool_call", (event) => {
             const call = parseToolCall(event);
             if (!call) return;
-            void handleToolCall(call, connection, clientId, snapshotRef, applyOpsRef, (ops) => confirmCanvasOps(modal, ops));
+            void handleToolCall(call, connection, clientId, snapshotRef, applyOpsRef, (ops) => confirmCanvasOps(modal, ops, tRef.current), tRef.current);
         });
         source.onerror = () => {
             setConnected(false);
-            if (!notifiedRef.current) message.warning("本地 Canvas Agent 连接失败，请确认本地服务仍在运行");
+            if (!notifiedRef.current) message.warning(tRef.current("connectFailed"));
         };
         return () => {
             setConnected(false);
@@ -50,7 +55,7 @@ export function useCanvasLocalAgentBridge({ snapshot, onApplyOps }: { snapshot: 
 
     useEffect(() => {
         if (!connection || !connected) return;
-        const timer = window.setTimeout(() => void postCanvasAgentState(connection, clientIdRef.current, snapshot), 300);
+        const timer = window.setTimeout(() => void postCanvasAgentState(connection, clientIdRef.current, snapshot, tRef.current), 300);
         return () => window.clearTimeout(timer);
     }, [connected, connection, snapshot]);
 }
@@ -70,16 +75,16 @@ export function resolveCanvasAgentConnection(search: string): CanvasAgentConnect
     }
 }
 
-export async function executeCanvasAgentToolCall(call: CanvasAgentToolCall, snapshot: CanvasAgentSnapshot, applyOps: (ops?: CanvasAgentOp[]) => CanvasAgentSnapshot, confirmOps: (ops: CanvasAgentOp[]) => Promise<boolean>) {
+export async function executeCanvasAgentToolCall(call: CanvasAgentToolCall, snapshot: CanvasAgentSnapshot, applyOps: (ops?: CanvasAgentOp[]) => CanvasAgentSnapshot, confirmOps: (ops: CanvasAgentOp[]) => Promise<boolean>, t: CanvasAgentTranslate) {
     if (call.name === "canvas_get_state" || call.name === "canvas_export_snapshot") return snapshot;
     if (call.name === "canvas_get_selection") {
         const selected = new Set(snapshot.selectedNodeIds);
         return { nodes: snapshot.nodes.filter((node) => selected.has(node.id)) };
     }
-    if (call.name !== "canvas_apply_ops") throw new Error(`网页不支持本地工具：${call.name}`);
+    if (call.name !== "canvas_apply_ops") throw new Error(t("unsupportedTool", { name: call.name }));
     const ops = Array.isArray(call.input?.ops) ? call.input.ops.filter((op) => Boolean(op?.type)) : [];
-    if (!ops.length) throw new Error("本地 Agent 没有提供有效画布操作");
-    if (!(await confirmOps(ops))) throw new Error("用户拒绝了画布操作");
+    if (!ops.length) throw new Error(t("noValidOps"));
+    if (!(await confirmOps(ops))) throw new Error(t("opsRejected"));
     return applyOps(ops);
 }
 
@@ -90,13 +95,14 @@ async function handleToolCall(
     snapshotRef: { current: CanvasAgentSnapshot },
     applyOpsRef: { current: (ops?: CanvasAgentOp[]) => CanvasAgentSnapshot },
     confirmOps: (ops: CanvasAgentOp[]) => Promise<boolean>,
+    t: CanvasAgentTranslate,
 ) {
     try {
-        const result = await executeCanvasAgentToolCall(call, snapshotRef.current, applyOpsRef.current, confirmOps);
-        await postCanvasAgentResult(connection, clientId, { requestId: call.requestId, result });
-        if (call.name === "canvas_apply_ops") await postCanvasAgentState(connection, clientId, result as CanvasAgentSnapshot);
+        const result = await executeCanvasAgentToolCall(call, snapshotRef.current, applyOpsRef.current, confirmOps, t);
+        await postCanvasAgentResult(connection, clientId, { requestId: call.requestId, result }, t);
+        if (call.name === "canvas_apply_ops") await postCanvasAgentState(connection, clientId, result as CanvasAgentSnapshot, t);
     } catch (error) {
-        await postCanvasAgentResult(connection, clientId, { requestId: call.requestId, error: error instanceof Error ? error.message : "画布操作失败" });
+        await postCanvasAgentResult(connection, clientId, { requestId: call.requestId, error: error instanceof Error ? error.message : t("opFailed") }, t);
     }
 }
 
@@ -109,7 +115,7 @@ function parseToolCall(event: Event): CanvasAgentToolCall | null {
     }
 }
 
-function confirmCanvasOps(modal: ReturnType<typeof App.useApp>["modal"], ops: CanvasAgentOp[]) {
+function confirmCanvasOps(modal: ReturnType<typeof App.useApp>["modal"], ops: CanvasAgentOp[], t: CanvasAgentTranslate) {
     return new Promise<boolean>((resolve) => {
         let settled = false;
         const finish = (value: boolean) => {
@@ -118,10 +124,10 @@ function confirmCanvasOps(modal: ReturnType<typeof App.useApp>["modal"], ops: Ca
             resolve(value);
         };
         modal.confirm({
-            title: "允许本地 Canvas Agent 修改画布？",
-            content: `将执行 ${ops.length} 项节点或连线操作。`,
-            okText: "允许",
-            cancelText: "拒绝",
+            title: t("confirmTitle"),
+            content: t("confirmContent", { count: ops.length }),
+            okText: t("allow"),
+            cancelText: t("reject"),
             onOk: () => finish(true),
             onCancel: () => finish(false),
             afterClose: () => finish(false),
@@ -129,17 +135,17 @@ function confirmCanvasOps(modal: ReturnType<typeof App.useApp>["modal"], ops: Ca
     });
 }
 
-function postCanvasAgentState(connection: CanvasAgentConnection, clientId: string, snapshot: CanvasAgentSnapshot) {
-    return postCanvasAgentJson(connection, `/canvas/state?clientId=${encodeURIComponent(clientId)}`, snapshot);
+function postCanvasAgentState(connection: CanvasAgentConnection, clientId: string, snapshot: CanvasAgentSnapshot, t: CanvasAgentTranslate) {
+    return postCanvasAgentJson(connection, `/canvas/state?clientId=${encodeURIComponent(clientId)}`, snapshot, t);
 }
 
-function postCanvasAgentResult(connection: CanvasAgentConnection, clientId: string, body: { requestId: string; result?: unknown; error?: string }) {
-    return postCanvasAgentJson(connection, `/canvas/result?clientId=${encodeURIComponent(clientId)}`, body);
+function postCanvasAgentResult(connection: CanvasAgentConnection, clientId: string, body: { requestId: string; result?: unknown; error?: string }, t: CanvasAgentTranslate) {
+    return postCanvasAgentJson(connection, `/canvas/result?clientId=${encodeURIComponent(clientId)}`, body, t);
 }
 
-async function postCanvasAgentJson(connection: CanvasAgentConnection, path: string, body: unknown) {
+async function postCanvasAgentJson(connection: CanvasAgentConnection, path: string, body: unknown, t: CanvasAgentTranslate) {
     const response = await fetch(`${connection.endpoint}${path}${path.includes("?") ? "&" : "?"}token=${encodeURIComponent(connection.token)}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-    if (!response.ok) throw new Error("本地 Canvas Agent 请求失败");
+    if (!response.ok) throw new Error(t("requestFailed"));
 }
 
 function removeCanvasAgentCredentialsFromUrl() {

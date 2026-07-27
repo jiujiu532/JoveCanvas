@@ -50,7 +50,7 @@ export const useAssetStore = create<AssetStore>((set, get) => ({
                 set({ assets, hydrated: true, hydratedUserId: userId });
             })
             .catch((error) => {
-                if (isActiveHydrate(session, requestId)) set({ assets: [], hydrated: false, hydratedUserId: userId, syncError: error instanceof Error ? error.message : "素材加载失败" });
+                if (isActiveHydrate(session, requestId)) set({ assets: [], hydrated: false, hydratedUserId: userId, syncError: error instanceof Error ? error.message : "Failed to load assets" });
             })
             .finally(() => {
                 if (hydrateRequest?.requestId === requestId) hydrateRequest = null;
@@ -61,7 +61,7 @@ export const useAssetStore = create<AssetStore>((set, get) => ({
     addAsset: async (input) => {
         const session = requireSession();
         const prepared = await prepareAssetForServer(input);
-        if (!sessionEpoch.isCurrent(session)) throw new Error("登录会话已变更，请重试");
+        if (!sessionEpoch.isCurrent(session)) throw new Error("Login session changed, please retry");
         const asset = await createLibraryAsset(prepared);
         if (sessionEpoch.isCurrent(session)) set((state) => ({ assets: [asset, ...state.assets.filter((item) => item.id !== asset.id)], syncError: undefined }));
         return asset.id;
@@ -69,9 +69,9 @@ export const useAssetStore = create<AssetStore>((set, get) => ({
     updateAsset: async (id, patch) => {
         const session = requireSession();
         const current = get().assets.find((asset) => asset.id === id);
-        if (!current) throw new Error("素材不存在");
+        if (!current) throw new Error("Asset not found");
         const prepared = await prepareAssetForServer({ ...current, ...patch } as CreateLibraryAssetInput);
-        if (!sessionEpoch.isCurrent(session)) throw new Error("登录会话已变更，请重试");
+        if (!sessionEpoch.isCurrent(session)) throw new Error("Login session changed, please retry");
         const asset = await saveLibraryAsset(id, prepared);
         if (sessionEpoch.isCurrent(session)) set((state) => ({ assets: state.assets.map((item) => (item.id === id ? asset : item)), syncError: undefined }));
     },
@@ -93,7 +93,7 @@ function isActiveHydrate(session: ClientSessionStamp, requestId: number) {
 
 function requireSession() {
     const session = sessionEpoch.capture();
-    if (!session.userId) throw new Error("请先登录");
+    if (!session.userId) throw new Error("Please sign in first");
     return session;
 }
 

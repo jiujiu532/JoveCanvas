@@ -28,6 +28,6 @@ export async function POST(request: Request) {
     } catch (error) {
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Create announcement failed", error);
-        return NextResponse.json({ error: "创建公告失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.announcementCreateFailed") }, { status: 500 });
     }
 }

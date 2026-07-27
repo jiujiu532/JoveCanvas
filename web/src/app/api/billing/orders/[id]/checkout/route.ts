@@ -47,7 +47,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         if (error instanceof RequestBodyTooLargeError) return NextResponse.json({ error: error.message }, { status: error.status });
         console.error("Create payment checkout failed", error);
-        return NextResponse.json({ error: "创建支付参数失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.createPaymentParamsFailed") }, { status: 500 });
     }
 }
 

@@ -25,10 +25,10 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const rate = await checkGenerationRateLimit(user.id, request, "render");
-    if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: "成片合成请求" }) }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.dramaRender") }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const renderLimit = (await getAuthSettings()).generationConcurrency.render;
     const response = await withGenerationConcurrencyLimit(user.id, "render", 60 * 60_000, renderLimit, async () => {
-        if (!(await ffmpegAvailable())) return NextResponse.json({ code: 503, data: null, msg: "当前服务器未安装 FFmpeg" }, { status: 503 });
+        if (!(await ffmpegAvailable())) return NextResponse.json({ code: 503, data: null, msg: await serverMessage("drama.ffmpegMissing") }, { status: 503 });
         let body: { projectId?: unknown; conversationId?: unknown; title?: unknown; ratio?: unknown; shots?: RenderShot[] };
         try {
             body = await readJsonBody(request);
@@ -37,15 +37,15 @@ export async function POST(request: Request) {
             throw error;
         }
         const projectId = text(body.projectId, 120);
-        const title = text(body.title, 120) || "短剧成片";
+        const title = text(body.title, 120) || (await serverMessage("drama.defaultTitle"));
         const shots = normalizeShots(body.shots);
-        if (!projectId || !shots.length || shots.some((shot) => !shot.videoUrl)) return NextResponse.json({ code: 400, data: null, msg: "请先完成全部镜头视频" }, { status: 400 });
-        if (shots.some((shot) => shot.audioMode === "voiceover" && !shot.audioUrl)) return NextResponse.json({ code: 400, data: null, msg: "部分镜头选择了 AI 配音，但配音尚未完成" }, { status: 400 });
+        if (!projectId || !shots.length || shots.some((shot) => !shot.videoUrl)) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("drama.allShotVideosRequired") }, { status: 400 });
+        if (shots.some((shot) => shot.audioMode === "voiceover" && !shot.audioUrl)) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("drama.voiceoverIncomplete") }, { status: 400 });
         const task = await createDramaRenderTask({ userId: user.id, projectId, conversationId: text(body.conversationId, 160) || undefined, title });
         after(() => renderDrama(task, shots, body.ratio === "16:9" ? "16:9" : "9:16", resolveInternalOrigin(new URL(request.url).origin), request.headers.get("cookie") || ""));
-        return NextResponse.json({ code: 0, data: publicTask(task), msg: "合成任务已创建" });
+        return NextResponse.json({ code: 0, data: publicTask(task), msg: await serverMessage("tasks.composeCreated") });
     });
-    return response || NextResponse.json({ code: 429, data: null, msg: `当前最多同时运行 ${renderLimit} 个整集合成任务` }, { status: 429 });
+    return response || NextResponse.json({ code: 429, data: null, msg: await serverMessage("tasks.dramaRenderConcurrencyLimit", { limit: renderLimit }) }, { status: 429 });
 }
 
 async function renderDrama(task: DramaRenderTask, shots: NormalizedShot[], ratio: "9:16" | "16:9", origin: string, cookie: string) {

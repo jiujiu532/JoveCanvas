@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { App } from "antd";
+import { useTranslations } from "next-intl";
 
 import { listBillingOrders, listBillingProducts, type BillingOrder, type BillingProduct } from "@/services/api/billing";
 import { listPointRecords, type PointRecord } from "@/services/api/points";
@@ -11,6 +12,7 @@ import { ORDER_PAGE_SIZE, RECORD_PAGE_SIZE, type ProfileSectionKey } from "./pro
 
 export function useProfileData(activeSection: ProfileSectionKey) {
     const { message } = App.useApp();
+    const t = useTranslations("workspace.profile");
     const setUser = useUserStore((state) => state.setUser);
     const [products, setProducts] = useState<BillingProduct[]>([]);
     const [productsLoaded, setProductsLoaded] = useState(false);
@@ -45,12 +47,12 @@ export function useProfileData(activeSection: ProfileSectionKey) {
             setProducts(payload.products || []);
             setProductsLoaded(true);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "充值套餐加载失败");
+            message.error(error instanceof Error ? error.message : t("productsLoadFailed"));
         } finally {
             productsRequest.current = false;
             setProductsLoading(false);
         }
-    }, [message]);
+    }, [message, t]);
 
     const loadOrders = useCallback(
         async (page: number) => {
@@ -63,13 +65,13 @@ export function useProfileData(activeSection: ProfileSectionKey) {
                 setOrdersTotal(payload.total || 0);
                 setOrdersLoadedPage(page);
             } catch (error) {
-                message.error(error instanceof Error ? error.message : "订单记录加载失败");
+                message.error(error instanceof Error ? error.message : t("ordersLoadFailed"));
             } finally {
                 if (ordersRequestPage.current === page) ordersRequestPage.current = null;
                 setOrdersLoading(false);
             }
         },
-        [message],
+        [message, t],
     );
 
     const loadPointRecords = useCallback(
@@ -83,13 +85,13 @@ export function useProfileData(activeSection: ProfileSectionKey) {
                 setPointRecordsTotal(payload.total);
                 setPointRecordsLoadedPage(page);
             } catch (error) {
-                message.error(error instanceof Error ? error.message : "积分记录加载失败");
+                message.error(error instanceof Error ? error.message : t("pointsLoadFailed"));
             } finally {
                 if (pointsRequestPage.current === page) pointsRequestPage.current = null;
                 setPointRecordsLoading(false);
             }
         },
-        [message],
+        [message, t],
     );
 
     const loadConsumeRecords = useCallback(
@@ -103,13 +105,13 @@ export function useProfileData(activeSection: ProfileSectionKey) {
                 setConsumeRecordsTotal(payload.total);
                 setConsumeRecordsLoadedPage(page);
             } catch (error) {
-                message.error(error instanceof Error ? error.message : "消费记录加载失败");
+                message.error(error instanceof Error ? error.message : t("consumeLoadFailed"));
             } finally {
                 if (consumptionRequestPage.current === page) consumptionRequestPage.current = null;
                 setConsumeRecordsLoading(false);
             }
         },
-        [message],
+        [message, t],
     );
 
     const needsOrders = activeSection === "overview" || activeSection === "orders";

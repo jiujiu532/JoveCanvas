@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("List billing orders failed", error);
-        return NextResponse.json({ error: "获取订单失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.getOrderFailed") }, { status: 500 });
     }
 }
 
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
         });
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Create billing order failed", error);
-        return NextResponse.json({ error: "创建订单失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.createOrderFailed") }, { status: 500 });
     }
 }
 

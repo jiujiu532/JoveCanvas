@@ -21,6 +21,7 @@ export const viewport: Viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
     const site = await getPublicSiteSettings();
+    const locale = await getLocale();
     const base = siteMetadataBase();
     const logoUrl = absoluteSiteUrl(site.logoUrl || "/logo.svg", base);
     const iconUrl = absoluteSiteUrl("/favicon.ico", base);
@@ -45,7 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
             description: site.seoDescription,
             siteName: site.title,
             images: logoUrl ? [{ url: logoUrl }] : undefined,
-            locale: "zh_CN",
+            locale: locale === "en" ? "en_US" : "zh_CN",
         },
         twitter: {
             card: "summary",

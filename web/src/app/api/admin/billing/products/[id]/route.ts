@@ -39,7 +39,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         });
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin update billing product failed", error);
-        return NextResponse.json({ error: "更新套餐商品失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.updateProductFailed") }, { status: 500 });
     }
 }
 
@@ -67,6 +67,6 @@ export async function DELETE(request: Request, context: RouteContext) {
         });
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin disable billing product failed", error);
-        return NextResponse.json({ error: "删除套餐商品失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.deleteProductFailed") }, { status: 500 });
     }
 }

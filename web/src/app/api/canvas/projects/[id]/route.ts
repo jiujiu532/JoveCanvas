@@ -11,7 +11,7 @@ export async function PATCH(request: Request, context: Context) {
     if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     try {
         const project = await updateCanvasProjectForUser(user.id, (await context.params).id, await request.json().catch(() => ({})));
-        return NextResponse.json({ code: 0, data: { project }, msg: "画布项目已保存" });
+        return NextResponse.json({ code: 0, data: { project }, msg: await serverMessage("canvas.projectSaved") });
     } catch (error) {
         const known = canvasProjectError(error);
         if (known) return NextResponse.json({ code: known.status, data: null, msg: known.message }, { status: known.status });

@@ -25,7 +25,7 @@ export async function POST(request: Request) {
                 target: { type: "user", label: username },
                 metadata: { reason: "rate_limited", retryAfter },
             });
-            return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "登录请求" }), retryAfter }, { status: 429 });
+            return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.login") }), retryAfter }, { status: 429 });
         }
 
         const user = await authenticateUser({ username, password: body.password || "" });
@@ -48,6 +48,6 @@ export async function POST(request: Request) {
         });
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Login failed", error);
-        return NextResponse.json({ error: "登录失败，请稍后重试" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.loginFailed") }, { status: 500 });
     }
 }

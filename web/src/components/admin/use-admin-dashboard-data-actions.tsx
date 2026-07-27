@@ -4,6 +4,7 @@ import type { AdminSectionKey } from "@/components/admin/admin-sections";
 import { toNumberOrZero } from "@/components/admin/admin-values";
 import dayjs from "dayjs";
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import type { AdminBillingSummary } from "@/lib/admin-billing-types";
 import type { AdminGenerationOverviewSummary } from "@/lib/admin-generation-overview";
@@ -52,6 +53,7 @@ export const GENERATION_LOG_PAGE_SIZE = 20;
 import type { AdminDashboardState } from "./use-admin-dashboard-state";
 
 export function useAdminDashboardDataActions({ state }: { state: AdminDashboardState }) {
+    const t = useTranslations("admin");
     const {
         currentUser,
         message,
@@ -161,7 +163,7 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
             if (keyword) params.set("keyword", keyword);
             const response = await fetch(`/api/admin/users?${params.toString()}`, { cache: "no-store" });
             const payload = (await response.json().catch(() => null)) as { users?: PublicUser[]; total?: number; page?: number; summary?: PublicUserSummary; error?: string } | null;
-            if (!response.ok || !payload?.users || !payload.summary) throw new Error(payload?.error || "加载用户失败");
+            if (!response.ok || !payload?.users || !payload.summary) throw new Error(payload?.error || t("dataActions.loadUsersFailed"));
             if (requestId !== userRequestIdRef.current) return;
             const total = Number(payload.total ?? payload.users.length);
             const resolvedPage = Math.max(1, Number(payload.page) || page);
@@ -171,13 +173,13 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
             if (resolvedPage !== page) setUserPage(resolvedPage);
             setSelectedUserIds((ids) => ids.filter((id) => payload.users!.some((user) => user.id === id)));
         } catch (error) {
-            if (requestId === userRequestIdRef.current) message.error(error instanceof Error ? error.message : "加载用户失败");
+            if (requestId === userRequestIdRef.current) message.error(error instanceof Error ? error.message : t("dataActions.loadUsersFailed"));
         } finally {
             if (requestId === userRequestIdRef.current) setUsersLoading(false);
         }
     };
 
-    const saveSettings = async (patch: Partial<AuthSettings>, successText = "设置已保存") => {
+    const saveSettings = async (patch: Partial<AuthSettings>, successText = t("dataActions.settingsSaved")) => {
         setSettingsLoading(true);
         try {
             const response = await fetch("/api/admin/settings", {
@@ -186,12 +188,12 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
                 body: JSON.stringify(patch),
             });
             const payload = (await response.json()) as { settings?: AuthSettings; error?: string };
-            if (!response.ok || !payload.settings) throw new Error(payload.error || "更新设置失败");
+            if (!response.ok || !payload.settings) throw new Error(payload.error || t("dataActions.updateSettingsFailed"));
             setSettings(payload.settings);
             message.success(successText);
             return true;
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "更新设置失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.updateSettingsFailed"));
             return false;
         } finally {
             setSettingsLoading(false);
@@ -203,10 +205,10 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
         try {
             const response = await fetch("/api/admin/billing/summary", { cache: "no-store" });
             const payload = (await response.json().catch(() => null)) as { summary?: AdminBillingSummary; error?: string } | null;
-            if (!response.ok || !payload?.summary) throw new Error(payload?.error || "加载财务摘要失败");
+            if (!response.ok || !payload?.summary) throw new Error(payload?.error || t("dataActions.loadBillingSummaryFailed"));
             setBillingSummary(payload.summary);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "加载财务摘要失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.loadBillingSummaryFailed"));
         } finally {
             setBillingSummaryLoading(false);
         }
@@ -219,10 +221,10 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
         try {
             const response = await fetch("/api/admin/generation-overview", { cache: "no-store" });
             const payload = (await response.json().catch(() => null)) as { data?: AdminGenerationOverviewSummary; msg?: string } | null;
-            if (!response.ok || !payload?.data) throw new Error(payload?.msg || "加载生成运营摘要失败");
+            if (!response.ok || !payload?.data) throw new Error(payload?.msg || t("dataActions.loadOpsSummaryFailed"));
             if (requestId === operationsSummaryRequestIdRef.current) setOperationsSummary(payload.data);
         } catch (error) {
-            if (requestId === operationsSummaryRequestIdRef.current) message.error(error instanceof Error ? error.message : "加载生成运营摘要失败");
+            if (requestId === operationsSummaryRequestIdRef.current) message.error(error instanceof Error ? error.message : t("dataActions.loadOpsSummaryFailed"));
         } finally {
             if (requestId === operationsSummaryRequestIdRef.current) setOperationsSummaryLoading(false);
         }
@@ -236,7 +238,7 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
                 msg?: string;
             } | null;
             const summary = payload?.data?.summary;
-            if (!response.ok || !summary) throw new Error(payload?.msg || "加载生成资源统计失败");
+            if (!response.ok || !summary) throw new Error(payload?.msg || t("dataActions.loadAssetStatsFailed"));
             setAssetStats({
                 totalFiles: summary.totalFiles,
                 totalBytes: summary.totalBytes,
@@ -247,7 +249,7 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
                 missingReferences: 0,
             });
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "加载生成资源统计失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.loadAssetStatsFailed"));
         }
     };
 
@@ -260,12 +262,12 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
                 body: JSON.stringify(patch),
             });
             const payload = (await response.json()) as { user?: PublicUser; error?: string };
-            if (!response.ok || !payload.user) throw new Error(payload.error || "更新用户失败");
+            if (!response.ok || !payload.user) throw new Error(payload.error || t("dataActions.updateUserFailed"));
             await loadUsers();
-            message.success("用户已更新");
+            message.success(t("dataActions.userUpdated"));
             return payload.user;
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "更新用户失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.updateUserFailed"));
             return null;
         } finally {
             setUpdatingUserId(null);
@@ -292,7 +294,7 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
             if (!response.ok || !payload.user) throw new Error(payload.error || "Create user failed");
             setUserPage(1);
             await loadUsers(1);
-            message.success("用户已新增");
+            message.success(t("dataActions.userCreated"));
             return payload.user;
         } catch (error) {
             message.error(error instanceof Error ? error.message : "Create user failed");
@@ -307,12 +309,12 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
         try {
             const response = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
             const payload = (await response.json()) as { error?: string };
-            if (!response.ok) throw new Error(payload.error || "删除用户失败");
+            if (!response.ok) throw new Error(payload.error || t("dataActions.deleteUserFailed"));
             setSelectedUserIds((items) => items.filter((id) => id !== userId));
             await loadUsers();
-            message.success("用户已删除");
+            message.success(t("dataActions.userDeleted"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "删除用户失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.deleteUserFailed"));
         } finally {
             setUpdatingUserId(null);
         }
@@ -321,7 +323,7 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
     const bulkDeleteUsers = async () => {
         const deletable = selectedUsers.filter((user) => user.id !== currentUser.id);
         if (!deletable.length) {
-            message.warning("请选择可删除的用户");
+            message.warning(t("dataActions.selectUsersToDelete"));
             return;
         }
 
@@ -335,7 +337,7 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
                 if (response.ok) {
                     deletedIds.push(user.id);
                 } else {
-                    failedMessages.push(`${user.displayName || user.username}：${payload?.error || "删除失败"}`);
+                    failedMessages.push(`${user.displayName || user.username}: ${payload?.error || t("dataActions.deleteFailed")}`);
                 }
             }
             if (deletedIds.length) {
@@ -343,12 +345,12 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
                 await loadUsers();
             }
             if (failedMessages.length) {
-                message.warning(`已删除 ${deletedIds.length} 个，${failedMessages.length} 个失败：${failedMessages.join("；")}`);
+                message.warning(t("dataActions.bulkDeletePartial", { deleted: deletedIds.length, failed: failedMessages.length, details: failedMessages.join("; ") }));
             } else {
-                message.success(`已删除 ${deletedIds.length} 个用户`);
+                message.success(t("dataActions.bulkDeleteUsersSuccess", { count: deletedIds.length }));
             }
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "批量删除失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.bulkDeleteFailed"));
         } finally {
             setBulkDeletingUsers(false);
         }
@@ -363,16 +365,16 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
                 body: JSON.stringify({ ...value, tags: splitTags(value.tags) }),
             });
             const payload = (await response.json()) as { prompt?: Prompt; error?: string };
-            if (!response.ok || !payload.prompt) throw new Error(payload.error || "新增提示词失败");
+            if (!response.ok || !payload.prompt) throw new Error(payload.error || t("dataActions.createPromptFailed"));
             promptForm.resetFields();
             setPromptPage(1);
             setPromptSearch("");
             setDebouncedPromptSearch("");
             setPromptModalOpen(false);
             void loadPrompts(1, "");
-            message.success("公共提示词已新增");
+            message.success(t("dataActions.promptCreated"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "新增提示词失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.createPromptFailed"));
         } finally {
             setPromptSaving(false);
         }
@@ -383,7 +385,7 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
         try {
             const response = await fetch(`/api/admin/prompts/${id}`, { method: "DELETE" });
             const payload = (await response.json()) as { error?: string };
-            if (!response.ok) throw new Error(payload.error || "删除提示词失败");
+            if (!response.ok) throw new Error(payload.error || t("dataActions.deletePromptFailed"));
             setSelectedPromptIds((ids) => ids.filter((item) => item !== id));
             const nextTotal = Math.max(0, promptListTotal - 1);
             const nextPage = Math.min(promptPage, Math.max(1, Math.ceil(nextTotal / PROMPT_PAGE_SIZE)));
@@ -394,9 +396,9 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
             } else {
                 void loadPrompts(nextPage, debouncedPromptSearch);
             }
-            message.success("公共提示词已删除");
+            message.success(t("dataActions.promptDeleted"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "删除提示词失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.deletePromptFailed"));
         } finally {
             setDeletingPromptId("");
         }
@@ -410,7 +412,7 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
             for (const id of ids) {
                 const response = await fetch(`/api/admin/prompts/${id}`, { method: "DELETE" });
                 const payload = (await response.json()) as { error?: string };
-                if (!response.ok) throw new Error(payload.error || "批量删除提示词失败");
+                if (!response.ok) throw new Error(payload.error || t("dataActions.bulkDeletePromptsFailed"));
             }
             setSelectedPromptIds([]);
             const nextTotal = Math.max(0, promptListTotal - ids.length);
@@ -422,9 +424,9 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
             } else {
                 void loadPrompts(nextPage, debouncedPromptSearch);
             }
-            message.success(`已删除 ${ids.length} 条公共提示词`);
+            message.success(t("dataActions.bulkDeletePromptsSuccess", { count: ids.length }));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "批量删除提示词失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.bulkDeletePromptsFailed"));
         } finally {
             setBulkDeletingPrompts(false);
         }
@@ -439,14 +441,14 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
             if (keyword) params.set("keyword", keyword);
             const response = await fetch(`/api/admin/prompts?${params.toString()}`);
             const payload = (await response.json()) as { prompts?: Prompt[]; total?: number; scopeTotal?: number; error?: string };
-            if (!response.ok || !payload.prompts) throw new Error(payload.error || "加载提示词失败");
+            if (!response.ok || !payload.prompts) throw new Error(payload.error || t("dataActions.loadPromptsFailed"));
             if (requestId !== promptRequestIdRef.current) return;
             setPrompts(payload.prompts);
             setPromptListTotal(Number(payload.total ?? payload.prompts.length));
             setPromptCount(Number(payload.scopeTotal ?? payload.total ?? payload.prompts.length));
             setSelectedPromptIds((ids) => ids.filter((id) => payload.prompts!.some((prompt) => prompt.id === id)));
         } catch (error) {
-            if (requestId === promptRequestIdRef.current) message.error(error instanceof Error ? error.message : "加载提示词失败");
+            if (requestId === promptRequestIdRef.current) message.error(error instanceof Error ? error.message : t("dataActions.loadPromptsFailed"));
         } finally {
             if (requestId === promptRequestIdRef.current) setPromptsLoading(false);
         }
@@ -467,13 +469,13 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
             if (generationLogEnd) params.set("end", generationLogEnd);
             const response = await fetch(`/api/admin/generation-logs?${params.toString()}`, { cache: "no-store" });
             const payload = (await response.json()) as { logs?: StoredGenerationLog[]; total?: number; error?: string };
-            if (!response.ok || !payload.logs) throw new Error(payload.error || "加载生成日志失败");
+            if (!response.ok || !payload.logs) throw new Error(payload.error || t("dataActions.loadLogsFailed"));
             if (requestId !== generationLogRequestIdRef.current) return;
             setGenerationLogs(payload.logs);
             setGenerationLogTotal(Number(payload.total ?? payload.logs.length));
             setSelectedGenerationLogIds((ids) => ids.filter((id) => payload.logs!.some((log) => log.id === id)));
         } catch (error) {
-            if (requestId === generationLogRequestIdRef.current) message.error(error instanceof Error ? error.message : "加载生成日志失败");
+            if (requestId === generationLogRequestIdRef.current) message.error(error instanceof Error ? error.message : t("dataActions.loadLogsFailed"));
         } finally {
             if (requestId === generationLogRequestIdRef.current) setGenerationLogsLoading(false);
         }
@@ -483,10 +485,10 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
         try {
             const response = await fetch("/api/admin/billing/payment-config", { cache: "no-store" });
             const payload = (await response.json().catch(() => null)) as { paymentConfig?: PaymentConfigSummary; error?: string } | null;
-            if (!response.ok || !payload?.paymentConfig) throw new Error(payload?.error || "加载支付配置失败");
+            if (!response.ok || !payload?.paymentConfig) throw new Error(payload?.error || t("dataActions.loadPaymentConfigFailed"));
             setPaymentConfig(payload.paymentConfig);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "加载支付配置失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.loadPaymentConfigFailed"));
         }
     };
 
@@ -501,12 +503,12 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
                 body: JSON.stringify({ ids: deletingIds }),
             });
             const payload = (await response.json()) as { deleted?: number; error?: string };
-            if (!response.ok) throw new Error(payload.error || "删除生成日志失败");
+            if (!response.ok) throw new Error(payload.error || t("dataActions.deleteLogsFailed"));
             setSelectedGenerationLogIds((current) => current.filter((id) => !deletingIds.includes(id)));
             void loadGenerationLogs();
-            message.success(`已删除 ${payload.deleted ?? deletingIds.length} 条生成日志`);
+            message.success(t("dataActions.deleteLogsSuccess", { count: payload.deleted ?? deletingIds.length }));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "删除生成日志失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.deleteLogsFailed"));
         } finally {
             setBulkDeletingGenerationLogs(false);
         }
@@ -543,14 +545,14 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
                 stats?: typeof cdkStats;
                 error?: string;
             };
-            if (!response.ok || !payload.codes) throw new Error(payload.error || "加载 CDK 失败");
+            if (!response.ok || !payload.codes) throw new Error(payload.error || t("dataActions.loadCdkFailed"));
             setCdkCodes(payload.codes);
             setCdkTotal(payload.total || 0);
             setCdkStats(payload.stats || { total: 0, redeemed: 0, unused: 0, expired: 0 });
             if (payload.page && payload.page !== cdkPage) setCdkPage(payload.page);
             setSelectedCdkIds((current) => current.filter((id) => payload.codes!.some((code) => code.id === id)));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "加载 CDK 失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.loadCdkFailed"));
         } finally {
             setCdkLoading(false);
         }
@@ -565,7 +567,7 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
                 body: JSON.stringify(cdkForm),
             });
             const payload = (await response.json()) as { codes?: CreatedCdkCode[]; error?: string };
-            if (!response.ok || !payload.codes) throw new Error(payload.error || "生成 CDK 失败");
+            if (!response.ok || !payload.codes) throw new Error(payload.error || t("dataActions.createCdkFailed"));
             setCreatedCdkCodes((current) => [...payload.codes!, ...current]);
             setSelectedCreatedCdkIds(payload.codes.map((code) => code.id));
             setCdkSearch("");
@@ -573,9 +575,9 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
             setCdkFilter("unused");
             setCdkPage(1);
             await loadCdkCodes({ page: 1, keyword: "", filter: "unused" });
-            message.success(`已生成 ${payload.codes.length} 个 CDK`);
+            message.success(t("dataActions.createCdkSuccess", { count: payload.codes.length }));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "生成 CDK 失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.createCdkFailed"));
         } finally {
             setCdkGenerating(false);
         }
@@ -585,14 +587,14 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
         try {
             const response = await fetch(`/api/admin/cdk/${id}`, { method: "DELETE" });
             const payload = (await response.json().catch(() => ({}))) as { error?: string };
-            if (!response.ok) throw new Error(payload.error || "删除 CDK 失败");
+            if (!response.ok) throw new Error(payload.error || t("dataActions.deleteCdkFailed"));
             setCreatedCdkCodes((current) => current.filter((code) => code.id !== id));
             setSelectedCreatedCdkIds((current) => current.filter((item) => item !== id));
             setSelectedCdkIds((current) => current.filter((item) => item !== id));
             await loadCdkCodes();
-            message.success("CDK 已删除");
+            message.success(t("dataActions.cdkDeleted"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "删除 CDK 失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.deleteCdkFailed"));
         }
     };
 
@@ -606,14 +608,14 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
                 body: JSON.stringify({ ids: deletingIds }),
             });
             const payload = (await response.json().catch(() => ({}))) as { deleted?: number; error?: string };
-            if (!response.ok) throw new Error(payload.error || "删除 CDK 失败");
+            if (!response.ok) throw new Error(payload.error || t("dataActions.deleteCdkFailed"));
             setCreatedCdkCodes((current) => current.filter((code) => !deletingIds.includes(code.id)));
             setSelectedCreatedCdkIds((current) => current.filter((id) => !deletingIds.includes(id)));
             setSelectedCdkIds((current) => current.filter((id) => !deletingIds.includes(id)));
             await loadCdkCodes();
-            message.success(`已删除 ${payload.deleted ?? deletingIds.length} 个 CDK`);
+            message.success(t("dataActions.deleteCdksSuccess", { count: payload.deleted ?? deletingIds.length }));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "删除 CDK 失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.deleteCdkFailed"));
         }
     };
 
@@ -628,14 +630,14 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
                 body: JSON.stringify({ ids }),
             });
             const payload = (await response.json().catch(() => ({}))) as { deleted?: number; error?: string };
-            if (!response.ok) throw new Error(payload.error || "批量删除 CDK 失败");
+            if (!response.ok) throw new Error(payload.error || t("dataActions.bulkDeleteCdkFailed"));
             setSelectedCdkIds([]);
             setCreatedCdkCodes((current) => current.filter((code) => !ids.includes(code.id)));
             setSelectedCreatedCdkIds((current) => current.filter((id) => !ids.includes(id)));
             await loadCdkCodes();
-            message.success(`已删除 ${payload.deleted ?? ids.length} 个 CDK`);
+            message.success(t("dataActions.deleteCdksSuccess", { count: payload.deleted ?? ids.length }));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "批量删除 CDK 失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.bulkDeleteCdkFailed"));
         } finally {
             setBulkDeletingCdk(false);
         }
@@ -645,22 +647,22 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
         if (!codes.length) return;
         try {
             await navigator.clipboard.writeText(codes.map((code) => code.code).join("\n"));
-            message.success(`已复制 ${codes.length} 个 CDK`);
+            message.success(t("dataActions.copyCdksSuccess", { count: codes.length }));
         } catch {
-            message.error("复制失败，请手动复制明文 CDK");
+            message.error(t("dataActions.copyFailed"));
         }
     };
 
     const copyCdkPlainCode = async (code: PublicCdkCode) => {
         if (!code.code) {
-            message.warning("这个 CDK 没有可复制的明文");
+            message.warning(t("dataActions.cdkNoPlaintext"));
             return;
         }
         try {
             await navigator.clipboard.writeText(code.code);
-            message.success("已复制 CDK 明文");
+            message.success(t("dataActions.copyCdkPlainSuccess"));
         } catch {
-            message.error("复制失败，请手动复制明文 CDK");
+            message.error(t("dataActions.copyFailed"));
         }
     };
 
@@ -668,7 +670,7 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
         if (!codes.length) return;
         const text = formatCreatedCdkExport(codes, settings.site.title);
         downloadTextFile(`vozeb-pro-cdk-${dayjs().format("YYYYMMDD-HHmmss")}.txt`, text);
-        message.success(`已导出 ${codes.length} 个 CDK`);
+        message.success(t("dataActions.exportCdksSuccess", { count: codes.length }));
     };
 
     const loadAnnouncements = async () => {
@@ -676,10 +678,10 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
         try {
             const response = await fetch("/api/admin/announcements", { cache: "no-store" });
             const payload = (await response.json()) as { announcements?: PublicAnnouncement[]; error?: string };
-            if (!response.ok || !payload.announcements) throw new Error(payload.error || "加载公告失败");
+            if (!response.ok || !payload.announcements) throw new Error(payload.error || t("dataActions.loadAnnouncementsFailed"));
             setAnnouncements(payload.announcements);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "加载公告失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.loadAnnouncementsFailed"));
         } finally {
             setAnnouncementsLoading(false);
         }
@@ -694,13 +696,13 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
                 body: JSON.stringify(announcementDraft),
             });
             const payload = (await response.json()) as { announcement?: PublicAnnouncement; error?: string };
-            if (!response.ok || !payload.announcement) throw new Error(payload.error || "保存公告失败");
+            if (!response.ok || !payload.announcement) throw new Error(payload.error || t("dataActions.saveAnnouncementFailed"));
             setAnnouncementModalOpen(false);
             setAnnouncementDraft({ title: "", content: "", enabled: true, popupHome: false, popupAfterLogin: false });
             await loadAnnouncements();
-            message.success("公告已发布");
+            message.success(t("dataActions.announcementPublished"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "保存公告失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.saveAnnouncementFailed"));
         } finally {
             setAnnouncementSaving(false);
         }
@@ -735,10 +737,10 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
                 body: JSON.stringify(patch),
             });
             const payload = (await response.json()) as { announcement?: PublicAnnouncement; error?: string };
-            if (!response.ok || !payload.announcement) throw new Error(payload.error || "更新公告失败");
+            if (!response.ok || !payload.announcement) throw new Error(payload.error || t("dataActions.updateAnnouncementFailed"));
             setAnnouncements((current) => current.map((item) => (item.id === payload.announcement!.id ? payload.announcement! : item)));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "更新公告失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.updateAnnouncementFailed"));
         }
     };
 
@@ -746,11 +748,11 @@ export function useAdminDashboardDataActions({ state }: { state: AdminDashboardS
         try {
             const response = await fetch(`/api/admin/announcements/${id}`, { method: "DELETE" });
             const payload = (await response.json().catch(() => ({}))) as { error?: string };
-            if (!response.ok) throw new Error(payload.error || "删除公告失败");
+            if (!response.ok) throw new Error(payload.error || t("dataActions.deleteAnnouncementFailed"));
             setAnnouncements((current) => current.filter((item) => item.id !== id));
-            message.success("公告已删除");
+            message.success(t("dataActions.announcementDeleted"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "删除公告失败");
+            message.error(error instanceof Error ? error.message : t("dataActions.deleteAnnouncementFailed"));
         }
     };
     return {

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { CanvasNodeType } from "./types";
 import type { CanvasAgentSnapshot } from "./utils/canvas-agent-ops";
 import { executeCanvasAgentToolCall, resolveCanvasAgentConnection } from "./use-canvas-local-agent-bridge";
+import zhCanvas from "../../../../messages/zh/canvas.json";
 
 const snapshot: CanvasAgentSnapshot = {
     projectId: "project",
@@ -11,6 +12,12 @@ const snapshot: CanvasAgentSnapshot = {
     selectedNodeIds: ["one"],
     viewport: { x: 0, y: 0, k: 1 },
 };
+
+function t(key: string, values?: Record<string, string | number>) {
+    const template = (zhCanvas.agent as Record<string, string>)[key] ?? key;
+    if (!values) return template;
+    return template.replace(/\{(\w+)\}/g, (matched, name: string) => (name in values ? String(values[name]) : matched));
+}
 
 describe("Canvas local agent bridge", () => {
     it("accepts only loopback HTTP endpoints with a bounded token", () => {
@@ -22,7 +29,7 @@ describe("Canvas local agent bridge", () => {
 
     it("returns selection without applying mutations", async () => {
         const applyOps = vi.fn();
-        const result = await executeCanvasAgentToolCall({ requestId: "read", name: "canvas_get_selection" }, snapshot, applyOps, vi.fn());
+        const result = await executeCanvasAgentToolCall({ requestId: "read", name: "canvas_get_selection" }, snapshot, applyOps, vi.fn(), t);
         expect(result).toEqual({ nodes: [snapshot.nodes[0]] });
         expect(applyOps).not.toHaveBeenCalled();
     });
@@ -37,6 +44,7 @@ describe("Canvas local agent bridge", () => {
                 snapshot,
                 applyOps,
                 vi.fn(async () => false),
+                t,
             ),
         ).rejects.toThrow("用户拒绝");
         await expect(
@@ -45,6 +53,7 @@ describe("Canvas local agent bridge", () => {
                 snapshot,
                 applyOps,
                 vi.fn(async () => true),
+                t,
             ),
         ).resolves.toBe(next);
         expect(applyOps).toHaveBeenCalledTimes(1);

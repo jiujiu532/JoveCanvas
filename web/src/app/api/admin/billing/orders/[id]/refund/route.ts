@@ -54,6 +54,6 @@ export async function POST(request: Request, context: RouteContext) {
         });
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin refund billing order failed", error);
-        return NextResponse.json({ error: "退款标记失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.markRefundFailed") }, { status: 500 });
     }
 }

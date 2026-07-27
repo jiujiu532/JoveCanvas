@@ -4,17 +4,24 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Maximize2 } from "lucide-react";
 import { Modal } from "antd";
+import { useTranslations } from "next-intl";
 
 import { canvasThemes } from "@/lib/canvas-theme";
 import { imagePreviewUrl } from "@/lib/media-image-url";
 import { useThemeStore } from "@/stores/use-theme-store";
 
+function PanoramaViewerLoading() {
+    const t = useTranslations("canvas");
+    return <div className="grid h-full w-full place-items-center text-xs text-white/75">{t("panorama.preparing")}</div>;
+}
+
 const CanvasPanoramaSurface = dynamic(() => import("./canvas-panorama-surface").then((module) => module.CanvasPanoramaSurface), {
     ssr: false,
-    loading: () => <div className="grid h-full w-full place-items-center text-xs text-white/75">正在准备全景查看器...</div>,
+    loading: () => <PanoramaViewerLoading />,
 });
 
 export function CanvasPanoramaViewer({ src, alt }: { src: string; alt: string }) {
+    const t = useTranslations("canvas");
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
     const [open, setOpen] = useState(false);
     const previewSrc = imagePreviewUrl(src, 1920);
@@ -35,16 +42,16 @@ export function CanvasPanoramaViewer({ src, alt }: { src: string; alt: string })
                     }}
                     onMouseDown={(event) => event.stopPropagation()}
                     onPointerDown={(event) => event.stopPropagation()}
-                    aria-label="沉浸查看全景"
-                    title="沉浸查看全景"
+                    aria-label={t("panorama.immersive")}
+                    title={t("panorama.immersive")}
                 >
                     <Maximize2 className="size-3.5" />
-                    沉浸查看
+                    {t("panorama.immersiveShort")}
                 </button>
             </div>
             <Modal
                 open={open}
-                title="全景查看"
+                title={t("panorama.viewTitle")}
                 centered
                 destroyOnHidden
                 footer={null}

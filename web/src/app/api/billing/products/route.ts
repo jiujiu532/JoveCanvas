@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { isBillingInputError, listBillingProducts } from "@/lib/server/billing-service";
 import { getPaymentConfigSummary } from "@/lib/server/payment-config-status";
 
-import { localizeErrorMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -17,6 +17,6 @@ export async function GET() {
     } catch (error) {
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("List billing products failed", error);
-        return NextResponse.json({ error: "获取套餐商品失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.getPlanProductsFailed") }, { status: 500 });
     }
 }

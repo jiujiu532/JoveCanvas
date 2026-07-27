@@ -2,6 +2,7 @@
 
 import { nanoid } from "nanoid";
 import type { Dispatch, DragEvent as ReactDragEvent, SetStateAction } from "react";
+import { useTranslations } from "next-intl";
 
 import { droppedFiles, leftDropTarget, preventFileDragEvent } from "@/lib/file-drop";
 import { uploadImage } from "@/services/image-storage";
@@ -10,6 +11,7 @@ import type { ReferenceImage } from "@/types/image";
 type Notice = { error: (text: string) => void; success: (text: string) => void };
 
 export function useImageReferenceInputs(input: { references: ReferenceImage[]; setReferences: Dispatch<SetStateAction<ReferenceImage[]>>; setDragActive: Dispatch<SetStateAction<boolean>>; notice: Notice }) {
+    const t = useTranslations("workspace.image");
     const addReferences = async (files?: FileList | File[] | null) => {
         const next = await Promise.all(
             Array.from(files || [])
@@ -37,7 +39,7 @@ export function useImageReferenceInputs(input: { references: ReferenceImage[]; s
         try {
             const items = await navigator.clipboard.read();
             const blobs = await Promise.all(items.flatMap((item) => item.types.filter((type) => type.startsWith("image/")).map((type) => item.getType(type))));
-            if (!blobs.length) return input.notice.error("剪切板里没有可读取的图片");
+            if (!blobs.length) return input.notice.error(t("noClipboardImage"));
             const next = await Promise.all(
                 blobs.map(async (blob, index) => {
                     const image = await uploadImage(blob);
@@ -45,9 +47,9 @@ export function useImageReferenceInputs(input: { references: ReferenceImage[]; s
                 }),
             );
             input.setReferences((value) => [...value, ...next]);
-            input.notice.success(`已读取 ${next.length} 张参考图`);
+            input.notice.success(t("clipboardImagesReadCount", { count: next.length }));
         } catch {
-            input.notice.error("剪切板里没有可读取的图片");
+            input.notice.error(t("noClipboardImage"));
         }
     };
     return { addReferences, addReferencesFromClipboard, handleReferenceDragOver, handleReferenceDragLeave, handleReferenceDrop };

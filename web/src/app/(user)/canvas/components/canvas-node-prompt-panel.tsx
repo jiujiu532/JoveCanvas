@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { LoaderCircle, Square } from "lucide-react";
 import { Button } from "antd";
+import { useTranslations } from "next-intl";
 
 import { ModelPicker } from "@/components/model-picker";
 import { CreditSymbol, formatCreditAmount, requestCreditCost } from "@/constant/credits";
@@ -34,6 +35,7 @@ type CanvasNodePromptPanelProps = {
 };
 
 export function CanvasNodePromptPanel({ node, isRunning, onPromptChange, onConfigChange, onGenerate, onStop, mentionReferences = [], onImageSettingsOpenChange }: CanvasNodePromptPanelProps) {
+    const t = useTranslations("canvas");
     const globalConfig = useEffectiveConfig();
     const openConfigDialog = useConfigStore((state) => state.openConfigDialog);
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
@@ -87,7 +89,7 @@ export function CanvasNodePromptPanel({ node, isRunning, onPromptChange, onConfi
                 onSubmit={submit}
                 className="thin-scrollbar h-24 w-full resize-none rounded-xl border px-3 py-2 text-sm leading-5 outline-none"
                 style={{ background: theme.node.fill, borderColor: theme.node.stroke, color: theme.node.text }}
-                placeholder={promptPlaceholder(mode, hasImageContent, hasTextContent, isPanorama)}
+                placeholder={promptPlaceholder(mode, hasImageContent, hasTextContent, isPanorama, t)}
             />
 
             <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
@@ -102,7 +104,7 @@ export function CanvasNodePromptPanel({ node, isRunning, onPromptChange, onConfi
                                 buttonClassName="canvas-composer-settings !h-10 !min-w-[9rem] !max-w-full !flex-1 !justify-start !rounded-full !px-3"
                                 onConfigChange={(key, value) => onConfigChange(node.id, key === "count" ? { count: Number(value) || 1 } : { [key]: value })}
                                 onOpenChange={onImageSettingsOpenChange}
-                                fixedSizeLabel={isPanorama ? "全景 2:1" : undefined}
+                                fixedSizeLabel={isPanorama ? t("promptPanel.panoramaSize") : undefined}
                             />
                             {!isPanorama ? (
                                 <CanvasCameraControl
@@ -145,18 +147,18 @@ export function CanvasNodePromptPanel({ node, isRunning, onPromptChange, onConfi
                     danger={isRunning}
                     disabled={!isRunning && !prompt.trim()}
                     onClick={() => (isRunning ? onStop(node.id) : submit())}
-                    aria-label={isRunning ? "停止生成" : "生成"}
+                    aria-label={isRunning ? t("promptPanel.stopGenerate") : t("promptPanel.generate")}
                 >
                     <span className="flex items-center gap-1.5">
                         {isRunning ? (
                             <>
                                 <LoaderCircle className="size-4 animate-spin" />
                                 <Square className="size-3.5 fill-current" />
-                                <span className="text-xs font-medium">停止</span>
+                                <span className="text-xs font-medium">{t("promptPanel.stop")}</span>
                             </>
                         ) : (
                             <>
-                                <span className="text-xs font-semibold">生成</span>
+                                <span className="text-xs font-semibold">{t("promptPanel.generate")}</span>
                                 <span className="inline-flex items-center gap-1 text-xs font-medium tabular-nums">
                                     <CreditSymbol />
                                     {formatCreditAmount(credits)}
@@ -181,10 +183,10 @@ function buildNodeConfig(globalConfig: AiConfig, node: CanvasNodeData, mode: Can
     return node.type === CanvasNodeType.Panorama ? { ...config, size: PANORAMA_IMAGE_SIZE } : config;
 }
 
-function promptPlaceholder(mode: CanvasNodeGenerationMode, hasImageContent: boolean, hasTextContent: boolean, isPanorama: boolean) {
-    if (mode === "video") return "描述要生成的视频内容";
-    if (mode === "audio") return "描述要生成的音频内容";
-    if (isPanorama) return hasImageContent ? "描述要如何调整这个全景环境" : "描述要生成的 360° 全景环境";
-    if (mode === "image") return hasImageContent ? "请输入你想要把这张图修改成什么" : "描述要生成的图片内容";
-    return hasTextContent ? "请输入你想要将本段文本修改成什么" : "请输入你想要生成的文本内容";
+function promptPlaceholder(mode: CanvasNodeGenerationMode, hasImageContent: boolean, hasTextContent: boolean, isPanorama: boolean, t: (key: string) => string) {
+    if (mode === "video") return t("promptPanel.placeholderVideo");
+    if (mode === "audio") return t("promptPanel.placeholderAudio");
+    if (isPanorama) return hasImageContent ? t("promptPanel.placeholderPanoramaEdit") : t("promptPanel.placeholderPanorama");
+    if (mode === "image") return hasImageContent ? t("promptPanel.placeholderImageEdit") : t("promptPanel.placeholderImage");
+    return hasTextContent ? t("promptPanel.placeholderTextEdit") : t("promptPanel.placeholderText");
 }

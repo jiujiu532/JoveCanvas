@@ -44,9 +44,9 @@ export async function DELETE(request: Request) {
     if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     const body = (await request.json().catch(() => ({}))) as { ids?: unknown; expired?: unknown };
-    if (body.expired === true) return NextResponse.json({ code: 0, data: await cleanupExpiredLocalMediaAssets(), msg: "过期临时文件已清理" });
+    if (body.expired === true) return NextResponse.json({ code: 0, data: await cleanupExpiredLocalMediaAssets(), msg: await serverMessage("media.tempCleaned") });
     const ids = Array.isArray(body.ids) ? body.ids.filter((id): id is string => typeof id === "string") : [];
-    if (!ids.length) return NextResponse.json({ code: 400, data: null, msg: "请选择要删除的媒体文件" }, { status: 400 });
+    if (!ids.length) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("media.selectToDelete") }, { status: 400 });
     const result = await deleteLocalMediaAssets(ids);
     return NextResponse.json({ code: 0, data: result, msg: result.blocked.length ? "部分文件仍被业务记录引用，未执行删除" : "媒体文件已删除" });
 }

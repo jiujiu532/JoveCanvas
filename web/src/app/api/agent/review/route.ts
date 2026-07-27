@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const rate = await checkRateLimit(`agent-review:${user.id}`, { maxRequests: 12, windowMs: 60 * 1000 });
-    if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: "复盘请求" }) }, { status: 429 });
+    if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.review") }) }, { status: 429 });
     let body: ReviewBody;
     try {
         body = await readJsonBody(request);
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     }
     const workspace = body.workspace === "video" ? "video" : "image";
     const recordId = typeof body.recordId === "string" ? body.recordId.trim() : "";
-    if (!recordId || recordId.length > 160) return NextResponse.json({ code: 400, data: null, msg: "复盘记录标识无效" }, { status: 400 });
+    if (!recordId || recordId.length > 160) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("agent.invalidReviewId") }, { status: 400 });
     const foundation = normalizeCreativeFoundation(body.foundation, workspace === "image" ? "检查当前图片结果" : "检查当前视频结果");
     const deliverables = normalizeCreativeDeliverables(body.deliverables, { title: workspace === "image" ? "当前图片" : "当前视频", type: workspace, role: "当前创作结果" });
     const assets = normalizeCreativeReviewAssets(body.assets, workspace);

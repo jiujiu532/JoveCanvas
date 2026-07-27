@@ -22,6 +22,6 @@ export async function POST(request: Request) {
     } catch (error) {
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Password reset failed", error);
-        return NextResponse.json({ error: "重置密码失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.resetPasswordFailed") }, { status: 500 });
     }
 }

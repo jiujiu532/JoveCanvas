@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type DragEvent as ReactDragEvent } from "react";
 import { App, Button, Drawer, Empty, Image, Modal, Tooltip, Typography } from "antd";
 import { saveAs } from "file-saver";
+import { useTranslations } from "next-intl";
 
 import { ImageSettingsPanel } from "@/components/image-settings-panel";
 import { ModelPicker } from "@/components/model-picker";
@@ -64,13 +65,14 @@ export type UpdateAiConfig = <K extends keyof AiConfig>(key: K, value: AiConfig[
 export const RESULT_ACTION_BUTTON_CLASS = "min-w-0 px-1.5 [&_.ant-btn-icon]:shrink-0 [&>span:last-child]:min-w-0 [&>span:last-child]:truncate";
 
 export function GenerationSettings({ config, model, updateConfig, openConfigDialog, hideModel = false }: { config: AiConfig; model: string; updateConfig: UpdateAiConfig; openConfigDialog: (shouldPromptContinue?: boolean) => void; hideModel?: boolean }) {
+    const t = useTranslations("workspace.image");
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
 
     return (
         <>
             {!hideModel ? (
                 <label className="col-span-2 block min-w-0 sm:col-span-1">
-                    <span className="mb-1.5 block text-sm font-semibold sm:mb-2 sm:text-base">模型</span>
+                    <span className="mb-1.5 block text-sm font-semibold sm:mb-2 sm:text-base">{t("modelLabel")}</span>
                     <ModelPicker config={config} value={model} onChange={(value) => updateConfig("imageModel", value)} capability="image" fullWidth onMissingConfig={() => openConfigDialog(true)} />
                 </label>
             ) : null}
@@ -104,6 +106,7 @@ export function ResultImageCard({
     onDownload: (image: GeneratedImage, index: number) => void;
     onSaveAsset: (image: GeneratedImage, index: number) => void;
 }) {
+    const t = useTranslations("workspace.image");
     const hasImage = Boolean(image.dataUrl) && !missing;
     return (
         <div className="relative overflow-hidden rounded-lg border border-stone-200 bg-background dark:border-stone-800">
@@ -113,7 +116,7 @@ export function ResultImageCard({
                     <Image
                         rootClassName="!h-full !w-full"
                         src={imagePreviewUrl(image.dataUrl, 960)}
-                        alt={`生成结果 ${index + 1}`}
+                        alt={t("resultAltWithIndex", { index: index + 1 })}
                         className="!h-full !w-full object-contain"
                         style={{ objectFit: "contain" }}
                         preview={{ src: imagePreviewUrl(image.dataUrl, 1920) }}
@@ -122,7 +125,7 @@ export function ResultImageCard({
                 ) : (
                     <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-center text-sm text-stone-500 dark:text-stone-400">
                         <ImagePlus className="size-8 text-stone-400" />
-                        <span>图片已丢失</span>
+                        <span>{t("imageLost")}</span>
                     </div>
                 )}
             </div>
@@ -135,19 +138,19 @@ export function ResultImageCard({
                     <span>{formatDuration(image.durationMs)}</span>
                 </div>
                 <div className="grid min-w-0 grid-cols-3 gap-2">
-                    <Tooltip title="添加到素材">
+                    <Tooltip title={t("addToAssets")}>
                         <Button className={RESULT_ACTION_BUTTON_CLASS} size="small" disabled={!hasImage} icon={<FolderPlus className="size-3.5" />} onClick={() => void onSaveAsset(image, index)}>
-                            添加到素材
+                            {t("addToAssets")}
                         </Button>
                     </Tooltip>
-                    <Tooltip title="加入参考图">
+                    <Tooltip title={t("addToReferences")}>
                         <Button className={RESULT_ACTION_BUTTON_CLASS} size="small" disabled={!hasImage} icon={<PenLine className="size-3.5" />} onClick={() => void onEdit(image, index)}>
-                            加入参考图
+                            {t("addToReferences")}
                         </Button>
                     </Tooltip>
-                    <Tooltip title="下载">
+                    <Tooltip title={t("download")}>
                         <Button className={RESULT_ACTION_BUTTON_CLASS} size="small" disabled={!hasImage} icon={<Download className="size-3.5" />} onClick={() => onDownload(image, index)}>
-                            下载
+                            {t("download")}
                         </Button>
                     </Tooltip>
                 </div>
@@ -161,18 +164,19 @@ export function PendingImageCard({ large }: { large?: boolean }) {
 }
 
 export function FailedImageCard({ error, large, selected, onSelectedChange, onRetry }: { error: string; large?: boolean; selected?: boolean; onSelectedChange?: (checked: boolean) => void; onRetry: () => void }) {
+    const t = useTranslations("workspace.image");
     return (
         <div className="relative overflow-hidden rounded-lg border border-red-200 bg-red-50 dark:border-red-950 dark:bg-red-950/20">
             <ResultSelectCheckbox selected={selected} onSelectedChange={onSelectedChange} />
             <div className={`flex flex-col items-center justify-center gap-2 p-3 text-center sm:gap-3 sm:p-5 ${large ? "h-[156px] sm:h-[240px]" : "h-[136px] sm:h-[220px]"}`}>
-                <div className="text-sm font-medium text-red-600 dark:text-red-300">生成失败</div>
+                <div className="text-sm font-medium text-red-600 dark:text-red-300">{t("generationFailed")}</div>
                 <Typography.Paragraph ellipsis={{ rows: 4 }} className="!mb-0 !text-xs !text-red-500 dark:!text-red-300">
                     {error}
                 </Typography.Paragraph>
             </div>
             <div className="flex justify-end border-t border-red-200 p-2 sm:p-3 dark:border-red-950">
                 <Button size="small" danger onClick={onRetry}>
-                    重试
+                    {t("retry")}
                 </Button>
             </div>
         </div>
@@ -200,6 +204,7 @@ export function LogPanel({
     onRenameLog: (log: GenerationLog, title: string) => void;
     compact?: boolean;
 }) {
+    const t = useTranslations("workspace.image");
     return (
         <WorkbenchHistoryPanel
             logs={logs}
@@ -224,16 +229,20 @@ export function LogPanel({
             renderDetails={(log) => (
                 <div className="ml-6 mt-1 min-h-[62px] rounded-md border border-stone-200/70 bg-white/65 px-2.5 py-2 shadow-sm shadow-stone-200/30 dark:border-stone-800 dark:bg-stone-950/45 dark:shadow-black/10">
                     <div className="flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap">
-                        <span className="inline-flex h-6 shrink-0 items-center rounded-md bg-blue-50 px-1.5 text-xs font-medium leading-none text-blue-700 dark:bg-blue-500/15 dark:text-blue-200">成功 {log.successCount ?? log.imageCount}</span>
-                        {log.failCount ? <span className="inline-flex h-6 shrink-0 items-center rounded-md bg-rose-50 px-1.5 text-xs font-medium leading-none text-rose-700 dark:bg-rose-500/15 dark:text-rose-200">失败 {log.failCount}</span> : null}
-                        <span className="inline-flex h-6 shrink-0 items-center rounded-md bg-stone-100 px-1.5 text-xs font-medium leading-none text-stone-700 dark:bg-white/10 dark:text-stone-200">{log.imageCount} 张</span>
+                        <span className="inline-flex h-6 shrink-0 items-center rounded-md bg-blue-50 px-1.5 text-xs font-medium leading-none text-blue-700 dark:bg-blue-500/15 dark:text-blue-200">
+                            {t("successCount", { count: log.successCount ?? log.imageCount })}
+                        </span>
+                        {log.failCount ? (
+                            <span className="inline-flex h-6 shrink-0 items-center rounded-md bg-rose-50 px-1.5 text-xs font-medium leading-none text-rose-700 dark:bg-rose-500/15 dark:text-rose-200">{t("failCount", { count: log.failCount })}</span>
+                        ) : null}
+                        <span className="inline-flex h-6 shrink-0 items-center rounded-md bg-stone-100 px-1.5 text-xs font-medium leading-none text-stone-700 dark:bg-white/10 dark:text-stone-200">{t("imageCountUnit", { count: log.imageCount })}</span>
                         <span className="inline-flex h-6 shrink-0 items-center rounded-md bg-lime-50 px-1.5 text-xs font-medium leading-none text-lime-700 dark:bg-lime-500/15 dark:text-lime-200">{formatDuration(log.durationMs)}</span>
                     </div>
                     <div className="mt-1.5 flex min-w-0 items-center justify-between gap-2">
                         <span className="min-w-0 truncate text-xs leading-5 text-stone-500 dark:text-stone-400">{log.time}</span>
                         {log.pendingCount ? (
                             <span className="inline-flex h-6 shrink-0 items-center rounded-md bg-sky-50 px-1.5 text-xs font-medium leading-none text-sky-700 ring-1 ring-sky-200 dark:bg-sky-500/15 dark:text-sky-200 dark:ring-sky-500/25">
-                                生成中 {log.pendingCount}
+                                {t("pendingCount", { count: log.pendingCount })}
                             </span>
                         ) : null}
                     </div>

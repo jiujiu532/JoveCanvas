@@ -3,6 +3,7 @@
 import { App, Button, Input, Pagination, Select, Table, Tag, Tooltip } from "antd";
 import type { TableColumnsType } from "antd";
 import { Activity, CircleStop, Clock3, Coins, RefreshCw, RotateCcw, Route, ServerCog } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Panel } from "@/components/admin/admin-panel";
@@ -10,7 +11,10 @@ import type { AdminGenerationChannel, AdminGenerationOperationsPayload, AdminGen
 
 const PAGE_SIZE = 20;
 
+type AdminTranslator = ReturnType<typeof useTranslations<"admin">>;
+
 export function GenerationOperationsClient() {
+    const t = useTranslations("admin");
     const { message } = App.useApp();
     const [data, setData] = useState<AdminGenerationOperationsPayload>();
     const [loading, setLoading] = useState(true);
@@ -33,14 +37,14 @@ export function GenerationOperationsClient() {
             if (submittedSearch) query.set("search", submittedSearch);
             const response = await fetch(`/api/admin/generation-operations?${query}`, { cache: "no-store" });
             const payload = (await response.json().catch(() => ({}))) as { data?: AdminGenerationOperationsPayload; msg?: string };
-            if (!response.ok || !payload.data) throw new Error(payload.msg || "任务数据加载失败");
+            if (!response.ok || !payload.data) throw new Error(payload.msg || t("generationOps.loadFailed"));
             setData(payload.data);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "任务数据加载失败");
+            message.error(error instanceof Error ? error.message : t("generationOps.loadFailed"));
         } finally {
             setLoading(false);
         }
-    }, [message, page, status, submittedSearch, surface, type]);
+    }, [message, page, status, submittedSearch, surface, t, type]);
 
     useEffect(() => {
         void load();
@@ -59,11 +63,11 @@ export function GenerationOperationsClient() {
                         : `/api/${task.type}-tasks/${encodeURIComponent(task.id)}`;
             const response = await fetch(url, action === "retry" || task.type === "agent" ? { method: "POST" } : { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "cancelled" }) });
             const payload = (await response.json().catch(() => ({}))) as { msg?: string; error?: string };
-            if (!response.ok) throw new Error(payload.msg || payload.error || "任务操作失败");
-            message.success(action === "retry" ? "失败子任务已重新提交" : "任务已取消");
+            if (!response.ok) throw new Error(payload.msg || payload.error || t("generationOps.actionFailed"));
+            message.success(action === "retry" ? t("generationOps.retrySuccess") : t("generationOps.cancelSuccess"));
             await load();
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "任务操作失败");
+            message.error(error instanceof Error ? error.message : t("generationOps.actionFailed"));
         } finally {
             setActingId("");
         }
@@ -79,24 +83,24 @@ export function GenerationOperationsClient() {
                 body: JSON.stringify({ channelId: channel.id, model: channel.upstreamModel, kind: channel.capability }),
             });
             const payload = (await response.json().catch(() => ({}))) as { result?: { ok?: boolean; status?: number; error?: string }; error?: string };
-            if (!response.ok || !payload.result) throw new Error(payload.error || "渠道探测失败");
+            if (!response.ok || !payload.result) throw new Error(payload.error || t("generationOps.probeFailed"));
             setHealth((current) => ({ ...current, [key]: { ok: Boolean(payload.result?.ok), status: payload.result?.status, error: payload.result?.error } }));
         } catch (error) {
-            setHealth((current) => ({ ...current, [key]: { ok: false, error: error instanceof Error ? error.message : "渠道探测失败" } }));
+            setHealth((current) => ({ ...current, [key]: { ok: false, error: error instanceof Error ? error.message : t("generationOps.probeFailed") } }));
         }
     };
 
     const columns = useMemo<TableColumnsType<AdminGenerationTask>>(
         () => [
             {
-                title: "任务",
+                title: t("generationOps.table.task"),
                 dataIndex: "id",
                 width: 260,
                 render: (_, task) => (
                     <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                            <Tag className="m-0">{taskTypeLabel(task.type)}</Tag>
-                            <StatusTag status={task.status} />
+                            <Tag className="m-0">{taskTypeLabel(task.type, t)}</Tag>
+                            <StatusTag status={task.status} t={t} />
                         </div>
                         <Tooltip title={task.id}>
                             <div className="mt-2 truncate font-mono text-xs text-zinc-500 dark:text-zinc-400">{task.id}</div>
@@ -105,7 +109,7 @@ export function GenerationOperationsClient() {
                 ),
             },
             {
-                title: "用户",
+                title: t("generationOps.table.user"),
                 width: 150,
                 render: (_, task) => (
                     <div>
@@ -115,43 +119,44 @@ export function GenerationOperationsClient() {
                 ),
             },
             {
-                title: "模型 / 入口",
+                title: t("generationOps.table.modelEntry"),
                 width: 190,
                 render: (_, task) => (
                     <div>
-                        <div className="truncate text-sm">{task.model || "未记录"}</div>
+                        <div className="truncate text-sm">{task.model || t("generationOps.unrecorded")}</div>
                         <div className="mt-1 text-xs text-zinc-500">
-                            {surfaceLabel(task.surface)}
-                            {task.channelId ? ` · 渠道 ${task.channelId}` : ""}
-                            {task.projectId ? ` · 项目 ${task.projectId.slice(0, 8)}` : ""}
+                            {surfaceLabel(task.surface, t)}
+                            {task.channelId ? ` · ${t("generationOps.channelPrefix", { id: task.channelId })}` : ""}
+                            {task.projectId ? ` · ${t("generationOps.projectPrefix", { id: task.projectId.slice(0, 8) })}` : ""}
                         </div>
                     </div>
                 ),
             },
             {
-                title: "请求",
+                title: t("generationOps.table.request"),
                 render: (_, task) => (
                     <div>
-                        <div className="line-clamp-2 text-sm leading-5">{task.prompt || task.error || "无请求摘要"}</div>
+                        <div className="line-clamp-2 text-sm leading-5">{task.prompt || task.error || t("generationOps.noPromptSummary")}</div>
                         <div className="mt-1 text-xs text-zinc-500">
-                            {formatDuration(task.durationMs)} · {task.pointsCost} 积分{task.attempts && task.attempts.length > 1 ? ` · ${task.attempts.length} 次渠道尝试` : ""}
+                            {formatDuration(task.durationMs, t)} · {t("generationOps.pointsCost", { count: task.pointsCost })}
+                            {task.attempts && task.attempts.length > 1 ? ` · ${t("generationOps.attempts", { count: task.attempts.length })}` : ""}
                         </div>
                     </div>
                 ),
             },
             {
-                title: "操作",
+                title: t("generationOps.table.actions"),
                 width: 118,
                 fixed: "right",
                 render: (_, task) => (
                     <div className="flex gap-1">
                         {task.canCancel ? (
-                            <Tooltip title="取消任务">
+                            <Tooltip title={t("generationOps.cancelTask")}>
                                 <Button danger type="text" shape="circle" icon={<CircleStop className="size-4" />} loading={actingId === `${task.id}:cancel`} onClick={() => void runAction(task, "cancel")} />
                             </Tooltip>
                         ) : null}
                         {task.retryTaskId ? (
-                            <Tooltip title="重试失败子任务">
+                            <Tooltip title={t("generationOps.retryFailedSubtask")}>
                                 <Button type="text" shape="circle" icon={<RotateCcw className="size-4" />} loading={actingId === `${task.id}:retry`} onClick={() => void runAction(task, "retry")} />
                             </Tooltip>
                         ) : null}
@@ -159,18 +164,18 @@ export function GenerationOperationsClient() {
                 ),
             },
         ],
-        [actingId],
+        [actingId, t],
     );
 
     const summary = data?.summary;
     return (
         <Panel>
             <section className="grid grid-cols-2 gap-px border-b border-zinc-200 bg-zinc-200 p-px dark:border-zinc-800 dark:bg-zinc-800 sm:grid-cols-3 xl:grid-cols-5">
-                <Metric icon={<Activity />} label="任务总数" value={summary?.total || 0} />
-                <Metric icon={<Route />} label="执行中" value={summary?.active || 0} />
-                <Metric icon={<CircleStop />} label="失败" value={summary?.failed || 0} />
-                <Metric icon={<Clock3 />} label="平均耗时" value={formatDuration(summary?.averageDurationMs || 0)} />
-                <Metric className="col-span-2 sm:col-span-1" icon={<Coins />} label="积分消耗" value={summary?.totalPointsCost || 0} />
+                <Metric icon={<Activity />} label={t("generationOps.metrics.total")} value={summary?.total || 0} />
+                <Metric icon={<Route />} label={t("generationOps.metrics.active")} value={summary?.active || 0} />
+                <Metric icon={<CircleStop />} label={t("generationOps.metrics.failed")} value={summary?.failed || 0} />
+                <Metric icon={<Clock3 />} label={t("generationOps.metrics.avgDuration")} value={formatDuration(summary?.averageDurationMs || 0, t)} />
+                <Metric className="col-span-2 sm:col-span-1" icon={<Coins />} label={t("generationOps.metrics.pointsCost")} value={summary?.totalPointsCost || 0} />
             </section>
 
             <section className="p-3 sm:p-5">
@@ -179,8 +184,8 @@ export function GenerationOperationsClient() {
                         className="col-span-2 md:col-span-1"
                         value={search}
                         allowClear
-                        placeholder="任务、用户、模型、会话或项目"
-                        enterButton="筛选"
+                        placeholder={t("generationOps.searchPlaceholder")}
+                        enterButton={t("generationOps.filter")}
                         onChange={(event) => setSearch(event.target.value)}
                         onSearch={(value) => {
                             setPage(1);
@@ -190,8 +195,8 @@ export function GenerationOperationsClient() {
                     <Select
                         value={type || undefined}
                         allowClear
-                        placeholder="任务类型"
-                        options={["agent", "text", "image", "video", "audio", "render"].map((value) => ({ value, label: taskTypeLabel(value) }))}
+                        placeholder={t("generationOps.typePlaceholder")}
+                        options={["agent", "text", "image", "video", "audio", "render"].map((value) => ({ value, label: taskTypeLabel(value, t) }))}
                         onChange={(value) => {
                             setPage(1);
                             setType(value || "");
@@ -200,8 +205,8 @@ export function GenerationOperationsClient() {
                     <Select
                         value={status || undefined}
                         allowClear
-                        placeholder="任务状态"
-                        options={["pending", "running", "paused", "success", "error", "cancelled"].map((value) => ({ value, label: statusLabel(value) }))}
+                        placeholder={t("generationOps.statusPlaceholder")}
+                        options={["pending", "running", "paused", "success", "error", "cancelled"].map((value) => ({ value, label: statusLabel(value, t) }))}
                         onChange={(value) => {
                             setPage(1);
                             setStatus(value || "");
@@ -211,11 +216,11 @@ export function GenerationOperationsClient() {
                         className="col-span-2 md:col-span-1"
                         value={surface || undefined}
                         allowClear
-                        placeholder="创作入口"
+                        placeholder={t("generationOps.surfacePlaceholder")}
                         options={[
-                            { value: "chat", label: "创作对话" },
-                            { value: "canvas", label: "Canvas" },
-                            { value: "drama", label: "短剧" },
+                            { value: "chat", label: t("generationOps.surfaces.chat") },
+                            { value: "canvas", label: t("generationOps.surfaces.canvas") },
+                            { value: "drama", label: t("generationOps.surfaces.drama") },
                         ]}
                         onChange={(value) => {
                             setPage(1);
@@ -223,7 +228,7 @@ export function GenerationOperationsClient() {
                         }}
                     />
                     <Button icon={<RefreshCw className="size-4" />} loading={loading} onClick={() => void load()}>
-                        刷新
+                        {t("generationOps.refresh")}
                     </Button>
                 </div>
 
@@ -232,9 +237,9 @@ export function GenerationOperationsClient() {
                 </div>
                 <div className="mt-4 space-y-3 md:hidden">
                     {(data?.items || []).map((task) => (
-                        <TaskCard key={task.id} task={task} actingId={actingId} onAction={runAction} />
+                        <TaskCard key={task.id} task={task} actingId={actingId} onAction={runAction} t={t} />
                     ))}
-                    {!loading && !data?.items.length ? <div className="py-6 text-center text-sm text-zinc-500 sm:py-16">没有匹配任务</div> : null}
+                    {!loading && !data?.items.length ? <div className="py-6 text-center text-sm text-zinc-500 sm:py-16">{t("generationOps.empty")}</div> : null}
                 </div>
                 <Pagination className="mt-5 justify-end" current={page} pageSize={PAGE_SIZE} total={data?.total || 0} showSizeChanger={false} onChange={setPage} />
             </section>
@@ -242,8 +247,8 @@ export function GenerationOperationsClient() {
             <section className="border-t border-zinc-200 p-4 dark:border-zinc-800 sm:p-5">
                 <div className="mb-3 flex flex-wrap items-center gap-2 sm:mb-4">
                     <ServerCog className="size-4" />
-                    <h2 className="font-semibold">渠道健康</h2>
-                    <span className="basis-full text-xs text-zinc-500 sm:basis-auto">显式探测会发起真实最小请求并可能产生积分消耗</span>
+                    <h2 className="font-semibold">{t("generationOps.channelHealth")}</h2>
+                    <span className="basis-full text-xs text-zinc-500 sm:basis-auto">{t("generationOps.channelHealthHint")}</span>
                 </div>
                 <div className="grid gap-3 lg:grid-cols-2">
                     {(data?.channels || []).map((channel) => {
@@ -253,18 +258,18 @@ export function GenerationOperationsClient() {
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2">
                                         <span className="truncate text-sm font-medium">{channel.name}</span>
-                                        <Tag className="m-0">{taskTypeLabel(channel.capability)}</Tag>
-                                        {!channel.enabled ? <Tag color="default">已停用</Tag> : null}
-                                        {channel.runtimeHealth.status === "cooling" ? <Tag color="warning">冷却中</Tag> : null}
+                                        <Tag className="m-0">{taskTypeLabel(channel.capability, t)}</Tag>
+                                        {!channel.enabled ? <Tag color="default">{t("generationOps.disabled")}</Tag> : null}
+                                        {channel.runtimeHealth.status === "cooling" ? <Tag color="warning">{t("generationOps.cooling")}</Tag> : null}
                                     </div>
                                     <div className="mt-1 truncate text-xs text-zinc-500">
                                         {channel.logicalModelName} → {channel.upstreamModel}
                                     </div>
-                                    {channel.runtimeHealth.status === "cooling" ? <div className="mt-1 truncate text-xs text-amber-600 dark:text-amber-300">{channel.runtimeHealth.lastError || "连续失败，等待自动恢复"}</div> : null}
+                                    {channel.runtimeHealth.status === "cooling" ? <div className="mt-1 truncate text-xs text-amber-600 dark:text-amber-300">{channel.runtimeHealth.lastError || t("generationOps.coolingFallback")}</div> : null}
                                 </div>
-                                {state && !state.loading ? <Tag color={state.ok ? "success" : "error"}>{state.ok ? `正常 ${state.status || ""}` : state.error || "异常"}</Tag> : null}
+                                {state && !state.loading ? <Tag color={state.ok ? "success" : "error"}>{state.ok ? t("generationOps.healthy", { status: state.status || "" }) : state.error || t("generationOps.unhealthy")}</Tag> : null}
                                 <Button size="small" disabled={!channel.enabled} loading={state?.loading} onClick={() => void testChannel(channel)}>
-                                    探测
+                                    {t("generationOps.probe")}
                                 </Button>
                             </div>
                         );
@@ -287,13 +292,13 @@ function Metric({ icon, label, value, className = "" }: { icon: React.ReactNode;
     );
 }
 
-function TaskCard({ task, actingId, onAction }: { task: AdminGenerationTask; actingId: string; onAction: (task: AdminGenerationTask, action: "cancel" | "retry") => Promise<void> }) {
+function TaskCard({ task, actingId, onAction, t }: { task: AdminGenerationTask; actingId: string; onAction: (task: AdminGenerationTask, action: "cancel" | "retry") => Promise<void>; t: AdminTranslator }) {
     return (
         <article className="rounded-md border border-zinc-200 p-4 dark:border-zinc-800">
             <div className="flex items-start justify-between gap-3">
                 <div>
-                    <Tag>{taskTypeLabel(task.type)}</Tag>
-                    <StatusTag status={task.status} />
+                    <Tag>{taskTypeLabel(task.type, t)}</Tag>
+                    <StatusTag status={task.status} t={t} />
                 </div>
                 <div className="flex gap-1">
                     {task.canCancel ? <Button danger type="text" shape="circle" icon={<CircleStop className="size-4" />} loading={actingId === `${task.id}:cancel`} onClick={() => void onAction(task, "cancel")} /> : null}
@@ -302,34 +307,57 @@ function TaskCard({ task, actingId, onAction }: { task: AdminGenerationTask; act
             </div>
             <div className="mt-3 font-mono text-xs text-zinc-500">{task.id}</div>
             <div className="mt-2 text-sm">
-                {task.displayName} · {task.model || "未记录模型"}
+                {task.displayName} · {task.model || t("generationOps.unrecordedModel")}
             </div>
-            <p className="mt-2 line-clamp-3 text-sm leading-5 text-zinc-600 dark:text-zinc-300">{task.prompt || task.error || "无请求摘要"}</p>
+            <p className="mt-2 line-clamp-3 text-sm leading-5 text-zinc-600 dark:text-zinc-300">{task.prompt || task.error || t("generationOps.noPromptSummary")}</p>
             <div className="mt-3 text-xs text-zinc-500">
-                {surfaceLabel(task.surface)} · {formatDuration(task.durationMs)} · {task.pointsCost} 积分
+                {surfaceLabel(task.surface, t)} · {formatDuration(task.durationMs, t)} · {t("generationOps.pointsCost", { count: task.pointsCost })}
             </div>
         </article>
     );
 }
 
-function StatusTag({ status }: { status: string }) {
+function StatusTag({ status, t }: { status: string; t: AdminTranslator }) {
     const color = status === "success" ? "success" : status === "error" ? "error" : status === "running" ? "processing" : status === "paused" ? "warning" : "default";
-    return <Tag color={color}>{statusLabel(status)}</Tag>;
+    return <Tag color={color}>{statusLabel(status, t)}</Tag>;
 }
 
-function taskTypeLabel(value: string) {
-    return ({ agent: "Agent", text: "文本", image: "图片", video: "视频", audio: "音频", render: "合成" } as Record<string, string>)[value] || value;
+function taskTypeLabel(value: string, t: AdminTranslator) {
+    const map: Record<string, string> = {
+        agent: t("generationOps.types.agent"),
+        text: t("generationOps.types.text"),
+        image: t("generationOps.types.image"),
+        video: t("generationOps.types.video"),
+        audio: t("generationOps.types.audio"),
+        render: t("generationOps.types.render"),
+    };
+    return map[value] || value;
 }
-function statusLabel(value: string) {
-    return ({ pending: "排队", running: "执行中", paused: "已暂停", success: "成功", error: "失败", cancelled: "已取消" } as Record<string, string>)[value] || value;
+
+function statusLabel(value: string, t: AdminTranslator) {
+    const map: Record<string, string> = {
+        pending: t("generationOps.statuses.pending"),
+        running: t("generationOps.statuses.running"),
+        paused: t("generationOps.statuses.paused"),
+        success: t("generationOps.statuses.success"),
+        error: t("generationOps.statuses.error"),
+        cancelled: t("generationOps.statuses.cancelled"),
+    };
+    return map[value] || value;
 }
-function surfaceLabel(value?: string) {
-    return value === "canvas" ? "Canvas" : value === "drama" ? "短剧" : value === "chat" ? "创作对话" : "专业工作台";
+
+function surfaceLabel(value: string | undefined, t: AdminTranslator) {
+    if (value === "canvas") return t("generationOps.surfaces.canvas");
+    if (value === "drama") return t("generationOps.surfaces.drama");
+    if (value === "chat") return t("generationOps.surfaces.chat");
+    return t("generationOps.surfaces.workbench");
 }
-function formatDuration(ms: number) {
-    if (!ms) return "0 秒";
-    return ms < 60_000 ? `${Math.max(1, Math.round(ms / 1000))} 秒` : `${Math.floor(ms / 60_000)} 分 ${Math.round((ms % 60_000) / 1000)} 秒`;
+
+function formatDuration(ms: number, t: AdminTranslator) {
+    if (!ms) return t("generationOps.duration.zero");
+    return ms < 60_000 ? t("generationOps.duration.seconds", { count: Math.max(1, Math.round(ms / 1000)) }) : t("generationOps.duration.minutesSeconds", { minutes: Math.floor(ms / 60_000), seconds: Math.round((ms % 60_000) / 1000) });
 }
+
 function channelKey(channel: AdminGenerationChannel) {
     return `${channel.id}:${channel.capability}:${channel.logicalModelId}:${channel.upstreamModel}`;
 }

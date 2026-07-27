@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 
     const [body, settings] = await Promise.all([readJsonBody<ModelsPayload>(request), getAuthSettings()]);
     const { baseUrl, apiKey, apiFormat, savedChannel } = resolveAdminChannelCredentials(settings, body);
-    if (!baseUrl || !apiKey) return NextResponse.json({ error: "请先填写 Base URL 和 API Key" }, { status: 400 });
+    if (!baseUrl || !apiKey) return NextResponse.json({ error: await serverMessage("admin.fillBaseUrlAndKey") }, { status: 400 });
     const advancedConfig = {
         ...(savedChannel?.advancedConfig || {}),
         ...(body.protocol !== undefined ? { protocol: body.protocol } : {}),
@@ -60,9 +60,9 @@ export async function POST(request: Request) {
         const catalog = buildGlobalAiOpcSelection(globalAiOpcPresets.map((preset) => preset.id));
         return NextResponse.json({ models: catalog.models, globalAiOpcPresets: catalog.presetIds });
     }
-    if (advancedConfig.protocol === "globalaiopc" || isGlobalAiOpcBaseUrl(baseUrl)) return NextResponse.json({ error: "未识别到 GlobalAiOpc 接口范围，请检查 Base URL 或重新选择接口范围" }, { status: 400 });
+    if (advancedConfig.protocol === "globalaiopc" || isGlobalAiOpcBaseUrl(baseUrl)) return NextResponse.json({ error: await serverMessage("admin.globalAiOpcScopeUnrecognized") }, { status: 400 });
     const modelsUrl = buildModelsUrl(baseUrl, apiFormat);
-    if (!(await isSafeOutboundUrl(modelsUrl))) return NextResponse.json({ error: "Base URL 不允许访问内网或保留地址" }, { status: 400 });
+    if (!(await isSafeOutboundUrl(modelsUrl))) return NextResponse.json({ error: await serverMessage("common.baseUrlPrivateBlocked") }, { status: 400 });
 
     const cooldownKey = `${currentUser.id}:${baseUrl.toLowerCase()}`;
     const waitMs = (modelFetchCooldowns.get(cooldownKey) || 0) - Date.now();
@@ -79,14 +79,14 @@ export async function POST(request: Request) {
         if (!response.ok || isProviderBusinessError(payload)) {
             modelFetchCooldowns.delete(cooldownKey);
             if (isModelCatalogUnsupported(response.status, payload)) {
-                return NextResponse.json({ error: "该上游未提供模型列表接口，请在高级设置的“模型列表”手动填写模型名称；不影响已配置的视频生成接口。" }, { status: 422 });
+                return NextResponse.json({ error: await serverMessage("admin.noModelListEndpoint") }, { status: 422 });
             }
             return NextResponse.json({ error: sanitizeProviderMessage(readProviderError(payload) || payload.msg || payload.error?.message || `拉取模型失败：${response.status}`, [apiKey]) }, { status: 502 });
         }
         const models = parseModels(payload);
         if (!models.length) {
             modelFetchCooldowns.delete(cooldownKey);
-            return NextResponse.json({ error: "接口请求成功，但返回内容中没有识别到模型列表" }, { status: 502 });
+            return NextResponse.json({ error: await serverMessage("admin.modelListEmpty") }, { status: 502 });
         }
         return NextResponse.json({ models });
     } catch (error) {

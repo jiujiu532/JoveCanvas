@@ -67,6 +67,7 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 import { nanoid } from "nanoid";
+import { useTranslations } from "next-intl";
 
 import { formatCreditAmount } from "@/constant/credits";
 import { normalizeDefaultModelsConfig } from "@/lib/model-routing-config";
@@ -103,6 +104,7 @@ import {
 import { PROMPT_PAGE_SIZE, PROMPT_SEARCH_DEBOUNCE_MS, CDK_PAGE_SIZE, GENERATION_LOG_PAGE_SIZE } from "./use-admin-dashboard-controller";
 
 export function AdminCdkSection({ controller }: { controller: AdminDashboardController }) {
+    const t = useTranslations("admin");
     const {
         message,
         setViewingCdkCode,
@@ -143,74 +145,74 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
     return (
         <Panel>
             <PanelHeader
-                title="CDK 兑换"
-                description="生成积分或套餐兑换码，用于活动发放、客服补偿和私域转化；后台可复制、导出、查看兑换明细并删除密钥。"
+                title={t("nav.sections.cdk.label")}
+                description={t("cdk.section.description")}
                 actions={
                     <Button icon={<RefreshCw className="size-4" />} loading={cdkLoading} onClick={() => void loadCdkCodes()}>
-                        刷新
+                        {t("cdk.section.refresh")}
                     </Button>
                 }
             />
             <div className="space-y-3 p-2.5 sm:space-y-5 sm:p-5">
                 <div className="grid items-start gap-3 sm:gap-4 xl:grid-cols-[minmax(360px,0.85fr)_minmax(0,1.15fr)]">
                     <section className="rounded-lg border border-stone-200 bg-stone-50/70 p-3 sm:p-4 dark:border-stone-800 dark:bg-stone-900/40">
-                        <SectionTitle icon={<KeyRound className="size-4" />} title="生成 CDK" />
+                        <SectionTitle icon={<KeyRound className="size-4" />} title={t("cdk.section.generate.title")} />
                         <div className="mt-3 grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2.5 sm:mt-4 sm:gap-3">
-                            <LabeledControl label="生成数量">
+                            <LabeledControl label={t("cdk.section.generate.count")}>
                                 <InputNumber className="!w-full" min={1} max={100} precision={0} value={cdkForm.count} onChange={(value) => setCdkForm((current) => ({ ...current, count: clampInteger(value, 1, 100, 1) }))} />
                             </LabeledControl>
-                            <LabeledControl label="每次兑换积分">
+                            <LabeledControl label={t("cdk.section.generate.points")}>
                                 <InputNumber className="!w-full" min={0} precision={0} value={cdkForm.points} onChange={(value) => setCdkForm((current) => ({ ...current, points: toNumberOrZero(value) }))} />
                             </LabeledControl>
-                            <LabeledControl label="每个密钥可兑换次数">
+                            <LabeledControl label={t("cdk.section.generate.maxRedemptions")}>
                                 <InputNumber className="!w-full" min={1} max={10000} precision={0} value={cdkForm.maxRedemptions} onChange={(value) => setCdkForm((current) => ({ ...current, maxRedemptions: clampInteger(value, 1, 10000, 1) }))} />
                             </LabeledControl>
-                            <LabeledControl label="有效天数">
+                            <LabeledControl label={t("cdk.section.generate.expiresInDays")}>
                                 <InputNumber
                                     className="!w-full"
                                     min={1}
                                     max={3650}
                                     precision={0}
                                     value={cdkForm.expiresInDays}
-                                    placeholder="留空为永久"
+                                    placeholder={t("cdk.section.generate.expiresInDaysPlaceholder")}
                                     onChange={(value) => setCdkForm((current) => ({ ...current, expiresInDays: value === null ? null : clampInteger(value, 1, 3650, 1) }))}
                                 />
                             </LabeledControl>
-                            <p className="col-span-2 -mt-0.5 text-xs leading-5 text-stone-500 dark:text-stone-400">有效天数留空时长期有效，填写数字则从生成当日起计算。</p>
+                            <p className="col-span-2 -mt-0.5 text-xs leading-5 text-stone-500 dark:text-stone-400">{t("cdk.section.generate.expiresInDaysHint")}</p>
                             <div className="col-span-2">
-                                <LabeledControl label="备注">
-                                    <Input value={cdkForm.note} maxLength={120} placeholder="例如：活动赠送 / 测试兑换" onChange={(event) => setCdkForm((current) => ({ ...current, note: event.target.value }))} />
+                                <LabeledControl label={t("cdk.section.generate.note")}>
+                                    <Input value={cdkForm.note} maxLength={120} placeholder={t("cdk.section.generate.notePlaceholder")} onChange={(event) => setCdkForm((current) => ({ ...current, note: event.target.value }))} />
                                 </LabeledControl>
                             </div>
                         </div>
                         <div className="mt-4 flex justify-end sm:mt-5">
                             <Button className="!h-9 w-full sm:w-auto" type="primary" icon={<Gift className="size-4" />} loading={cdkGenerating} onClick={() => void generateCdkCodes()}>
-                                随机生成 CDK
+                                {t("cdk.section.generate.submit")}
                             </Button>
                         </div>
                     </section>
                     <section className="rounded-lg border border-stone-200 bg-white p-3 sm:p-4 dark:border-stone-800 dark:bg-stone-950">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div className="min-w-0">
-                                <SectionTitle icon={<ShieldCheck className="size-4" />} title="本次生成结果" />
-                                <p className="mt-2 text-xs leading-5 text-stone-500 dark:text-stone-400">新生成会显示完整明文；删除后会从密钥管理移除，用户不能再兑换。</p>
+                                <SectionTitle icon={<ShieldCheck className="size-4" />} title={t("cdk.section.result.title")} />
+                                <p className="mt-2 text-xs leading-5 text-stone-500 dark:text-stone-400">{t("cdk.section.result.description")}</p>
                             </div>
                             <div className="flex shrink-0 flex-wrap gap-2">
                                 <Button size="small" disabled={!createdCdkActionCodes.length} onClick={() => void copyCreatedCdkCodes()}>
-                                    {selectedCreatedCdkCodes.length ? "复制选中" : "复制全部"}
+                                    {selectedCreatedCdkCodes.length ? t("cdk.section.result.copySelected") : t("cdk.section.result.copyAll")}
                                 </Button>
                                 <Button size="small" icon={<Download className="size-3.5" />} disabled={!createdCdkActionCodes.length} onClick={() => exportCreatedCdkCodes()}>
-                                    {selectedCreatedCdkCodes.length ? "导出选中" : "导出 TXT"}
+                                    {selectedCreatedCdkCodes.length ? t("cdk.section.result.exportSelected") : t("cdk.section.result.exportAll")}
                                 </Button>
                                 <Popconfirm
-                                    title={selectedCreatedCdkCodes.length ? "删除选中的 CDK？" : "删除本次生成的 CDK？"}
-                                    description="删除后这些密钥不能再兑换，也不会继续显示在密钥管理里。建议先复制或导出明文。"
-                                    okText="删除"
-                                    cancelText="取消"
+                                    title={selectedCreatedCdkCodes.length ? t("cdk.section.result.deleteSelectedConfirmTitle") : t("cdk.section.result.deleteThisBatchConfirmTitle")}
+                                    description={t("cdk.section.result.deleteConfirmDescription")}
+                                    okText={t("cdk.table.deleteOk")}
+                                    cancelText={t("cdk.table.deleteCancel")}
                                     onConfirm={() => void deleteCreatedCdkCodes(createdCdkActionCodes.map((code) => code.id))}
                                 >
                                     <Button size="small" danger icon={<Trash2 className="size-3.5" />} disabled={!createdCdkActionCodes.length}>
-                                        {selectedCreatedCdkCodes.length ? "删除选中" : "删除本次"}
+                                        {selectedCreatedCdkCodes.length ? t("cdk.section.result.deleteSelected") : t("cdk.section.result.deleteThisBatch")}
                                     </Button>
                                 </Popconfirm>
                             </div>
@@ -222,11 +224,9 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
                                     indeterminate={Boolean(selectedCreatedCdkIds.length) && !allCreatedCdkSelected}
                                     onChange={(event) => setSelectedCreatedCdkIds(event.target.checked ? createdCdkCodes.map((code) => code.id) : [])}
                                 >
-                                    全选当前结果
+                                    {t("cdk.section.result.selectAll")}
                                 </Checkbox>
-                                <span className="text-xs text-stone-500 dark:text-stone-400">
-                                    已选 {selectedCreatedCdkIds.length} 个 / 共 {createdCdkCodes.length} 个；新生成会追加在顶部并自动选中
-                                </span>
+                                <span className="text-xs text-stone-500 dark:text-stone-400">{t("cdk.section.result.selectedSummary", { selected: selectedCreatedCdkIds.length, total: createdCdkCodes.length })}</span>
                             </div>
                         ) : null}
                         <div className="mt-4 max-h-72 space-y-2 overflow-y-auto">
@@ -236,28 +236,38 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
                                         <Checkbox
                                             checked={selectedCreatedCdkIds.includes(code.id)}
                                             onChange={(event) => setSelectedCreatedCdkIds((current) => (event.target.checked ? Array.from(new Set([...current, code.id])) : current.filter((id) => id !== code.id)))}
-                                            aria-label={`选择 ${code.codePreview}`}
+                                            aria-label={t("cdk.section.result.selectCode", { code: code.codePreview })}
                                         />
                                         <div className="min-w-0">
                                             <div className="break-all font-mono text-sm font-semibold text-stone-900 dark:text-stone-100">{code.code}</div>
                                             <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">
-                                                {formatCreditAmount(code.points)} 积分 / 可兑 {code.maxRedemptions} 次{code.expiresAt ? ` / ${new Date(code.expiresAt).toLocaleDateString("zh-CN")} 过期` : " / 长期有效"}
+                                                {t("cdk.section.result.codeSummary", {
+                                                    points: formatCreditAmount(code.points),
+                                                    max: code.maxRedemptions,
+                                                    expiry: code.expiresAt ? t("cdk.section.result.expiresAt", { date: new Date(code.expiresAt).toLocaleDateString() }) : t("cdk.table.longTermValid"),
+                                                })}
                                             </div>
                                         </div>
                                         <Space size={6}>
-                                            <Button size="small" onClick={() => void navigator.clipboard?.writeText(code.code).then(() => message.success("已复制 CDK"))}>
-                                                复制
+                                            <Button size="small" onClick={() => void navigator.clipboard?.writeText(code.code).then(() => message.success(t("cdk.section.result.copied")))}>
+                                                {t("cdk.table.copy")}
                                             </Button>
-                                            <Popconfirm title="删除这个 CDK？" description="删除后会从密钥管理移除，用户不能再兑换。" okText="删除" cancelText="取消" onConfirm={() => void deleteCreatedCdkCodes([code.id])}>
+                                            <Popconfirm
+                                                title={t("cdk.table.deleteConfirmTitle")}
+                                                description={t("cdk.section.result.deleteSingleConfirmDescription")}
+                                                okText={t("cdk.table.deleteOk")}
+                                                cancelText={t("cdk.table.deleteCancel")}
+                                                onConfirm={() => void deleteCreatedCdkCodes([code.id])}
+                                            >
                                                 <Button size="small" danger icon={<Trash2 className="size-3.5" />}>
-                                                    删除
+                                                    {t("cdk.table.deleteOk")}
                                                 </Button>
                                             </Popconfirm>
                                         </Space>
                                     </div>
                                 ))
                             ) : (
-                                <div className="rounded-md border border-dashed border-stone-200 px-3 py-6 text-center text-sm text-stone-500 sm:py-10 dark:border-stone-800">生成后会在这里显示明文，请及时复制。</div>
+                                <div className="rounded-md border border-dashed border-stone-200 px-3 py-6 text-center text-sm text-stone-500 sm:py-10 dark:border-stone-800">{t("cdk.section.result.empty")}</div>
                             )}
                         </div>
                     </section>
@@ -265,13 +275,13 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
                 <section className="rounded-lg border border-stone-200 bg-white p-3 sm:p-4 dark:border-stone-800 dark:bg-stone-950">
                     <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                         <div className="min-w-0">
-                            <SectionTitle icon={<Database className="size-4" />} title="CDK 密钥管理" />
-                            <p className="mt-2 text-xs leading-5 text-stone-500 dark:text-stone-400">这里管理的是可兑换密钥本身；可搜索、复制、查看明细、勾选批量删除，已兑换流水会保留在用户积分记录中。</p>
+                            <SectionTitle icon={<Database className="size-4" />} title={t("cdk.section.management.title")} />
+                            <p className="mt-2 text-xs leading-5 text-stone-500 dark:text-stone-400">{t("cdk.section.management.description")}</p>
                             <div className="mt-2 flex flex-wrap gap-2 text-xs text-stone-500 dark:text-stone-400">
-                                <Tag className="m-0">总数 {cdkStats.total}</Tag>
-                                <Tag className="m-0">已兑换 {cdkStats.redeemed}</Tag>
-                                <Tag className="m-0">未兑换 {cdkStats.unused}</Tag>
-                                <Tag className="m-0">已过期 {cdkStats.expired}</Tag>
+                                <Tag className="m-0">{t("cdk.section.management.statsTotal", { count: cdkStats.total })}</Tag>
+                                <Tag className="m-0">{t("cdk.section.management.statsRedeemed", { count: cdkStats.redeemed })}</Tag>
+                                <Tag className="m-0">{t("cdk.section.management.statsUnused", { count: cdkStats.unused })}</Tag>
+                                <Tag className="m-0">{t("cdk.section.management.statsExpired", { count: cdkStats.expired })}</Tag>
                             </div>
                         </div>
                         <div className="flex w-full flex-col gap-2 xl:w-auto xl:min-w-[520px] xl:flex-row xl:justify-end">
@@ -279,7 +289,7 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
                                 allowClear
                                 className="w-full xl:max-w-64"
                                 prefix={<Search className="size-4 text-stone-400" />}
-                                placeholder="搜索明文、备注、兑换用户"
+                                placeholder={t("cdk.section.management.searchPlaceholder")}
                                 value={cdkSearch}
                                 onChange={(event) => {
                                     setCdkSearch(event.target.value);
@@ -294,15 +304,21 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
                                     setCdkPage(1);
                                 }}
                                 options={[
-                                    { value: "all", label: "全部" },
-                                    { value: "redeemed", label: "已兑换" },
-                                    { value: "unused", label: "未兑换" },
-                                    { value: "expired", label: "已过期" },
+                                    { value: "all", label: t("cdk.section.management.filterAll") },
+                                    { value: "redeemed", label: t("cdk.section.management.filterRedeemed") },
+                                    { value: "unused", label: t("cdk.section.management.filterUnused") },
+                                    { value: "expired", label: t("cdk.section.management.filterExpired") },
                                 ]}
                             />
-                            <Popconfirm title="批量删除选中 CDK？" description="删除后用户将不能再兑换这些密钥，已有积分流水不会被删除。" okText="删除" cancelText="取消" onConfirm={() => void bulkDeleteCdkCodes()}>
+                            <Popconfirm
+                                title={t("cdk.section.management.bulkDeleteConfirmTitle")}
+                                description={t("cdk.table.deleteConfirmDescription")}
+                                okText={t("cdk.table.deleteOk")}
+                                cancelText={t("cdk.table.deleteCancel")}
+                                onConfirm={() => void bulkDeleteCdkCodes()}
+                            >
                                 <Button danger disabled={!selectedCdkIds.length} loading={bulkDeletingCdk} icon={<Trash2 className="size-4" />}>
-                                    批量删除
+                                    {t("cdk.section.management.bulkDelete")}
                                 </Button>
                             </Popconfirm>
                         </div>
@@ -310,7 +326,7 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
                     <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950">
                         <div className="md:hidden">
                             {cdkLoading ? (
-                                <div className="px-3 py-8 text-center text-sm text-stone-500 dark:text-stone-400">加载中...</div>
+                                <div className="px-3 py-8 text-center text-sm text-stone-500 dark:text-stone-400">{t("cdk.section.management.loading")}</div>
                             ) : cdkCodes.length ? (
                                 <div className="divide-y divide-stone-200 dark:divide-stone-800">
                                     {cdkCodes.map((code) => {
@@ -323,7 +339,7 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
                                                         className="mt-0.5 shrink-0"
                                                         checked={selected}
                                                         onChange={(event) => setSelectedCdkIds((current) => (event.target.checked ? Array.from(new Set([...current, code.id])) : current.filter((id) => id !== code.id)))}
-                                                        aria-label={`选择 ${code.code}`}
+                                                        aria-label={t("cdk.section.result.selectCode", { code: code.code || code.codePreview })}
                                                     />
                                                     <div className="min-w-0 flex-1">
                                                         <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -332,35 +348,35 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
                                                                 {cdkStatusLabel(code)}
                                                             </Tag>
                                                         </div>
-                                                        {code.note ? <div className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">备注：{code.note}</div> : null}
+                                                        {code.note ? <div className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">{t("cdk.table.note", { note: code.note })}</div> : null}
                                                     </div>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-2 rounded-md bg-stone-50/80 p-3 text-xs leading-5 dark:bg-stone-900/50">
                                                     <div>
-                                                        <div className="text-stone-400 dark:text-stone-500">兑换规则</div>
+                                                        <div className="text-stone-400 dark:text-stone-500">{t("cdk.table.rules")}</div>
                                                         <div className="mt-0.5 font-medium text-stone-800 dark:text-stone-100">
-                                                            {formatCreditAmount(code.points)} 积分 · {code.redeemedCount}/{code.maxRedemptions}
+                                                            {formatCreditAmount(code.points)} · {code.redeemedCount}/{code.maxRedemptions}
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <div className="text-stone-400 dark:text-stone-500">有效期</div>
-                                                        <div className="mt-0.5 font-medium text-stone-800 dark:text-stone-100">{code.expiresAt ? new Date(code.expiresAt).toLocaleDateString("zh-CN") : "长期有效"}</div>
+                                                        <div className="text-stone-400 dark:text-stone-500">{t("cdk.table.validity")}</div>
+                                                        <div className="mt-0.5 font-medium text-stone-800 dark:text-stone-100">{code.expiresAt ? new Date(code.expiresAt).toLocaleDateString() : t("cdk.table.longTermValid")}</div>
                                                     </div>
                                                     <div className="col-span-2">
-                                                        <div className="text-stone-400 dark:text-stone-500">最近兑换</div>
-                                                        <div className="mt-0.5 truncate font-medium text-stone-800 dark:text-stone-100">{latest ? `${latest.displayName} @${latest.username}` : "暂无兑换"}</div>
+                                                        <div className="text-stone-400 dark:text-stone-500">{t("cdk.table.latestRedemption")}</div>
+                                                        <div className="mt-0.5 truncate font-medium text-stone-800 dark:text-stone-100">{latest ? `${latest.displayName} @${latest.username}` : t("cdk.table.noRedemption")}</div>
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-wrap justify-end gap-2">
                                                     <Button size="small" icon={<Copy className="size-3.5" />} onClick={() => void copyCdkPlainCode(code)}>
-                                                        复制
+                                                        {t("cdk.table.copy")}
                                                     </Button>
                                                     <Button size="small" type="text" icon={<Eye className="size-3.5" />} onClick={() => setViewingCdkCode(code)}>
-                                                        明细
+                                                        {t("cdk.table.detail")}
                                                     </Button>
-                                                    <Popconfirm title="删除这个 CDK？" okText="删除" cancelText="取消" onConfirm={() => void deleteCdkById(code.id)}>
+                                                    <Popconfirm title={t("cdk.table.deleteConfirmTitle")} okText={t("cdk.table.deleteOk")} cancelText={t("cdk.table.deleteCancel")} onConfirm={() => void deleteCdkById(code.id)}>
                                                         <Button size="small" danger icon={<Trash2 className="size-3.5" />}>
-                                                            删除
+                                                            {t("cdk.table.deleteOk")}
                                                         </Button>
                                                     </Popconfirm>
                                                 </div>
@@ -369,7 +385,7 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
                                     })}
                                 </div>
                             ) : (
-                                <div className="px-3 py-8 text-center text-sm text-stone-500 dark:text-stone-400">暂无符合条件的 CDK</div>
+                                <div className="px-3 py-8 text-center text-sm text-stone-500 dark:text-stone-400">{t("cdk.section.management.empty")}</div>
                             )}
                         </div>
                         <div className="hidden md:block">
@@ -384,14 +400,11 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
                                     selectedRowKeys: selectedCdkIds,
                                     onChange: (keys) => setSelectedCdkIds(keys.map(String)),
                                 }}
-                                locale={{ emptyText: "暂无符合条件的 CDK" }}
+                                locale={{ emptyText: t("cdk.section.management.empty") }}
                             />
                         </div>
                         <div className="flex flex-col gap-3 border-t border-stone-200 px-3 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-stone-800">
-                            <div className="text-sm text-stone-500 dark:text-stone-400">
-                                已选 <span className="font-semibold text-stone-950 dark:text-stone-100">{selectedCdkIds.length}</span> 个，当前页 <span className="font-semibold text-stone-950 dark:text-stone-100">{cdkCodes.length}</span> 条，共{" "}
-                                <span className="font-semibold text-stone-950 dark:text-stone-100">{cdkTotal}</span> 条
-                            </div>
+                            <div className="text-sm text-stone-500 dark:text-stone-400">{t("cdk.section.management.footerSummary", { selected: selectedCdkIds.length, page: cdkCodes.length, total: cdkTotal })}</div>
                             <Pagination current={cdkPage} pageSize={CDK_PAGE_SIZE} total={cdkTotal} showSizeChanger={false} onChange={(page) => setCdkPage(page)} />
                         </div>
                     </div>

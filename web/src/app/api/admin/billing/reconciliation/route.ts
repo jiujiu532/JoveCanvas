@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         const runId = params.get("runId");
         if (runId) {
             const reconciliation = await getBillingReconciliationRun(runId);
-            if (!reconciliation) return NextResponse.json({ error: "对账批次不存在" }, { status: 404 });
+            if (!reconciliation) return NextResponse.json({ error: await serverMessage("billing.reconBatchNotFound") }, { status: 404 });
             return NextResponse.json({ reconciliation });
         }
         const result = await listBillingReconciliationRuns({
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin billing reconciliation list failed", error);
-        return NextResponse.json({ error: "获取支付对账记录失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.reconListFailed") }, { status: 500 });
     }
 }
 
@@ -70,6 +70,6 @@ export async function POST(request: Request) {
         });
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin billing reconciliation failed", error);
-        return NextResponse.json({ error: "支付账单对账失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.reconFailed") }, { status: 500 });
     }
 }

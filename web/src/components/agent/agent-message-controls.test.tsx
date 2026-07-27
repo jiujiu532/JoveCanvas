@@ -2,10 +2,28 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { App } from "antd";
 import { describe, expect, it, vi } from "vitest";
 
+import layoutMessages from "../../../messages/zh/layout.json";
 import { agentMediaDownloadName } from "./agent-media-download";
 import { formatAgentMessageText } from "./agent-message-format";
 import { agentMediaPreviewPopupStyles, AgentMediaPreview } from "./agent-media-preview";
 import { AgentMessageActions } from "./agent-message-actions";
+
+function readNested(dict: unknown, key: string): string | undefined {
+    let current: unknown = dict;
+    for (const part of key.split(".")) {
+        if (typeof current !== "object" || current === null) return undefined;
+        current = (current as Record<string, unknown>)[part];
+    }
+    return typeof current === "string" ? current : undefined;
+}
+
+vi.mock("next-intl", () => ({
+    useTranslations: () => (key: string, params?: Record<string, string | number>) => {
+        const template = readNested(layoutMessages, key) ?? key;
+        if (!params) return template;
+        return template.replace(/\{(\w+)\}/g, (matched, name: string) => (name in params ? String(params[name]) : matched));
+    },
+}));
 
 describe("agent message controls", () => {
     it("shows copy for every message and edit only for user messages", () => {

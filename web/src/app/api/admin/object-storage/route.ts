@@ -32,9 +32,9 @@ export async function PATCH(request: Request) {
             clearAccessKeyId: body.clearAccessKeyId === true,
             clearSecretAccessKey: body.clearSecretAccessKey === true,
         });
-        return NextResponse.json({ code: 0, data, msg: "外部存储配置已保存" }, { headers: { "Cache-Control": "private, no-store" } });
+        return NextResponse.json({ code: 0, data, msg: await serverMessage("media.externalStorageSaved") }, { headers: { "Cache-Control": "private, no-store" } });
     } catch (error) {
-        return NextResponse.json({ code: 400, data: null, msg: error instanceof Error ? error.message : "外部存储配置保存失败" }, { status: 400 });
+        return NextResponse.json({ code: 400, data: null, msg: error instanceof Error ? error.message : await serverMessage("media.externalStorageSaveFailed") }, { status: 400 });
     }
 }
 
@@ -43,10 +43,10 @@ export async function POST() {
     if (denied) return denied;
     try {
         await checkConfiguredObjectStorage();
-        return NextResponse.json({ code: 0, data: { available: true }, msg: "外部存储连接正常" });
+        return NextResponse.json({ code: 0, data: { available: true }, msg: await serverMessage("media.externalStorageOk") });
     } catch (error) {
         console.error("Object storage connection test failed", error);
-        return NextResponse.json({ code: 502, data: { available: false }, msg: "连接失败，请检查 Endpoint、Region、Bucket 和访问密钥" }, { status: 502 });
+        return NextResponse.json({ code: 502, data: { available: false }, msg: await serverMessage("media.externalStorageConnectFailed") }, { status: 502 });
     }
 }
 

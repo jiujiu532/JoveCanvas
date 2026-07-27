@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { App } from "antd";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { SiteAnnouncementPopup } from "@/components/layout/site-announcement-popup";
 import { applyPublicSystemSettings, useConfigStore } from "@/stores/use-config-store";
@@ -12,6 +13,7 @@ import { loadPublicSession } from "@/stores/use-public-session-store";
 
 export function ClientRootInit({ children }: { children: ReactNode }) {
     const { message } = App.useApp();
+    const t = useTranslations("layout");
     const pathname = usePathname();
     const installRoute = pathname === "/install";
     const setConfig = useConfigStore((state) => state.setConfig);
@@ -34,11 +36,11 @@ export function ClientRootInit({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const handleMissingConfig = () => {
-            message.warning("请联系管理员在后台配置可用模型渠道");
+            message.warning(t("clientInit.missingConfigWarning"));
         };
         window.addEventListener("vozeb-pro-system-config-missing", handleMissingConfig);
         return () => window.removeEventListener("vozeb-pro-system-config-missing", handleMissingConfig);
-    }, [message]);
+    }, [message, t]);
 
     return (
         <>

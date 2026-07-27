@@ -1,5 +1,6 @@
 import type { DramaProject, DramaShot } from "../types";
 import type { useEffectiveConfig } from "@/stores/use-config-store";
+import { dramaT } from "../stores/drama-i18n-runtime";
 
 export function shotReferenceImages(project: DramaProject, shot: DramaShot) {
     const assetUrls = [...project.characters.filter((item) => shot.characterIds.includes(item.id)), ...project.scenes.filter((item) => item.id === shot.sceneId), ...project.props.filter((item) => shot.propIds.includes(item.id))].flatMap((item) =>
@@ -14,9 +15,10 @@ export function shotReferenceImages(project: DramaProject, shot: DramaShot) {
 }
 
 export function storyboardReferenceImages(shot: DramaShot) {
+    const t = dramaT();
     return [
-        shot.storyboardImageUrl ? referenceImage(`storyboard-start-${shot.id}`, `${shot.title}-起始帧.png`, shot.storyboardImageUrl) : null,
-        shot.storyboardEndImageUrl ? referenceImage(`storyboard-end-${shot.id}`, `${shot.title}-结束帧.png`, shot.storyboardEndImageUrl) : null,
+        shot.storyboardImageUrl ? referenceImage(`storyboard-start-${shot.id}`, `${shot.title}-${t("storyboard.startFrameFileSuffix")}.png`, shot.storyboardImageUrl) : null,
+        shot.storyboardEndImageUrl ? referenceImage(`storyboard-end-${shot.id}`, `${shot.title}-${t("storyboard.endFrameFileSuffix")}.png`, shot.storyboardEndImageUrl) : null,
     ].filter((item): item is ReturnType<typeof referenceImage> => Boolean(item));
 }
 

@@ -1,6 +1,9 @@
 import { DEFAULT_SITE_SETTINGS, getPublicUserSummary } from "@/lib/auth/store";
 import { getDatabaseProvider, getPostgresConnectionString, initializePostgresSchema, postgresQuery } from "@/lib/server/database";
 import { getEncryptionKeyStatus } from "@/lib/server/secret-crypto";
+import type { AppLocale } from "@/i18n/locale";
+import zhServer from "../../../messages/zh/server.json";
+import enServer from "../../../messages/en/server.json";
 
 export type InstallStatus = {
     provider: "file" | "postgres";
@@ -33,10 +36,28 @@ const globalForInstallStatus = globalThis as typeof globalThis & {
     };
 };
 
+type InstallDict = (typeof zhServer)["install"];
+
+function installMessage(locale: AppLocale, key: keyof InstallDict) {
+    const dict = (locale === "en" ? enServer : zhServer).install as InstallDict;
+    return dict[key] ?? (zhServer.install as InstallDict)[key] ?? String(key);
+}
+
+async function resolveLocale(): Promise<AppLocale> {
+    try {
+        const { getLocale } = await import("next-intl/server");
+        const locale = await getLocale();
+        return locale === "en" ? "en" : "zh";
+    } catch {
+        return "zh";
+    }
+}
+
 export async function getInstallStatus(): Promise<InstallStatus> {
     const provider = getDatabaseProvider();
     const encryption = getEncryptionKeyStatus();
-    const key = `${provider}:${provider === "postgres" ? getPostgresConnectionString() : ""}:${encryption.ready}`;
+    const locale = await resolveLocale();
+    const key = `${provider}:${provider === "postgres" ? getPostgresConnectionString() : ""}:${encryption.ready}:${locale}`;
     const now = Date.now();
     const cached = globalForInstallStatus.__vozebProInstallStatusCache;
     if (cached?.key === key) {
@@ -44,7 +65,7 @@ export async function getInstallStatus(): Promise<InstallStatus> {
         if (cached.pending) return cached.pending;
     }
 
-    const pending = loadInstallStatus(provider, encryption);
+    const pending = loadInstallStatus(provider, encryption, locale);
     globalForInstallStatus.__vozebProInstallStatusCache = { key, expiresAt: 0, pending };
     try {
         const value = await pending;
@@ -61,7 +82,8 @@ export function invalidateInstallStatusCache() {
     globalForInstallStatus.__vozebProInstallStatusCache = undefined;
 }
 
-async function loadInstallStatus(provider: "file" | "postgres", encryption = getEncryptionKeyStatus()): Promise<InstallStatus> {
+async function loadInstallStatus(provider: "file" | "postgres", encryption = getEncryptionKeyStatus(), locale: AppLocale = "zh"): Promise<InstallStatus> {
+    const t = (key: keyof InstallDict) => installMessage(locale, key);
     if (provider === "file") {
         try {
             const users = await getPublicUserSummary();
@@ -74,7 +96,7 @@ async function loadInstallStatus(provider: "file" | "postgres", encryption = get
                     healthy: true,
                     schemaReady: true,
                     connectionEnv: null,
-                    message: "本地文件存储可用。适合单机体验，商业化部署建议切换到 PostgreSQL。",
+                    message: t("fileReady"),
                 },
             });
         } catch (error) {
@@ -88,8 +110,8 @@ async function loadInstallStatus(provider: "file" | "postgres", encryption = get
                     healthy: false,
                     schemaReady: false,
                     connectionEnv: null,
-                    message: "本地文件存储不可用。",
-                    detail: "完整错误已写入服务器日志。",
+                    message: t("fileUnavailable"),
+                    detail: t("errorInLogs"),
                 },
             });
         }
@@ -106,8 +128,8 @@ async function loadInstallStatus(provider: "file" | "postgres", encryption = get
                 healthy: false,
                 schemaReady: false,
                 connectionEnv,
-                message: "缺少 PostgreSQL 连接配置。请在服务器环境变量、.env.local 或 Docker Compose 中填写 DATABASE_URL。",
-                detail: "本机部署通常是 postgres://用户名:密码@localhost:5432/vozeb_pro；Docker Compose 通常是 postgres://用户名:密码@postgres:5432/vozeb_pro。",
+                message: t("pgMissingConfig"),
+                detail: t("pgMissingConfigDetail"),
             },
         });
     }
@@ -125,8 +147,8 @@ async function loadInstallStatus(provider: "file" | "postgres", encryption = get
                 healthy: false,
                 schemaReady: false,
                 connectionEnv,
-                message: "无法连接 PostgreSQL。请检查数据库、账号密码、Host、端口、网络和 SSL 设置。",
-                detail: "完整错误已写入服务器日志。",
+                message: t("pgConnectFailed"),
+                detail: t("errorInLogs"),
             },
         });
     }
@@ -143,7 +165,7 @@ async function loadInstallStatus(provider: "file" | "postgres", encryption = get
                     healthy: true,
                     schemaReady: false,
                     connectionEnv,
-                    message: "PostgreSQL 连接可用，等待显式初始化表结构。",
+                    message: t("pgAwaitSchema"),
                 },
             });
         }
@@ -158,7 +180,7 @@ async function loadInstallStatus(provider: "file" | "postgres", encryption = get
                 healthy: true,
                 schemaReady: true,
                 connectionEnv,
-                message: "PostgreSQL 连接可用，表结构已完成初始化。",
+                message: t("pgSchemaReady"),
             },
         });
     } catch (error) {
@@ -172,22 +194,24 @@ async function loadInstallStatus(provider: "file" | "postgres", encryption = get
                 healthy: false,
                 schemaReady: false,
                 connectionEnv,
-                message: "PostgreSQL 已连接，但表结构状态检查失败。",
-                detail: "完整错误已写入服务器日志。",
+                message: t("pgSchemaCheckFailed"),
+                detail: t("errorInLogs"),
             },
         });
     }
 }
 
 export async function initializeInstallDatabase() {
-    if (getDatabaseProvider() !== "postgres") throw new InstallInitializationError("当前存储模式不需要初始化 PostgreSQL", 409);
-    if (!getPostgresConnectionString()) throw new InstallInitializationError("请先配置 DATABASE_URL", 400);
-    if (!getEncryptionKeyStatus().ready) throw new InstallInitializationError("请先配置有效的 VOZEB_PRO_ENCRYPTION_KEY", 400);
+    const locale = await resolveLocale();
+    const t = (key: keyof InstallDict) => installMessage(locale, key);
+    if (getDatabaseProvider() !== "postgres") throw new InstallInitializationError(t("initNotNeeded"), 409);
+    if (!getPostgresConnectionString()) throw new InstallInitializationError(t("initNeedDatabaseUrl"), 400);
+    if (!getEncryptionKeyStatus().ready) throw new InstallInitializationError(t("initNeedEncryptionKey"), 400);
     try {
         await initializePostgresSchema();
     } catch (error) {
         console.error("PostgreSQL install initialization failed", error);
-        throw new InstallInitializationError("数据库初始化失败，请查看服务器日志并检查数据库账号权限", 500);
+        throw new InstallInitializationError(t("initFailed"), 500);
     }
     invalidateInstallStatusCache();
     return getInstallStatus();

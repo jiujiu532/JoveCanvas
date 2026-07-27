@@ -30,16 +30,16 @@ export async function POST(request: Request) {
     try {
         const input = normalizeCreativeRunRequest(await readJsonBody<unknown>(request));
         const existing = await getAgentRunByClientRequestId(user.id, input.clientRequestId);
-        if (existing) return NextResponse.json({ code: 0, data: { run: existing, created: false }, msg: "Agent 任务已存在" });
+        if (existing) return NextResponse.json({ code: 0, data: { run: existing, created: false }, msg: await serverMessage("tasks.agentExists") });
         const rate = await checkRateLimit(`agent-run:${user.id}`, { maxRequests: 10, windowMs: 60 * 1000 });
-        if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: "Agent 请求" }) }, { status: 429 });
+        if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.agent") }) }, { status: 429 });
         const settings = await getAuthSettings();
         const response = await withGenerationConcurrencyLimit(user.id, "agent", 10 * 60 * 1000, settings.generationConcurrency.agent, async () => {
             const created = await createAgentRun(user.id, input);
             if (created.created) after(() => executeAgentRun(created.run, resolveInternalOrigin(new URL(request.url).origin), request.headers.get("cookie") || ""));
             return NextResponse.json({ code: 0, data: { run: created.run, conversation: created.conversation, created: created.created }, msg: created.created ? "Agent 任务已创建" : "Agent 任务已存在" });
         });
-        return response || NextResponse.json({ code: 429, data: null, msg: `当前最多同时运行 ${settings.generationConcurrency.agent} 个 Agent 任务` }, { status: 429 });
+        return response || NextResponse.json({ code: 429, data: null, msg: await serverMessage("tasks.agentConcurrencyLimit", { limit: settings.generationConcurrency.agent }) }, { status: 429 });
     } catch (error) {
         if (error instanceof CreativeRuntimeInputError || error instanceof CreativeStoreConflict) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
         throw error;

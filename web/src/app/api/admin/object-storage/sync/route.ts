@@ -17,6 +17,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ code: 0, data, msg: data.remaining ? "本批迁移完成，可继续迁移剩余文件" : "本地媒体迁移完成" });
     } catch (error) {
         console.error("Local media migration failed", error);
-        return NextResponse.json({ code: 500, data: null, msg: error instanceof Error ? error.message : "本地媒体迁移失败" }, { status: 500 });
+        return NextResponse.json({ code: 500, data: null, msg: error instanceof Error ? error.message : await serverMessage("media.localMigrateFailed") }, { status: 500 });
     }
 }

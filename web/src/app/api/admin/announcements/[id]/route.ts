@@ -31,7 +31,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     } catch (error) {
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Update announcement failed", error);
-        return NextResponse.json({ error: "更新公告失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.announcementUpdateFailed") }, { status: 500 });
     }
 }
 
@@ -45,6 +45,6 @@ export async function DELETE(_request: Request, context: RouteContext) {
     } catch (error) {
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Delete announcement failed", error);
-        return NextResponse.json({ error: "删除公告失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.announcementDeleteFailed") }, { status: 500 });
     }
 }

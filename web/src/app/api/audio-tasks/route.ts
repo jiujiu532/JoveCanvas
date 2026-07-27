@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const rate = await checkGenerationRateLimit(user.id, request, "audio");
-    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "音频生成请求" }) }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.audioGen") }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const settings = await getAuthSettings();
     const response = await withGenerationConcurrencyLimit(user.id, "audio", 10 * 60 * 1000, settings.generationConcurrency.audio, async () => {
         let body: { config?: AudioTaskConfig; prompt?: string; source?: string; context?: GenerationTaskContext };
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
         const channels = resolveLogicalModelCandidates(settings, "audio", body.config?.model || settings.defaultModels.audioModel).map((resolved) => ({ ...toSystemGenerationChannel(resolved), channelId: resolved.channelId }));
         const prompt = String(body.prompt || "").trim();
         const supportedChannels = channels.filter((channel) => channel.apiFormat !== "gemini");
-        if (!supportedChannels.length || !prompt) return NextResponse.json({ error: "音频任务参数不完整或渠道不支持" }, { status: 400 });
+        if (!supportedChannels.length || !prompt) return NextResponse.json({ error: await serverMessage("tasks.audioParamsOrChannel") }, { status: 400 });
         const configs: AudioTaskConfig[] = supportedChannels.map((channel) => ({ ...channel, ...resolveAudioTaskOptions(body.config, settings.generationDefaults), instructions: clean(body.config?.instructions, 2000) }));
         const requestId = body.context?.clientRequestId?.trim();
         if (requestId) {
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
         after(() => runAudioTask(task, resolveInternalOrigin(new URL(request.url).origin), request.headers.get("cookie") || ""));
         return NextResponse.json({ task: publicTask(task) });
     });
-    return response || NextResponse.json({ error: "当前用户音频任务已达到并发上限" }, { status: 429 });
+    return response || NextResponse.json({ error: await serverMessage("tasks.audioConcurrencyLimit") }, { status: 429 });
 }
 
 async function runAudioTask(task: AudioTask, origin: string, cookie: string) {
@@ -102,7 +102,7 @@ async function runAudioTask(task: AudioTask, origin: string, cookie: string) {
                 } else await persistAudioBytes(candidateTask, origin, Buffer.from(await response.arrayBuffer()), contentType);
                 const persisted = await getAudioTask(task.id);
                 if (persisted?.status === "cancelled") {
-                    attempts = finishGenerationAttempt(attempts, started.attempt.attemptNo, { status: "failed", error: "任务已取消", pointsCost: chargedPoints || undefined, pointsRecordId });
+                    attempts = finishGenerationAttempt(attempts, started.attempt.attemptNo, { status: "failed", error: await serverMessage("tasks.cancelled"), pointsCost: chargedPoints || undefined, pointsRecordId });
                     await updateAudioTask(task.id, { attempts, attemptNo: started.attempt.attemptNo });
                     return;
                 }
@@ -124,7 +124,7 @@ async function runAudioTask(task: AudioTask, origin: string, cookie: string) {
                     await refundUserPoints(task.userId, generationModelId(config), chargedPoints, "audio", 1, audioTaskRefundIdempotencyKey({ id: task.id, attemptNo: started.attempt.attemptNo }), pointsRecordId);
                     await updateAudioTask(task.id, { billing: { pointsCost: chargedPoints, pointsRecordId, refunded: true } });
                 }
-                attempts = finishGenerationAttempt(attempts, started.attempt.attemptNo, { status: "failed", error: toSafeGenerationErrorMessage(error, "音频生成失败"), pointsCost: chargedPoints || undefined, pointsRecordId });
+                attempts = finishGenerationAttempt(attempts, started.attempt.attemptNo, { status: "failed", error: toSafeGenerationErrorMessage(error, await serverMessage("tasks.audioGenFailed")), pointsCost: chargedPoints || undefined, pointsRecordId });
                 await updateAudioTask(task.id, { attempts, attemptNo: started.attempt.attemptNo });
                 if (current?.status === "cancelled" || current?.status === "success") return;
             }
@@ -135,7 +135,7 @@ async function runAudioTask(task: AudioTask, origin: string, cookie: string) {
         if (current && current.status !== "cancelled") {
             const failed = await transitionAudioTask(current, ["running"], {
                 status: "error",
-                error: toSafeGenerationErrorMessage(error, "音频生成失败"),
+                error: toSafeGenerationErrorMessage(error, await serverMessage("tasks.audioGenFailed")),
                 config: { ...current.config, apiKey: "" },
                 billing: current.billing,
             });

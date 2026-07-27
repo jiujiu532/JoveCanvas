@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Button, Card, Form, Modal, Space, Switch, Tag, Tooltip, Typography, theme as antdTheme } from "antd";
 import { Check, Ellipsis, Image as ImageIcon, Settings2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { ImageQuickToolId } from "./canvas-image-toolbar-tools";
 
@@ -52,13 +53,14 @@ export function ImageToolSettingsModal({
     onCancel: () => void;
     onSave: () => void;
 }) {
+    const t = useTranslations("canvas");
     const { token } = antdTheme.useToken();
     const previewToolbarRef = useRef<HTMLDivElement>(null);
     const scrollbarTrackRef = useRef<HTMLInputElement>(null);
     const [previewScroll, setPreviewScroll] = useState<PreviewScroll>({ left: 0, max: 0, viewport: 1, content: 1 });
     const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
     const selectedTools = tools.filter((tool) => selected.has(tool.id));
-    const previewTools: PreviewTool[] = [...selectedTools, { id: "more", title: "配置快捷工具", label: "更多", icon: <Ellipsis className="size-4" />, active: true }];
+    const previewTools: PreviewTool[] = [...selectedTools, { id: "more", title: t("actions.configQuickTools"), label: t("actions.more"), icon: <Ellipsis className="size-4" />, active: true }];
 
     const syncPreviewScroll = useCallback(() => {
         const toolbar = previewToolbarRef.current;
@@ -115,7 +117,7 @@ export function ImageToolSettingsModal({
     return (
         <Modal
             className="canvas-image-toolbar-settings-modal"
-            title="自定义工具栏"
+            title={t("toolbarSettings.title")}
             open={open}
             centered
             width={760}
@@ -124,20 +126,20 @@ export function ImageToolSettingsModal({
             footer={
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                        <span>显示按钮文字</span>
+                        <span>{t("toolbarSettings.showLabels")}</span>
                         <Switch checked={showLabels} onChange={onShowLabelsChange} />
                     </div>
                     <Space>
-                        <Button onClick={onCancel}>取消</Button>
+                        <Button onClick={onCancel}>{t("toolbarSettings.cancel")}</Button>
                         <Button type="primary" onClick={onSave}>
-                            保存
+                            {t("toolbarSettings.save")}
                         </Button>
                     </Space>
                 </div>
             }
         >
             <Typography.Paragraph type="secondary" className="!mb-4">
-                选择你想在图片节点编辑栏中使用的快捷工具。
+                {t("toolbarSettings.description")}
             </Typography.Paragraph>
 
             <Card
@@ -145,7 +147,7 @@ export function ImageToolSettingsModal({
                 title={
                     <Space size={6}>
                         <Settings2 className="size-4" />
-                        节点预览
+                        {t("toolbarSettings.nodePreview")}
                     </Space>
                 }
                 className="mb-4"
@@ -166,7 +168,7 @@ export function ImageToolSettingsModal({
                         style={{ background: token.colorBgContainer, borderColor: token.colorBorderSecondary, color: token.colorTextSecondary }}
                     >
                         <ImageIcon className="mb-2 size-8" />
-                        <Typography.Text type="secondary">图片节点</Typography.Text>
+                        <Typography.Text type="secondary">{t("toolbarSettings.imageNode")}</Typography.Text>
                     </div>
                     <input
                         ref={scrollbarTrackRef}
@@ -188,7 +190,7 @@ export function ImageToolSettingsModal({
                     className="!mb-4"
                     label={
                         <Space size={8}>
-                            <span>快捷工具</span>
+                            <span>{t("toolbarSettings.quickTools")}</span>
                             <Tag className="m-0">
                                 {selectedTools.length}/{tools.length}
                             </Tag>

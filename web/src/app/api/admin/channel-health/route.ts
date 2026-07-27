@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     const { baseUrl, apiKey, savedChannel } = resolveAdminChannelCredentials(settings, body);
     const model = typeof body.model === "string" ? body.model.trim() : "";
     const kind = body.kind === "image" || body.kind === "video" || body.kind === "audio" || body.kind === "text" ? body.kind : "";
-    if (!baseUrl || !apiKey || !model || !kind) return NextResponse.json({ error: "请填写 Base URL、API Key，并选择要测试的模型" }, { status: 400 });
+    if (!baseUrl || !apiKey || !model || !kind) return NextResponse.json({ error: await serverMessage("admin.fillChannelTestFields") }, { status: 400 });
     const advancedConfig = {
         ...(savedChannel?.advancedConfig || {}),
         ...(body.protocol !== undefined ? { protocol: body.protocol } : {}),
@@ -86,11 +86,11 @@ export async function POST(request: Request) {
     const catalogPresets = resolveGlobalAiOpcCatalogPresets(baseUrl, advancedConfig);
     const globalPreset = resolveGlobalAiOpcPreset({ protocol: "globalaiopc", globalAiOpcPresets: catalogPresets.map((preset) => preset.id) }, model);
     const providerBaseUrl = globalPreset?.baseUrl || baseUrl;
-    if (!(await isSafeOutboundUrl(apiUrl(providerBaseUrl, "/models")))) return NextResponse.json({ result: { ok: false, kind, model, status: 0, error: "Base URL 不允许访问内网或保留地址" } satisfies HealthResult }, { status: 200 });
+    if (!(await isSafeOutboundUrl(apiUrl(providerBaseUrl, "/models")))) return NextResponse.json({ result: { ok: false, kind, model, status: 0, error: await serverMessage("common.baseUrlPrivateBlocked") } satisfies HealthResult }, { status: 200 });
 
     const cooldownKey = `${currentUser.id}:${baseUrl.toLowerCase()}:${kind}`;
     const waitMs = (healthCooldowns.get(cooldownKey) || 0) - Date.now();
-    if (waitMs > 0) return NextResponse.json({ error: await serverMessage("common.rateLimitedWithSeconds", { feature: "接口测试", seconds: Math.ceil(waitMs / 1000) }) }, { status: 429 });
+    if (waitMs > 0) return NextResponse.json({ error: await serverMessage("common.rateLimitedWithSeconds", { feature: await serverMessage("features.apiTest"), seconds: Math.ceil(waitMs / 1000) }) }, { status: 429 });
     healthCooldowns.set(cooldownKey, Date.now() + HEALTH_COOLDOWN_MS);
 
     try {
@@ -104,7 +104,7 @@ export async function POST(request: Request) {
                     : await testVideo(providerBaseUrl, apiKey, model, settings.site.title, globalPreset);
         return NextResponse.json({ result });
     } catch (error) {
-        const message = isProviderTimeoutError(error) ? "上游接口请求超时" : sanitizeProviderMessage(error instanceof Error ? error.message : "接口测试失败", [apiKey]);
+        const message = isProviderTimeoutError(error) ? await serverMessage("admin.upstreamTimeout") : sanitizeProviderMessage(error instanceof Error ? error.message : await serverMessage("admin.imageTestFailed"), [apiKey]);
         return NextResponse.json({ result: { ok: false, kind, model, status: 0, error: message } satisfies HealthResult }, { status: 200 });
     }
 }
@@ -135,7 +135,7 @@ async function testText(baseUrl: string, apiKey: string, model: string, globalPr
         model,
         status: response.status,
         protocolKey: globalPreset ? "globalaiopc" : "openai",
-        protocol: globalPreset?.label || "OpenAI 文本兼容",
+        protocol: globalPreset?.label || (await serverMessage("admin.openaiTextCompat")),
         createPath: path,
         requestTemplate: nativeGemini
             ? '{"contents":[{"role":"user","parts":[{"text":"{{prompt}}"}]}]}'
@@ -207,7 +207,7 @@ async function testImage(baseUrl: string, apiKey: string, model: string, siteTit
         if (responseFormat === "url" && /response[_ -]?format|url|unsupported|not supported|invalid|not implemented/i.test(message)) continue;
         return failed("image", model, response.status, payload, apiKey);
     }
-    return { ok: false, kind: "image", model, status: 0, error: "图片测试失败" };
+    return { ok: false, kind: "image", model, status: 0, error: await serverMessage("admin.imageTestFailed") };
 }
 
 async function testAudio(baseUrl: string, apiKey: string, model: string, siteTitle: string): Promise<HealthResult> {
@@ -414,7 +414,7 @@ async function testVideoPayloads(baseUrl: string, apiKey: string, model: string,
             return failed("video", model, response.status, data, apiKey);
         }
     }
-    return { ok: false, kind: "video", model, status: 0, error: "视频测试失败：所有兼容路径都不可用" };
+    return { ok: false, kind: "video", model, status: 0, error: await serverMessage("admin.videoTestAllPathsFailed") };
 }
 
 function videoHealthPaths(baseUrl: string, model: string) {

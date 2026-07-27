@@ -91,10 +91,22 @@
         "sectionDescription": "Confirm script facts, shot boundaries, and narrative info first; the visual model won't rewrite your content at this stage.",
         "confirmButton": "Confirm content and generate visual plan",
         "fields": {
-            "outline": { "label": "Episode outline", "placeholder": "One sentence summarizing this episode's progress" },
-            "sourceRange": { "label": "Source range", "placeholder": "e.g. Original text sections 1-3" },
-            "hook": { "label": "Ending hook", "placeholder": "The conflict to leave at the end of this episode" },
-            "nextPreview": { "label": "Next episode preview", "placeholder": "Direction for the next episode" }
+            "outline": {
+                "label": "Episode outline",
+                "placeholder": "One sentence summarizing this episode's progress"
+            },
+            "sourceRange": {
+                "label": "Source range",
+                "placeholder": "e.g. Original text sections 1-3"
+            },
+            "hook": {
+                "label": "Ending hook",
+                "placeholder": "The conflict to leave at the end of this episode"
+            },
+            "nextPreview": {
+                "label": "Next episode preview",
+                "placeholder": "Direction for the next episode"
+            }
         },
         "noSourceText": "No source text yet",
         "editableBadge": "Editable content",
@@ -121,16 +133,48 @@
         "sectionTitle": "Visual Assets",
         "sectionDescription": "Lock down characters, scenes, and key props first, so shot prompts automatically reference these settings.",
         "kinds": {
-            "characters": { "title": "Characters", "label": "Character" },
-            "scenes": { "title": "Scenes", "label": "Scene" },
-            "props": { "title": "Props", "label": "Prop" },
-            "clues": { "title": "Clues", "label": "Clue" }
+            "characters": {
+                "title": "Characters",
+                "label": "Character"
+            },
+            "scenes": {
+                "title": "Scenes",
+                "label": "Scene"
+            },
+            "props": {
+                "title": "Props",
+                "label": "Prop"
+            },
+            "clues": {
+                "title": "Clues",
+                "label": "Clue"
+            }
         },
         "profileLabels": {
-            "characters": { "visualIdentity": "Fixed appearance", "styling": "Costume and styling", "colorPalette": "Signature color", "consistencyRules": "Consistency rules" },
-            "scenes": { "visualIdentity": "Spatial structure", "styling": "Furnishing and materials", "colorPalette": "Ambient color", "consistencyRules": "Fixed spatial rules" },
-            "props": { "visualIdentity": "Shape identification", "styling": "Material and details", "colorPalette": "Fixed color", "consistencyRules": "Usage and consistency rules" },
-            "clues": { "visualIdentity": "Visual identification", "styling": "Appearance form", "colorPalette": "Hint color", "consistencyRules": "Callback rules" }
+            "characters": {
+                "visualIdentity": "Fixed appearance",
+                "styling": "Costume and styling",
+                "colorPalette": "Signature color",
+                "consistencyRules": "Consistency rules"
+            },
+            "scenes": {
+                "visualIdentity": "Spatial structure",
+                "styling": "Furnishing and materials",
+                "colorPalette": "Ambient color",
+                "consistencyRules": "Fixed spatial rules"
+            },
+            "props": {
+                "visualIdentity": "Shape identification",
+                "styling": "Material and details",
+                "colorPalette": "Fixed color",
+                "consistencyRules": "Usage and consistency rules"
+            },
+            "clues": {
+                "visualIdentity": "Visual identification",
+                "styling": "Appearance form",
+                "colorPalette": "Hint color",
+                "consistencyRules": "Callback rules"
+            }
         },
         "nameRequired": "Please enter a {label} name",
         "namePlaceholder": "{label} name",
@@ -165,7 +209,11 @@
         "uploadSuccess": "Reference image uploaded and set as baseline",
         "uploadFailed": "Reference image upload failed",
         "noDescription": "No description yet",
-        "notAddedYet": "Not added yet"
+        "notAddedYet": "Not added yet",
+        "generatedCandidateLabel": "AI candidate",
+        "legacyReferenceLabel": "Original reference",
+        "payoffEditPlaceholder": "Where the clue is revealed or paid off",
+        "settingImageSuffix": "reference sheet"
     },
     "storyboard": {
         "sectionTitle": "Storyboard Editing",
@@ -175,11 +223,36 @@
         "startFrame": "First frame",
         "endFrame": "Last frame",
         "status": {
-            "generation": { "idle": "Not generated", "queued": "Queued", "running": "Generating", "success": "Completed", "error": "Failed", "cancelled": "Cancelled" },
-            "storyboard": { "idle": "Frame pending", "queued": "Frame queued", "running": "Generating frame", "success": "Frame ready", "error": "Frame failed", "cancelled": "Frame cancelled" },
-            "audio": { "idle": "No voiceover", "queued": "Voiceover queued", "running": "Voicing over", "success": "Voiceover ready", "error": "Voiceover failed", "cancelled": "Voiceover cancelled" }
+            "generation": {
+                "idle": "Not generated",
+                "queued": "Queued",
+                "running": "Generating",
+                "success": "Completed",
+                "error": "Failed",
+                "cancelled": "Cancelled"
+            },
+            "storyboard": {
+                "idle": "Frame pending",
+                "queued": "Frame queued",
+                "running": "Generating frame",
+                "success": "Frame ready",
+                "error": "Frame failed",
+                "cancelled": "Frame cancelled"
+            },
+            "audio": {
+                "idle": "No voiceover",
+                "queued": "Voiceover queued",
+                "running": "Voicing over",
+                "success": "Voiceover ready",
+                "error": "Voiceover failed",
+                "cancelled": "Voiceover cancelled"
+            }
         },
-        "audioModes": { "source": "Video original audio", "voiceover": "AI voiceover", "mute": "Mute" },
+        "audioModes": {
+            "source": "Video original audio",
+            "voiceover": "AI voiceover",
+            "mute": "Mute"
+        },
         "audioModeDescriptions": {
             "source": "Keep the dialogue, ambience, and music generated by the video model.",
             "voiceover": "Turn off the video model's original audio and generate independent voiceover by character voice, replacing the audio track.",
@@ -191,15 +264,42 @@
             "title": "Continuity Control",
             "subtitle": "Blocking, gaze, axis, and action continuity",
             "openButton": "Set continuity",
-            "shotSize": { "label": "Shot size", "placeholder": "Close-up / medium shot / full shot / wide shot" },
-            "cameraAngle": { "label": "Camera angle", "placeholder": "Eye level, high angle, rear side" },
-            "composition": { "label": "Composition", "placeholder": "Subject on the left, space reserved for gaze near the door" },
-            "characterBlocking": { "label": "Character blocking", "placeholder": "Heroine in foreground right, hero by the door" },
-            "gazeDirection": { "label": "Gaze and screen direction", "placeholder": "Heroine looks screen left, keeps moving right" },
-            "axisRule": { "label": "Axis rule", "placeholder": "Keep characters on the same side of the line, don't cross the axis" },
-            "actionStart": { "label": "Action start state", "placeholder": "What the character is doing when the shot begins" },
-            "actionEnd": { "label": "Action end state", "placeholder": "Where the action stops at the end, and what state it leaves for the next shot" },
-            "continuityNotes": { "label": "Adjacent shot notes", "placeholder": "Details that must stay consistent with the previous or next shot" }
+            "shotSize": {
+                "label": "Shot size",
+                "placeholder": "Close-up / medium shot / full shot / wide shot"
+            },
+            "cameraAngle": {
+                "label": "Camera angle",
+                "placeholder": "Eye level, high angle, rear side"
+            },
+            "composition": {
+                "label": "Composition",
+                "placeholder": "Subject on the left, space reserved for gaze near the door"
+            },
+            "characterBlocking": {
+                "label": "Character blocking",
+                "placeholder": "Heroine in foreground right, hero by the door"
+            },
+            "gazeDirection": {
+                "label": "Gaze and screen direction",
+                "placeholder": "Heroine looks screen left, keeps moving right"
+            },
+            "axisRule": {
+                "label": "Axis rule",
+                "placeholder": "Keep characters on the same side of the line, don't cross the axis"
+            },
+            "actionStart": {
+                "label": "Action start state",
+                "placeholder": "What the character is doing when the shot begins"
+            },
+            "actionEnd": {
+                "label": "Action end state",
+                "placeholder": "Where the action stops at the end, and what state it leaves for the next shot"
+            },
+            "continuityNotes": {
+                "label": "Adjacent shot notes",
+                "placeholder": "Details that must stay consistent with the previous or next shot"
+            }
         },
         "dialogue": {
             "title": "Dialogue (verbatim)",
@@ -225,7 +325,10 @@
             "uploadFailed": "Storyboard image upload failed",
             "title": "Storyboard Frames",
             "hint": "Missing frames are auto-filled when generating the shot; upload to override",
-            "modes": { "single": "Single frame", "firstLast": "First/last frame" },
+            "modes": {
+                "single": "Single frame",
+                "firstLast": "First/last frame"
+            },
             "uploadAria": "Upload {title}",
             "replaceButton": "Replace",
             "uploadButton": "Upload",
@@ -252,7 +355,19 @@
         "durationLabel": "Duration",
         "noPromptYet": "No visual prompt generated yet",
         "dialoguePrefix": "Dialogue: {text}",
-        "narrationPrefix": "Narration: {text}"
+        "narrationPrefix": "Narration: {text}",
+        "shotFactsPlaceholder": "Only write actions and character states that actually happen on screen",
+        "narrationPlaceholder": "Leave empty if there is no narration",
+        "endFrameTag": "End frame",
+        "startFrameFileSuffix": "start-frame",
+        "endFrameFileSuffix": "end-frame",
+        "endFrameLogSuffix": "end frame",
+        "endFrameNoUrl": "End-frame image has no persistable URL",
+        "imageNoUrl": "Storyboard image has no persistable URL",
+        "endFrameGenerateFailed": "Failed to generate end-frame image",
+        "imageGenerateFailed": "Failed to generate storyboard image",
+        "endFrameTaskCreateFailed": "Failed to create end-frame task",
+        "imageTaskCreateFailed": "Failed to create storyboard task"
     },
     "render": {
         "needReviewHint": "Please confirm shots in \"{stage}\" first, then generate the full visual plan.",
@@ -293,7 +408,11 @@
         },
         "review": {
             "title": "Storyboard Visual Review",
-            "status": { "passed": "Passed", "needsRevision": "Needs revision", "pending": "Incomplete" },
+            "status": {
+                "passed": "Passed",
+                "needsRevision": "Needs revision",
+                "pending": "Incomplete"
+            },
             "scoreValue": "{score} pts",
             "retryButton": "Retry flagged shots",
             "correctionPrefix": "Suggestion: {correction}"
@@ -301,7 +420,12 @@
         "audioUnavailableHint": "Voiceover is currently unavailable: no default audio model is configured in the admin console. Video shot generation and full episode rendering are unaffected.",
         "task": {
             "title": "Final Render",
-            "status": { "success": "Final video generated", "error": "Render failed", "cancelled": "Render cancelled", "inProgress": "Transcoding, stitching, and burning in subtitles…" },
+            "status": {
+                "success": "Final video generated",
+                "error": "Render failed",
+                "cancelled": "Render cancelled",
+                "inProgress": "Transcoding, stitching, and burning in subtitles…"
+            },
             "cancelButton": "Cancel render",
             "downloadLink": "Download final episode video"
         },
@@ -350,7 +474,9 @@
             "exported": "Jianying draft exported",
             "exportFailed": "Jianying draft export failed"
         },
-        "subtitle": { "title": "Subtitle Timeline" }
+        "subtitle": {
+            "title": "Subtitle Timeline"
+        }
     },
     "agent": {
         "openMobileAria": "Open drama project Agent",
@@ -417,7 +543,11 @@
             "fallbackExample": "Key asset"
         },
         "requestFailed": "Project Agent request failed, please try again later.",
-        "downloadFallback": { "video": "Generated video", "image": "Generated image" }
+        "downloadFallback": {
+            "video": "Generated video",
+            "image": "Generated image"
+        },
+        "conversationTitle": "{title} Agent"
     },
     "store": {
         "loginRequired": "Please sign in first",
@@ -425,7 +555,12 @@
         "projectLoadFailed": "Failed to load drama project",
         "projectSaveFailed": "Failed to save drama project",
         "episodeTitleTemplate": "Episode {n}",
-        "paragraphBoundary": "Paragraph boundary"
+        "paragraphBoundary": "Paragraph boundary",
+        "contextSeparator": ", ",
+        "defaultImagePrompt": "{context}, consistent characters and art style, cinematic storyboard frame",
+        "defaultVideoPrompt": "{context}, natural camera motion, continuous character action, maintain character consistency",
+        "defaultCameraMotion": "Natural camera motion",
+        "defaultNegativePrompt": "text, watermark, character identity drift, costume change, deformed limbs"
     },
     "shared": {
         "collapse": "Collapse",

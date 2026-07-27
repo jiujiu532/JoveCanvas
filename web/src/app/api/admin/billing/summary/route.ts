@@ -24,6 +24,6 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin billing summary failed", error);
-        return NextResponse.json({ error: "获取财务钱包摘要失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.walletSummaryFailed") }, { status: 500 });
     }
 }

@@ -4,7 +4,29 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { CreativeAsset, CreativeMessage } from "@/lib/creative-runtime-contract";
 
+import workspaceMessages from "../../../../../messages/zh/workspace.json";
 import { CreativeMessages } from "./creative-messages";
+
+function readNested(dict: unknown, key: string): string | undefined {
+    let current: unknown = dict;
+    for (const part of key.split(".")) {
+        if (typeof current !== "object" || current === null) return undefined;
+        current = (current as Record<string, unknown>)[part];
+    }
+    return typeof current === "string" ? current : undefined;
+}
+
+// 组件通过 useTranslations 读取 workspace 命名空间；用 zh 字典 mock 保证断言中文文案稳定。
+vi.mock("next-intl", () => ({
+    useTranslations: (namespace?: string) => (key: string, params?: Record<string, string | number>) => {
+        const fullKey = namespace ? `${namespace}.${key}` : key;
+        const stripped = fullKey.startsWith("workspace.") ? fullKey.slice("workspace.".length) : fullKey;
+        const template = readNested(workspaceMessages, stripped) ?? key;
+        if (!params) return template;
+        return template.replace(/\{(\w+)\}/g, (matched, name: string) => (name in params ? String(params[name]) : matched));
+    },
+    useLocale: () => "zh",
+}));
 
 describe("CreativeMessages", () => {
     it("keeps generated media compact without cropping it", () => {

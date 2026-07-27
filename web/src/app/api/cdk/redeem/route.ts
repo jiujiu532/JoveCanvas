@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const limit = await checkRateLimit(`cdk-redeem:${currentUser.id}:${getClientIp(request)}`, { maxRequests: 10, windowMs: 15 * 60 * 1000 });
-    if (!limit.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "兑换请求" }), retryAfter: Math.ceil((limit.resetAt - Date.now()) / 1000) }, { status: 429 });
+    if (!limit.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.redeem") }), retryAfter: Math.ceil((limit.resetAt - Date.now()) / 1000) }, { status: 429 });
 
     try {
         const body = await readJsonBody<{ code?: string }>(request);
@@ -37,6 +37,6 @@ export async function POST(request: Request) {
         });
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Redeem CDK failed", error);
-        return NextResponse.json({ error: "兑换失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.redeemFailed") }, { status: 500 });
     }
 }

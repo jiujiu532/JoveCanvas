@@ -23,28 +23,28 @@ export async function GET(request: Request, context: RouteContext) {
 
     const { path } = await context.params;
     const rate = await checkLocalMediaRateLimit(`user:${currentUser.id}`, request);
-    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "媒体访问" }) }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.mediaAccess") }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const root = resolve(getServerDataDir(), "generation-assets");
     const filePath = resolve(root, ...(path || []));
-    if (!isInsideRoot(filePath, root)) return NextResponse.json({ error: "资源不存在" }, { status: 404 });
+    if (!isInsideRoot(filePath, root)) return NextResponse.json({ error: await serverMessage("common.resourceNotFound") }, { status: 404 });
     const assetUrl = `/api/generation-log-assets/${(path || []).join("/")}`;
-    if (!(await canAccessGenerationAsset(currentUser.id, currentUser.role, assetUrl))) return NextResponse.json({ error: "资源不存在" }, { status: 404 });
+    if (!(await canAccessGenerationAsset(currentUser.id, currentUser.role, assetUrl))) return NextResponse.json({ error: await serverMessage("common.resourceNotFound") }, { status: 404 });
 
     const registration = await getLocalMediaRegistration((path || []).join("/"));
     if (registration?.storageProvider === "object") {
         try {
             const externalUrl = await createExternalMediaReadUrl(request, registration);
-            return externalUrl ? externalMediaRedirect(externalUrl) : NextResponse.json({ error: "资源不存在" }, { status: 404 });
+            return externalUrl ? externalMediaRedirect(externalUrl) : NextResponse.json({ error: await serverMessage("common.resourceNotFound") }, { status: 404 });
         } catch (error) {
             console.error("Generation object storage read failed", error);
-            return NextResponse.json({ error: "外部存储文件读取失败" }, { status: 502 });
+            return NextResponse.json({ error: await serverMessage("media.externalReadFailed") }, { status: 502 });
         }
     }
     return (
         (await createLocalMediaResponse(request, filePath, contentType(filePath), {
             "Cache-Control": "private, max-age=3600",
             "Content-Disposition": mediaContentDisposition("inline", registration?.originalName || path.at(-1) || "media"),
-        })) || NextResponse.json({ error: "资源不存在" }, { status: 404 })
+        })) || NextResponse.json({ error: await serverMessage("common.resourceNotFound") }, { status: 404 })
     );
 }
 

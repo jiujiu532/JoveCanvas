@@ -46,7 +46,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         });
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Update CDK failed", error);
-        return NextResponse.json({ error: "更新 CDK 失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.cdkUpdateFailed") }, { status: 500 });
     }
 }
 
@@ -75,6 +75,6 @@ export async function DELETE(request: Request, context: RouteContext) {
         });
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Delete CDK failed", error);
-        return NextResponse.json({ error: "删除 CDK 失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.cdkDeleteFailed") }, { status: 500 });
     }
 }

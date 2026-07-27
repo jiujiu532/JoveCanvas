@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin list billing orders failed", error);
-        return NextResponse.json({ error: "获取订单失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.getOrderFailed") }, { status: 500 });
     }
 }
 

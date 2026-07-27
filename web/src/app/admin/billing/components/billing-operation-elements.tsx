@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { App, Button, DatePicker, Form, Input, InputNumber, Modal, Select, Segmented, Space, Switch, Table, Tag } from "antd";
 import type { TableColumnsType } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
@@ -13,20 +14,21 @@ import type { BillingOrder, BillingOrderStatus, BillingProduct } from "@/service
 import { BillingReconciliationImport } from "./billing-reconciliation-import";
 
 export function ReconciliationPanel({ reconciliationIssues, summary, onImport }: { reconciliationIssues: number; summary: BillingSummary | null; onImport: () => void }) {
+    const t = useTranslations("admin");
     return (
         <div className="rounded-lg border border-stone-200 bg-stone-50/70 p-4 dark:border-stone-800 dark:bg-stone-900/40">
             <div className="flex items-center justify-between gap-3">
-                <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">对账检查</div>
-                <Tag color={reconciliationIssues ? "red" : "green"}>{reconciliationIssues ? "需处理" : "正常"}</Tag>
+                <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("billingOps.elements.reconciliationTitle")}</div>
+                <Tag color={reconciliationIssues ? "red" : "green"}>{reconciliationIssues ? t("billingOps.elements.needsAction") : t("billingOps.elements.normal")}</Tag>
             </div>
             <div className="mt-3 space-y-2 text-sm text-stone-600 dark:text-stone-300">
-                <CheckLine label="已支付但缺少成功流水" value={summary?.reconciliation.paidOrdersWithoutSucceededPayment || 0} />
-                <CheckLine label="成功流水未对应已支付订单" value={summary?.reconciliation.succeededPaymentsWithoutPaidOrder || 0} />
-                <CheckLine label="流水金额与订单金额不一致" value={summary?.reconciliation.amountMismatchPayments || 0} />
+                <CheckLine label={t("billingOps.elements.paidWithoutPayment")} value={summary?.reconciliation.paidOrdersWithoutSucceededPayment || 0} />
+                <CheckLine label={t("billingOps.elements.paymentWithoutOrder")} value={summary?.reconciliation.succeededPaymentsWithoutPaidOrder || 0} />
+                <CheckLine label={t("billingOps.elements.amountMismatch")} value={summary?.reconciliation.amountMismatchPayments || 0} />
             </div>
             <div className="mt-4 border-t border-stone-200 pt-3 dark:border-stone-800">
                 <Button className="w-full" icon={<FileUp className="size-4" />} onClick={onImport}>
-                    导入支付商账单
+                    {t("billingOps.elements.importStatement")}
                 </Button>
             </div>
         </div>
@@ -34,11 +36,12 @@ export function ReconciliationPanel({ reconciliationIssues, summary, onImport }:
 }
 
 export function ActiveProductsPanel({ activeProducts }: { activeProducts: BillingProduct[] }) {
+    const t = useTranslations("admin");
     return (
         <div className="rounded-lg border border-stone-200 bg-stone-50/70 p-4 dark:border-stone-800 dark:bg-stone-900/40">
             <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-stone-950 dark:text-stone-100">
                 <Package className="size-4" />
-                在售商品
+                {t("billingOps.elements.activeProducts")}
             </div>
             <div className="space-y-2">
                 {activeProducts.length ? (
@@ -52,12 +55,15 @@ export function ActiveProductsPanel({ activeProducts }: { activeProducts: Billin
                                 <Tag color="green">{formatMoney(product.amountCents, product.currency)}</Tag>
                             </div>
                             <div className="mt-2 text-xs text-stone-500 dark:text-stone-400">
-                                {product.pointsAmount} 积分 / {product.periodDays ? `${product.periodDays} 天` : "长期"}
+                                {t("billingOps.elements.pointsWithPeriod", {
+                                    points: product.pointsAmount,
+                                    period: product.periodDays ? t("billingOps.table.days", { count: product.periodDays }) : t("billingOps.table.longTerm"),
+                                })}
                             </div>
                         </div>
                     ))
                 ) : (
-                    <div className="rounded-md border border-dashed border-stone-200 px-3 py-6 text-center text-sm text-stone-500 dark:border-stone-800 dark:text-stone-400">暂无在售商品</div>
+                    <div className="rounded-md border border-dashed border-stone-200 px-3 py-6 text-center text-sm text-stone-500 dark:border-stone-800 dark:text-stone-400">{t("billingOps.elements.noActiveProducts")}</div>
                 )}
             </div>
         </div>
@@ -74,6 +80,7 @@ export function ProductFact({ label, value }: { label: string; value: string }) 
 }
 
 export function PaymentConfigPanel({ paymentConfig, loading, embedded, onRefresh, onCopy }: { paymentConfig: PaymentConfigSummary | null; loading: boolean; embedded?: boolean; onRefresh: () => Promise<void> | void; onCopy: (value: string) => void }) {
+    const t = useTranslations("admin");
     const { message } = App.useApp();
     const [form] = Form.useForm<Record<string, string | boolean>>();
     const providers = paymentConfig?.providers || [];
@@ -107,11 +114,11 @@ export function PaymentConfigPanel({ paymentConfig, loading, embedded, onRefresh
                 body: JSON.stringify({ providerId: activeProvider.id, enabled: value.enabled === true, values: fieldValues }),
             });
             const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-            if (!response.ok) throw new Error(payload?.error || "保存支付配置失败");
-            message.success("支付配置已保存");
+            if (!response.ok) throw new Error(payload?.error || t("billingOps.elements.savePaymentConfigFailed"));
+            message.success(t("billingOps.elements.paymentConfigSaved"));
             await onRefresh();
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "保存支付配置失败");
+            message.error(error instanceof Error ? error.message : t("billingOps.elements.savePaymentConfigFailed"));
         } finally {
             setSaving(false);
         }
@@ -138,25 +145,27 @@ export function PaymentConfigPanel({ paymentConfig, loading, embedded, onRefresh
         >
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1.5 border-b border-stone-200 px-3 py-3 sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-5 sm:py-5 dark:border-stone-800">
                 <div className="contents sm:block sm:min-w-0">
-                    <h2 className="min-w-0 truncate text-base font-semibold tracking-normal text-stone-950 sm:text-xl dark:text-stone-100">支付渠道配置</h2>
-                    <div className="col-span-2 line-clamp-2 text-xs leading-5 text-stone-500 sm:mt-1 sm:block sm:text-sm sm:leading-6 dark:text-stone-400">每个渠道独立保存。下单接口、密钥、回调验签、返回地址和字段映射都可以在这里配置。</div>
+                    <h2 className="min-w-0 truncate text-base font-semibold tracking-normal text-stone-950 sm:text-xl dark:text-stone-100">{t("billingOps.elements.paymentConfigTitle")}</h2>
+                    <div className="col-span-2 line-clamp-2 text-xs leading-5 text-stone-500 sm:mt-1 sm:block sm:text-sm sm:leading-6 dark:text-stone-400">{t("billingOps.elements.paymentConfigDesc")}</div>
                 </div>
                 <div className="col-start-2 row-start-1 flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-                    <Tag className="m-0 hidden sm:inline-flex">{paymentConfig?.readyProviders || 0} 个真实支付可用</Tag>
-                    <Button aria-label="刷新支付状态" title="刷新支付状态" icon={<RefreshCw className="size-4" />} loading={loading} onClick={() => void onRefresh()}>
-                        <span className="hidden sm:inline">刷新状态</span>
+                    <Tag className="m-0 hidden sm:inline-flex">{t("billingOps.elements.readyProvidersCount", { count: paymentConfig?.readyProviders || 0 })}</Tag>
+                    <Button aria-label={t("billingOps.elements.refreshPaymentStatus")} title={t("billingOps.elements.refreshPaymentStatus")} icon={<RefreshCw className="size-4" />} loading={loading} onClick={() => void onRefresh()}>
+                        <span className="hidden sm:inline">{t("billingOps.elements.refreshStatus")}</span>
                     </Button>
                 </div>
             </div>
             <div className="grid gap-3 bg-stone-50/70 p-3 sm:gap-5 sm:p-5 xl:grid-cols-[300px_minmax(0,1fr)] dark:bg-stone-950/45">
                 <aside className="space-y-3">
                     <div className="rounded-xl border border-stone-200/80 bg-white p-2.5 sm:rounded-3xl sm:p-3 dark:border-stone-800 dark:bg-stone-900/60">
-                        <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-400">支付渠道</div>
+                        <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-400">{t("billingOps.elements.paymentChannels")}</div>
                         <div className="grid grid-cols-2 gap-1.5 sm:block sm:space-y-2">
                             {providers.map((provider) => (
                                 <PaymentProviderCard key={provider.id} provider={provider} active={provider.id === activeProvider?.id} onSelect={() => setActiveProviderId(provider.id)} />
                             ))}
-                            {!providers.length ? <div className="rounded-xl border border-dashed border-stone-200 px-3 py-10 text-center text-sm text-stone-500 dark:border-stone-800 dark:text-stone-400">支付配置状态加载中</div> : null}
+                            {!providers.length ? (
+                                <div className="rounded-xl border border-dashed border-stone-200 px-3 py-10 text-center text-sm text-stone-500 dark:border-stone-800 dark:text-stone-400">{t("billingOps.elements.paymentConfigLoading")}</div>
+                            ) : null}
                         </div>
                     </div>
                 </aside>
@@ -172,25 +181,33 @@ export function PaymentConfigPanel({ paymentConfig, loading, embedded, onRefresh
                                         <div className="flex flex-wrap items-center gap-2">
                                             <h3 className="text-xl font-semibold tracking-normal text-stone-950 sm:text-2xl dark:text-stone-100">{activeProvider.name}</h3>
                                             <Tag className="m-0" color={activeProvider.ready ? "green" : activeProvider.checkoutReady ? "gold" : "default"}>
-                                                {activeProvider.ready ? "可用" : activeProvider.checkoutReady ? "待回调" : "待配置"}
+                                                {activeProvider.ready ? t("billingOps.elements.ready") : activeProvider.checkoutReady ? t("billingOps.elements.awaitingWebhook") : t("billingOps.elements.awaitingConfig")}
                                             </Tag>
                                             <Tag className="m-0">{activeProvider.sourceLabel}</Tag>
                                         </div>
                                         <div className="mt-1 line-clamp-2 max-w-3xl text-xs leading-5 text-stone-500 sm:mt-2 sm:line-clamp-none sm:text-sm sm:leading-6 dark:text-stone-400">{activeProvider.description}</div>
                                         <div className="mt-3 flex flex-wrap gap-2 text-xs text-stone-500 dark:text-stone-400">
                                             <span className="rounded-full bg-stone-100 px-2.5 py-1 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
-                                                必填 {requiredReady}/{requiredFields.length}
+                                                {t("billingOps.elements.requiredProgress", { ready: requiredReady, total: requiredFields.length })}
                                             </span>
-                                            <span className="rounded-full bg-stone-100 px-2.5 py-1 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">下单：{activeProvider.checkoutReady ? "已配置" : "待配置"}</span>
                                             <span className="rounded-full bg-stone-100 px-2.5 py-1 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
-                                                回调：{activeProvider.webhookOptional ? "可选" : activeProvider.webhookReady ? "已配置" : "待配置"}
+                                                {activeProvider.checkoutReady ? t("billingOps.elements.checkoutConfigured") : t("billingOps.elements.checkoutPending")}
+                                            </span>
+                                            <span className="rounded-full bg-stone-100 px-2.5 py-1 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
+                                                {activeProvider.webhookOptional ? t("billingOps.elements.webhookOptional") : activeProvider.webhookReady ? t("billingOps.elements.webhookConfigured") : t("billingOps.elements.webhookPending")}
                                             </span>
                                         </div>
                                     </div>
                                     <div className="flex shrink-0 flex-wrap items-center gap-3">
-                                        <Switch disabled={activeProvider.id === "manual"} checked={formEnabled} checkedChildren="启用" unCheckedChildren="关闭" onChange={(checked) => form.setFieldValue("enabled", checked)} />
+                                        <Switch
+                                            disabled={activeProvider.id === "manual"}
+                                            checked={formEnabled}
+                                            checkedChildren={t("billingOps.elements.enabled")}
+                                            unCheckedChildren={t("billingOps.elements.disabled")}
+                                            onChange={(checked) => form.setFieldValue("enabled", checked)}
+                                        />
                                         <Button type="primary" htmlType="submit" icon={<Save className="size-4" />} loading={saving} className="!text-white">
-                                            保存
+                                            {t("billingOps.elements.save")}
                                         </Button>
                                     </div>
                                 </div>
@@ -200,32 +217,32 @@ export function PaymentConfigPanel({ paymentConfig, loading, embedded, onRefresh
                                     <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
                                         <div className="flex shrink-0 items-center gap-2 text-sm font-semibold text-stone-950 dark:text-stone-100">
                                             <Copy className="size-4 text-stone-500 dark:text-stone-400" />
-                                            系统回调地址
+                                            {t("billingOps.elements.systemWebhookUrl")}
                                         </div>
                                         <div className="min-w-0 flex-1 truncate rounded-xl bg-stone-50 px-3 py-2 font-mono text-xs leading-5 text-stone-700 ring-1 ring-stone-200 dark:bg-stone-900 dark:text-stone-200 dark:ring-stone-800">
                                             {activeProvider.webhookUrl}
                                         </div>
                                         <Button className="!h-9 shrink-0 justify-center" size="small" icon={<Copy className="size-3.5" />} onClick={() => onCopy(activeProvider.webhookUrl)}>
-                                            复制
+                                            {t("billingOps.elements.copy")}
                                         </Button>
                                     </div>
                                     <div className="mt-4 border-t border-stone-200/80 pt-4 dark:border-stone-800">
                                         <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-stone-950 dark:text-stone-100">
                                             <Settings2 className="size-4" />
-                                            必填检查
+                                            {t("billingOps.elements.requiredCheck")}
                                         </div>
                                         <RequirementGrid checkout={activeProvider.checkoutRequirements} webhook={activeProvider.webhookRequirements} webhookOptional={activeProvider.webhookOptional} />
                                     </div>
                                 </div>
                             </div>
                             <div className="space-y-3 p-3 sm:space-y-5 sm:p-5">
-                                <PaymentFieldSection title="基础配置" description="这里是启用该渠道最常用的字段，包含下单地址、商户号、接口密钥和请求方式。">
+                                <PaymentFieldSection title={t("billingOps.elements.basicConfig")} description={t("billingOps.elements.basicConfigDesc")}>
                                     {sortedMainFields.map((field) => (
                                         <PaymentConfigFieldControl key={field.key} field={field} providerEnabled={formEnabled} />
                                     ))}
                                 </PaymentFieldSection>
                                 {routeFields.length ? (
-                                    <PaymentFieldSection title="回调与返回" description="外部支付平台需要填写回调地址时，用上方系统回调地址；这里可覆盖同步返回、取消返回和通知地址。">
+                                    <PaymentFieldSection title={t("billingOps.elements.routeConfig")} description={t("billingOps.elements.routeConfigDesc")}>
                                         {sortedRouteFields.map((field) => (
                                             <PaymentConfigFieldControl key={field.key} field={field} providerEnabled={formEnabled} />
                                         ))}
@@ -239,10 +256,10 @@ export function PaymentConfigPanel({ paymentConfig, loading, embedded, onRefresh
                                             onClick={() => setAdvancedOpen((value) => !value)}
                                         >
                                             <span>
-                                                <span className="block text-base font-semibold text-stone-950 dark:text-stone-100">高级字段映射</span>
-                                                <span className="mt-1 block text-xs leading-5 text-stone-500 dark:text-stone-400">支付商字段映射、额外请求头、请求体模板和高级回调设置，不确定时可以先保持为空。</span>
+                                                <span className="block text-base font-semibold text-stone-950 dark:text-stone-100">{t("billingOps.elements.advancedMapping")}</span>
+                                                <span className="mt-1 block text-xs leading-5 text-stone-500 dark:text-stone-400">{t("billingOps.elements.advancedMappingDesc")}</span>
                                             </span>
-                                            <Tag className="m-0">{advancedOpen ? "收起" : `${advancedFields.length} 项`}</Tag>
+                                            <Tag className="m-0">{advancedOpen ? t("billingOps.elements.collapse") : t("billingOps.elements.itemCount", { count: advancedFields.length })}</Tag>
                                         </button>
                                         {advancedOpen ? (
                                             <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3">
@@ -255,9 +272,9 @@ export function PaymentConfigPanel({ paymentConfig, loading, embedded, onRefresh
                                 ) : null}
                             </div>
                             <div className="mx-5 mb-5 flex flex-col-reverse gap-3 border-t border-stone-200/80 pt-4 sm:flex-row sm:items-center sm:justify-between dark:border-stone-800">
-                                <div className="text-xs leading-5 text-stone-500 dark:text-stone-400">密钥留空表示保留原值；需要清空密钥时请关闭该渠道或覆盖保存新的值。</div>
+                                <div className="text-xs leading-5 text-stone-500 dark:text-stone-400">{t("billingOps.elements.secretKeepHint")}</div>
                                 <Button type="primary" htmlType="submit" icon={<Save className="size-4" />} loading={saving} className="!text-white">
-                                    保存支付配置
+                                    {t("billingOps.elements.savePaymentConfig")}
                                 </Button>
                             </div>
                         </div>
@@ -269,6 +286,7 @@ export function PaymentConfigPanel({ paymentConfig, loading, embedded, onRefresh
 }
 
 export function PaymentProviderCard({ provider, active, onSelect }: { provider: PaymentProviderConfig; active: boolean; onSelect: () => void }) {
+    const t = useTranslations("admin");
     const Icon = providerIcon(provider.id);
     return (
         <button
@@ -289,7 +307,7 @@ export function PaymentProviderCard({ provider, active, onSelect }: { provider: 
                             <div className="mt-1 hidden truncate text-xs text-stone-500 sm:block dark:text-stone-400">{provider.sourceLabel}</div>
                         </div>
                         <Tag className="m-0 shrink-0 !px-1 !text-[10px] sm:!px-[7px] sm:!text-xs" color={provider.ready ? "green" : provider.checkoutReady ? "gold" : "default"}>
-                            {provider.ready ? "可用" : provider.checkoutReady ? "待回调" : "待配置"}
+                            {provider.ready ? t("billingOps.elements.ready") : provider.checkoutReady ? t("billingOps.elements.awaitingWebhook") : t("billingOps.elements.awaitingConfig")}
                         </Tag>
                     </div>
                     <div className="mt-2 grid grid-cols-3 gap-1 sm:mt-3 sm:gap-1.5">
@@ -325,11 +343,12 @@ export function isWidePaymentField(field: PaymentProviderConfigField) {
 }
 
 export function PaymentConfigFieldControl({ field, providerEnabled }: { field: PaymentProviderConfigField & { configured: boolean; value?: string; sourceLabel: string }; providerEnabled: boolean }) {
+    const t = useTranslations("admin");
     const rules = [
         {
             validator: (_: unknown, value: unknown) => {
                 if (!providerEnabled || !field.required || field.configured || normalizePaymentFormValue(value)) return Promise.resolve();
-                return Promise.reject(new Error(`请填写${field.label}`));
+                return Promise.reject(new Error(t("billingOps.elements.fillField", { label: field.label })));
             },
         },
     ];
@@ -342,9 +361,9 @@ export function PaymentConfigFieldControl({ field, providerEnabled }: { field: P
                 {field.kind === "select" ? (
                     <Select className={inputClassName} options={field.options || []} placeholder={field.placeholder} />
                 ) : field.kind === "textarea" ? (
-                    <Input.TextArea className="admin-payment-textarea" rows={field.secret ? 5 : 4} maxLength={20_000} placeholder={field.configured && field.secret ? "已配置，留空不修改" : field.placeholder} />
+                    <Input.TextArea className="admin-payment-textarea" rows={field.secret ? 5 : 4} maxLength={20_000} placeholder={field.configured && field.secret ? t("billingOps.elements.secretConfiguredPlaceholder") : field.placeholder} />
                 ) : field.kind === "secret" ? (
-                    <Input.Password className={inputClassName} autoComplete="new-password" placeholder={field.configured ? "已配置，留空不修改" : field.placeholder} />
+                    <Input.Password className={inputClassName} autoComplete="new-password" placeholder={field.configured ? t("billingOps.elements.secretConfiguredPlaceholder") : field.placeholder} />
                 ) : (
                     <Input className={inputClassName} maxLength={2000} placeholder={field.placeholder} />
                 )}
@@ -355,6 +374,7 @@ export function PaymentConfigFieldControl({ field, providerEnabled }: { field: P
 }
 
 export function PaymentFieldHeader({ field }: { field: PaymentProviderConfigField & { configured: boolean; sourceLabel: string } }) {
+    const t = useTranslations("admin");
     return (
         <div className="flex min-w-0 items-center justify-between gap-2">
             <div className="min-w-0">
@@ -362,9 +382,9 @@ export function PaymentFieldHeader({ field }: { field: PaymentProviderConfigFiel
                 {field.configured ? <div className="mt-0.5 text-xs text-stone-400 dark:text-stone-500">{field.sourceLabel}</div> : null}
             </div>
             <div className="flex shrink-0 flex-wrap justify-end gap-1">
-                {field.required ? <Tag className="m-0">必填</Tag> : null}
+                {field.required ? <Tag className="m-0">{t("billingOps.elements.required")}</Tag> : null}
                 <Tag className="m-0" color={field.configured ? "green" : "default"}>
-                    {field.configured ? "已配置" : "未配置"}
+                    {field.configured ? t("billingOps.elements.configured") : t("billingOps.elements.notConfigured")}
                 </Tag>
             </div>
         </div>
@@ -372,9 +392,14 @@ export function PaymentFieldHeader({ field }: { field: PaymentProviderConfigFiel
 }
 
 export function RequirementGrid({ checkout, webhook, webhookOptional }: { checkout: PaymentConfigRequirement[]; webhook: PaymentConfigRequirement[]; webhookOptional?: boolean }) {
-    const items = [...checkout.map((item) => ({ ...item, group: "下单" })), ...webhook.map((item) => ({ ...item, group: "回调" }))];
+    const t = useTranslations("admin");
+    const items = [...checkout.map((item) => ({ ...item, group: t("billingOps.elements.groupCheckout") })), ...webhook.map((item) => ({ ...item, group: t("billingOps.elements.groupWebhook") }))];
     if (!items.length) {
-        return <div className="rounded-md border border-dashed border-stone-200 px-3 py-3 text-sm text-stone-500 dark:border-stone-800 dark:text-stone-400">{webhookOptional ? "该渠道无需强制回调配置" : "暂无必填变量"}</div>;
+        return (
+            <div className="rounded-md border border-dashed border-stone-200 px-3 py-3 text-sm text-stone-500 dark:border-stone-800 dark:text-stone-400">
+                {webhookOptional ? t("billingOps.elements.webhookNotRequired") : t("billingOps.elements.noRequiredVars")}
+            </div>
+        );
     }
     return (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,180px),1fr))] gap-2">
@@ -383,7 +408,7 @@ export function RequirementGrid({ checkout, webhook, webhookOptional }: { checko
                     <div className="flex items-center justify-between gap-2">
                         <span className="truncate text-xs text-stone-500 dark:text-stone-400">{item.group}</span>
                         <Tag className="m-0" color={item.configured ? "green" : "gold"}>
-                            {item.configured ? "已设置" : "待设置"}
+                            {item.configured ? t("billingOps.elements.setDone") : t("billingOps.elements.setPending")}
                         </Tag>
                     </div>
                     <div className="mt-1 truncate text-sm font-semibold text-stone-950 dark:text-stone-100">{item.label}</div>
@@ -405,12 +430,12 @@ export function normalizePaymentFormValue(value: unknown) {
     return typeof value === "string" ? value.trim() : value === null || value === undefined ? "" : String(value).trim();
 }
 
-export async function copyText(value: string, message: { success: (content: string) => void; error: (content: string) => void }) {
+export async function copyText(value: string, message: { success: (content: string) => void; error: (content: string) => void }, labels?: { copied: string; copyFailed: string }) {
     try {
         await navigator.clipboard.writeText(value);
-        message.success("已复制");
+        message.success(labels?.copied || "已复制");
     } catch {
-        message.error("复制失败");
+        message.error(labels?.copyFailed || "复制失败");
     }
 }
 
@@ -443,13 +468,13 @@ export function metricTone(tone: "emerald" | "amber" | "blue" | "rose" | "slate"
     return "bg-stone-100 text-stone-700 dark:bg-stone-900 dark:text-stone-200";
 }
 
-export function statusLabel(status: BillingOrderStatus) {
-    if (status === "pending") return "待支付";
-    if (status === "paid") return "已支付";
-    if (status === "refunding") return "退款处理中";
-    if (status === "closed") return "已关闭";
-    if (status === "canceled") return "已取消";
-    return "已退款";
+export function statusLabel(status: BillingOrderStatus, t?: (key: string) => string) {
+    if (status === "pending") return t ? t("billingOps.status.pending") : "待支付";
+    if (status === "paid") return t ? t("billingOps.status.paid") : "已支付";
+    if (status === "refunding") return t ? t("billingOps.status.refunding") : "退款处理中";
+    if (status === "closed") return t ? t("billingOps.status.closed") : "已关闭";
+    if (status === "canceled") return t ? t("billingOps.status.canceled") : "已取消";
+    return t ? t("billingOps.status.refunded") : "已退款";
 }
 
 export function statusColor(status: BillingOrderStatus) {
@@ -460,12 +485,12 @@ export function statusColor(status: BillingOrderStatus) {
     return "default";
 }
 
-export function providerLabel(value: string) {
-    if (value === "stripe") return "Stripe";
-    if (value === "alipay") return "支付宝";
-    if (value === "wechat") return "微信支付";
-    if (value === "payply") return "PayPly";
-    if (value === "manual") return "人工确认";
+export function providerLabel(value: string, t?: (key: string) => string) {
+    if (value === "stripe") return t ? t("billingOps.provider.stripe") : "Stripe";
+    if (value === "alipay") return t ? t("billingOps.provider.alipay") : "支付宝";
+    if (value === "wechat") return t ? t("billingOps.provider.wechat") : "微信支付";
+    if (value === "payply") return t ? t("billingOps.provider.payply") : "PayPly";
+    if (value === "manual") return t ? t("billingOps.provider.manual") : "人工确认";
     return value || "-";
 }
 

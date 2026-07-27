@@ -22,7 +22,7 @@ import { linkStoredGenerationTask, type GenerationTaskContext } from "@/lib/serv
 import { registerGenerationTaskAssetsForUser } from "@/lib/server/creative-runtime-service";
 import { createSignedReferenceAssetUrl, signReferenceAssetInputUrl } from "@/lib/server/reference-asset-access";
 import { assertCapabilityConstraints } from "@/lib/server/capability-constraints";
-
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 import {
     type CreateImageTaskBody,
     type ImageApiResponse,
@@ -261,7 +261,7 @@ export async function pollOpenAiImageTask(config: ImageTaskConfig, taskId: strin
         for (const pollUrl of pollUrls) {
             const response = await taskFetch(config, pollUrl, { method: "GET", headers: taskHeaders(config, cookie), cache: "no-store" });
             if (!response.ok) {
-                const message = await readFetchError(response, "图片任务查询失败");
+                const message = await readFetchError(response, await serverMessage("tasks.imageQueryFailed"));
                 lastError = message;
                 if (response.status === 404 || response.status === 405) continue;
                 throw new Error(message);
@@ -581,12 +581,12 @@ export async function imageReferenceToFile(reference: ImageTaskReference, name: 
                 cache: "no-store",
                 signal: AbortSignal.timeout(INLINE_IMAGE_TIMEOUT_MS),
             });
-            if (!response.ok || !response.body) throw new Error("参考图读取失败");
+            if (!response.ok || !response.body) throw new Error(await serverMessage("media.refImageReadFailed"));
             const contentLength = Number(response.headers.get("content-length") || 0);
-            if (contentLength > MAX_INLINE_IMAGE_BYTES) throw new Error("参考图过大，请压缩后重试");
+            if (contentLength > MAX_INLINE_IMAGE_BYTES) throw new Error(await serverMessage("media.refImageTooLarge"));
             const bytes = Buffer.from(await response.arrayBuffer());
-            if (!bytes.length) throw new Error("参考图读取失败");
-            if (bytes.length > MAX_INLINE_IMAGE_BYTES) throw new Error("参考图过大，请压缩后重试");
+            if (!bytes.length) throw new Error(await serverMessage("media.refImageReadFailed"));
+            if (bytes.length > MAX_INLINE_IMAGE_BYTES) throw new Error(await serverMessage("media.refImageTooLarge"));
             const mimeType = response.headers.get("content-type")?.split(";", 1)[0] || reference.type || "image/png";
             if (!mimeType.startsWith("image/")) throw new Error("参考图不是有效图片");
             return new File([bytes], name, { type: mimeType });

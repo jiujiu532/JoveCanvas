@@ -13,9 +13,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const { id, taskId } = await params;
     const run = await getAgentRun(id);
-    if (!run || (run.userId !== user.id && user.role !== "admin")) return NextResponse.json({ code: 404, data: null, msg: "Agent 任务不存在" }, { status: 404 });
+    if (!run || (run.userId !== user.id && user.role !== "admin")) return NextResponse.json({ code: 404, data: null, msg: await serverMessage("tasks.agentNotFound") }, { status: 404 });
     const task = run.tasks.find((item) => item.id === taskId);
-    if (!task || task.status !== "failed") return NextResponse.json({ code: 409, data: null, msg: "只有失败任务可以单独重试" }, { status: 409 });
+    if (!task || task.status !== "failed") return NextResponse.json({ code: 409, data: null, msg: await serverMessage("agent.onlyFailedCanRetry") }, { status: 409 });
     const limit = (await getAuthSettings()).generationConcurrency.agent;
     const tasks = run.tasks.map((item) => {
         if (item.id !== taskId) return item;
@@ -34,9 +34,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const result = await withGenerationConcurrencyLimit(run.userId, "agent", 10 * 60 * 1000, limit, async () => ({
         updated: await updateAgentRunById(run.id, { status: "running", tasks }, { type: "task.retry.requested", data: { taskId } }, [run.status]),
     }));
-    if (result === null) return NextResponse.json({ code: 429, data: null, msg: `当前最多同时运行 ${limit} 个 Agent 任务` }, { status: 429 });
+    if (result === null) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("tasks.agentConcurrencyLimit", { limit }) }, { status: 429 });
     const { updated } = result;
-    if (!updated) return NextResponse.json({ code: 404, data: null, msg: "Agent 任务不存在" }, { status: 404 });
+    if (!updated) return NextResponse.json({ code: 404, data: null, msg: await serverMessage("tasks.agentNotFound") }, { status: 404 });
     after(() => executeAgentRun(updated, resolveInternalOrigin(new URL(request.url).origin), request.headers.get("cookie") || ""));
     return NextResponse.json({ code: 0, data: { run: updated }, msg: "OK" });
 }

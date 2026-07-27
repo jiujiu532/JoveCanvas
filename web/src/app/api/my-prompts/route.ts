@@ -35,6 +35,6 @@ export async function POST(request: Request) {
     } catch (error) {
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Create user prompt failed", error);
-        return NextResponse.json({ error: "新增提示词失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("prompts.createFailed") }, { status: 500 });
     }
 }

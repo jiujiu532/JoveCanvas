@@ -19,7 +19,7 @@ type RouteContext = {
 export async function GET(request: Request, context: RouteContext) {
     const { path } = await context.params;
     const storagePath = path.join("/");
-    if (!isReferenceAssetPath(storagePath)) return NextResponse.json({ error: "媒体文件不存在或已过期" }, { status: 404 });
+    if (!isReferenceAssetPath(storagePath)) return NextResponse.json({ error: await serverMessage("media.notFoundOrExpired") }, { status: 404 });
     const url = new URL(request.url);
     const signature = url.searchParams.get("signature") || "";
     const signed = verifyReferenceAssetSignature(storagePath, url.searchParams.get("expires"), signature);
@@ -31,27 +31,27 @@ export async function GET(request: Request, context: RouteContext) {
         rateIdentity = `user:${currentUser.id}`;
     }
     const rate = await checkLocalMediaRateLimit(rateIdentity, request);
-    if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: "媒体访问" }) }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.mediaAccess") }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const registration = await getLocalMediaRegistration(storagePath);
-    if (!registration) return NextResponse.json({ error: "媒体文件不存在或已过期" }, { status: 404 });
-    if (currentUser && currentUser.role !== "admin" && registration.ownerUserId !== currentUser.id) return NextResponse.json({ code: 404, data: null, msg: "媒体文件不存在" }, { status: 404 });
+    if (!registration) return NextResponse.json({ error: await serverMessage("media.notFoundOrExpired") }, { status: 404 });
+    if (currentUser && currentUser.role !== "admin" && registration.ownerUserId !== currentUser.id) return NextResponse.json({ code: 404, data: null, msg: await serverMessage("media.fileNotFound") }, { status: 404 });
     if (registration.storageProvider === "object") {
         try {
             const externalUrl = await createExternalMediaReadUrl(request, registration);
-            return externalUrl ? externalMediaRedirect(externalUrl) : NextResponse.json({ error: "媒体文件不存在或已过期" }, { status: 404 });
+            return externalUrl ? externalMediaRedirect(externalUrl) : NextResponse.json({ error: await serverMessage("media.notFoundOrExpired") }, { status: 404 });
         } catch (error) {
             console.error("Reference object storage read failed", error);
-            return NextResponse.json({ error: "外部存储文件读取失败" }, { status: 502 });
+            return NextResponse.json({ error: await serverMessage("media.externalReadFailed") }, { status: 502 });
         }
     }
     const asset = await readReferenceAsset(storagePath);
-    if (!asset) return NextResponse.json({ error: "媒体文件不存在或已过期" }, { status: 404 });
+    if (!asset) return NextResponse.json({ error: await serverMessage("media.notFoundOrExpired") }, { status: 404 });
 
     return (
         (await createLocalMediaResponse(request, asset.filePath, asset.mimeType, {
             "Cache-Control": storagePath.startsWith("permanent/") ? "private, max-age=86400" : "private, max-age=300",
             "Content-Disposition": mediaContentDisposition("inline", registration.originalName || path.at(-1) || "media"),
-        })) || NextResponse.json({ error: "媒体文件不存在或已过期" }, { status: 404 })
+        })) || NextResponse.json({ error: await serverMessage("media.notFoundOrExpired") }, { status: 404 })
     );
 }
 

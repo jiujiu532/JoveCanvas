@@ -1,10 +1,31 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { canvasThemes } from "@/lib/canvas-theme";
 import { useThemeStore } from "@/stores/use-theme-store";
+import canvasMessages from "../../../../../messages/zh/canvas.json";
 import { CanvasNodeType, type CanvasNodeData } from "../types";
 import { CanvasNode } from "./canvas-node";
+
+function readNested(dict: unknown, key: string): string | undefined {
+    let current: unknown = dict;
+    for (const part of key.split(".")) {
+        if (typeof current !== "object" || current === null) return undefined;
+        current = (current as Record<string, unknown>)[part];
+    }
+    return typeof current === "string" ? current : undefined;
+}
+
+// 子组件通过 useTranslations("canvas") 取文案；用 zh 字典 mock 避免依赖 NextIntlClientProvider。
+vi.mock("next-intl", () => ({
+    useTranslations: (namespace?: string) => (key: string, params?: Record<string, string | number>) => {
+        const fullKey = namespace && namespace !== "canvas" ? `${namespace}.${key}` : key;
+        const template = readNested(canvasMessages, fullKey) ?? key;
+        if (!params) return template;
+        return template.replace(/\{(\w+)\}/g, (matched, name: string) => (name in params ? String(params[name]) : matched));
+    },
+    useLocale: () => "zh",
+}));
 
 const imageNode: CanvasNodeData = {
     id: "generated-image",

@@ -53,6 +53,6 @@ export async function POST(request: Request, context: RouteContext) {
         });
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin complete billing order failed", error);
-        return NextResponse.json({ error: "确认支付失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.confirmPaymentFailed") }, { status: 500 });
     }
 }

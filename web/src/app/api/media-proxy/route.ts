@@ -24,7 +24,7 @@ async function proxyMedia(request: Request, method: "GET" | "HEAD") {
     const currentUser = await getCurrentUser();
     if (!currentUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const rate = await checkMediaProxyRateLimit(currentUser.id, request);
-    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "媒体访问" }) }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.mediaAccess") }) }, { status: 429, headers: rateLimitHeaders(rate) });
 
     const target = await readTargetUrl(request);
     if (!target) return NextResponse.json({ error: "Invalid media url" }, { status: 400 });

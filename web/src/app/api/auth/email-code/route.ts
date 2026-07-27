@@ -20,10 +20,10 @@ export async function POST(request: Request) {
     try {
         const body = await readJsonBody<{ purpose?: unknown; email?: unknown }>(request);
         const purpose = body.purpose === "email-change" || body.purpose === "password-reset" ? body.purpose : body.purpose === "register" ? body.purpose : null;
-        if (!purpose) return NextResponse.json({ error: "验证码用途不正确" }, { status: 400 });
+        if (!purpose) return NextResponse.json({ error: await serverMessage("auth.codePurposeInvalid") }, { status: 400 });
         const emailKey = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
         const limit = await checkRateLimit(`email-code:${getClientIp(request)}:${purpose}:${emailKey}`, { maxRequests: 5, windowMs: 60 * 60 * 1000 });
-        if (!limit.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: "验证码发送" }), retryAfter: Math.ceil((limit.resetAt - Date.now()) / 1000) }, { status: 429 });
+        if (!limit.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.sendCode") }), retryAfter: Math.ceil((limit.resetAt - Date.now()) / 1000) }, { status: 429 });
 
         const currentUser = await getCurrentUser();
         if (purpose === "email-change" && !currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
@@ -45,6 +45,6 @@ export async function POST(request: Request) {
     } catch (error) {
         if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Send email code failed", error);
-        return NextResponse.json({ error: "发送验证码失败，请稍后重试" }, { status: 400 });
+        return NextResponse.json({ error: await serverMessage("auth.sendCodeFailed") }, { status: 400 });
     }
 }

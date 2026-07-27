@@ -2,6 +2,7 @@
 
 import { Button, Input } from "antd";
 import { ArrowLeft, ArrowRight, BookOpen, Check, FolderPlus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { ClipboardEvent, KeyboardEvent } from "react";
 
 import { clipboardImageFiles } from "@/lib/clipboard-image-files";
@@ -41,6 +42,7 @@ export function WorkbenchPromptEditor({
     onOpenPrompts: () => void;
     onOpenAssets: () => void;
 }) {
+    const t = useTranslations("layout");
     const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
         if (event.key !== "Enter" || event.shiftKey) return;
         event.preventDefault();
@@ -55,13 +57,13 @@ export function WorkbenchPromptEditor({
     return (
         <div className="workbench-prompt-editor order-2">
             <div className="mb-2 flex items-center justify-between gap-3">
-                <span className="sr-only">提示词</span>
+                <span className="sr-only">{t("agent.composer.promptLabel")}</span>
                 <div className="flex gap-2">
                     <Button className="workbench-prompt-action" size="small" icon={<BookOpen className="size-3.5" />} onClick={onOpenPrompts}>
-                        查看提示词库
+                        {t("agent.composer.viewPromptLibrary")}
                     </Button>
                     <Button className="workbench-prompt-action" size="small" icon={<FolderPlus className="size-3.5" />} onClick={onOpenAssets}>
-                        查看我的素材
+                        {t("agent.composer.viewMyAssets")}
                     </Button>
                 </div>
             </div>

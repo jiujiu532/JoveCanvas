@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Image, Modal } from "antd";
 import type { ImageProps } from "antd";
 import { Maximize2, PlayCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { imagePreviewUrl } from "@/lib/media-image-url";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ export function AgentMediaPreview({
     fit?: "cover" | "contain";
     onDimensions?: (width: number, height: number) => void;
 }) {
+    const t = useTranslations("layout");
     const [videoOpen, setVideoOpen] = useState(false);
     const mediaRootRef = useRef<HTMLDivElement>(null);
 
@@ -75,7 +77,7 @@ export function AgentMediaPreview({
                         cover: (
                             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-white">
                                 <Maximize2 className="size-3.5" />
-                                查看大图
+                                {t("agent.media.viewLarge")}
                             </span>
                         ),
                     }}
@@ -87,7 +89,7 @@ export function AgentMediaPreview({
         return (
             <>
                 <div ref={mediaRootRef} className={cn("group/media relative overflow-hidden bg-black text-white", className)}>
-                    <button type="button" className="block size-full" onClick={() => setVideoOpen(true)} aria-label={`打开视频：${title}`}>
+                    <button type="button" className="block size-full" onClick={() => setVideoOpen(true)} aria-label={t("agent.media.openVideo", { title })}>
                         <video src={url} muted playsInline preload="metadata" className="size-full object-cover" />
                         <span className="absolute inset-0 grid place-items-center bg-black/10 transition group-hover/media:bg-black/20">
                             <span className="grid size-11 place-items-center rounded-full bg-black/55 shadow-sm backdrop-blur-sm">

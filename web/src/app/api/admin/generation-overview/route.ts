@@ -16,6 +16,6 @@ export async function GET() {
         return NextResponse.json({ code: 0, data: await getAdminGenerationOverviewSummary(), msg: "OK" });
     } catch (error) {
         console.error("Admin generation overview failed", error);
-        return NextResponse.json({ code: 500, data: null, msg: "获取生成运营摘要失败" }, { status: 500 });
+        return NextResponse.json({ code: 500, data: null, msg: await serverMessage("admin.generationOpsSummaryFailed") }, { status: 500 });
     }
 }

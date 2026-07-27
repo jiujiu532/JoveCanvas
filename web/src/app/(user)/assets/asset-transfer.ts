@@ -49,7 +49,7 @@ export async function readAssetPackage(file: File): Promise<Asset[]> {
     const assetFile = zip.get("assets.json");
     if (!assetFile) throw new Error("missing assets.json");
     const data = JSON.parse(await assetFile.text()) as AssetExportFile;
-    if (data.app !== APP_EXPORT_ID) throw new Error("不是当前应用的素材包");
+    if (data.app !== APP_EXPORT_ID) throw new Error("not an asset package for this app");
     const uploaded = new Map<string, Awaited<ReturnType<typeof uploadImage>> | Awaited<ReturnType<typeof uploadMediaFile>>>();
     await Promise.all(
         data.files.map(async (item) => {

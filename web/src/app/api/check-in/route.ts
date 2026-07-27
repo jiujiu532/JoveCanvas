@@ -10,5 +10,5 @@ export async function POST() {
     const currentUser = await getCurrentUser();
     if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
-    return NextResponse.json({ error: "签到功能已取消，每日免费积分会按套餐自动发放且仅当日有效" }, { status: 410 });
+    return NextResponse.json({ error: await serverMessage("billing.checkInDeprecated") }, { status: 410 });
 }

@@ -1,13 +1,37 @@
 {
     "nav": {
-        "create": { "label": "Create Agent", "description": "Unified creation entry" },
-        "canvas": { "label": "My Canvas", "description": "Node-based multimedia creation" },
-        "drama": { "label": "Drama Projects", "description": "Script, storyboard and final cut" },
-        "image": { "label": "Image Studio", "description": "Image generation and refinement" },
-        "video": { "label": "Video Studio", "description": "Video generation and refinement" },
-        "prompts": { "label": "Prompt Library", "description": "Public prompts" },
-        "my-prompts": { "label": "My Prompts", "description": "Personal prompts" },
-        "assets": { "label": "My Assets", "description": "Images, videos and audio" }
+        "create": {
+            "label": "Create Agent",
+            "description": "Unified creation entry"
+        },
+        "canvas": {
+            "label": "My Canvas",
+            "description": "Node-based multimedia creation"
+        },
+        "drama": {
+            "label": "Drama Projects",
+            "description": "Script, storyboard and final cut"
+        },
+        "image": {
+            "label": "Image Studio",
+            "description": "Image generation and refinement"
+        },
+        "video": {
+            "label": "Video Studio",
+            "description": "Video generation and refinement"
+        },
+        "prompts": {
+            "label": "Prompt Library",
+            "description": "Public prompts"
+        },
+        "my-prompts": {
+            "label": "My Prompts",
+            "description": "Personal prompts"
+        },
+        "assets": {
+            "label": "My Assets",
+            "description": "Images, videos and audio"
+        }
     },
     "navGroup": {
         "create": "Create",
@@ -16,6 +40,7 @@
         "assets": "Assets"
     },
     "helpCenter": "Help Center",
+    "copiedDefault": "Copied",
     "sidebar": {
         "navAria": "Workspace navigation"
     },
@@ -209,7 +234,9 @@
         },
         "media": {
             "viewLarge": "View full size",
-            "openVideo": "Open video: {title}"
+            "openVideo": "Open video: {title}",
+            "generatedImage": "Generated image",
+            "generatedVideo": "Generated video"
         },
         "skills": {
             "chooseTitle": "Choose a creative Skill",
@@ -240,7 +267,9 @@
             "smartPlanningOff": "Smart planning: off",
             "smartShort": "Smart",
             "selectedModelsCount": "{count} models selected",
-            "selectModel": "Choose generation models"
+            "selectModel": "Choose generation models",
+            "smartToggleOnAria": "Smart planning is on, click to turn off",
+            "smartToggleOffAria": "Smart planning is off, click to turn on"
         },
         "header": {
             "historyTitle": "Generation history",
@@ -278,7 +307,10 @@
             "generationParams": "Generation parameters",
             "currentParams": "Current: {summary}",
             "openParamsAria": "Open generation parameters, currently {summary}",
-            "paramsTooltip": "Generation parameters: {summary}"
+            "paramsTooltip": "Generation parameters: {summary}",
+            "promptLabel": "Prompt",
+            "viewPromptLibrary": "Browse prompt library",
+            "viewMyAssets": "Browse my assets"
         },
         "history": {
             "title": "Generation history",
@@ -287,7 +319,8 @@
             "cancelSelect": "Cancel",
             "delete": "Delete",
             "empty": "No generation history yet",
-            "editTitleAria": "Edit record title"
+            "editTitleAria": "Edit record title",
+            "selectResult": "Select generation result"
         },
         "toggler": {
             "switchTheme": "Switch theme"
@@ -319,7 +352,13 @@
         "generationPlaceholder": {
             "imageGenerating": "Image is generating",
             "videoGenerating": "Video is generating",
-            "tasksGenerating": "{count} {kind} tasks are generating"
+            "tasksGenerating": "{count} {kind} tasks are generating",
+            "kindImage": "image",
+            "kindVideo": "video"
+        },
+        "mediaLabel": {
+            "image": "image",
+            "video": "video"
         }
     },
     "myPrompts": {
@@ -377,5 +416,65 @@
         "loadFailed": "Failed to load prompts",
         "useThisPrompt": "Use this prompt",
         "empty": "No matching prompts found"
+    },
+    "settings": {
+        "audio": {
+            "title": "Audio settings",
+            "voice": "Voice",
+            "format": "Format",
+            "speed": "Speed",
+            "instructions": "Voice instructions",
+            "instructionsPlaceholder": "e.g. natural, warm, good for narration."
+        },
+        "image": {
+            "title": "Image settings",
+            "quality": "Quality",
+            "size": "Size",
+            "snap16": "Snap to multiples of 16",
+            "snap16Title": "Values are rounded up to multiples of 16 after input",
+            "aspectRatio": "Aspect ratio",
+            "count": "Image count",
+            "countUnit": "{count} images",
+            "qualityAuto": "Auto",
+            "qualityHigh": "High",
+            "qualityMedium": "Medium",
+            "qualityLow": "Low"
+        },
+        "video": {
+            "title": "Video settings",
+            "clarity": "Clarity",
+            "size": "Size",
+            "seconds": "Seconds",
+            "resolution": "Resolution",
+            "ratio": "Ratio",
+            "duration": "Duration",
+            "output": "Output",
+            "generateAudio": "Generate audio",
+            "watermark": "Add watermark",
+            "smart": "Smart",
+            "adaptive": "Adaptive",
+            "landscape": "Landscape",
+            "portrait": "Portrait",
+            "square": "Square",
+            "wide": "Wide",
+            "tall": "Tall",
+            "seedanceFastHint": "Fast models do not support 1080p and will automatically use 720p."
+        },
+        "model": {
+            "placeholder": "Select model",
+            "capabilityImage": "image",
+            "capabilityVideo": "video",
+            "capabilityText": "text",
+            "capabilityAudio": "audio",
+            "noMatching": "No matching {capability} models",
+            "contactAdmin": "Ask an administrator to configure channels and models"
+        }
+    },
+    "errors": {
+        "pleaseLogin": "Please sign in first",
+        "sessionChanged": "Your login session has changed, please retry",
+        "assetLoadFailed": "Failed to load assets",
+        "assetNotFound": "Asset not found",
+        "sessionLoadFailed": "Failed to load session"
     }
 }

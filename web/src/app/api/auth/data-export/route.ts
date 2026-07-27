@@ -15,7 +15,7 @@ export async function GET() {
     if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const limit = await checkRateLimit(`personal-data-export:${currentUser.id}`, { maxRequests: 3, windowMs: 60 * 60 * 1000 });
-    if (!limit.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureAgain", { feature: "导出请求" }) }, { status: 429, headers: rateLimitHeaders(limit) });
+    if (!limit.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureAgain", { feature: await serverMessage("features.export") }) }, { status: 429, headers: rateLimitHeaders(limit) });
 
     try {
         const exportedAt = new Date();
@@ -32,6 +32,6 @@ export async function GET() {
         });
     } catch (error) {
         console.error("personal data export failed", error);
-        return NextResponse.json({ error: "个人数据导出失败，请稍后重试" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.exportFailed") }, { status: 500 });
     }
 }

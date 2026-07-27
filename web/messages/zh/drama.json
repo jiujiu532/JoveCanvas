@@ -91,10 +91,22 @@
         "sectionDescription": "先确认剧本事实、镜头边界和叙事信息；视觉模型不会在这个阶段改写你的内容。",
         "confirmButton": "确认内容并生成视觉方案",
         "fields": {
-            "outline": { "label": "本集大纲", "placeholder": "用一句话概括本集推进" },
-            "sourceRange": { "label": "来源范围", "placeholder": "例如：原文第 1-3 节" },
-            "hook": { "label": "结尾钩子", "placeholder": "本集结尾要留下的冲突" },
-            "nextPreview": { "label": "下集预告", "placeholder": "下一集承接方向" }
+            "outline": {
+                "label": "本集大纲",
+                "placeholder": "用一句话概括本集推进"
+            },
+            "sourceRange": {
+                "label": "来源范围",
+                "placeholder": "例如：原文第 1-3 节"
+            },
+            "hook": {
+                "label": "结尾钩子",
+                "placeholder": "本集结尾要留下的冲突"
+            },
+            "nextPreview": {
+                "label": "下集预告",
+                "placeholder": "下一集承接方向"
+            }
         },
         "noSourceText": "暂无原文依据",
         "editableBadge": "可编辑内容",
@@ -121,16 +133,48 @@
         "sectionTitle": "视觉资产",
         "sectionDescription": "先固定角色、场景和关键道具，再让镜头提示词自动引用这些设定。",
         "kinds": {
-            "characters": { "title": "角色", "label": "人物" },
-            "scenes": { "title": "场景", "label": "地点" },
-            "props": { "title": "道具", "label": "道具" },
-            "clues": { "title": "线索", "label": "线索" }
+            "characters": {
+                "title": "角色",
+                "label": "人物"
+            },
+            "scenes": {
+                "title": "场景",
+                "label": "地点"
+            },
+            "props": {
+                "title": "道具",
+                "label": "道具"
+            },
+            "clues": {
+                "title": "线索",
+                "label": "线索"
+            }
         },
         "profileLabels": {
-            "characters": { "visualIdentity": "固定外貌", "styling": "服装与造型", "colorPalette": "标志色", "consistencyRules": "一致性规则" },
-            "scenes": { "visualIdentity": "空间结构", "styling": "陈设与材质", "colorPalette": "环境色", "consistencyRules": "固定空间规则" },
-            "props": { "visualIdentity": "外形识别", "styling": "材质与细节", "colorPalette": "固定色彩", "consistencyRules": "使用与一致性规则" },
-            "clues": { "visualIdentity": "视觉识别", "styling": "出现形态", "colorPalette": "提示色", "consistencyRules": "前后呼应规则" }
+            "characters": {
+                "visualIdentity": "固定外貌",
+                "styling": "服装与造型",
+                "colorPalette": "标志色",
+                "consistencyRules": "一致性规则"
+            },
+            "scenes": {
+                "visualIdentity": "空间结构",
+                "styling": "陈设与材质",
+                "colorPalette": "环境色",
+                "consistencyRules": "固定空间规则"
+            },
+            "props": {
+                "visualIdentity": "外形识别",
+                "styling": "材质与细节",
+                "colorPalette": "固定色彩",
+                "consistencyRules": "使用与一致性规则"
+            },
+            "clues": {
+                "visualIdentity": "视觉识别",
+                "styling": "出现形态",
+                "colorPalette": "提示色",
+                "consistencyRules": "前后呼应规则"
+            }
         },
         "nameRequired": "请输入{label}名称",
         "namePlaceholder": "{label}名称",
@@ -165,7 +209,11 @@
         "uploadSuccess": "参考图已上传并设为基准",
         "uploadFailed": "参考图上传失败",
         "noDescription": "暂无描述",
-        "notAddedYet": "暂未添加"
+        "notAddedYet": "暂未添加",
+        "generatedCandidateLabel": "AI 候选图",
+        "legacyReferenceLabel": "原参考图",
+        "payoffEditPlaceholder": "线索回收位置",
+        "settingImageSuffix": "设定图"
     },
     "storyboard": {
         "sectionTitle": "分镜编辑",
@@ -175,11 +223,36 @@
         "startFrame": "起始帧",
         "endFrame": "结束帧",
         "status": {
-            "generation": { "idle": "未生成", "queued": "排队中", "running": "生成中", "success": "已完成", "error": "失败", "cancelled": "已取消" },
-            "storyboard": { "idle": "待分镜图", "queued": "分镜排队", "running": "分镜图生成中", "success": "分镜图完成", "error": "分镜图失败", "cancelled": "分镜图取消" },
-            "audio": { "idle": "未配音", "queued": "配音排队", "running": "配音中", "success": "配音完成", "error": "配音失败", "cancelled": "配音取消" }
+            "generation": {
+                "idle": "未生成",
+                "queued": "排队中",
+                "running": "生成中",
+                "success": "已完成",
+                "error": "失败",
+                "cancelled": "已取消"
+            },
+            "storyboard": {
+                "idle": "待分镜图",
+                "queued": "分镜排队",
+                "running": "分镜图生成中",
+                "success": "分镜图完成",
+                "error": "分镜图失败",
+                "cancelled": "分镜图取消"
+            },
+            "audio": {
+                "idle": "未配音",
+                "queued": "配音排队",
+                "running": "配音中",
+                "success": "配音完成",
+                "error": "配音失败",
+                "cancelled": "配音取消"
+            }
         },
-        "audioModes": { "source": "视频原声", "voiceover": "AI 配音", "mute": "静音" },
+        "audioModes": {
+            "source": "视频原声",
+            "voiceover": "AI 配音",
+            "mute": "静音"
+        },
         "audioModeDescriptions": {
             "source": "保留即梦等视频模型生成的对白、环境声和音乐。",
             "voiceover": "关闭视频模型原声，按角色音色生成独立配音并替换音轨。",
@@ -191,15 +264,42 @@
             "title": "连续性控制",
             "subtitle": "站位、视线、轴线与动作衔接",
             "openButton": "设置连续性",
-            "shotSize": { "label": "景别", "placeholder": "特写 / 近景 / 中景 / 全景" },
-            "cameraAngle": { "label": "机位与角度", "placeholder": "平视、俯拍、侧后方" },
-            "composition": { "label": "构图", "placeholder": "主体位于画面左侧，门口留出视线空间" },
-            "characterBlocking": { "label": "人物站位", "placeholder": "女主在前景右侧，男主位于门边" },
-            "gazeDirection": { "label": "视线与屏幕方向", "placeholder": "女主看向画面左侧，保持向右运动" },
-            "axisRule": { "label": "轴线规则", "placeholder": "保持人物连线同侧，不越轴" },
-            "actionStart": { "label": "动作起始状态", "placeholder": "镜头开始时人物正在做什么" },
-            "actionEnd": { "label": "动作结束状态", "placeholder": "镜头结束时动作停在哪里，为下一镜头留下什么状态" },
-            "continuityNotes": { "label": "相邻镜头备注", "placeholder": "与上一镜头或下一镜头必须保持的细节" }
+            "shotSize": {
+                "label": "景别",
+                "placeholder": "特写 / 近景 / 中景 / 全景"
+            },
+            "cameraAngle": {
+                "label": "机位与角度",
+                "placeholder": "平视、俯拍、侧后方"
+            },
+            "composition": {
+                "label": "构图",
+                "placeholder": "主体位于画面左侧，门口留出视线空间"
+            },
+            "characterBlocking": {
+                "label": "人物站位",
+                "placeholder": "女主在前景右侧，男主位于门边"
+            },
+            "gazeDirection": {
+                "label": "视线与屏幕方向",
+                "placeholder": "女主看向画面左侧，保持向右运动"
+            },
+            "axisRule": {
+                "label": "轴线规则",
+                "placeholder": "保持人物连线同侧，不越轴"
+            },
+            "actionStart": {
+                "label": "动作起始状态",
+                "placeholder": "镜头开始时人物正在做什么"
+            },
+            "actionEnd": {
+                "label": "动作结束状态",
+                "placeholder": "镜头结束时动作停在哪里，为下一镜头留下什么状态"
+            },
+            "continuityNotes": {
+                "label": "相邻镜头备注",
+                "placeholder": "与上一镜头或下一镜头必须保持的细节"
+            }
         },
         "dialogue": {
             "title": "对白（原话）",
@@ -225,7 +325,10 @@
             "uploadFailed": "分镜图片上传失败",
             "title": "分镜帧",
             "hint": "生成镜头时自动补齐缺失帧，可上传覆盖",
-            "modes": { "single": "单帧", "firstLast": "首尾帧" },
+            "modes": {
+                "single": "单帧",
+                "firstLast": "首尾帧"
+            },
             "uploadAria": "上传{title}",
             "replaceButton": "替换",
             "uploadButton": "上传",
@@ -252,7 +355,19 @@
         "durationLabel": "时长",
         "noPromptYet": "尚未生成视觉提示词",
         "dialoguePrefix": "对白：{text}",
-        "narrationPrefix": "旁白：{text}"
+        "narrationPrefix": "旁白：{text}",
+        "shotFactsPlaceholder": "只写画面中真实发生的动作和人物状态",
+        "narrationPlaceholder": "没有旁白请留空",
+        "endFrameTag": "尾帧",
+        "startFrameFileSuffix": "起始帧",
+        "endFrameFileSuffix": "结束帧",
+        "endFrameLogSuffix": "尾帧",
+        "endFrameNoUrl": "尾帧图没有可持久化的访问地址",
+        "imageNoUrl": "分镜图没有可持久化的访问地址",
+        "endFrameGenerateFailed": "尾帧图生成失败",
+        "imageGenerateFailed": "分镜图生成失败",
+        "endFrameTaskCreateFailed": "尾帧图任务创建失败",
+        "imageTaskCreateFailed": "分镜图任务创建失败"
     },
     "render": {
         "needReviewHint": "请先在“{stage}”中确认镜头，并生成完整视觉方案。",
@@ -293,7 +408,11 @@
         },
         "review": {
             "title": "分镜视觉复盘",
-            "status": { "passed": "通过", "needsRevision": "需调整", "pending": "未完成" },
+            "status": {
+                "passed": "通过",
+                "needsRevision": "需调整",
+                "pending": "未完成"
+            },
             "scoreValue": "{score} 分",
             "retryButton": "重试问题镜头",
             "correctionPrefix": "建议：{correction}"
@@ -301,7 +420,12 @@
         "audioUnavailableHint": "配音暂不可用：后台尚未配置可用的默认音频模型。视频镜头生成和整集合成不受影响。",
         "task": {
             "title": "整集合成",
-            "status": { "success": "成片已生成", "error": "合成失败", "cancelled": "合成已取消", "inProgress": "正在转码、拼接并烧录字幕…" },
+            "status": {
+                "success": "成片已生成",
+                "error": "合成失败",
+                "cancelled": "合成已取消",
+                "inProgress": "正在转码、拼接并烧录字幕…"
+            },
             "cancelButton": "取消合成",
             "downloadLink": "下载整集成片"
         },
@@ -350,7 +474,9 @@
             "exported": "剪映草稿已导出",
             "exportFailed": "剪映草稿导出失败"
         },
-        "subtitle": { "title": "字幕时间轴" }
+        "subtitle": {
+            "title": "字幕时间轴"
+        }
     },
     "agent": {
         "openMobileAria": "打开短剧项目 Agent",
@@ -417,7 +543,11 @@
             "fallbackExample": "关键资产"
         },
         "requestFailed": "项目 Agent 请求失败，请稍后重试。",
-        "downloadFallback": { "video": "生成视频", "image": "生成图片" }
+        "downloadFallback": {
+            "video": "生成视频",
+            "image": "生成图片"
+        },
+        "conversationTitle": "{title} Agent"
     },
     "store": {
         "loginRequired": "请先登录",
@@ -425,7 +555,12 @@
         "projectLoadFailed": "短剧项目加载失败",
         "projectSaveFailed": "短剧项目保存失败",
         "episodeTitleTemplate": "第 {n} 集",
-        "paragraphBoundary": "段落边界"
+        "paragraphBoundary": "段落边界",
+        "contextSeparator": "，",
+        "defaultImagePrompt": "{context}，角色与画风保持一致，电影分镜画面",
+        "defaultVideoPrompt": "{context}，镜头运动自然，人物动作连续，保持角色一致性",
+        "defaultCameraMotion": "自然镜头运动",
+        "defaultNegativePrompt": "文字、水印、角色身份漂移、服装变化、错误肢体"
     },
     "shared": {
         "collapse": "收起",

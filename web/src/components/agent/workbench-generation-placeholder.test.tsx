@@ -1,7 +1,25 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
+import layoutMessages from "../../../messages/zh/layout.json";
 import { WorkbenchGenerationActivity, WorkbenchGenerationPlaceholder } from "./workbench-generation-placeholder";
+
+function readNested(dict: unknown, key: string): string | undefined {
+    let current: unknown = dict;
+    for (const part of key.split(".")) {
+        if (typeof current !== "object" || current === null) return undefined;
+        current = (current as Record<string, unknown>)[part];
+    }
+    return typeof current === "string" ? current : undefined;
+}
+
+vi.mock("next-intl", () => ({
+    useTranslations: () => (key: string, params?: Record<string, string | number>) => {
+        const template = readNested(layoutMessages, key) ?? key;
+        if (!params) return template;
+        return template.replace(/\{(\w+)\}/g, (matched, name: string) => (name in params ? String(params[name]) : matched));
+    },
+}));
 
 describe("workbench generation placeholders", () => {
     it("keeps generation status accessible without visible status copy", () => {

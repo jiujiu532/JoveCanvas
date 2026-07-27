@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     try {
         const conversation = await createConversationForUser(user.id, await readJsonBody<unknown>(request));
-        return NextResponse.json({ code: 0, data: { conversation }, msg: "创作会话已创建" });
+        return NextResponse.json({ code: 0, data: { conversation }, msg: await serverMessage("creative.sessionCreated") });
     } catch (error) {
         return serviceError(error);
     }

@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     if (!(await checkRateLimit(`drama-analyze:${user.id}`, { maxRequests: 10, windowMs: 60_000 })).allowed)
-        return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: "剧本解析" }) }, { status: 429 });
+        return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.scriptAnalyze") }) }, { status: 429 });
     let body: AnalyzeBody;
     try {
         body = await readJsonBody(request, 8 * 1024 * 1024);
@@ -51,16 +51,16 @@ export async function POST(request: Request) {
     }
     const phase = body.phase === "visual" ? "visual" : "content";
     const script = cleanText(body.script, 30_000);
-    if (phase === "content" && !script) return NextResponse.json({ code: 400, data: null, msg: "请先填写剧本" }, { status: 400 });
-    if (typeof body.script === "string" && body.script.trim().length > 30_000) return NextResponse.json({ code: 400, data: null, msg: "单次解析剧本不能超过 30000 字" }, { status: 400 });
+    if (phase === "content" && !script) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("drama.scriptRequired") }, { status: 400 });
+    if (typeof body.script === "string" && body.script.trim().length > 30_000) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("drama.scriptTooLong") }, { status: 400 });
 
     const visualInput = phase === "visual" ? normalizeVisualInput(body) : null;
-    if (phase === "visual" && !visualInput?.shotIds.length) return NextResponse.json({ code: 400, data: null, msg: "请先完成内容审核" }, { status: 400 });
+    if (phase === "visual" && !visualInput?.shotIds.length) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("drama.contentReviewRequired") }, { status: 400 });
 
     const settings = await getAuthSettings();
     const model = settings.defaultModels.textModel;
     const candidates = resolveLogicalModelCandidates(settings, "text", model);
-    if (!model || !candidates.length) return NextResponse.json({ code: 400, data: null, msg: "后台尚未配置可用的默认文本模型" }, { status: 400 });
+    if (!model || !candidates.length) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("admin.defaultTextModelMissing") }, { status: 400 });
 
     let refundedPointsRemaining: number | undefined;
     try {

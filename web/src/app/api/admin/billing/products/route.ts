@@ -20,7 +20,7 @@ export async function GET() {
     } catch (error) {
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin list billing products failed", error);
-        return NextResponse.json({ error: "获取套餐商品失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.getPlanProductsFailed") }, { status: 500 });
     }
 }
 
@@ -48,6 +48,6 @@ export async function POST(request: Request) {
         });
         if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin upsert billing product failed", error);
-        return NextResponse.json({ error: "保存套餐商品失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.saveProductFailed") }, { status: 500 });
     }
 }

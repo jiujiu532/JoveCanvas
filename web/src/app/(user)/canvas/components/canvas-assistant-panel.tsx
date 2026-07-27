@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Bot, History, PanelRightClose, Pause, Play, Plus, Square, Trash2, X } from "lucide-react";
 import { Button, Modal, Tooltip } from "antd";
+import { useTranslations } from "next-intl";
 import { motion } from "motion/react";
 
 import { canvasThemes } from "@/lib/canvas-theme";
@@ -75,6 +76,7 @@ export function CanvasAssistantPanel({
     closing,
     onCollapse,
 }: CanvasAssistantPanelProps) {
+    const t = useTranslations("canvas");
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
     const user = useUserStore((state) => state.user);
     const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", logoUrl: "/logo.svg" };
@@ -88,7 +90,7 @@ export function CanvasAssistantPanel({
     const [isRunning, setIsRunning] = useState(false);
     const [activeRunId, setActiveRunId] = useState("");
     const [runPaused, setRunPaused] = useState(false);
-    const [runStage, setRunStage] = useState<CanvasAgentRunStage>({ key: "planning", text: "正在理解你的需求" });
+    const [runStage, setRunStage] = useState<CanvasAgentRunStage>({ key: "planning", text: t("panel.understanding") });
     const [deleteChatIds, setDeleteChatIds] = useState<string[]>([]);
     const [resizing, setResizing] = useState(false);
     const [removedReferenceIds, setRemovedReferenceIds] = useState<Set<string>>(new Set());
@@ -136,7 +138,7 @@ export function CanvasAssistantPanel({
     const appendMessage = (sessionId: string, message: CanvasAssistantMessage) => {
         updateSession(sessionId, (session) => ({
             ...session,
-            title: session.messages.length ? session.title : message.text.slice(0, 18) || "新对话",
+            title: session.messages.length ? session.title : message.text.slice(0, 18) || t("panel.newChat"),
             messages: [...session.messages, message],
             updatedAt: new Date().toISOString(),
         }));
@@ -147,7 +149,7 @@ export function CanvasAssistantPanel({
             const exists = session.messages.some((item) => item.id === message.id);
             return {
                 ...session,
-                title: session.messages.length ? session.title : message.text.slice(0, 18) || "新对话",
+                title: session.messages.length ? session.title : message.text.slice(0, 18) || t("panel.newChat"),
                 messages: exists ? session.messages.map((item) => (item.id === message.id ? { ...item, ...message } : item)) : [...session.messages, message],
                 updatedAt: new Date().toISOString(),
             };
@@ -162,7 +164,7 @@ export function CanvasAssistantPanel({
             setLocalActiveSessionId(activeSession.id);
             return;
         }
-        const session = createSession();
+        const session = createSession(t("panel.newChat"));
         setLocalSessions((prev) => [session, ...prev]);
         setLocalActiveSessionId(session.id);
     };
@@ -184,7 +186,7 @@ export function CanvasAssistantPanel({
     };
 
     const sendMessage = async (text: string, savedReferences?: CanvasAssistantReference[]) => {
-        const session = activeSession || createSession();
+        const session = activeSession || createSession(t("panel.newChat"));
         if (!activeSession) {
             setLocalSessions([session]);
             setLocalActiveSessionId(session.id);
@@ -194,8 +196,8 @@ export function CanvasAssistantPanel({
         const userMessage: CanvasAssistantMessage = { id: nanoid(), role: "user", text, references: refs };
         const assistantId = nanoid();
         appendMessage(session.id, userMessage);
-        upsertMessage(session.id, { id: assistantId, role: "assistant", text: "已收到需求，正在分析画布并制定执行计划。" });
-        setRunStage({ key: "planning", text: "正在理解你的需求" });
+        upsertMessage(session.id, { id: assistantId, role: "assistant", text: t("panel.receivedPlan") });
+        setRunStage({ key: "planning", text: t("panel.understanding") });
         setIsRunning(true);
         try {
             const response = await fetch("/api/agent/runs", {
@@ -214,36 +216,40 @@ export function CanvasAssistantPanel({
                 }),
             });
             const payload = await response.json();
-            if (!response.ok) throw new Error(payload.msg || "创建 Agent 任务失败");
+            if (!response.ok) throw new Error(payload.msg || t("panel.createRunFailed"));
             if (payload.data.run.conversationId && payload.data.run.conversationId !== conversationId) onConversationChange(payload.data.run.conversationId);
             setActiveRunId(payload.data.run.id);
             setSelectedSkillId(undefined);
             setRunPaused(false);
             await waitForBackendAgent(payload.data.run.id, session.id, assistantId);
         } catch (error) {
-            upsertMessage(session.id, { id: assistantId, role: "error", title: "Agent 执行失败", text: friendlyAgentError(error) });
+            upsertMessage(session.id, { id: assistantId, role: "error", title: t("panel.runFailed"), text: friendlyAgentError(error) });
             setIsRunning(false);
         }
     };
 
     const waitForBackendAgent = async (runId: string, sessionId: string, assistantId: string) => {
         try {
-            await watchCanvasAgentRun(runId, {
-                onPlan: (ops, reply) => {
-                    onApplyOps(ops);
-                    upsertMessage(sessionId, { id: assistantId, role: "assistant", text: reply });
+            await watchCanvasAgentRun(
+                runId,
+                {
+                    onPlan: (ops, reply) => {
+                        onApplyOps(ops);
+                        upsertMessage(sessionId, { id: assistantId, role: "assistant", text: reply });
+                    },
+                    onAssistant: (text, detail) => {
+                        if (detail?.runId && detail.taskId) {
+                            appendMessage(sessionId, { id: nanoid(), role: "error", title: detail.title || t("panel.taskFailed"), text, detail });
+                            return;
+                        }
+                        upsertMessage(sessionId, { id: assistantId, role: "assistant", text, ...(detail?.nodeIds?.length ? { detail } : {}) });
+                    },
+                    onStage: setRunStage,
+                    onPaused: setRunPaused,
+                    onOps: onApplyOps,
                 },
-                onAssistant: (text, detail) => {
-                    if (detail?.runId && detail.taskId) {
-                        appendMessage(sessionId, { id: nanoid(), role: "error", title: detail.title || "创作任务失败", text, detail });
-                        return;
-                    }
-                    upsertMessage(sessionId, { id: assistantId, role: "assistant", text, ...(detail?.nodeIds?.length ? { detail } : {}) });
-                },
-                onStage: setRunStage,
-                onPaused: setRunPaused,
-                onOps: onApplyOps,
-            });
+                t,
+            );
         } finally {
             await refreshUserPointsIfSystem("system");
             setIsRunning(false);
@@ -263,17 +269,17 @@ export function CanvasAssistantPanel({
                 const run = (payload?.data?.runs || []).find((item: { status?: string }) => ["planning", "running", "paused"].includes(item.status || ""));
                 if (!run?.id || restoredRunRef.current === run.id) return;
                 restoredRunRef.current = run.id;
-                const session = activeSession || createSession();
+                const session = activeSession || createSession(t("panel.newChat"));
                 if (!activeSession) {
                     setLocalSessions([session]);
                     setLocalActiveSessionId(session.id);
                 }
                 const assistantId = nanoid();
-                appendMessage(session.id, { id: assistantId, role: "assistant", text: "已恢复刷新前仍在执行的 Agent 任务。" });
+                appendMessage(session.id, { id: assistantId, role: "assistant", text: t("panel.restoredRun") });
                 setActiveRunId(run.id);
                 setRunPaused(run.status === "paused");
                 setIsRunning(true);
-                void waitForBackendAgent(run.id, session.id, assistantId).catch((error) => appendMessage(session.id, { id: nanoid(), role: "error", title: "恢复失败", text: friendlyAgentError(error, "Agent 任务恢复失败，请稍后重试。") }));
+                void waitForBackendAgent(run.id, session.id, assistantId).catch((error) => appendMessage(session.id, { id: nanoid(), role: "error", title: t("panel.restoreFailed"), text: friendlyAgentError(error, t("panel.restoreFailedDetail")) }));
             });
         return () => {
             cancelled = true;
@@ -292,13 +298,13 @@ export function CanvasAssistantPanel({
         try {
             const response = await fetch(`/api/agent/runs/${encodeURIComponent(activeRunId)}/${action}`, { method: "POST" });
             const payload = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(payload.msg || "Agent 任务控制失败");
+            if (!response.ok) throw new Error(payload.msg || t("panel.controlFailed"));
             if (action === "pause") setRunPaused(true);
             if (action === "resume") setRunPaused(false);
             if (action === "cancel") setRunPaused(false);
         } catch (error) {
             const session = activeSession || localSessions[0];
-            if (session) appendMessage(session.id, { id: nanoid(), role: "error", title: "控制失败", text: friendlyAgentError(error, "Agent 任务控制失败，请稍后重试。") });
+            if (session) appendMessage(session.id, { id: nanoid(), role: "error", title: t("panel.controlFailedTitle"), text: friendlyAgentError(error, t("panel.controlFailedDetail")) });
         }
     };
 
@@ -308,15 +314,15 @@ export function CanvasAssistantPanel({
         const assistantId = nanoid();
         setIsRunning(true);
         setActiveRunId(runId);
-        setRunStage({ key: "executing", text: "正在重新执行失败任务" });
+        setRunStage({ key: "executing", text: t("panel.retryingTask") });
         try {
             const response = await fetch(`/api/agent/runs/${encodeURIComponent(runId)}/tasks/${encodeURIComponent(taskId)}/retry`, { method: "POST" });
             const payload = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(payload.msg || "任务重试失败");
-            appendMessage(session.id, { id: assistantId, role: "assistant", text: "已重新提交该失败任务。" });
+            if (!response.ok) throw new Error(payload.msg || t("panel.retryFailed"));
+            appendMessage(session.id, { id: assistantId, role: "assistant", text: t("panel.retrySubmitted") });
             await waitForBackendAgent(runId, session.id, assistantId);
         } catch (error) {
-            appendMessage(session.id, { id: assistantId, role: "error", title: "重试失败", text: friendlyAgentError(error, "任务重试失败，请稍后再试。") });
+            appendMessage(session.id, { id: assistantId, role: "error", title: t("panel.retryFailedTitle"), text: friendlyAgentError(error, t("panel.retryFailedDetail")) });
             setIsRunning(false);
             setActiveRunId("");
         }
@@ -367,14 +373,14 @@ export function CanvasAssistantPanel({
                 value={view}
                 theme={theme}
                 items={[
-                    { value: "chat", label: "对话" },
-                    { value: "history", label: "历史", icon: <History className="size-3.5" />, count: historySessions.length },
+                    { value: "chat", label: t("panel.chat") },
+                    { value: "history", label: t("panel.history"), icon: <History className="size-3.5" />, count: historySessions.length },
                 ]}
                 onChange={setView}
                 right={
                     <>
                         {view === "history" ? (
-                            <Tooltip title="删除全部">
+                            <Tooltip title={t("panel.deleteAll")}>
                                 <Button
                                     type="text"
                                     shape="circle"
@@ -386,7 +392,7 @@ export function CanvasAssistantPanel({
                                 />
                             </Tooltip>
                         ) : null}
-                        <Tooltip title="新对话">
+                        <Tooltip title={t("panel.newChat")}>
                             <Button
                                 type="text"
                                 shape="circle"
@@ -435,10 +441,10 @@ export function CanvasAssistantPanel({
                                 <AgentWorkingMessage theme={theme} stage={runStage} />
                                 <div className="flex justify-end gap-2">
                                     <Button size="small" icon={runPaused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />} onClick={() => void controlRun(runPaused ? "resume" : "pause")}>
-                                        {runPaused ? "继续" : "暂停"}
+                                        {runPaused ? t("panel.resume") : t("panel.pause")}
                                     </Button>
                                     <Button size="small" danger icon={<Square className="size-3.5" />} onClick={() => void controlRun("cancel")}>
-                                        取消
+                                        {t("panel.cancel")}
                                     </Button>
                                 </div>
                             </>
@@ -475,7 +481,7 @@ export function CanvasAssistantPanel({
                     <AgentChatComposer
                         prompt={prompt}
                         sending={isRunning}
-                        placeholder="描述你想让 Agent 如何操作画布"
+                        placeholder={t("panel.placeholder")}
                         theme={theme}
                         onPromptChange={setPrompt}
                         onSubmit={submit}
@@ -505,13 +511,13 @@ export function CanvasAssistantPanel({
             ) : null}
 
             <Modal
-                title="删除对话记录？"
+                title={t("panel.deleteChatsTitle")}
                 open={deleteChatIds.length > 0}
                 centered
                 onCancel={() => setDeleteChatIds([])}
                 footer={
                     <>
-                        <Button onClick={() => setDeleteChatIds([])}>取消</Button>
+                        <Button onClick={() => setDeleteChatIds([])}>{t("panel.cancel")}</Button>
                         <Button
                             danger
                             type="primary"
@@ -520,12 +526,12 @@ export function CanvasAssistantPanel({
                                 setDeleteChatIds([]);
                             }}
                         >
-                            删除
+                            {t("panel.delete")}
                         </Button>
                     </>
                 }
             >
-                <p className="text-sm opacity-60">将删除 {deleteChatIds.length} 条对话记录，此操作不可撤销。</p>
+                <p className="text-sm opacity-60">{t("panel.deleteChatsDesc", { count: deleteChatIds.length })}</p>
             </Modal>
         </>
     );
@@ -545,7 +551,7 @@ export function CanvasAssistantPanel({
                 transition={{ duration: resizing ? 0 : PANEL_MOTION_SECONDS, ease: [0.22, 1, 0.36, 1] }}
                 style={{ width, background: theme.node.panel, borderColor: theme.node.stroke, color: theme.node.text }}
             >
-                <button type="button" className="canvas-agent-resize-handle absolute inset-y-0 left-0 z-40 w-4 -translate-x-1/2 cursor-col-resize" onMouseDown={startResize} aria-label="调整右侧面板宽度" />
+                <button type="button" className="canvas-agent-resize-handle absolute inset-y-0 left-0 z-40 w-4 -translate-x-1/2 cursor-col-resize" onMouseDown={startResize} aria-label={t("panel.resizePanel")} />
                 <header className="flex h-14 items-center justify-between border-b px-4" style={{ borderColor: theme.node.stroke }}>
                     <div className="flex min-w-0 items-center gap-2">
                         <span className="grid size-8 place-items-center rounded-lg">
@@ -554,12 +560,12 @@ export function CanvasAssistantPanel({
                         <div className="min-w-0">
                             <div className="text-base font-semibold leading-5">Agent</div>
                             <div className="truncate text-xs" style={{ color: theme.node.muted }}>
-                                画布助手
+                                {t("panel.canvasAssistant")}
                             </div>
                         </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                        <Tooltip title="收起对话">
+                        <Tooltip title={t("panel.collapseChat")}>
                             <Button type="text" shape="circle" className="!h-8 !w-8 !min-w-8" style={iconButtonStyle} icon={<PanelRightClose className="size-4" />} onClick={collapse} />
                         </Tooltip>
                     </div>

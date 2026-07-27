@@ -108,7 +108,7 @@ function LatestProjectCard({ project, loading, error, onRetry }: { project?: Ret
             </div>
             <div className="flex min-w-0 flex-col justify-between gap-1.5 p-2.5 sm:gap-4 sm:p-5">
                 <div className="min-w-0">
-                    <p className="text-[11px] text-[#8b949f] dark:text-[#7f8996]">{t("recentlyEdited", { time: formatRecentTime(project.updatedAt, locale) })}</p>
+                    <p className="text-[11px] text-[#8b949f] dark:text-[#7f8996]">{t("recentlyEdited", { time: formatRecentTime(project.updatedAt, locale, t("justNow")) })}</p>
                     <h3 className="mt-2 truncate text-[17px] font-semibold text-[#20242a] dark:text-[#f3f5f7]">{project.title || t("untitledProject")}</h3>
                     <p className="mt-2 text-xs text-[#697381] dark:text-[#9aa3af]">{t("nodeConnectionCount", { nodes: project.nodeCount, connections: project.connectionCount })}</p>
                 </div>
@@ -143,6 +143,7 @@ function CanvasProjectCover({ previews }: { previews: CreateOverviewMedia[] }) {
 }
 
 function RecentAssetCard({ asset }: { asset: CreateOverviewAsset }) {
+    const t = useTranslations("workspace.create.overview");
     const locale = useLocale();
     return (
         <div className="group min-w-0 overflow-hidden rounded-xl border border-[#e2e7eb] bg-white transition hover:border-[#cbd2d9] hover:shadow-[0_10px_26px_rgba(32,36,42,0.08)] dark:border-[#2b3037] dark:bg-[#181b20] dark:hover:border-[#3b424c] dark:hover:shadow-black/25">
@@ -154,7 +155,7 @@ function RecentAssetCard({ asset }: { asset: CreateOverviewAsset }) {
             </div>
             <div className="min-w-0 px-3 py-2.5">
                 <p className="truncate text-xs font-medium text-[#343b44] dark:text-[#dce1e7]">{asset.title}</p>
-                <p className="mt-1 text-[11px] text-[#9aa2ad] dark:text-[#737d89]">{formatRecentTime(asset.createdAt, locale)}</p>
+                <p className="mt-1 text-[11px] text-[#9aa2ad] dark:text-[#737d89]">{formatRecentTime(asset.createdAt, locale, t("justNow"))}</p>
             </div>
         </div>
     );
@@ -200,7 +201,7 @@ function TaskRow({ task }: { task: CreateOverviewTask }) {
             </span>
             <span className="min-w-0 flex-1">
                 <span className="block truncate text-xs font-medium text-[#343b44] group-hover:text-[#20242a] dark:text-[#dce1e7] dark:group-hover:text-white">{task.title || (isImage ? t("imageGeneration") : t("videoGeneration"))}</span>
-                <span className="mt-1 block truncate text-[11px] text-[#9aa2ad] dark:text-[#737d89]">{t("runningAt", { time: formatRecentTime(task.createdAt, locale) })}</span>
+                <span className="mt-1 block truncate text-[11px] text-[#9aa2ad] dark:text-[#737d89]">{t("runningAt", { time: formatRecentTime(task.createdAt, locale, t("justNow")) })}</span>
             </span>
             <LoaderCircle className="size-4 shrink-0 animate-spin text-[#6e87db]" />
         </Link>
@@ -233,8 +234,8 @@ function OverviewError({ message, onRetry, compact = false }: { message: string;
     );
 }
 
-function formatRecentTime(value: string, locale: string) {
+function formatRecentTime(value: string, locale: string, justNowLabel: string) {
     const time = Date.parse(value);
-    if (!Number.isFinite(time)) return locale === "zh" ? "刚刚" : "just now";
+    if (!Number.isFinite(time)) return justNowLabel;
     return new Date(time).toLocaleString(locale === "zh" ? "zh-CN" : "en-US", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
 }

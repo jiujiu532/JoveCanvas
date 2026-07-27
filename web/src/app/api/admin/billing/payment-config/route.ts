@@ -28,7 +28,7 @@ export async function PATCH(request: Request) {
     try {
         const body = await readJsonBody<{ providerId?: unknown; enabled?: unknown; values?: unknown }>(request);
         const providerId = normalizeProviderId(body.providerId);
-        if (!providerId) return NextResponse.json({ error: "支付渠道无效" }, { status: 400 });
+        if (!providerId) return NextResponse.json({ error: await serverMessage("billing.invalidPaymentChannel") }, { status: 400 });
         await savePaymentProviderConfig({
             providerId,
             enabled: body.enabled === true,
@@ -38,7 +38,7 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ paymentConfig: await getPaymentConfigSummary(origin) });
     } catch (error) {
         console.error("Payment config save failed", error);
-        return NextResponse.json({ error: error instanceof Error ? error.message : "保存支付配置失败" }, { status: 500 });
+        return NextResponse.json({ error: error instanceof Error ? error.message : await serverMessage("billing.savePaymentConfigFailed") }, { status: 500 });
     }
 }
 

@@ -17,14 +17,35 @@
             "beauty": "Beauty"
         },
         "heroPipeline": {
-            "recognition": { "name": "Reference recognition", "status": "Done" },
-            "styleGeneration": { "name": "Style generation", "status": "Generating" },
-            "detailPolish": { "name": "Detail polish", "status": "Pending" }
+            "recognition": {
+                "name": "Reference recognition",
+                "status": "Done"
+            },
+            "styleGeneration": {
+                "name": "Style generation",
+                "status": "Generating"
+            },
+            "detailPolish": {
+                "name": "Detail polish",
+                "status": "Pending"
+            }
         },
         "heroOutput": {
-            "commerce": { "label": "Commerce", "title": "New arrival visuals", "detail": "Product shots / posters / details" },
-            "comic": { "label": "Drama", "title": "Character storyboards", "detail": "Covers / series / dialogue" },
-            "beauty": { "label": "Beauty", "title": "Portrait retouching", "detail": "Skin tone / lighting / texture" }
+            "commerce": {
+                "label": "Commerce",
+                "title": "New arrival visuals",
+                "detail": "Product shots / posters / details"
+            },
+            "comic": {
+                "label": "Drama",
+                "title": "Character storyboards",
+                "detail": "Covers / series / dialogue"
+            },
+            "beauty": {
+                "label": "Beauty",
+                "title": "Portrait retouching",
+                "detail": "Skin tone / lighting / texture"
+            }
         },
         "workbenchTaskStatus": "Creative task / generating",
         "creativeBoardLabel": "AI creative board",
@@ -151,9 +172,18 @@
         "wizardTitle": "{site} Install Wizard",
         "wizardSubtitle": "Complete server setup in three steps",
         "steps": {
-            "intro": { "title": "Setup guide", "description": "Confirm deployment method and prerequisites" },
-            "database": { "title": "Configure database", "description": "Generate configuration and initialize PostgreSQL" },
-            "admin": { "title": "Create administrator", "description": "Create the first admin account" }
+            "intro": {
+                "title": "Setup guide",
+                "description": "Confirm deployment method and prerequisites"
+            },
+            "database": {
+                "title": "Configure database",
+                "description": "Generate configuration and initialize PostgreSQL"
+            },
+            "admin": {
+                "title": "Create administrator",
+                "description": "Create the first admin account"
+            }
         },
         "stepLockedHint": "Finish database and encryption configuration first",
         "metricDatabaseLabel": "Database",
@@ -221,10 +251,22 @@
             "headerTitle": "Database details",
             "headerSubtitle": "Generate PostgreSQL environment variables",
             "modes": {
-                "local": { "label": "Local", "description": "Web and PostgreSQL both run directly on the current system without Docker; configuration is saved to web/.env.local." },
-                "docker": { "label": "Docker", "description": "Web and the bundled PostgreSQL run in separate containers, started together by the default docker-compose.yml." },
-                "baota": { "label": "Baota", "description": "Web runs in a container and connects to a PostgreSQL instance already installed on the Baota host; no additional database is started." },
-                "cloud": { "label": "Cloud database", "description": "Web connects to a remote PostgreSQL hosted by a cloud provider; enter the provider's address and enable SSL as required." }
+                "local": {
+                    "label": "Local",
+                    "description": "Web and PostgreSQL both run directly on the current system without Docker; configuration is saved to web/.env.local."
+                },
+                "docker": {
+                    "label": "Docker",
+                    "description": "Web and the bundled PostgreSQL run in separate containers, started together by the default docker-compose.yml."
+                },
+                "baota": {
+                    "label": "Baota",
+                    "description": "Web runs in a container and connects to a PostgreSQL instance already installed on the Baota host; no additional database is started."
+                },
+                "cloud": {
+                    "label": "Cloud database",
+                    "description": "Web connects to a remote PostgreSQL hosted by a cloud provider; enter the provider's address and enable SSL as required."
+                }
             },
             "snippetEnvLabel": "Environment variables",
             "snippetEnvTitleLocal": "web/.env.local",
@@ -302,5 +344,10 @@
                 }
             }
         }
+    },
+    "notFound": {
+        "title": "Page not found",
+        "description": "This address has no matching page. It may have been moved or merged into another entry.",
+        "backHome": "Back to home"
     }
 }

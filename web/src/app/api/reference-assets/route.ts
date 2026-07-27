@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
     const body = await readJsonBody<{ dataUrl?: unknown; type?: unknown; persistent?: unknown; originalName?: unknown }>(request, 28 * 1024 * 1024).catch(() => ({}) as { dataUrl?: unknown; type?: unknown; persistent?: unknown; originalName?: unknown });
     const dataUrl = typeof body.dataUrl === "string" ? body.dataUrl : "";
-    if (!dataUrl) return NextResponse.json({ error: "缺少参考素材" }, { status: 400 });
+    if (!dataUrl) return NextResponse.json({ error: await serverMessage("media.missingReference") }, { status: 400 });
     const type = body.type === "video" || body.type === "audio" ? body.type : "image";
 
     try {
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
             mimeType: asset.mimeType,
         });
     } catch (error) {
-        return NextResponse.json({ error: error instanceof Error ? error.message : "参考图临时保存失败" }, { status: 400 });
+        return NextResponse.json({ error: error instanceof Error ? error.message : await serverMessage("media.refTempSaveFailed") }, { status: 400 });
     }
 }
 
