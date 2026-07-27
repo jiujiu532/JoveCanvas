@@ -17,3 +17,23 @@ VOZEB PRO 会把经过配置的第三方提示词源采集到管理员公共提�
 | https://github.com/davidwuw0811-boop/awesome-gpt-image2-prompts    | 已采集                     |
 
 当前验证可采集约 874 条带可显示远程封面的提示词；`img.shields.io` 徽章、README 头图和统计图会被过滤。
+
+## Phase2 独立 seed 导入（CLI）
+
+在 874 条 original-author 种子之外，可用离线 CLI 导入独立 source（**不会**触碰 `vozeb-pro/original-author-prompts` 前缀）：
+
+| source | 前缀 | 说明 |
+| --- | --- | --- |
+| `vozeb-pro/youmind-skill:v1` | `vozeb-pro/youmind-skill` | YouMind skill `references/*.json` 精选 |
+| `vozeb-pro/gptimage2-json:v1` | `vozeb-pro/gptimage2-json` | gptimage2 / 同源 JSON 精选 |
+
+```bash
+cd web
+pnpm run import:prompt-seeds -- --source youmind-skill --input /path/to/references --dry-run
+pnpm run import:prompt-seeds -- --source gptimage2-json --input /path/to/prompts.json --apply
+```
+
+- 默认 dry-run：输出 accept/skip 计数，不写库、不下载封面。
+- `--apply`：封面转存为 permanent reference，`coverUrl` 存 `/api/reference-assets/{token}`；`source` 以 `prompt-seed` 开头且 permanent 的资源允许无登录 GET（限流仍在）。
+- 去重：`sha256(normalize(prompt))` 与现库交叉；meta-prompt / 无图默认拒收。
+- 媒体引用计数 `countLocalMediaReferences` **暂不含** `prompts.cover_url`，勿对 prompt-seed 封面做自动硬删。

@@ -1,6 +1,11 @@
 import { readJsonDataFile } from "@/lib/server/data-adapter";
 import { ensurePostgresSchema, getDatabaseProvider, postgresQuery } from "@/lib/server/database";
 
+/**
+ * Count live references for local/object media storage keys.
+ * Note (Phase2): does **not** include prompts.cover_url yet — seed covers registered as
+ * prompt-seed* permanent media may look unreferenced to GC/admin delete. Follow-up: join prompts.
+ */
 export async function countLocalMediaReferences(storageKeys: string[]) {
     const keys = Array.from(new Set(storageKeys.map(normalizeKey).filter(Boolean)));
     const counts = new Map(keys.map((key) => [key, 0]));

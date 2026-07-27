@@ -56,12 +56,21 @@ describe("reference asset access", () => {
         expect(mocks.registration).not.toHaveBeenCalled();
     });
 
-    it("rejects anonymous unsigned access before querying media registrations", async () => {
+    it("rejects anonymous unsigned access for non-prompt-seed media", async () => {
         mocks.getCurrentUser.mockResolvedValue(null);
+        mocks.registration.mockResolvedValue({ ownerUserId: "owner", storageClass: "permanent", source: "user-upload" });
         const response = await GET(new Request("http://localhost/api/reference-assets/permanent/2026/07/20/images/file.png"), context);
         expect(response.status).toBe(401);
-        expect(mocks.rate).not.toHaveBeenCalled();
-        expect(mocks.registration).not.toHaveBeenCalled();
+        expect(mocks.stream).not.toHaveBeenCalled();
+    });
+
+    it("allows anonymous unsigned access for permanent prompt-seed covers (scheme C)", async () => {
+        mocks.getCurrentUser.mockResolvedValue(null);
+        mocks.registration.mockResolvedValue({ ownerUserId: "system", storageClass: "permanent", source: "prompt-seed:youmind-skill" });
+        const response = await GET(new Request("http://localhost/api/reference-assets/permanent/2026/07/20/images/file.png"), context);
+        expect(response.status).toBe(200);
+        expect(mocks.getCurrentUser).not.toHaveBeenCalled();
+        expect(mocks.stream).toHaveBeenCalled();
     });
 
     it("allows the owner and administrators to read registered media", async () => {

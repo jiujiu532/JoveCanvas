@@ -69,6 +69,14 @@ const PROMPT_DATA_FILE = "prompts.json";
 const DEFAULT_COVER_URL = "";
 const ORIGINAL_AUTHOR_SEED_SOURCE_PREFIX = "vozeb-pro/original-author-prompts";
 const ORIGINAL_AUTHOR_SEED_SOURCE = `${ORIGINAL_AUTHOR_SEED_SOURCE_PREFIX}:v4`;
+
+/** Independent Phase2 library seed prefixes (never original-author). */
+export const LIBRARY_SEED_SOURCE_WHITELIST = ["vozeb-pro/youmind-skill", "vozeb-pro/gptimage2-json"] as const;
+
+export type LibrarySeedSourcePrefix = (typeof LIBRARY_SEED_SOURCE_WHITELIST)[number];
+
+export type StoredPromptExport = StoredPrompt;
+
 let mutationQueue = Promise.resolve();
 
 export async function listPrompts(options: PromptListOptions) {
@@ -566,6 +574,66 @@ function isActiveOption(value: string) {
 
 function isOriginalAuthorSeedSource(source?: string) {
     return Boolean(source?.startsWith(ORIGINAL_AUTHOR_SEED_SOURCE_PREFIX));
+}
+
+function assertLibrarySeedBatchInput(input: { sourcePrefix: string; source: string; prompts: StoredPrompt[] }) {
+    const { sourcePrefix, source, prompts } = input;
+    if (!sourcePrefix || !source) throw new AuthInputError("seed source/prefix 不能为空");
+    if (sourcePrefix === ORIGINAL_AUTHOR_SEED_SOURCE_PREFIX || source.startsWith(ORIGINAL_AUTHOR_SEED_SOURCE_PREFIX)) {
+        throw new AuthInputError("禁止通过 library seed batch 写入 original-author 前缀");
+    }
+    if (!(LIBRARY_SEED_SOURCE_WHITELIST as readonly string[]).includes(sourcePrefix)) {
+        throw new AuthInputError(`sourcePrefix 不在白名单: ${sourcePrefix}`);
+    }
+    if (!source.startsWith(sourcePrefix)) throw new AuthInputError("source 必须以前缀 sourcePrefix 开头");
+    for (const item of prompts) {
+        if (item.scope !== "library") throw new AuthInputError(`seed 必须为 library scope: ${item.id}`);
+        if (item.source !== source) throw new AuthInputError(`seed source 必须等于批次 source: ${item.id}`);
+    }
+}
+
+/**
+ * Replace one independent library seed batch (PG or file).
+ * Never accepts original-author prefix.
+ */
+export async function replaceLibrarySeedBatch(input: { sourcePrefix: string; source: string; prompts: StoredPrompt[] }): Promise<{ written: number }> {
+    assertLibrarySeedBatchInput(input);
+    const { sourcePrefix, source, prompts } = input;
+
+    if (isPostgresDatabaseEnabled()) {
+        await ensurePostgresSchema();
+        const records = prompts.map(toPromptRecord);
+        await withPostgresTransaction(async (client) => {
+            await createPostgresRepositories(client).prompts.replaceSeededPrompts(sourcePrefix, source, records);
+        });
+        return { written: prompts.length };
+    }
+
+    return mutatePromptDb((db) => {
+        db.prompts = db.prompts.filter((item) => !(typeof item.source === "string" && item.source.startsWith(sourcePrefix)));
+        db.seedSources = db.seedSources.filter((item) => !item.startsWith(sourcePrefix));
+        const existingIds = new Set(db.prompts.map((item) => item.id));
+        for (const prompt of prompts) {
+            if (existingIds.has(prompt.id)) {
+                db.prompts = db.prompts.filter((item) => item.id !== prompt.id);
+            }
+            db.prompts.push(normalizeStoredPrompt(prompt));
+            existingIds.add(prompt.id);
+        }
+        db.seedSources = Array.from(new Set([...db.seedSources, source]));
+        return { written: prompts.length };
+    });
+}
+
+/** Read all library prompts (for hash index during import). Does not force-apply Phase2 batches. */
+export async function listAllLibraryPromptsForImport(): Promise<StoredPrompt[]> {
+    if (isPostgresDatabaseEnabled()) {
+        await ensurePostgresPromptSeeds();
+        const db = await readPostgresPromptDb();
+        return db.prompts.filter((item) => item.scope === "library");
+    }
+    const db = await readPromptDb({ includeSeeds: true });
+    return db.prompts.filter((item) => item.scope === "library");
 }
 
 function isUsefulPromptTag(tag?: string) {

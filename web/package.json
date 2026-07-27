@@ -11,6 +11,7 @@
         "test": "vitest run",
         "reset:admin-password": "node scripts/reset-admin-password.mjs",
         "check:release": "node scripts/release-check.mjs",
+        "import:prompt-seeds": "node scripts/import-prompt-seeds.mjs",
         "typecheck": "tsc --noEmit --pretty false",
         "format": "prettier --write .",
         "format:check": "prettier --check ."
