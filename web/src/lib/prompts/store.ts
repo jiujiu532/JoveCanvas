@@ -521,7 +521,9 @@ function normalizeStoredPrompt(value: StoredPrompt): StoredPrompt {
         preview: repairMojibakeText(value.preview || ""),
         githubUrl: value.githubUrl,
         source: value.source,
-        locale: normalizePromptLocale(value.locale) || (prompt ? guessPromptLocale(title, prompt) : undefined),
+        // Keep missing/invalid locale as undefined so list ranking can treat it as "unknown".
+        // Creation, update, and seed paths assign locale explicitly (or via guessPromptLocale).
+        locale: normalizePromptLocale(value.locale),
         createdAt: value.createdAt || now,
         updatedAt: value.updatedAt || value.createdAt || now,
     };
