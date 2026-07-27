@@ -36,7 +36,7 @@ describe("site metadata routes", () => {
         const result = await manifest();
 
         expect(result.name).toBe("自定义站点");
-        expect(result.icons).toEqual([{ src: expect.stringMatching(/^\/favicon\.ico\?v=.+/), sizes: "any", purpose: "any" }]);
+        expect(result.icons).toEqual([{ src: "/favicon.ico", sizes: "any", purpose: "any" }]);
     });
 
     it("redirects the standard favicon route to the configured browser icon", async () => {
@@ -52,6 +52,6 @@ describe("site metadata routes", () => {
 
         const response = await favicon(new Request("http://localhost:3000/favicon.ico"));
 
-        expect(response.headers.get("location")).toMatch(/^\/icon\.svg\?v=.+/);
+        expect(response.headers.get("location")).toBe("/icon.svg");
     });
 });
