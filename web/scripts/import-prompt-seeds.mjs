@@ -164,6 +164,10 @@ async function main() {
         source: report.source,
         prompts: report.prompts,
     });
+    if (result.skipped) {
+        console.log(`[import] skipped (source already registered) source=${report.source}`);
+        return;
+    }
     console.log(`[import] applied written=${result.written} source=${report.source}`);
 }
 

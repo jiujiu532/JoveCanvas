@@ -91,4 +91,19 @@ describe("replaceLibrarySeedBatch", () => {
         expect(written.seedSources).toContain("vozeb-pro/youmind-skill:v1");
         expect(written.seedSources).not.toContain("vozeb-pro/youmind-skill:v0");
     });
+
+    it("skips when the same versioned source is already registered (file)", async () => {
+        mocks.readJson.mockResolvedValue({
+            version: 1,
+            prompts: [samplePrompt("youmind-skill-1", "vozeb-pro/youmind-skill:v1")],
+            seedSources: ["vozeb-pro/youmind-skill:v1"],
+        });
+        const result = await replaceLibrarySeedBatch({
+            sourcePrefix: "vozeb-pro/youmind-skill",
+            source: "vozeb-pro/youmind-skill:v1",
+            prompts: [samplePrompt("youmind-skill-2", "vozeb-pro/youmind-skill:v1")],
+        });
+        expect(result).toEqual({ written: 0, skipped: true });
+        expect(mocks.writeJson).not.toHaveBeenCalled();
+    });
 });

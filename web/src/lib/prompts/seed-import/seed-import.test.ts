@@ -21,10 +21,14 @@ describe("seed-import normalize", () => {
         expect(normalizePrompt("Hello")).toBe(normalizePrompt("hello"));
     });
 
-    it("hashes equal after key-sorted JSON normalize", () => {
+    it("hashes equal after key-sorted JSON normalize without stack blow-up", () => {
         const a = '{\n  "b": 1,\n  "a": 2\n}';
         const b = '{"a":2,"b":1}';
+        expect(normalizePrompt(a)).toBe('{"a":2,"b":1}');
         expect(promptContentHash(a)).toBe(promptContentHash(b));
+        // Nested object must also terminate (pre-fix path re-entered full normalize forever).
+        const nested = '{"z":{"y":1},"x":[2,{"b":3,"a":4}]}';
+        expect(normalizePrompt(nested)).toBe('{"x":[2,{"a":4,"b":3}],"z":{"y":1}}');
     });
 
     it("strips utm from cover urls", () => {

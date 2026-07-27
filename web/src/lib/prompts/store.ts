@@ -595,13 +595,19 @@ function assertLibrarySeedBatchInput(input: { sourcePrefix: string; source: stri
 /**
  * Replace one independent library seed batch (PG or file).
  * Never accepts original-author prefix.
+ * Postgres: same versioned `source` already registered → skip (idempotent; bump :vN to force replace).
+ * File: always replace matching prefix rows (user scope untouched by prefix filter).
  */
-export async function replaceLibrarySeedBatch(input: { sourcePrefix: string; source: string; prompts: StoredPrompt[] }): Promise<{ written: number }> {
+export async function replaceLibrarySeedBatch(input: { sourcePrefix: string; source: string; prompts: StoredPrompt[] }): Promise<{ written: number; skipped?: boolean }> {
     assertLibrarySeedBatchInput(input);
     const { sourcePrefix, source, prompts } = input;
 
     if (isPostgresDatabaseEnabled()) {
         await ensurePostgresSchema();
+        const repository = createPostgresRepositories().prompts;
+        if (await repository.hasSeedSource(source)) {
+            return { written: 0, skipped: true };
+        }
         const records = prompts.map(toPromptRecord);
         await withPostgresTransaction(async (client) => {
             await createPostgresRepositories(client).prompts.replaceSeededPrompts(sourcePrefix, source, records);
@@ -609,7 +615,17 @@ export async function replaceLibrarySeedBatch(input: { sourcePrefix: string; sou
         return { written: prompts.length };
     }
 
+    // File store: same versioned source already registered → skip without rewrite.
+    const existing = await readPromptDb({ includeSeeds: false });
+    if (existing.seedSources.includes(source)) {
+        return { written: 0, skipped: true };
+    }
+
     return mutatePromptDb((db) => {
+        // Re-check under the mutation queue (another writer may have registered the source).
+        if (db.seedSources.includes(source)) {
+            return { written: 0, skipped: true };
+        }
         db.prompts = db.prompts.filter((item) => !(typeof item.source === "string" && item.source.startsWith(sourcePrefix)));
         db.seedSources = db.seedSources.filter((item) => !item.startsWith(sourcePrefix));
         const existingIds = new Set(db.prompts.map((item) => item.id));

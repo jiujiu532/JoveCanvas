@@ -115,13 +115,25 @@ export function sampleBySceneQuota(pool: CuratedSeed[], target: number): { accep
         }
     }
 
-    // Cap other again if overfilled.
+    // Cap other again if overfilled; free slots for non-other backfill.
     const otherCap = Math.floor(safeTarget * 0.07);
     const others = accepted.filter((item) => item.category === "other");
     if (others.length > otherCap) {
         const drop = new Set(others.slice(otherCap).map((item) => item.stableId));
         for (let i = accepted.length - 1; i >= 0; i -= 1) {
-            if (drop.has(accepted[i].stableId)) accepted.splice(i, 1);
+            if (drop.has(accepted[i].stableId)) {
+                used.delete(accepted[i].stableId);
+                accepted.splice(i, 1);
+            }
+        }
+        if (accepted.length < safeTarget) {
+            const remaining = pool.filter((item) => !used.has(item.stableId) && item.category !== "other");
+            remaining.sort((a, b) => b.prompt.length - a.prompt.length);
+            for (const item of remaining) {
+                accepted.push(item);
+                used.add(item.stableId);
+                if (accepted.length >= safeTarget) break;
+            }
         }
     }
 

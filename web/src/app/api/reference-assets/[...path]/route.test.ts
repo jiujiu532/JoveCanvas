@@ -71,6 +71,15 @@ describe("reference asset access", () => {
         expect(response.status).toBe(200);
         expect(mocks.getCurrentUser).not.toHaveBeenCalled();
         expect(mocks.stream).toHaveBeenCalled();
+        expect(mocks.rate).toHaveBeenCalled();
+    });
+
+    it("does not treat temporary prompt-seed media as public", async () => {
+        mocks.getCurrentUser.mockResolvedValue(null);
+        mocks.registration.mockResolvedValue({ ownerUserId: "system", storageClass: "temporary", source: "prompt-seed:youmind-skill" });
+        const response = await GET(new Request("http://localhost/api/reference-assets/temporary/2026/07/20/images/file.png"), context);
+        expect(response.status).toBe(401);
+        expect(mocks.stream).not.toHaveBeenCalled();
     });
 
     it("allows the owner and administrators to read registered media", async () => {

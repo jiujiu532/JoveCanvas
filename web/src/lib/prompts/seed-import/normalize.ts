@@ -2,6 +2,14 @@ import { createHash } from "node:crypto";
 
 /** Normalize prompt text for stable primary hash. */
 export function normalizePrompt(prompt: string): string {
+    const text = normalizePromptPlain(prompt);
+    // JSON key-sort must not re-enter full normalize (would recurse forever on stable objects).
+    const maybeJson = tryStableJson(text);
+    return maybeJson ?? text;
+}
+
+/** Whitespace / case normalization without JSON re-entry. */
+function normalizePromptPlain(prompt: string): string {
     let text = (prompt || "").normalize("NFKC").trim();
     text = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
     text = text.replace(/[ \t\f\v]+/g, " ");
@@ -9,10 +17,6 @@ export function normalizePrompt(prompt: string): string {
     // Latin lower only — keep CJK as-is.
     text = text.replace(/[A-Z]/g, (ch) => ch.toLowerCase());
     text = text.replace(/^["'“”‘’]+|["'“”‘’]+$/g, "").trim();
-
-    const maybeJson = tryStableJson(text);
-    if (maybeJson) text = maybeJson;
-
     return text;
 }
 
@@ -20,7 +24,7 @@ function tryStableJson(text: string): string | null {
     if (!text.startsWith("{") && !text.startsWith("[")) return null;
     try {
         const parsed = JSON.parse(text) as unknown;
-        return normalizePrompt(JSON.stringify(sortKeys(parsed)));
+        return normalizePromptPlain(JSON.stringify(sortKeys(parsed)));
     } catch {
         return null;
     }
