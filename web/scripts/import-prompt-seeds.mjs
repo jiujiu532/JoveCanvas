@@ -99,14 +99,17 @@ async function main() {
 
     const inputPath = resolve(args.input);
 
-    // Without DATABASE_URL, postgres mode cannot read the live library — dry-run still works with empty baseline.
-    if (!process.env.DATABASE_URL && !process.env.POSTGRES_URL) {
-        if (args.apply) {
-            console.error("[import] apply requires DATABASE_URL (or file-mode VOZEB_PRO_DATABASE_PROVIDER=file)");
+    // Without DATABASE_URL, postgres mode cannot read/write. File provider can still apply to local JSON.
+    const hasPostgresUrl = Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL);
+    const provider = (process.env.VOZEB_PRO_DATABASE_PROVIDER || "").toLowerCase();
+    const isFileProvider = provider === "file";
+    if (!hasPostgresUrl) {
+        if (args.apply && !isFileProvider) {
+            console.error("[import] apply requires DATABASE_URL/POSTGRES_URL, or VOZEB_PRO_DATABASE_PROVIDER=file");
             process.exitCode = 1;
             return;
         }
-        if ((process.env.VOZEB_PRO_DATABASE_PROVIDER || "").toLowerCase() === "postgres") {
+        if (!isFileProvider) {
             process.env.VOZEB_PRO_DATABASE_PROVIDER = "file";
             console.warn("[import] no DATABASE_URL — forced file provider for dry-run baseline");
         }

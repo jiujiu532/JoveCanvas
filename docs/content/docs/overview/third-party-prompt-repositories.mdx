@@ -35,5 +35,6 @@ pnpm run import:prompt-seeds -- --source gptimage2-json --input /path/to/prompts
 
 - 默认 dry-run：输出 accept/skip 计数，不写库、不下载封面。
 - `--apply`：封面转存为 permanent reference，`coverUrl` 存 `/api/reference-assets/{token}`；`source` 以 `prompt-seed` 开头且 permanent 的资源允许无登录 GET（限流仍在）。
+- 无 `DATABASE_URL` 时需 `VOZEB_PRO_DATABASE_PROVIDER=file` 才能 apply 到本地 `prompts.json`；外网不可达时可加 `--allow-external-cover --skip-rehost`（仅 dev/离线）。
 - 去重：`sha256(normalize(prompt))` 与现库交叉；meta-prompt / 无图默认拒收。
 - 媒体引用计数 `countLocalMediaReferences` **暂不含** `prompts.cover_url`，勿对 prompt-seed 封面做自动硬删。
