@@ -9,6 +9,7 @@ export type Prompt = {
     prompt: string;
     tags: string[];
     category: string;
+    locale?: "zh" | "en" | "mixed";
     githubUrl?: string;
     preview: string;
     createdAt: string;
@@ -24,7 +25,23 @@ export type PromptListResponse = {
     total: number;
 };
 
-export async function fetchPrompts({ keyword = "", tag = [], category = ALL_PROMPTS_OPTION, page, pageSize, random = false }: { keyword?: string; tag?: string[]; category?: string; page?: number; pageSize?: number; random?: boolean } = {}) {
+export async function fetchPrompts({
+    keyword = "",
+    tag = [],
+    category = ALL_PROMPTS_OPTION,
+    page,
+    pageSize,
+    random = false,
+    preferLocale,
+}: {
+    keyword?: string;
+    tag?: string[];
+    category?: string;
+    page?: number;
+    pageSize?: number;
+    random?: boolean;
+    preferLocale?: "zh" | "en";
+} = {}) {
     const params = serializeApiParams(
         compactApiParams({
             ...(keyword ? { keyword } : {}),
@@ -33,6 +50,8 @@ export async function fetchPrompts({ keyword = "", tag = [], category = ALL_PROM
             ...(random ? { random: "1" } : {}),
             ...(page ? { page } : {}),
             ...(pageSize ? { pageSize } : {}),
+            // random 首页预览不强制语言序：不传 preferLocale
+            ...(!random && preferLocale ? { preferLocale } : {}),
         }),
     );
     const response = await fetch(`/api/prompts${params.size ? `?${params}` : ""}`);

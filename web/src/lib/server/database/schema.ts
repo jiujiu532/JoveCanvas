@@ -799,10 +799,12 @@ CREATE TABLE IF NOT EXISTS prompts (
     updated_at timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT prompts_scope CHECK (scope IN ('library', 'user'))
 );
+ALTER TABLE prompts ADD COLUMN IF NOT EXISTS locale text;
 
 CREATE INDEX IF NOT EXISTS prompts_scope_updated_idx ON prompts (scope, updated_at DESC);
 CREATE INDEX IF NOT EXISTS prompts_owner_updated_idx ON prompts (owner_user_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS prompts_tags_gin_idx ON prompts USING gin (tags);
+CREATE INDEX IF NOT EXISTS prompts_scope_locale_updated_idx ON prompts (scope, locale, updated_at DESC);
 
 CREATE TABLE IF NOT EXISTS prompt_seed_sources (
     source text PRIMARY KEY,

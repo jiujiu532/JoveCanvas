@@ -229,6 +229,8 @@ export type PromptRecord = {
     preview: string;
     githubUrl?: string;
     source?: string;
+    /** Optional content language; used for preferLocale ranking only, never as a default filter. */
+    locale?: "zh" | "en" | "mixed";
     createdAt: string;
     updatedAt: string;
 };
