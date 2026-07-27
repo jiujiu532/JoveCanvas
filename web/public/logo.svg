@@ -1,28 +1,77 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="JoveCanvas logo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="JoveCanvas logo" fill="none">
   <defs>
-    <linearGradient id="jc-sphere" x1="0.25" y1="0.05" x2="0.75" y2="1">
-      <stop offset="0" stop-color="#38bdf8" />
-      <stop offset="0.45" stop-color="#1d4ed8" />
-      <stop offset="1" stop-color="#0f2a6b" />
-    </linearGradient>
-    <linearGradient id="jc-ring-front" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#f59e0b" />
-      <stop offset="1" stop-color="#fbbf24" />
-    </linearGradient>
-    <radialGradient id="jc-glow" cx="0.32" cy="0.25" r="0.9">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.5" />
-      <stop offset="0.45" stop-color="#ffffff" stop-opacity="0" />
+    <radialGradient id="jc-planet" cx="0.34" cy="0.3" r="0.78">
+      <stop offset="0" stop-color="#9ad4ff"/>
+      <stop offset="0.3" stop-color="#3b82f6"/>
+      <stop offset="0.65" stop-color="#1e3a8a"/>
+      <stop offset="1" stop-color="#071022"/>
     </radialGradient>
+    <radialGradient id="jc-limb" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0.7" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#020617" stop-opacity="0.5"/>
+    </radialGradient>
+    <radialGradient id="jc-spec" cx="0.3" cy="0.24" r="0.4">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.58"/>
+      <stop offset="0.4" stop-color="#bfdbfe" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="jc-atm" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0.8" stop-color="#38bdf8" stop-opacity="0"/>
+      <stop offset="0.92" stop-color="#38bdf8" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#38bdf8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="jc-gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b45309"/>
+      <stop offset="0.25" stop-color="#fbbf24"/>
+      <stop offset="0.5" stop-color="#fef3c7"/>
+      <stop offset="0.75" stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#92400e"/>
+    </linearGradient>
+    <linearGradient id="jc-gold-dim" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0" stop-color="#78350f" stop-opacity="0.55"/>
+      <stop offset="0.5" stop-color="#d97706" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#fbbf24" stop-opacity="0.5"/>
+    </linearGradient>
+    <clipPath id="jc-clip">
+      <circle cx="200" cy="200" r="110"/>
+    </clipPath>
   </defs>
-  <g transform="rotate(-16 200 200)">
-    <!-- 环-后段 -->
-    <path d="M 52 200 A 148 44 0 0 1 348 200" fill="none" stroke="#d97706" stroke-opacity="0.4" stroke-width="18" stroke-linecap="round" />
+
+  <circle cx="200" cy="200" r="130" fill="url(#jc-atm)"/>
+
+  <!-- Back rings (behind planet) -->
+  <g transform="rotate(-20 200 200)">
+    <path d="M 40 200 A 160 50 0 0 1 360 200" stroke="url(#jc-gold-dim)" stroke-width="14" stroke-linecap="round" opacity="0.45"/>
+    <path d="M 54 200 A 146 42 0 0 1 346 200" stroke="url(#jc-gold-dim)" stroke-width="5" stroke-linecap="round" opacity="0.35"/>
   </g>
-  <!-- 星球 -->
-  <circle cx="200" cy="200" r="112" fill="url(#jc-sphere)" />
-  <circle cx="200" cy="200" r="112" fill="url(#jc-glow)" />
-  <g transform="rotate(-16 200 200)">
-    <!-- 环-前段 -->
-    <path d="M 348 200 A 148 44 0 0 1 52 200" fill="none" stroke="url(#jc-ring-front)" stroke-width="18" stroke-linecap="round" />
+
+  <!-- Planet -->
+  <circle cx="200" cy="200" r="110" fill="url(#jc-planet)"/>
+  <g clip-path="url(#jc-clip)">
+    <!-- Cloud bands -->
+    <path d="M90 146 C145 128 255 128 310 146 L310 166 C255 148 145 148 90 166 Z" fill="#bfdbfe" opacity="0.26"/>
+    <path d="M90 176 C150 160 250 160 310 176 L310 194 C250 178 150 178 90 194 Z" fill="#0f172a" opacity="0.32"/>
+    <path d="M90 212 C148 198 252 198 310 212 L310 234 C252 218 148 218 90 234 Z" fill="#93c5fd" opacity="0.18"/>
+    <path d="M90 252 C150 238 250 238 310 252 L310 270 C250 256 150 256 90 270 Z" fill="#020617" opacity="0.28"/>
+    <!-- Great spot -->
+    <ellipse cx="250" cy="224" rx="24" ry="14" fill="#f59e0b" opacity="0.5"/>
+    <ellipse cx="250" cy="224" rx="14" ry="8" fill="#fde68a" opacity="0.32"/>
+  </g>
+  <circle cx="200" cy="200" r="110" fill="url(#jc-limb)"/>
+  <circle cx="200" cy="200" r="110" fill="url(#jc-spec)"/>
+  <circle cx="200" cy="200" r="110" stroke="#93c5fd" stroke-opacity="0.2" stroke-width="2"/>
+
+  <!-- Front rings (over planet) -->
+  <g transform="rotate(-20 200 200)">
+    <path d="M 360 200 A 160 50 0 0 1 40 200" stroke="url(#jc-gold)" stroke-width="15" stroke-linecap="round"/>
+    <path d="M 346 200 A 146 42 0 0 1 54 200" stroke="url(#jc-gold)" stroke-width="5.5" stroke-linecap="round" opacity="0.9"/>
+  </g>
+
+  <!-- Creation node on orbit -->
+  <g transform="rotate(-20 200 200)">
+    <circle cx="358" cy="216" r="16" fill="#0b1530" opacity="0.2"/>
+    <circle cx="356" cy="214" r="14" fill="#f59e0b"/>
+    <circle cx="356" cy="214" r="14" stroke="#fff7ed" stroke-width="3.5"/>
+    <circle cx="351" cy="209" r="4.5" fill="#fffbeb" opacity="0.95"/>
   </g>
 </svg>
