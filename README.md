@@ -7,6 +7,11 @@
 <p align="center">面向 Agent、图片、视频、Canvas 与短剧生产的开源 AI 创作工作台</p>
 
 <p align="center">
+  <strong>简体中文</strong> ·
+  <a href="./README.en.md">English</a>
+</p>
+
+<p align="center">
   <a href="https://github.com/csyqlz/VOZEB-PRO"><img src="https://img.shields.io/github/stars/csyqlz/VOZEB-PRO?style=flat-square&logo=github" alt="GitHub stars"></a>
   <a href="VERSION"><img src="https://img.shields.io/badge/version-v0.0.2-2563eb?style=flat-square" alt="Version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-f97316?style=flat-square" alt="License"></a>
