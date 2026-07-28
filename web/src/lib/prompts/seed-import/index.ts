@@ -7,3 +7,5 @@ export { loadSeedDrafts } from "@/lib/prompts/seed-import/adapters";
 export { rehostPromptCover, publicReferenceCoverUrl } from "@/lib/prompts/seed-import/rehost";
 export { runSeedImport } from "@/lib/prompts/seed-import/pipeline";
 export type { ImportReport, RunImportOptions } from "@/lib/prompts/seed-import/pipeline";
+export { cleanupUnreferencedPromptSeedCovers } from "@/lib/prompts/seed-import/cleanup-orphans";
+export type { CleanupUnreferencedPromptSeedCoversResult } from "@/lib/prompts/seed-import/cleanup-orphans";

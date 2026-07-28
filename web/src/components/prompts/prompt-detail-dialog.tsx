@@ -2,13 +2,15 @@
 
 import { Copy, FolderPlus } from "lucide-react";
 import { Button, Modal, Space, Tag } from "antd";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { imagePreviewUrl } from "@/lib/media-image-url";
+import { labelPromptTag } from "@/lib/prompts/facet-labels";
 import { formatPromptDate, type Prompt } from "@/services/api/prompts";
 
 export function PromptDetailDialog({ prompt, onClose, onCopy, onSaveAsset }: { prompt: Prompt | null; onClose: () => void; onCopy: (prompt: string) => void; onSaveAsset?: (prompt: Prompt) => void }) {
     const t = useTranslations("layout");
+    const locale = useLocale();
     return (
         <>
             <Modal title={prompt?.title} open={Boolean(prompt)} onCancel={onClose} footer={null} width={860}>
@@ -27,7 +29,7 @@ export function PromptDetailDialog({ prompt, onClose, onCopy, onSaveAsset }: { p
                                 <div className="flex flex-wrap gap-1.5">
                                     {prompt.tags.map((tag) => (
                                         <Tag key={tag} className="m-0">
-                                            {tag}
+                                            {labelPromptTag(tag, locale)}
                                         </Tag>
                                     ))}
                                 </div>

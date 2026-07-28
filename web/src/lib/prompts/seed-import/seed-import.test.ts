@@ -178,6 +178,7 @@ describe("seed-import pipeline skip-if-registered", () => {
         expect(report.accepted).toBe(0);
         expect(report.prompts).toEqual([]);
         expect(report.skipped.source_registered).toBe(1);
+        expect(report.rehostedTokens).toEqual([]);
     });
 
     it("does zero rehost when skipIfSourceRegistered hits (no cover download)", async () => {
@@ -200,9 +201,119 @@ describe("seed-import pipeline skip-if-registered", () => {
             });
             expect(report.skipped.source_registered).toBe(1);
             expect(report.prompts).toEqual([]);
+            expect(report.rehostedTokens).toEqual([]);
             expect(spy).not.toHaveBeenCalled();
         } finally {
             spy.mockRestore();
+        }
+    });
+
+    it("collects rehostedTokens from successful rehosts", async () => {
+        const adapters = await import("@/lib/prompts/seed-import/adapters");
+        const rehostMod = await import("@/lib/prompts/seed-import/rehost");
+        const loadSpy = vi.spyOn(adapters, "loadSeedDrafts").mockResolvedValue([
+            draft({
+                stableId: "token-1",
+                title: "Token Cover One",
+                prompt: "A long enough photographic product still life for rehost token collection path.",
+                coverOriginUrl: "https://cdn.example.com/token-1.jpg",
+            }),
+        ]);
+        const rehostSpy = vi.spyOn(rehostMod, "rehostPromptCover").mockResolvedValue({
+            ok: true,
+            coverUrl: "/api/reference-assets/permanent/rehosted-token-1.png",
+            token: "permanent/rehosted-token-1.png",
+        });
+        try {
+            const { runSeedImport } = await import("@/lib/prompts/seed-import/pipeline");
+            const report = await runSeedImport({
+                sourceKey: "youmind-skill",
+                inputPath: "/mock",
+                library: [],
+                dryRun: false,
+                skipRehost: false,
+                skipIfSourceRegistered: true,
+                registeredSeedSources: [],
+            });
+            expect(report.accepted).toBe(1);
+            expect(report.rehostedTokens).toEqual(["permanent/rehosted-token-1.png"]);
+            expect(report.prompts[0]?.coverUrl).toBe("/api/reference-assets/permanent/rehosted-token-1.png");
+            expect(rehostSpy).toHaveBeenCalledTimes(1);
+        } finally {
+            loadSpy.mockRestore();
+            rehostSpy.mockRestore();
+        }
+    });
+});
+
+describe("cleanupUnreferencedPromptSeedCovers", () => {
+    it("deletes keys with refCount 0 and leaves referenced keys", async () => {
+        const refs = await import("@/lib/server/local-media-references");
+        const storage = await import("@/lib/server/local-media-storage");
+        const countSpy = vi.spyOn(refs, "countLocalMediaReferences").mockResolvedValue(
+            new Map([
+                ["permanent/orphan-a.png", 0],
+                ["permanent/kept-b.png", 2],
+                ["permanent/orphan-c.png", 0],
+            ]),
+        );
+        const deleteSpy = vi.spyOn(storage, "deleteLocalMediaAssetsByStorageKeys").mockResolvedValue({
+            deletedFiles: 2,
+            deletedBytes: 100,
+            blocked: [],
+        });
+        try {
+            const { cleanupUnreferencedPromptSeedCovers } = await import("@/lib/prompts/seed-import/cleanup-orphans");
+            const result = await cleanupUnreferencedPromptSeedCovers([
+                "permanent/orphan-a.png",
+                "permanent/kept-b.png",
+                "permanent/orphan-c.png",
+                "permanent/orphan-a.png",
+            ]);
+            expect(result).toEqual({ deleted: 2, blocked: 1 });
+            expect(deleteSpy).toHaveBeenCalledTimes(1);
+            expect(deleteSpy).toHaveBeenCalledWith(["permanent/orphan-a.png", "permanent/orphan-c.png"], "reference");
+            expect(countSpy).toHaveBeenCalled();
+        } finally {
+            countSpy.mockRestore();
+            deleteSpy.mockRestore();
+        }
+    });
+
+    it("does not call delete when every token is still referenced", async () => {
+        const refs = await import("@/lib/server/local-media-references");
+        const storage = await import("@/lib/server/local-media-storage");
+        const countSpy = vi.spyOn(refs, "countLocalMediaReferences").mockResolvedValue(new Map([["permanent/kept.png", 1]]));
+        const deleteSpy = vi.spyOn(storage, "deleteLocalMediaAssetsByStorageKeys").mockResolvedValue({
+            deletedFiles: 0,
+            deletedBytes: 0,
+            blocked: [],
+        });
+        try {
+            const { cleanupUnreferencedPromptSeedCovers } = await import("@/lib/prompts/seed-import/cleanup-orphans");
+            const result = await cleanupUnreferencedPromptSeedCovers(["permanent/kept.png"]);
+            expect(result).toEqual({ deleted: 0, blocked: 1 });
+            expect(deleteSpy).not.toHaveBeenCalled();
+        } finally {
+            countSpy.mockRestore();
+            deleteSpy.mockRestore();
+        }
+    });
+
+    it("returns zeros for empty token list without media lookups", async () => {
+        const refs = await import("@/lib/server/local-media-references");
+        const storage = await import("@/lib/server/local-media-storage");
+        const countSpy = vi.spyOn(refs, "countLocalMediaReferences");
+        const deleteSpy = vi.spyOn(storage, "deleteLocalMediaAssetsByStorageKeys");
+        try {
+            const { cleanupUnreferencedPromptSeedCovers } = await import("@/lib/prompts/seed-import/cleanup-orphans");
+            await expect(cleanupUnreferencedPromptSeedCovers([])).resolves.toEqual({ deleted: 0, blocked: 0 });
+            await expect(cleanupUnreferencedPromptSeedCovers(["", "  "])).resolves.toEqual({ deleted: 0, blocked: 0 });
+            expect(countSpy).not.toHaveBeenCalled();
+            expect(deleteSpy).not.toHaveBeenCalled();
+        } finally {
+            countSpy.mockRestore();
+            deleteSpy.mockRestore();
         }
     });
 });

@@ -16,6 +16,8 @@ export type ImportReport = {
     localeCounts: Record<string, number>;
     samples: { accept: Array<{ id: string; title: string; category: string }>; skip: Array<{ reason: string; title?: string }> };
     prompts: StoredPromptExport[];
+    /** Storage keys successfully rehosted in this run (for orphan cleanup if apply claim races). */
+    rehostedTokens: string[];
 };
 
 export type RunImportOptions = {
@@ -63,6 +65,7 @@ export async function runSeedImport(options: RunImportOptions): Promise<ImportRe
                 localeCounts: {},
                 samples: { accept: [], skip: [{ reason: "source_registered" }] },
                 prompts: [],
+                rehostedTokens: [],
             };
         }
     }
@@ -89,6 +92,7 @@ export async function runSeedImport(options: RunImportOptions): Promise<ImportRe
 
     const prompts: StoredPromptExport[] = [];
     const acceptSamples: Array<{ id: string; title: string; category: string }> = [];
+    const rehostedTokens: string[] = [];
 
     for (const item of sampled) {
         let coverUrl = item.coverOriginUrl;
@@ -104,6 +108,7 @@ export async function runSeedImport(options: RunImportOptions): Promise<ImportRe
                 }
             } else {
                 coverUrl = rehosted.coverUrl;
+                if (rehosted.token) rehostedTokens.push(rehosted.token);
             }
         } else if (!isDryRun && !options.allowExternalCover) {
             bump(skipCounts, "rehost");
@@ -146,6 +151,7 @@ export async function runSeedImport(options: RunImportOptions): Promise<ImportRe
         localeCounts,
         samples: { accept: acceptSamples, skip: skipSamples },
         prompts,
+        rehostedTokens,
     };
 }
 

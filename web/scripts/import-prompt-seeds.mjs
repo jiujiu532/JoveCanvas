@@ -88,7 +88,7 @@ async function main() {
         },
     });
 
-    const { runSeedImport, SEED_SOURCE_META } = jiti(join(srcRoot, "lib/prompts/seed-import/index.ts"));
+    const { runSeedImport, SEED_SOURCE_META, cleanupUnreferencedPromptSeedCovers } = jiti(join(srcRoot, "lib/prompts/seed-import/index.ts"));
     const { isLibrarySeedSourceRegistered, listAllLibraryPromptsForImport, replaceLibrarySeedBatch } = jiti(join(srcRoot, "lib/prompts/store.ts"));
 
     if (!(args.source in SEED_SOURCE_META)) {
@@ -191,12 +191,23 @@ async function main() {
         prompts: report.prompts,
     });
     if (result.skipped) {
-        // Race after rehost: batch claim lost. Covers already written in this run may be unreferenced
-        // permanent media. Claim is the primary fix; orphan GC is not wired in CLI yet.
+        // Race after rehost: batch claim lost. Drop unreferenced covers produced by this run.
+        const tokens = Array.isArray(report.rehostedTokens) ? report.rehostedTokens : [];
         console.warn(
-            `[import] skipped after apply race (source already registered) source=${report.source}. ` +
-                "If covers were rehosted in this run they may be unreferenced; prefer pre-check / bump :vN.",
+            `[import] skipped after apply race (source already registered) source=${report.source} rehostedTokens=${tokens.length}`,
         );
+        if (tokens.length) {
+            try {
+                const cleanup = await cleanupUnreferencedPromptSeedCovers(tokens);
+                console.log(
+                    `[import] orphan cover cleanup deleted=${cleanup.deleted} blocked=${cleanup.blocked} candidates=${tokens.length}`,
+                );
+            } catch (error) {
+                console.warn(
+                    `[import] orphan cover cleanup failed: ${error instanceof Error ? error.message : error}`,
+                );
+            }
+        }
         return;
     }
     console.log(`[import] applied written=${result.written} source=${report.source}`);

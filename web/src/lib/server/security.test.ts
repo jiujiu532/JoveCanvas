@@ -1,5 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
-import { checkGenerationRateLimit, checkLocalMediaRateLimit, checkMediaProxyRateLimit, checkRateLimit, getClientIp, rateLimitHeaders } from "./security";
+import {
+    checkGenerationRateLimit,
+    checkLocalMediaRateLimit,
+    checkMediaProxyRateLimit,
+    checkRateLimit,
+    getClientIp,
+    isPublicIpAddress,
+    isSafeOutboundUrl,
+    rateLimitHeaders,
+} from "./security";
 
 describe("checkRateLimit", () => {
     it("blocks requests beyond the configured window limit", async () => {
@@ -19,6 +28,26 @@ describe("checkRateLimit", () => {
 
         if (previous === undefined) delete process.env.VOZEB_PRO_TRUSTED_PROXY_HOPS;
         else process.env.VOZEB_PRO_TRUSTED_PROXY_HOPS = previous;
+    });
+
+    it("reads cf-connecting-ip and x-real-ip when trusted proxy hops is 0", () => {
+        const previous = process.env.VOZEB_PRO_TRUSTED_PROXY_HOPS;
+        delete process.env.VOZEB_PRO_TRUSTED_PROXY_HOPS;
+        try {
+            expect(getClientIp(new Request("http://localhost", { headers: { "cf-connecting-ip": "198.51.100.20" } }))).toBe("198.51.100.20");
+            expect(getClientIp(new Request("http://localhost", { headers: { "x-real-ip": "203.0.113.20" } }))).toBe("203.0.113.20");
+            expect(
+                getClientIp(
+                    new Request("http://localhost", {
+                        headers: { "cf-connecting-ip": "198.51.100.30", "x-real-ip": "203.0.113.30", "x-forwarded-for": "192.0.2.30" },
+                    }),
+                ),
+            ).toBe("198.51.100.30");
+            expect(getClientIp(new Request("http://localhost", { headers: { "x-forwarded-for": "192.0.2.40" } }))).toBe("unknown");
+        } finally {
+            if (previous === undefined) delete process.env.VOZEB_PRO_TRUSTED_PROXY_HOPS;
+            else process.env.VOZEB_PRO_TRUSTED_PROXY_HOPS = previous;
+        }
     });
 
     it("limits generation requests by user", async () => {
@@ -67,5 +96,35 @@ describe("checkRateLimit", () => {
         vi.setSystemTime(new Date("2026-07-22T00:00:00.000Z"));
         expect(rateLimitHeaders({ allowed: false, remaining: 0, resetAt: Date.now() + 1500 })).toEqual({ "Retry-After": "2" });
         vi.useRealTimers();
+    });
+});
+
+describe("isPublicIpAddress", () => {
+    it("rejects private, loopback, and link-local IPv4 ranges", () => {
+        expect(isPublicIpAddress("10.0.0.1")).toBe(false);
+        expect(isPublicIpAddress("127.0.0.1")).toBe(false);
+        expect(isPublicIpAddress("192.168.1.1")).toBe(false);
+        expect(isPublicIpAddress("169.254.1.1")).toBe(false);
+        expect(isPublicIpAddress("8.8.8.8")).toBe(true);
+    });
+
+    it("rejects NAT64 well-known prefix 64:ff9b::/96", () => {
+        expect(isPublicIpAddress("64:ff9b::1")).toBe(false);
+        expect(isPublicIpAddress("64:ff9b:0:0:0:0:c000:201")).toBe(false);
+        expect(isPublicIpAddress("2001:4860:4860::8888")).toBe(true);
+    });
+});
+
+describe("isSafeOutboundUrl", () => {
+    it("rejects non-http protocols and credentialed urls", async () => {
+        expect(await isSafeOutboundUrl("ftp://example.com/a.png")).toBe(false);
+        expect(await isSafeOutboundUrl("https://user:pass@example.com/a.png")).toBe(false);
+        expect(await isSafeOutboundUrl("https://user:pass@example.com/a.png", { allowCredentials: true })).toBe(true);
+    });
+
+    it("rejects direct private and NAT64 IP hosts", async () => {
+        expect(await isSafeOutboundUrl("http://127.0.0.1/x")).toBe(false);
+        expect(await isSafeOutboundUrl("http://[64:ff9b::1]/x")).toBe(false);
+        expect(await isSafeOutboundUrl("https://8.8.8.8/x")).toBe(true);
     });
 });

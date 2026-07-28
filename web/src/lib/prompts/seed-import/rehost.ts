@@ -74,11 +74,13 @@ async function fetchImageBytes(url: string): Promise<{ bytes: Buffer; mimeType: 
         const response = await fetchSafeImageResponse(url, controller.signal);
         if (!response.ok) throw new Error(`http_${response.status}`);
         const contentType = (response.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+        if (contentType === "image/svg+xml") throw new Error("svg_not_allowed");
         if (contentType && !contentType.startsWith("image/")) throw new Error(`not_image:${contentType}`);
         const arrayBuffer = await response.arrayBuffer();
         const bytes = Buffer.from(arrayBuffer);
         if (!bytes.length) throw new Error("empty_body");
         if (bytes.length > MAX_IMAGE_BYTES) throw new Error("too_large");
+        if (looksLikeSvg(bytes)) throw new Error("svg_not_allowed");
         const mimeType = contentType && contentType.startsWith("image/") ? contentType : sniffMime(bytes);
         if (!mimeType.startsWith("image/")) throw new Error("not_image_sniff");
         return { bytes, mimeType };
@@ -120,4 +122,10 @@ function sniffMime(bytes: Buffer): string {
     if (bytes.length >= 6 && bytes.toString("ascii", 0, 6) === "GIF89a") return "image/gif";
     if (bytes.length >= 12 && bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WEBP") return "image/webp";
     return "application/octet-stream";
+}
+
+/** Reject SVG payloads that could carry scriptable content when rehosted as cover images. */
+function looksLikeSvg(bytes: Buffer): boolean {
+    const head = bytes.subarray(0, Math.min(bytes.length, 256)).toString("utf8").trimStart().toLowerCase();
+    return head.startsWith("<svg") || (head.startsWith("<?xml") && head.includes("<svg"));
 }

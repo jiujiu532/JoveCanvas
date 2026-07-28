@@ -4,6 +4,7 @@ import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { AppProviders } from "@/components/layout/app-providers";
+import { BRAND_ASSET_VERSION, DEFAULT_BRAND_ICON_PATH, DEFAULT_BRAND_LOGO_PATH, withBrandAssetVersion } from "@/lib/brand-assets";
 import { absoluteSiteUrl, getPublicSiteSettings, siteMetadataBase } from "@/lib/server/site-metadata";
 import "antd/dist/reset.css";
 import "./globals.css";
@@ -23,8 +24,9 @@ export async function generateMetadata(): Promise<Metadata> {
     const site = await getPublicSiteSettings();
     const locale = await getLocale();
     const base = siteMetadataBase();
-    const logoUrl = absoluteSiteUrl(site.logoUrl || "/logo.svg", base);
-    const iconUrl = absoluteSiteUrl("/favicon.ico", base);
+    const logoUrl = absoluteSiteUrl(withBrandAssetVersion(site.logoUrl || DEFAULT_BRAND_LOGO_PATH), base);
+    // Prefer SVG icon with version query; /favicon.ico still works as redirect fallback for legacy agents.
+    const iconUrl = absoluteSiteUrl(withBrandAssetVersion(site.iconUrl || DEFAULT_BRAND_ICON_PATH), base);
     const title = site.seoTitle || site.title;
     return {
         metadataBase: base,
@@ -68,9 +70,9 @@ export default async function RootLayout({
     return (
         <html lang={locale === "zh" ? "zh-CN" : "en"} suppressHydrationWarning className="font-sans">
             <head>
-                <link rel="icon" href="/favicon.ico" />
-                <link rel="shortcut icon" href="/favicon.ico" />
-                <link rel="apple-touch-icon" href="/favicon.ico" />
+                <link rel="icon" href={`${DEFAULT_BRAND_ICON_PATH}?v=${BRAND_ASSET_VERSION}`} type="image/svg+xml" />
+                <link rel="shortcut icon" href={`/favicon.ico?v=${BRAND_ASSET_VERSION}`} />
+                <link rel="apple-touch-icon" href={`${DEFAULT_BRAND_ICON_PATH}?v=${BRAND_ASSET_VERSION}`} />
             </head>
             <body
                 className="bg-background text-foreground antialiased"

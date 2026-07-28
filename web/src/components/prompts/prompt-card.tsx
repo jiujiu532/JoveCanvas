@@ -3,9 +3,10 @@
 import { Copy } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button, Card, Tag } from "antd";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { imagePreviewUrl } from "@/lib/media-image-url";
+import { labelPromptTag } from "@/lib/prompts/facet-labels";
 import { formatPromptDate, type Prompt } from "@/services/api/prompts";
 
 export function PromptCard({
@@ -26,6 +27,7 @@ export function PromptCard({
     extraAction?: ReactNode;
 }) {
     const t = useTranslations("layout");
+    const locale = useLocale();
     const resolvedActionLabel = actionLabel ?? t("prompts.copy");
     return (
         <>
@@ -45,7 +47,7 @@ export function PromptCard({
                         <div className="mt-1.5 flex min-w-0 gap-1 overflow-hidden">
                             {item.tags.slice(0, 2).map((tag) => (
                                 <Tag key={tag} className="m-0 max-w-24 truncate text-[10px]">
-                                    {tag}
+                                    {labelPromptTag(tag, locale)}
                                 </Tag>
                             ))}
                         </div>
@@ -83,7 +85,7 @@ export function PromptCard({
                         <div className="mt-2 flex flex-wrap gap-1.5">
                             {item.tags.map((tag) => (
                                 <Tag key={tag} className="m-0 text-[11px]">
-                                    {tag}
+                                    {labelPromptTag(tag, locale)}
                                 </Tag>
                             ))}
                         </div>

@@ -40,7 +40,10 @@ const rateLimits = (globalSecurityStore.__vozebProRateLimits ??= new Map<string,
 
 export function getClientIp(request: Request) {
     const trustedProxyHops = readTrustedProxyHops();
-    if (trustedProxyHops <= 0) return "unknown";
+    if (trustedProxyHops <= 0) {
+        // hops=0: do not trust XFF, but still accept platform-provided client IP headers when present.
+        return request.headers.get("cf-connecting-ip")?.trim() || request.headers.get("x-real-ip")?.trim() || "unknown";
+    }
 
     const forwarded = request.headers
         .get("x-forwarded-for")
@@ -183,6 +186,8 @@ export function isPublicIpAddress(address: string) {
         if (normalized === "::" || normalized === "::1") return false;
         if (normalized.startsWith("fc") || normalized.startsWith("fd") || /^fe[89ab]/.test(normalized)) return false;
         if (normalized.startsWith("ff") || normalized.startsWith("2001:db8:")) return false;
+        // NAT64 well-known prefix 64:ff9b::/96 maps IPv4 into IPv6 and must not be treated as public outbound.
+        if (normalized.startsWith("64:ff9b:")) return false;
         if (normalized.startsWith("::ffff:")) return isPublicIpAddress(normalized.slice("::ffff:".length));
         return true;
     }
