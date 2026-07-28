@@ -1,5 +1,5 @@
 /** Bump when bundled brand SVGs change so img/favicon caches refresh. */
-export const BRAND_ASSET_VERSION = "20260728a";
+export const BRAND_ASSET_VERSION = "20260728b";
 
 export const DEFAULT_BRAND_LOGO_PATH = "/logo.svg";
 export const DEFAULT_BRAND_ICON_PATH = "/icon.svg";

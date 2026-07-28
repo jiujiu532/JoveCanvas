@@ -1,77 +1,77 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="JoveCanvas logo" fill="none">
   <defs>
-    <linearGradient id="jc-frame" x1="0.1" y1="0" x2="0.9" y2="1">
-      <stop offset="0" stop-color="#60a5fa"/>
-      <stop offset="0.45" stop-color="#2563eb"/>
-      <stop offset="1" stop-color="#0f2a6b"/>
+    <radialGradient id="jc-planet" cx="0.34" cy="0.3" r="0.78">
+      <stop offset="0" stop-color="#9ad4ff"/>
+      <stop offset="0.3" stop-color="#3b82f6"/>
+      <stop offset="0.65" stop-color="#1e3a8a"/>
+      <stop offset="1" stop-color="#071022"/>
+    </radialGradient>
+    <radialGradient id="jc-limb" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0.7" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#020617" stop-opacity="0.5"/>
+    </radialGradient>
+    <radialGradient id="jc-spec" cx="0.3" cy="0.24" r="0.4">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.58"/>
+      <stop offset="0.4" stop-color="#bfdbfe" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="jc-atm" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0.8" stop-color="#38bdf8" stop-opacity="0"/>
+      <stop offset="0.92" stop-color="#38bdf8" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#38bdf8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="jc-gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b45309"/>
+      <stop offset="0.25" stop-color="#fbbf24"/>
+      <stop offset="0.5" stop-color="#fef3c7"/>
+      <stop offset="0.75" stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#92400e"/>
     </linearGradient>
-    <linearGradient id="jc-frame-soft" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#93c5fd" stop-opacity="0.55"/>
-      <stop offset="1" stop-color="#1d4ed8" stop-opacity="0.35"/>
+    <linearGradient id="jc-gold-dim" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0" stop-color="#78350f" stop-opacity="0.55"/>
+      <stop offset="0.5" stop-color="#d97706" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#fbbf24" stop-opacity="0.5"/>
     </linearGradient>
-    <linearGradient id="jc-ink" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#fef3c7"/>
-      <stop offset="0.35" stop-color="#fbbf24"/>
-      <stop offset="0.7" stop-color="#f59e0b"/>
-      <stop offset="1" stop-color="#b45309"/>
-    </linearGradient>
-    <linearGradient id="jc-core" x1="0.2" y1="0.1" x2="0.85" y2="0.95">
-      <stop offset="0" stop-color="#dbeafe"/>
-      <stop offset="0.4" stop-color="#3b82f6"/>
-      <stop offset="1" stop-color="#1e3a8a"/>
-    </linearGradient>
-    <filter id="jc-glow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="4" result="b"/>
-      <feMerge>
-        <feMergeNode in="b"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
+    <clipPath id="jc-clip">
+      <circle cx="200" cy="200" r="110"/>
+    </clipPath>
   </defs>
 
-  <!-- Back canvas sheets (depth / layers) -->
-  <g opacity="0.9">
-    <rect x="86" y="64" width="228" height="228" rx="36" transform="rotate(8 200 178)" fill="url(#jc-frame-soft)"/>
-    <rect x="78" y="72" width="228" height="228" rx="36" transform="rotate(-6 192 186)" fill="url(#jc-frame-soft)" opacity="0.75"/>
+  <circle cx="200" cy="200" r="130" fill="url(#jc-atm)"/>
+
+  <!-- Back rings (behind planet) -->
+  <g transform="rotate(-20 200 200)">
+    <path d="M 40 200 A 160 50 0 0 1 360 200" stroke="url(#jc-gold-dim)" stroke-width="14" stroke-linecap="round" opacity="0.45"/>
+    <path d="M 54 200 A 146 42 0 0 1 346 200" stroke="url(#jc-gold-dim)" stroke-width="5" stroke-linecap="round" opacity="0.35"/>
   </g>
 
-  <!-- Main canvas frame -->
-  <rect x="78" y="78" width="244" height="244" rx="40" fill="url(#jc-frame)"/>
-  <!-- Inner well -->
-  <rect x="104" y="104" width="192" height="192" rx="28" fill="#071022" opacity="0.22"/>
-  <rect x="112" y="112" width="176" height="176" rx="24" fill="url(#jc-core)" opacity="0.35"/>
+  <!-- Planet -->
+  <circle cx="200" cy="200" r="110" fill="url(#jc-planet)"/>
+  <g clip-path="url(#jc-clip)">
+    <!-- Cloud bands -->
+    <path d="M90 146 C145 128 255 128 310 146 L310 166 C255 148 145 148 90 166 Z" fill="#bfdbfe" opacity="0.26"/>
+    <path d="M90 176 C150 160 250 160 310 176 L310 194 C250 178 150 178 90 194 Z" fill="#0f172a" opacity="0.32"/>
+    <path d="M90 212 C148 198 252 198 310 212 L310 234 C252 218 148 218 90 234 Z" fill="#93c5fd" opacity="0.18"/>
+    <path d="M90 252 C150 238 250 238 310 252 L310 270 C250 256 150 256 90 270 Z" fill="#020617" opacity="0.28"/>
+    <!-- Great spot -->
+    <ellipse cx="250" cy="224" rx="24" ry="14" fill="#f59e0b" opacity="0.5"/>
+    <ellipse cx="250" cy="224" rx="14" ry="8" fill="#fde68a" opacity="0.32"/>
+  </g>
+  <circle cx="200" cy="200" r="110" fill="url(#jc-limb)"/>
+  <circle cx="200" cy="200" r="110" fill="url(#jc-spec)"/>
+  <circle cx="200" cy="200" r="110" stroke="#93c5fd" stroke-opacity="0.2" stroke-width="2"/>
 
-  <!-- Subtle grid (canvas metaphor) -->
-  <g stroke="#ffffff" stroke-opacity="0.14" stroke-width="3" stroke-linecap="round">
-    <path d="M148 140 H264"/>
-    <path d="M148 176 H264"/>
-    <path d="M148 212 H264"/>
-    <path d="M148 248 H220"/>
-    <path d="M168 128 V260"/>
-    <path d="M208 128 V260"/>
-    <path d="M248 128 V220"/>
+  <!-- Front rings (over planet) -->
+  <g transform="rotate(-20 200 200)">
+    <path d="M 360 200 A 160 50 0 0 1 40 200" stroke="url(#jc-gold)" stroke-width="15" stroke-linecap="round"/>
+    <path d="M 346 200 A 146 42 0 0 1 54 200" stroke="url(#jc-gold)" stroke-width="5.5" stroke-linecap="round" opacity="0.9"/>
   </g>
 
-  <!-- Creative stroke: golden path across the canvas -->
-  <path
-    d="M128 248 C158 210 176 168 208 152 C236 138 262 148 278 172"
-    stroke="url(#jc-ink)"
-    stroke-width="22"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    filter="url(#jc-glow)"
-  />
-  <!-- Secondary thinner accent -->
-  <path
-    d="M140 236 C168 204 184 174 210 162 C232 152 252 160 266 178"
-    stroke="#fffbeb"
-    stroke-opacity="0.45"
-    stroke-width="6"
-    stroke-linecap="round"
-  />
-
-  <!-- Creation node -->
-  <circle cx="278" cy="172" r="20" fill="#f59e0b"/>
-  <circle cx="278" cy="172" r="20" stroke="#fff7ed" stroke-width="5"/>
-  <circle cx="272" cy="166" r="6" fill="#fffbeb"/>
+  <!-- Creation node on orbit -->
+  <g transform="rotate(-20 200 200)">
+    <circle cx="358" cy="216" r="16" fill="#0b1530" opacity="0.2"/>
+    <circle cx="356" cy="214" r="14" fill="#f59e0b"/>
+    <circle cx="356" cy="214" r="14" stroke="#fff7ed" stroke-width="3.5"/>
+    <circle cx="351" cy="209" r="4.5" fill="#fffbeb" opacity="0.95"/>
+  </g>
 </svg>

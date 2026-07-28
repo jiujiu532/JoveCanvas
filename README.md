@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="web/public/logo.svg?v=0.0.3" width="108" alt="JoveCanvas logo">
+  <img src="web/public/logo.svg?v=0.0.4" width="108" alt="JoveCanvas logo">
 </p>
 
 <h1 align="center">JoveCanvas</h1>
