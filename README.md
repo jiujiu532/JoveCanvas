@@ -22,12 +22,9 @@
 <p align="center">
   <a href="docs/index.md">文档索引</a> ·
   <a href="docs/content/docs/overview/project-structure.mdx">项目结构</a> ·
-  <a href="docs/content/docs/overview/page-gallery.mdx">页面图册</a> ·
   <a href="CONTRIBUTING.md">参与贡献</a> ·
   <a href="CHANGELOG.md">更新记录</a>
 </p>
-
-![JoveCanvas 无限画布](docs/public/screenshots/pages/03a-canvas-editor.webp)
 
 **JoveCanvas** 把统一创作 Agent、图片与视频工作台、无限画布、短剧生产、素材库和商业运营后台放在同一套 Next.js 全栈应用中。PostgreSQL 保存账号与业务数据；媒体可写入服务器本地目录或 S3 兼容对象存储；模型、支付和存储密钥只在服务端使用。
 
@@ -400,25 +397,6 @@ pnpm run dev
 | `AGENTS.md` / `CONTRIBUTING.md` | 工程约束与贡献流程 |
 
 更完整的目录树与关键入口见[项目结构与流程](docs/content/docs/overview/project-structure.mdx)。
-
-## 页面展示
-
-<table>
-  <tr>
-    <td width="50%"><img src="docs/public/screenshots/pages/03a-canvas-editor.webp" alt="画布编辑器"></td>
-    <td width="50%"><img src="docs/public/screenshots/pages/04a-drama-editor.webp" alt="短剧生产编辑器"></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/public/screenshots/pages/05-image-workbench.webp" alt="图片工作台"></td>
-    <td width="50%"><img src="docs/public/screenshots/pages/06-video-workbench.webp" alt="视频工作台"></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/public/screenshots/pages/20-admin-overview.webp" alt="经营看板"></td>
-    <td width="50%"><img src="docs/public/screenshots/pages/34-admin-channels.webp" alt="模型渠道"></td>
-  </tr>
-</table>
-
-更多截图见[页面功能图册](docs/content/docs/overview/page-gallery.mdx)。
 
 ## 数据与安全
 

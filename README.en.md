@@ -22,12 +22,9 @@
 <p align="center">
   <a href="docs/index.md">Docs index</a> ·
   <a href="docs/content/docs/overview/project-structure.mdx">Project structure</a> ·
-  <a href="docs/content/docs/overview/page-gallery.mdx">Page gallery</a> ·
   <a href="CONTRIBUTING.md">Contributing</a> ·
   <a href="CHANGELOG.md">Changelog</a>
 </p>
-
-![JoveCanvas infinite canvas](docs/public/screenshots/pages/03a-canvas-editor.webp)
 
 **JoveCanvas** packs a unified creative Agent, image and video workbenches, an infinite canvas, short-drama production, an asset library, and a commercial admin console into one Next.js full-stack app. PostgreSQL stores accounts and business data; media can land on local disk or S3-compatible object storage; model, payment, and storage secrets stay server-side only.
 
@@ -400,25 +397,6 @@ pnpm run dev
 | `AGENTS.md` / `CONTRIBUTING.md` | Engineering constitution and contribution flow |
 
 Full tree and key entrypoints: [Project structure & flow](docs/content/docs/overview/project-structure.mdx).
-
-## Screenshots
-
-<table>
-  <tr>
-    <td width="50%"><img src="docs/public/screenshots/pages/03a-canvas-editor.webp" alt="Canvas editor"></td>
-    <td width="50%"><img src="docs/public/screenshots/pages/04a-drama-editor.webp" alt="Drama production editor"></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/public/screenshots/pages/05-image-workbench.webp" alt="Image workbench"></td>
-    <td width="50%"><img src="docs/public/screenshots/pages/06-video-workbench.webp" alt="Video workbench"></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/public/screenshots/pages/20-admin-overview.webp" alt="Admin dashboard"></td>
-    <td width="50%"><img src="docs/public/screenshots/pages/34-admin-channels.webp" alt="Model channels"></td>
-  </tr>
-</table>
-
-More screenshots: [Page gallery](docs/content/docs/overview/page-gallery.mdx).
 
 ## Data & security
 
