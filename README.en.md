@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="web/public/logo.svg?v=0.0.2" width="108" alt="JoveCanvas logo">
+  <img src="web/public/logo.svg?v=0.0.3" width="108" alt="JoveCanvas logo">
 </p>
 
 <h1 align="center">JoveCanvas</h1>
@@ -27,7 +27,7 @@
   <a href="CHANGELOG.md">Changelog</a>
 </p>
 
-![JoveCanvas home](docs/public/screenshots/pages/01-home.webp)
+![JoveCanvas infinite canvas](docs/public/screenshots/pages/03a-canvas-editor.webp)
 
 **JoveCanvas** packs a unified creative Agent, image and video workbenches, an infinite canvas, short-drama production, an asset library, and a commercial admin console into one Next.js full-stack app. PostgreSQL stores accounts and business data; media can land on local disk or S3-compatible object storage; model, payment, and storage secrets stay server-side only.
 

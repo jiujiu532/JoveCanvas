@@ -1,6 +1,6 @@
 # web
 
-VOZEB PRO application source files for the user workbenches, Canvas, admin console, API routes, authentication, server storage, and generation task polling.
+JoveCanvas application source files for the user workbenches, Canvas, admin console, API routes, authentication, server storage, and generation task polling.
 
 Run local development:
 

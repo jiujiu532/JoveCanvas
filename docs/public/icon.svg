@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="JoveCanvas icon" fill="none">
+  <defs>
+    <linearGradient id="jc-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#050a16"/>
+      <stop offset="0.55" stop-color="#0f1f4a"/>
+      <stop offset="1" stop-color="#16306e"/>
+    </linearGradient>
+    <linearGradient id="jc-frame" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="0.45" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#0f2a6b"/>
+    </linearGradient>
+    <linearGradient id="jc-frame-soft" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#93c5fd" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#1d4ed8" stop-opacity="0.32"/>
+    </linearGradient>
+    <linearGradient id="jc-ink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fef3c7"/>
+      <stop offset="0.35" stop-color="#fbbf24"/>
+      <stop offset="0.7" stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="jc-core" x1="0.2" y1="0.1" x2="0.85" y2="0.95">
+      <stop offset="0" stop-color="#dbeafe"/>
+      <stop offset="0.4" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1e3a8a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- App plate -->
+  <rect x="14" y="14" width="372" height="372" rx="88" fill="url(#jc-bg)"/>
+  <circle cx="86" cy="90" r="2.8" fill="#fff" opacity="0.7"/>
+  <circle cx="320" cy="112" r="2" fill="#fff" opacity="0.45"/>
+  <circle cx="110" cy="310" r="1.8" fill="#fde68a" opacity="0.45"/>
+
+  <!-- Stacked canvases -->
+  <rect x="98" y="82" width="204" height="204" rx="32" transform="rotate(7 200 184)" fill="url(#jc-frame-soft)"/>
+  <rect x="92" y="90" width="204" height="204" rx="32" transform="rotate(-5 194 192)" fill="url(#jc-frame-soft)" opacity="0.7"/>
+
+  <!-- Main frame -->
+  <rect x="92" y="96" width="216" height="216" rx="36" fill="url(#jc-frame)"/>
+  <rect x="116" y="120" width="168" height="168" rx="24" fill="#071022" opacity="0.22"/>
+  <rect x="122" y="126" width="156" height="156" rx="20" fill="url(#jc-core)" opacity="0.32"/>
+
+  <!-- Grid -->
+  <g stroke="#ffffff" stroke-opacity="0.14" stroke-width="2.8" stroke-linecap="round">
+    <path d="M152 152 H268"/>
+    <path d="M152 184 H268"/>
+    <path d="M152 216 H268"/>
+    <path d="M152 248 H230"/>
+    <path d="M170 140 V268"/>
+    <path d="M206 140 V268"/>
+    <path d="M242 140 V230"/>
+  </g>
+
+  <!-- Gold stroke -->
+  <path
+    d="M138 252 C164 218 180 180 208 166 C234 154 256 162 270 184"
+    stroke="url(#jc-ink)"
+    stroke-width="20"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M148 242 C172 212 186 184 210 174 C230 166 248 172 260 188"
+    stroke="#fffbeb"
+    stroke-opacity="0.4"
+    stroke-width="5.5"
+    stroke-linecap="round"
+  />
+
+  <circle cx="270" cy="184" r="17" fill="#f59e0b"/>
+  <circle cx="270" cy="184" r="17" stroke="#fff7ed" stroke-width="4"/>
+  <circle cx="265" cy="179" r="5" fill="#fffbeb"/>
+</svg>

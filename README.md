@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="web/public/logo.svg?v=0.0.2" width="108" alt="JoveCanvas logo">
+  <img src="web/public/logo.svg?v=0.0.3" width="108" alt="JoveCanvas logo">
 </p>
 
 <h1 align="center">JoveCanvas</h1>
@@ -27,7 +27,7 @@
   <a href="CHANGELOG.md">更新记录</a>
 </p>
 
-![JoveCanvas 首页](docs/public/screenshots/pages/01-home.webp)
+![JoveCanvas 无限画布](docs/public/screenshots/pages/03a-canvas-editor.webp)
 
 **JoveCanvas** 把统一创作 Agent、图片与视频工作台、无限画布、短剧生产、素材库和商业运营后台放在同一套 Next.js 全栈应用中。PostgreSQL 保存账号与业务数据；媒体可写入服务器本地目录或 S3 兼容对象存储；模型、支付和存储密钥只在服务端使用。
 

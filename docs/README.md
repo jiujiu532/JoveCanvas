@@ -1,6 +1,6 @@
 # docs
 
-VOZEB PRO documentation site files, including public guides, deployment notes, and
+JoveCanvas documentation site files, including public guides, deployment notes, and
 release support pages.
 
 This is a Next.js application generated with
