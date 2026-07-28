@@ -191,7 +191,12 @@ async function main() {
         prompts: report.prompts,
     });
     if (result.skipped) {
-        console.log(`[import] skipped (source already registered) source=${report.source}`);
+        // Race after rehost: batch claim lost. Covers already written in this run may be unreferenced
+        // permanent media. Claim is the primary fix; orphan GC is not wired in CLI yet.
+        console.warn(
+            `[import] skipped after apply race (source already registered) source=${report.source}. ` +
+                "If covers were rehosted in this run they may be unreferenced; prefer pre-check / bump :vN.",
+        );
         return;
     }
     console.log(`[import] applied written=${result.written} source=${report.source}`);

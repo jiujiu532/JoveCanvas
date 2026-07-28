@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { AuthInputError } from "@/lib/auth/store";
+import { isAllPromptsOption } from "@/lib/prompts/facet-labels";
 import { comparePromptsByPreferLocale, guessPromptLocale, isPreferLocale, normalizePromptLocale, type PreferLocale, type PromptLocale } from "@/lib/prompts/locale-rank";
 import { createPostgresRepositories, ensurePostgresSchema, isPostgresDatabaseEnabled, postgresQuery, withPostgresTransaction, type QueryExecutor } from "@/lib/server/database";
 import type { PromptRecord } from "@/lib/server/database/repository-types";
@@ -85,7 +86,8 @@ export async function listPrompts(options: PromptListOptions) {
     const db = await readPromptDb({ includeSeeds: true });
     const keyword = (options.keyword || "").trim().toLowerCase();
     const tags = options.tags || [];
-    const category = options.category || "";
+    // Normalize all-sentinels so file path matches PG (empty = no category filter).
+    const category = isAllPromptsOption(options.category) ? "" : options.category || "";
     const page = Math.max(1, options.page || 1);
     const pageSize = Math.max(1, Math.min(100, options.pageSize || 20));
     const preferLocale = isPreferLocale(options.preferLocale) ? options.preferLocale : undefined;
@@ -311,8 +313,14 @@ async function listPostgresPrompts(options: PromptListOptions) {
     await ensurePostgresPromptSeeds();
     const page = Math.max(1, options.page || 1);
     const pageSize = Math.max(1, Math.min(100, options.pageSize || 20));
+    // Align with file isActiveOption / isAllPromptsOption: __all__/全部/all/empty → no filter.
+    const category = isAllPromptsOption(options.category) ? "" : options.category || "";
     const repository = createPostgresRepositories().prompts;
-    const [result, facets] = await Promise.all([repository.list({ ...options, page, pageSize }), repository.facets({ scope: options.scope, ownerUserId: options.ownerUserId, keyword: options.keyword, category: options.category })]);
+    const listOptions = { ...options, page, pageSize, category };
+    const [result, facets] = await Promise.all([
+        repository.list(listOptions),
+        repository.facets({ scope: options.scope, ownerUserId: options.ownerUserId, keyword: options.keyword, category }),
+    ]);
     return {
         items: result.items.map(toStoredPrompt),
         tags: facets.tags.filter(isUsefulPromptTag),
@@ -569,8 +577,8 @@ function collectCategories(items: StoredPrompt[]) {
 }
 
 function isActiveOption(value: string) {
-    // Keep in sync with isAllPromptsOption in facet-labels (client display sentinel + legacy).
-    return Boolean(value) && value !== "全部" && value !== "all" && value !== "All" && value !== "__all__";
+    // Shared with client: empty / __all__ / 全部 / all / All mean no filter.
+    return !isAllPromptsOption(value);
 }
 
 function isOriginalAuthorSeedSource(source?: string) {
@@ -611,8 +619,9 @@ export async function isLibrarySeedSourceRegistered(source: string): Promise<boo
 /**
  * Replace one independent library seed batch (PG or file).
  * Never accepts original-author prefix.
- * Postgres: same versioned `source` already registered → skip (idempotent; bump :vN to force replace).
- * File: same versioned source already registered → skip without rewrite.
+ * Postgres: same versioned `source` claimed inside the transaction (INSERT ON CONFLICT);
+ *   outer hasSeedSource is a fast-path only — concurrent losers return skipped without DELETE.
+ * File: same versioned source already registered → skip without rewrite (queue re-check).
  */
 export async function replaceLibrarySeedBatch(input: { sourcePrefix: string; source: string; prompts: StoredPrompt[] }): Promise<{ written: number; skipped?: boolean }> {
     assertLibrarySeedBatchInput(input);
@@ -620,14 +629,18 @@ export async function replaceLibrarySeedBatch(input: { sourcePrefix: string; sou
 
     if (isPostgresDatabaseEnabled()) {
         await ensurePostgresSchema();
+        // Fast-path only — real mutual exclusion is the transactional claim inside replaceSeededPrompts.
         const repository = createPostgresRepositories().prompts;
         if (await repository.hasSeedSource(source)) {
             return { written: 0, skipped: true };
         }
         const records = prompts.map(toPromptRecord);
-        await withPostgresTransaction(async (client) => {
-            await createPostgresRepositories(client).prompts.replaceSeededPrompts(sourcePrefix, source, records);
+        const claimResult = await withPostgresTransaction(async (client) => {
+            return createPostgresRepositories(client).prompts.replaceSeededPrompts(sourcePrefix, source, records);
         });
+        if (!claimResult.claimed) {
+            return { written: 0, skipped: true };
+        }
         return { written: prompts.length };
     }
 

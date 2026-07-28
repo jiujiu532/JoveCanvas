@@ -1,7 +1,7 @@
 "use client";
 
 import { FolderPlus, Search } from "lucide-react";
-import { type UIEvent, useEffect, useRef, useState } from "react";
+import { type UIEvent, useEffect, useMemo, useRef, useState } from "react";
 import { App, Button, Input, Select, Spin, Tag } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -10,7 +10,13 @@ import { CompactEmptyState } from "@/components/compact-empty-state";
 import { PromptDetailDialog } from "@/components/prompts/prompt-detail-dialog";
 import { usePromptList } from "@/components/prompts/use-prompt-list";
 import { useCopyText } from "@/hooks/use-copy-text";
-import { ALL_PROMPTS_OPTION, isAllPromptsOption, labelPromptCategory, labelPromptTag } from "@/lib/prompts/facet-labels";
+import {
+    ALL_PROMPTS_OPTION,
+    disambiguateFacetLabels,
+    isAllPromptsOption,
+    labelPromptCategory,
+    labelPromptTag,
+} from "@/lib/prompts/facet-labels";
 import { cn } from "@/lib/utils";
 import type { Prompt } from "@/services/api/prompts";
 import { useAssetStore } from "@/stores/use-asset-store";
@@ -31,10 +37,14 @@ export default function PromptsPage() {
         keyword: titleKeyword,
         tags: activeTags,
         category: selectedCategory,
+        selectedTag,
+        onSelectedTagChange: setSelectedTag,
     });
+    const categoryLabels = useMemo(() => disambiguateFacetLabels(promptCategoryOptions, locale, "category"), [locale, promptCategoryOptions]);
+    const tagLabels = useMemo(() => disambiguateFacetLabels(promptTags, locale, "tag"), [locale, promptTags]);
     const activeFilterLabels = [
-        !isAllPromptsOption(selectedCategory) ? labelPromptCategory(selectedCategory, locale) : "",
-        !isAllPromptsOption(selectedTag) ? labelPromptTag(selectedTag, locale) : "",
+        !isAllPromptsOption(selectedCategory) ? categoryLabels.get(selectedCategory) || labelPromptCategory(selectedCategory, locale) : "",
+        !isAllPromptsOption(selectedTag) ? tagLabels.get(selectedTag) || labelPromptTag(selectedTag, locale) : "",
         titleKeyword.trim() ? t("searchFilterLabel", { keyword: titleKeyword.trim() }) : "",
     ].filter(Boolean);
 
@@ -103,7 +113,10 @@ export default function PromptsPage() {
                                 <Select
                                     aria-label={t("categoryAriaLabel")}
                                     value={selectedCategory}
-                                    options={promptCategoryOptions.map((category) => ({ label: labelPromptCategory(category, locale), value: category }))}
+                                    options={promptCategoryOptions.map((category) => ({
+                                        label: categoryLabels.get(category) || labelPromptCategory(category, locale),
+                                        value: category,
+                                    }))}
                                     onChange={setSelectedCategory}
                                 />
                                 <Select
@@ -111,7 +124,10 @@ export default function PromptsPage() {
                                     aria-label={t("tagAriaLabel")}
                                     optionFilterProp="label"
                                     value={selectedTag}
-                                    options={promptTags.map((tag) => ({ label: labelPromptTag(tag, locale), value: tag }))}
+                                    options={promptTags.map((tag) => ({
+                                        label: tagLabels.get(tag) || labelPromptTag(tag, locale),
+                                        value: tag,
+                                    }))}
                                     onChange={setSelectedTag}
                                 />
                             </div>
@@ -126,7 +142,7 @@ export default function PromptsPage() {
                                                 className={cn("prompt-filter-tag", selectedCategory === category && "is-active")}
                                                 onChange={() => setSelectedCategory(category)}
                                             >
-                                                {labelPromptCategory(category, locale)}
+                                                {categoryLabels.get(category) || labelPromptCategory(category, locale)}
                                             </Tag.CheckableTag>
                                         ))}
                                     </div>
@@ -141,7 +157,7 @@ export default function PromptsPage() {
                                                 className={cn("prompt-filter-tag", tag === selectedTag && "is-active")}
                                                 onChange={() => toggleTag(tag)}
                                             >
-                                                {labelPromptTag(tag, locale)}
+                                                {tagLabels.get(tag) || labelPromptTag(tag, locale)}
                                             </Tag.CheckableTag>
                                         ))}
                                     </div>

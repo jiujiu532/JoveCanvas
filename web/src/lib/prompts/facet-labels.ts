@@ -32,7 +32,7 @@ const CATEGORY_LABELS: Record<string, { zh: string; en: string }> = {
 const SOURCE_TAG_LABELS: Record<string, { zh: string; en: string }> = {
     "youmind-skill": { zh: "来源·YouMind", en: "Source·YouMind" },
     gptimage2: { zh: "来源·GPT Image2", en: "Source·GPT Image2" },
-    "gptimage2-json": { zh: "来源·GPT Image2", en: "Source·GPT Image2" },
+    "gptimage2-json": { zh: "来源·GPT Image2 JSON", en: "Source·GPT Image2 JSON" },
     原创作者提示词库: { zh: "来源·原创库", en: "Source·Original" },
     "gpt-image-2": { zh: "来源·GPT Image 2", en: "Source·GPT Image 2" },
     "gpt-image": { zh: "来源·GPT Image", en: "Source·GPT Image" },
@@ -72,6 +72,39 @@ export function labelPromptTag(tag: string, locale: AppLocale | string) {
 
 export function isSourcePromptTag(tag: string) {
     return SOURCE_TAG_KEYS.has(tag);
+}
+
+/**
+ * Build display labels for a facet list. When two different stable keys map to the
+ * same short label under the current locale, both get ` · {rawKey}` so chips stay distinguishable.
+ * Filtering still uses the original keys; freeform Chinese tags are never machine-translated.
+ */
+export function disambiguateFacetLabels(values: string[], locale: AppLocale | string, kind: "category" | "tag") {
+    const labelOf = kind === "category" ? labelPromptCategory : labelPromptTag;
+    const baseLabels = new Map<string, string>();
+    for (const value of values) {
+        baseLabels.set(value, labelOf(value, locale));
+    }
+
+    const labelToKeys = new Map<string, string[]>();
+    for (const [value, label] of baseLabels) {
+        if (isAllPromptsOption(value)) continue;
+        const keys = labelToKeys.get(label);
+        if (keys) keys.push(value);
+        else labelToKeys.set(label, [value]);
+    }
+
+    const result = new Map<string, string>();
+    for (const value of values) {
+        const label = baseLabels.get(value) || value;
+        if (isAllPromptsOption(value)) {
+            result.set(value, label);
+            continue;
+        }
+        const colliding = labelToKeys.get(label);
+        result.set(value, colliding && colliding.length > 1 ? `${label} · ${value}` : label);
+    }
+    return result;
 }
 
 function hasCjk(value: string) {

@@ -1,11 +1,17 @@
 "use client";
 
 import { Check, Search } from "lucide-react";
-import { type UIEvent, useEffect, useState } from "react";
+import { type UIEvent, useEffect, useMemo, useState } from "react";
 import { App, Empty, Input, Modal, Spin, Tag } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 
-import { ALL_PROMPTS_OPTION, isAllPromptsOption, labelPromptCategory, labelPromptTag } from "@/lib/prompts/facet-labels";
+import {
+    ALL_PROMPTS_OPTION,
+    disambiguateFacetLabels,
+    isAllPromptsOption,
+    labelPromptCategory,
+    labelPromptTag,
+} from "@/lib/prompts/facet-labels";
 import { cn } from "@/lib/utils";
 import { PromptCard } from "./prompt-card";
 import { usePromptList } from "./use-prompt-list";
@@ -18,7 +24,16 @@ export function PromptSelectDialog({ open, onOpenChange, onSelect }: { open: boo
     const [selectedTag, setSelectedTag] = useState(ALL_PROMPTS_OPTION);
     const [selectedCategory, setSelectedCategory] = useState(ALL_PROMPTS_OPTION);
     const activeTags = isAllPromptsOption(selectedTag) ? [] : [selectedTag];
-    const { query, items, tags: promptTags, categories: promptCategories } = usePromptList({ keyword, tags: activeTags, category: selectedCategory, enabled: open });
+    const { query, items, tags: promptTags, categories: promptCategories } = usePromptList({
+        keyword,
+        tags: activeTags,
+        category: selectedCategory,
+        selectedTag,
+        onSelectedTagChange: setSelectedTag,
+        enabled: open,
+    });
+    const categoryLabels = useMemo(() => disambiguateFacetLabels(promptCategories, locale, "category"), [locale, promptCategories]);
+    const tagLabels = useMemo(() => disambiguateFacetLabels(promptTags, locale, "tag"), [locale, promptTags]);
     const toggleTag = (tag: string) => setSelectedTag(tag === selectedTag ? ALL_PROMPTS_OPTION : tag);
     const selectPrompt = (prompt: string) => {
         onSelect(prompt);
@@ -46,7 +61,7 @@ export function PromptSelectDialog({ open, onOpenChange, onSelect }: { open: boo
                         <div className="flex flex-wrap gap-2">
                             {promptCategories.map((category) => (
                                 <Tag.CheckableTag key={category} checked={selectedCategory === category} className={cn("prompt-filter-tag", selectedCategory === category && "is-active")} onChange={() => setSelectedCategory(category)}>
-                                    {labelPromptCategory(category, locale)}
+                                    {categoryLabels.get(category) || labelPromptCategory(category, locale)}
                                 </Tag.CheckableTag>
                             ))}
                         </div>
@@ -58,7 +73,7 @@ export function PromptSelectDialog({ open, onOpenChange, onSelect }: { open: boo
                                 const active = tag === selectedTag;
                                 return (
                                     <Tag.CheckableTag key={tag} checked={active} className={cn("prompt-filter-tag", active && "is-active")} onChange={() => toggleTag(tag)}>
-                                        {labelPromptTag(tag, locale)}
+                                        {tagLabels.get(tag) || labelPromptTag(tag, locale)}
                                     </Tag.CheckableTag>
                                 );
                             })}

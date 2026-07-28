@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import * as ReactQuery from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
-import { ALL_PROMPTS_OPTION, sortPromptFacetValues } from "@/lib/prompts/facet-labels";
+import { ALL_PROMPTS_OPTION, isAllPromptsOption, sortPromptFacetValues } from "@/lib/prompts/facet-labels";
 import { fetchPrompts, type PromptListResponse } from "@/services/api/prompts";
 
 const PROMPT_PAGE_SIZE = 20;
@@ -20,7 +20,22 @@ type PromptListQuery = {
     fetchNextPage: () => Promise<unknown>;
 };
 
-export function usePromptList({ keyword, tags, category, enabled = true }: { keyword: string; tags: string[]; category: string; enabled?: boolean }) {
+export function usePromptList({
+    keyword,
+    tags,
+    category,
+    selectedTag,
+    onSelectedTagChange,
+    enabled = true,
+}: {
+    keyword: string;
+    tags: string[];
+    category: string;
+    /** When provided with onSelectedTagChange, clears ghost tags not present in facets. */
+    selectedTag?: string;
+    onSelectedTagChange?: (tag: string) => void;
+    enabled?: boolean;
+}) {
     const locale = useLocale();
     const preferLocale = locale === "en" ? "en" : "zh";
     const query = usePagedPromptQuery({
@@ -33,17 +48,31 @@ export function usePromptList({ keyword, tags, category, enabled = true }: { key
         enabled,
     }) as PromptListQuery;
     const firstPage = query.data?.pages[0];
+    const promptTags = useMemo(
+        () => sortPromptFacetValues([ALL_PROMPTS_OPTION, ...(firstPage?.tags || [])], preferLocale, "tag"),
+        [firstPage?.tags, preferLocale],
+    );
+    const promptCategories = useMemo(
+        () => sortPromptFacetValues([ALL_PROMPTS_OPTION, ...(firstPage?.categories || [])], preferLocale, "category"),
+        [firstPage?.categories, preferLocale],
+    );
+
+    // R6: after category change, drop selectedTag if it is not in the new facet list.
+    useEffect(() => {
+        if (!onSelectedTagChange || selectedTag === undefined) return;
+        if (isAllPromptsOption(selectedTag)) return;
+        // Wait until first page (facets) is available to avoid clearing during load.
+        if (!firstPage) return;
+        if (!promptTags.includes(selectedTag)) {
+            onSelectedTagChange(ALL_PROMPTS_OPTION);
+        }
+    }, [firstPage, onSelectedTagChange, promptTags, selectedTag]);
+
     return {
         query,
         items: useMemo(() => query.data?.pages.flatMap((page) => page.items) || [], [query.data?.pages]),
-        tags: useMemo(
-            () => sortPromptFacetValues([ALL_PROMPTS_OPTION, ...(firstPage?.tags || [])], preferLocale, "tag"),
-            [firstPage?.tags, preferLocale],
-        ),
-        categories: useMemo(
-            () => sortPromptFacetValues([ALL_PROMPTS_OPTION, ...(firstPage?.categories || [])], preferLocale, "category"),
-            [firstPage?.categories, preferLocale],
-        ),
+        tags: promptTags,
+        categories: promptCategories,
         total: firstPage?.total || 0,
     };
 }

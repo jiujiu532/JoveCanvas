@@ -1,3 +1,4 @@
+import { resolveClientStoreLocale } from "@/lib/client-store-locale";
 import { ALL_PROMPTS_OPTION, isAllPromptsOption } from "@/lib/prompts/facet-labels";
 import { compactApiParams, serializeApiParams } from "@/services/api/request";
 
@@ -62,5 +63,8 @@ export async function fetchPrompts({
 
 export function formatPromptDate(value: string) {
     const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+    if (Number.isNaN(date.getTime())) return "";
+    // 跟当前 UI locale：en → en-US，其余默认 zh-CN（避免英文界面仍显示中文日期）
+    const locale = resolveClientStoreLocale() === "en" ? "en-US" : "zh-CN";
+    return new Intl.DateTimeFormat(locale, { year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
 }

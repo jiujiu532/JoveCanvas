@@ -150,11 +150,24 @@ export class PromptsRepository {
         return Boolean(result.rows[0]);
     }
 
-    async replaceSeededPrompts(sourcePrefix: string, source: string, prompts: PromptRecord[]) {
+    /**
+     * Claim a versioned seed source, then replace all prompts under the same prefix.
+     * Must run inside a transaction so concurrent apply of the same `source` cannot both write.
+     * Order: INSERT claim → DELETE prefix prompts → DELETE other prefix sources → upsert.
+     * Returns `{ claimed: false }` when the exact source is already registered (no deletes).
+     */
+    async replaceSeededPrompts(sourcePrefix: string, source: string, prompts: PromptRecord[]): Promise<{ claimed: boolean }> {
+        // Unique-key claim: only the first concurrent writer proceeds; losers skip without DELETE.
+        const claim = await this.db.query("INSERT INTO prompt_seed_sources (source) VALUES ($1) ON CONFLICT (source) DO NOTHING RETURNING source", [source]);
+        if (!claim.rows[0]) {
+            return { claimed: false };
+        }
+
         await this.db.query("DELETE FROM prompts WHERE source LIKE $1", [`${sourcePrefix}%`]);
-        await this.db.query("DELETE FROM prompt_seed_sources WHERE source LIKE $1", [`${sourcePrefix}%`]);
-        await this.db.query("INSERT INTO prompt_seed_sources (source) VALUES ($1) ON CONFLICT (source) DO NOTHING", [source]);
+        // Keep the just-claimed source row; drop older versioned rows under the same prefix.
+        await this.db.query("DELETE FROM prompt_seed_sources WHERE source LIKE $1 AND source <> $2", [`${sourcePrefix}%`, source]);
         for (const prompt of prompts) await this.upsert(prompt);
+        return { claimed: true };
     }
 
     async upsert(prompt: PromptRecord) {

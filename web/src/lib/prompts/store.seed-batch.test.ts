@@ -60,6 +60,8 @@ describe("replaceLibrarySeedBatch", () => {
             prompts: { replaceSeededPrompts: mocks.replaceSeeded, hasSeedSource: mocks.hasSeedSource },
         });
         mocks.hasSeedSource.mockResolvedValue(false);
+        mocks.replaceSeeded.mockResolvedValue({ claimed: true });
+        mocks.withTx.mockImplementation(async (fn: (client: unknown) => Promise<unknown>) => fn({}));
     });
 
     it("exposes independent whitelist prefixes only", () => {
@@ -120,5 +122,180 @@ describe("replaceLibrarySeedBatch", () => {
         await expect(isLibrarySeedSourceRegistered("vozeb-pro/youmind-skill:v1")).resolves.toBe(true);
         await expect(isLibrarySeedSourceRegistered("vozeb-pro/youmind-skill:v2")).resolves.toBe(false);
         expect(mocks.writeJson).not.toHaveBeenCalled();
+    });
+
+    describe("postgres path (transactional claim)", () => {
+        beforeEach(() => {
+            mocks.isPostgres.mockReturnValue(true);
+            mocks.hasSeedSource.mockResolvedValue(false);
+            mocks.replaceSeeded.mockResolvedValue({ claimed: true });
+        });
+
+        it("fast-path skips without opening replace when source already registered", async () => {
+            mocks.hasSeedSource.mockResolvedValue(true);
+            const result = await replaceLibrarySeedBatch({
+                sourcePrefix: "vozeb-pro/youmind-skill",
+                source: "vozeb-pro/youmind-skill:v1",
+                prompts: [samplePrompt("youmind-skill-1", "vozeb-pro/youmind-skill:v1")],
+            });
+            expect(result).toEqual({ written: 0, skipped: true });
+            expect(mocks.withTx).not.toHaveBeenCalled();
+            expect(mocks.replaceSeeded).not.toHaveBeenCalled();
+        });
+
+        it("writes via claim-and-replace inside a transaction", async () => {
+            const prompts = [samplePrompt("youmind-skill-1", "vozeb-pro/youmind-skill:v1")];
+            const result = await replaceLibrarySeedBatch({
+                sourcePrefix: "vozeb-pro/youmind-skill",
+                source: "vozeb-pro/youmind-skill:v1",
+                prompts,
+            });
+            expect(result).toEqual({ written: 1 });
+            expect(mocks.withTx).toHaveBeenCalledTimes(1);
+            expect(mocks.replaceSeeded).toHaveBeenCalledTimes(1);
+            const [prefix, source, records] = mocks.replaceSeeded.mock.calls[0];
+            expect(prefix).toBe("vozeb-pro/youmind-skill");
+            expect(source).toBe("vozeb-pro/youmind-skill:v1");
+            expect(records).toHaveLength(1);
+            expect(records[0].id).toBe("youmind-skill-1");
+        });
+
+        it("returns skipped when transactional claim loses (claimed: false) without counting writes", async () => {
+            // Outer fast-path says free; in-tx claim loses to a concurrent writer.
+            mocks.hasSeedSource.mockResolvedValue(false);
+            mocks.replaceSeeded.mockResolvedValue({ claimed: false });
+            const result = await replaceLibrarySeedBatch({
+                sourcePrefix: "vozeb-pro/youmind-skill",
+                source: "vozeb-pro/youmind-skill:v1",
+                prompts: [samplePrompt("youmind-skill-1", "vozeb-pro/youmind-skill:v1")],
+            });
+            expect(result).toEqual({ written: 0, skipped: true });
+            expect(mocks.withTx).toHaveBeenCalledTimes(1);
+            expect(mocks.replaceSeeded).toHaveBeenCalledTimes(1);
+        });
+    });
+});
+
+describe("PromptsRepository.replaceSeededPrompts claim order", () => {
+    it("claims first; on conflict returns claimed false and never DELETEs", async () => {
+        const queries: Array<{ sql: string; params: unknown[] }> = [];
+        const db = {
+            query: vi.fn(async (sql: string, params: unknown[] = []) => {
+                queries.push({ sql, params });
+                if (sql.includes("INSERT INTO prompt_seed_sources") && sql.includes("RETURNING")) {
+                    return { rows: [] }; // conflict → no row
+                }
+                return { rows: [], rowCount: 0 };
+            }),
+        };
+        const { PromptsRepository } = await import("@/lib/server/database/content-repository");
+        const repo = new PromptsRepository(db as never);
+        const result = await repo.replaceSeededPrompts("vozeb-pro/youmind-skill", "vozeb-pro/youmind-skill:v1", []);
+        expect(result).toEqual({ claimed: false });
+        expect(queries).toHaveLength(1);
+        expect(queries[0].sql).toMatch(/INSERT INTO prompt_seed_sources/);
+        expect(queries.some((item) => item.sql.includes("DELETE"))).toBe(false);
+    });
+
+    it("on successful claim deletes prefix prompts/sources then upserts", async () => {
+        const queries: string[] = [];
+        const db = {
+            query: vi.fn(async (sql: string, _params: unknown[] = []) => {
+                queries.push(sql);
+                if (sql.includes("INSERT INTO prompt_seed_sources") && sql.includes("RETURNING")) {
+                    return { rows: [{ source: "vozeb-pro/youmind-skill:v1" }] };
+                }
+                if (sql.includes("INSERT INTO prompts")) {
+                    return {
+                        rows: [
+                            {
+                                id: "youmind-skill-1",
+                                scope: "library",
+                                owner_user_id: null,
+                                title: "t",
+                                cover_url: "/x.png",
+                                prompt: "body",
+                                tags: [],
+                                category: "ui",
+                                preview: "t",
+                                github_url: null,
+                                source: "vozeb-pro/youmind-skill:v1",
+                                locale: "en",
+                                created_at: "2026-07-27T00:00:00.000Z",
+                                updated_at: "2026-07-27T00:00:00.000Z",
+                            },
+                        ],
+                    };
+                }
+                return { rows: [], rowCount: 0 };
+            }),
+        };
+        const { PromptsRepository } = await import("@/lib/server/database/content-repository");
+        const repo = new PromptsRepository(db as never);
+        const result = await repo.replaceSeededPrompts("vozeb-pro/youmind-skill", "vozeb-pro/youmind-skill:v1", [
+            {
+                id: "youmind-skill-1",
+                scope: "library",
+                ownerUserId: "",
+                title: "t",
+                coverUrl: "/x.png",
+                prompt: "body",
+                tags: [],
+                category: "ui",
+                preview: "t",
+                githubUrl: "",
+                source: "vozeb-pro/youmind-skill:v1",
+                locale: "en",
+                createdAt: "2026-07-27T00:00:00.000Z",
+                updatedAt: "2026-07-27T00:00:00.000Z",
+            },
+        ]);
+        expect(result).toEqual({ claimed: true });
+        expect(queries[0]).toMatch(/INSERT INTO prompt_seed_sources/);
+        expect(queries[1]).toMatch(/DELETE FROM prompts WHERE source LIKE/);
+        expect(queries[2]).toMatch(/DELETE FROM prompt_seed_sources WHERE source LIKE/);
+        expect(queries[2]).toMatch(/source <>/);
+        expect(queries.some((sql) => sql.includes("INSERT INTO prompts"))).toBe(true);
+    });
+});
+
+describe("listPrompts all-sentinel normalization (PG)", () => {
+    const list = vi.fn();
+    const facets = vi.fn();
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mocks.isPostgres.mockReturnValue(true);
+        mocks.ensureSchema.mockResolvedValue(undefined);
+        // Short-circuit ensurePostgresPromptSeeds so list path does not import original-author seeds.
+        mocks.hasSeedSource.mockResolvedValue(true);
+        list.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
+        facets.mockResolvedValue({ tags: [], categories: [], scopeTotal: 0 });
+        mocks.createRepos.mockReturnValue({
+            prompts: {
+                list,
+                facets,
+                hasSeedSource: mocks.hasSeedSource,
+                replaceSeededPrompts: mocks.replaceSeeded,
+            },
+        });
+    });
+
+    it.each(["__all__", "全部", "all", "All", "", undefined])("passes empty category to repository for sentinel %j", async (category) => {
+        const { listPrompts } = await import("@/lib/prompts/store");
+        await listPrompts({ scope: "library", category: category as string | undefined, page: 1, pageSize: 20 });
+        expect(list).toHaveBeenCalled();
+        const listArg = list.mock.calls[0][0] as { category: string };
+        expect(listArg.category).toBe("");
+        expect(facets).toHaveBeenCalled();
+        const facetArg = facets.mock.calls[0][0] as { category: string };
+        expect(facetArg.category).toBe("");
+    });
+
+    it("keeps real category filter", async () => {
+        const { listPrompts } = await import("@/lib/prompts/store");
+        await listPrompts({ scope: "library", category: "ui", page: 1, pageSize: 20 });
+        expect(list.mock.calls[0][0].category).toBe("ui");
+        expect(facets.mock.calls[0][0].category).toBe("ui");
     });
 });

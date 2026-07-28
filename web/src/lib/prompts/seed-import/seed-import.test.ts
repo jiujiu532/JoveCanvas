@@ -6,7 +6,7 @@ import type { SeedDraft } from "@/lib/prompts/seed-import/types";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 function draft(partial: Partial<SeedDraft> & Pick<SeedDraft, "stableId" | "title" | "prompt" | "coverOriginUrl">): SeedDraft {
     return {
@@ -178,5 +178,31 @@ describe("seed-import pipeline skip-if-registered", () => {
         expect(report.accepted).toBe(0);
         expect(report.prompts).toEqual([]);
         expect(report.skipped.source_registered).toBe(1);
+    });
+
+    it("does zero rehost when skipIfSourceRegistered hits (no cover download)", async () => {
+        const rehostMod = await import("@/lib/prompts/seed-import/rehost");
+        const spy = vi.spyOn(rehostMod, "rehostPromptCover").mockResolvedValue({
+            ok: true,
+            coverUrl: "/api/reference-assets/permanent/should-not-write.png",
+            token: "permanent/should-not-write.png",
+        });
+        try {
+            const { runSeedImport } = await import("@/lib/prompts/seed-import/pipeline");
+            const report = await runSeedImport({
+                sourceKey: "youmind-skill",
+                inputPath: "/nonexistent",
+                library: [],
+                dryRun: false,
+                skipRehost: false,
+                skipIfSourceRegistered: true,
+                registeredSeedSources: ["vozeb-pro/youmind-skill:v1"],
+            });
+            expect(report.skipped.source_registered).toBe(1);
+            expect(report.prompts).toEqual([]);
+            expect(spy).not.toHaveBeenCalled();
+        } finally {
+            spy.mockRestore();
+        }
     });
 });

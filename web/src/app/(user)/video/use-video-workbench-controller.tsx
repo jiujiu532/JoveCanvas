@@ -15,6 +15,7 @@ import { requestCreditCost } from "@/constant/credits";
 import { mergeWorkbenchAgentPatch, useWorkbenchAgentRun, type WorkbenchAgentParameterPatch } from "@/hooks/use-workbench-agent-run";
 import { useWorkbenchAgentSessions } from "@/hooks/use-workbench-agent-sessions";
 import { useWorkbenchCreativeReview } from "@/hooks/use-workbench-creative-review";
+import { resolveClientStoreLocale } from "@/lib/client-store-locale";
 import { preloadOnIdle } from "@/lib/preload-on-idle";
 import { SEEDANCE_REFERENCE_LIMITS, seedanceVideoReferenceError, seedanceVideoReferenceHint } from "@/lib/seedance-video";
 import { referenceImageFromAsset, referenceVideoFromAsset, videoAssetData } from "@/lib/workbench-asset-reference";
@@ -415,7 +416,7 @@ export function useVideoWorkbenchController() {
         const pendingLog: GenerationLog = {
             ...currentLog,
             createdAt: retryStartedAt,
-            time: new Date(retryStartedAt).toLocaleString("zh-CN", { hour12: false }),
+            time: new Date(retryStartedAt).toLocaleString(resolveClientStoreLocale() === "en" ? "en-US" : "zh-CN", { hour12: false }),
             config: normalizeLogConfig({ ...currentLog, config: retryConfig }),
             size: retryConfig.size,
             resolution: normalizeResolution(retryConfig.vquality),
