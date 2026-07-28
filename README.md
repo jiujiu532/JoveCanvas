@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="web/public/logo.svg?v=0.0.2" width="108" alt="VOZEB PRO logo">
+  <img src="web/public/logo.svg?v=0.0.2" width="108" alt="JoveCanvas logo">
 </p>
 
-<h1 align="center">VOZEB PRO</h1>
+<h1 align="center">JoveCanvas</h1>
 
-<p align="center">面向 Agent、图片、视频、Canvas 与短剧生产的开源 AI 创作工作台</p>
+<p align="center">面向 Agent、图片、视频、无限画布与短剧生产的 AI 创作工作台</p>
 
 <p align="center">
   <strong>简体中文</strong> ·
@@ -12,10 +12,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/csyqlz/VOZEB-PRO"><img src="https://img.shields.io/github/stars/csyqlz/VOZEB-PRO?style=flat-square&logo=github" alt="GitHub stars"></a>
+  <a href="https://github.com/jiujiu532/JoveCanvas"><img src="https://img.shields.io/github/stars/jiujiu532/JoveCanvas?style=flat-square&logo=github" alt="GitHub stars"></a>
   <a href="VERSION"><img src="https://img.shields.io/badge/version-v0.0.2-2563eb?style=flat-square" alt="Version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-f97316?style=flat-square" alt="License"></a>
-  <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-16.2-000000?style=flat-square&logo=nextdotjs" alt="Next.js"></a>
+  <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs" alt="Next.js"></a>
   <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-16-4169e1?style=flat-square&logo=postgresql" alt="PostgreSQL"></a>
 </p>
 
@@ -23,22 +23,21 @@
   <a href="docs/index.md">文档索引</a> ·
   <a href="docs/content/docs/overview/project-structure.mdx">项目结构</a> ·
   <a href="docs/content/docs/overview/page-gallery.mdx">页面图册</a> ·
-  <a href="https://linux.do">LINUX DO</a> ·
   <a href="CONTRIBUTING.md">参与贡献</a> ·
   <a href="CHANGELOG.md">更新记录</a>
 </p>
 
-![VOZEB PRO 首页](docs/public/screenshots/pages/01-home.webp)
+![JoveCanvas 首页](docs/public/screenshots/pages/01-home.webp)
 
-VOZEB PRO 把统一创作 Agent、图片与视频工作台、画布、短剧生产、素材库和商业运营后台放在同一套 Next.js 全栈应用中。PostgreSQL 保存账号与业务数据；媒体可写入服务器本地目录或 S3 兼容对象存储；模型、支付和存储密钥只在服务端使用。
+**JoveCanvas** 把统一创作 Agent、图片与视频工作台、无限画布、短剧生产、素材库和商业运营后台放在同一套 Next.js 全栈应用中。PostgreSQL 保存账号与业务数据；媒体可写入服务器本地目录或 S3 兼容对象存储；模型、支付和存储密钥只在服务端使用。
 
 ## 核心功能
 
 - **统一 Agent**：文字、图片、视频和音频素材在同一会话中创作，支持 Skill、智能规划、手动逻辑模型、服务端历史和稳定资产。
 - **图片工作台**：文生图、图生图、参考图编辑、多结果、历史恢复、失败重试、WebP 预览和原件下载。
-- **视频工作台**：文生视频、图生视频、多类型参考素材、时长/比例/清晰度参数、异步续取和结果管理。
-- **画布**：文本、图片、视频、音频与生成节点，支持拖拽、连线、缩放、撤销重做、导入导出和 Agent Run。
-- **短剧生产线**：剧本、内容审核、角色/场景/道具、分镜、镜头视频、配音、字幕、版本和 FFmpeg 合成。
+- **视频工作台**：文生视频、图生视频、多类型参考素材、时长 / 比例 / 清晰度参数、异步续取和结果管理。
+- **无限画布**：文本、图片、视频、音频与生成节点，支持拖拽、连线、缩放、撤销重做、导入导出和 Agent Run。
+- **短剧生产线**：剧本、内容审核、角色 / 场景 / 道具、分镜、镜头视频、配音、字幕、版本和 FFmpeg 合成。
 - **模型路由**：管理员维护渠道、协议、真实模型、逻辑模型、能力、优先级和默认值，普通用户不接触上游密钥。
 - **商业后台**：用户、套餐、积分、CDK、订单、支付、退款、财务流水、公告、提示词、生成运营和审计日志。
 - **存储与备份**：本地媒体、S3 兼容对象存储、引用保护、对象迁移和脱敏业务数据导入导出。
@@ -54,10 +53,10 @@ VOZEB PRO 把统一创作 Agent、图片与视频工作台、画布、短剧生�
 flowchart LR
     HOME["首页 /<br/>产品介绍、功能入口、公告"] --> ACTION{"访客选择"}
 
-    ACTION --> ANN["公告中心 /announcements<br/>查看置顶公告和平台通知"]
-    ACTION --> LOGIN["登录 /login<br/>账号密码校验"]
-    ACTION --> REGISTER["注册 /register<br/>注册策略与可选邮箱验证码"]
-    ACTION --> FORGOT["找回密码 /forgot-password<br/>邮箱验证码与密码重置"]
+    ACTION --> ANN["公告中心 /announcements"]
+    ACTION --> LOGIN["登录 /login"]
+    ACTION --> REGISTER["注册 /register"]
+    ACTION --> FORGOT["找回密码 /forgot-password"]
     ACTION --> PRIVACY["隐私政策 /privacy"]
     ACTION --> TERMS["服务条款 /terms"]
 
@@ -66,9 +65,9 @@ flowchart LR
     LOGIN --> SESSION["创建登录 Session"]
     SESSION --> ROLE{"账号角色"}
     ROLE -->|普通用户| USER["用户工作区"]
-    ROLE -->|管理员| ADMIN["商业 SaaS 管理后台"]
+    ROLE -->|管理员| ADMIN["管理后台"]
 
-    INSTALL["安装向导 /install"] --> CHECK["检查运行环境和 PostgreSQL"]
+    INSTALL["安装向导 /install"] --> CHECK["检查运行环境与 PostgreSQL"]
     CHECK --> SCHEMA["初始化数据库表结构"]
     SCHEMA --> FIRST_ADMIN["创建首个管理员"]
     FIRST_ADMIN --> ADMIN
@@ -83,14 +82,14 @@ flowchart LR
 flowchart TB
     USER["用户工作区<br/>加载用户、积分、模型和站点配置"]
 
-    USER --> CREATE["统一 Agent /create<br/>多模态创作与服务端会话"]
-    USER --> IMAGE["图片工作台 /image<br/>文生图、图生图和参考图编辑"]
-    USER --> VIDEO["视频工作台 /video<br/>文生视频和图生视频"]
+    USER --> CREATE["统一 Agent /create"]
+    USER --> IMAGE["图片工作台 /image"]
+    USER --> VIDEO["视频工作台 /video"]
 
-    USER --> CANVAS["Canvas 项目 /canvas<br/>创建、搜索、重命名和删除"]
-    CANVAS --> CANVAS_ID["Canvas 编辑器 /canvas/:id"]
+    USER --> CANVAS["画布项目 /canvas"]
+    CANVAS --> CANVAS_ID["画布编辑器 /canvas/:id"]
 
-    USER --> DRAMA["短剧项目 /drama<br/>项目和生产进度管理"]
+    USER --> DRAMA["短剧项目 /drama"]
     DRAMA --> DRAMA_ID["短剧编辑器 /drama/:id"]
 
     USER --> PROMPTS["公共提示词 /prompts"]
@@ -103,8 +102,6 @@ flowchart TB
     PROMPTS --> CREATE
     PROMPTS --> IMAGE
     PROMPTS --> VIDEO
-
-    MY_PROMPTS --> CREATE
     ASSETS --> CREATE
     ASSETS --> IMAGE
     ASSETS --> VIDEO
@@ -152,39 +149,33 @@ flowchart TB
 </details>
 
 <details>
-<summary><strong>04｜Canvas 创作流程</strong></summary>
+<summary><strong>04｜画布创作流程</strong></summary>
 
 ```mermaid
 flowchart LR
-    LIST["Canvas 项目 /canvas"] --> CREATE["创建画布"]
-    LIST --> SEARCH["搜索项目"]
-    LIST --> RENAME["重命名项目"]
-    LIST --> DELETE["删除项目"]
+    LIST["画布项目 /canvas"] --> CREATE["创建画布"]
     LIST --> OPEN["打开项目"]
-
-    CREATE --> EDITOR["Canvas 编辑器 /canvas/:id"]
+    CREATE --> EDITOR["画布编辑器 /canvas/:id"]
     OPEN --> EDITOR
 
     EDITOR --> NODE{"添加节点"}
-    NODE --> TEXT["文本节点"]
-    NODE --> IMAGE["图片节点"]
-    NODE --> VIDEO["视频节点"]
-    NODE --> AUDIO["音频节点"]
-    NODE --> GENERATE["生成节点"]
+    NODE --> TEXT["文本"]
+    NODE --> IMAGE["图片"]
+    NODE --> VIDEO["视频"]
+    NODE --> AUDIO["音频"]
+    NODE --> GENERATE["生成"]
 
-    TEXT --> CONNECT["拖拽、缩放和节点连线"]
+    TEXT --> CONNECT["拖拽、缩放和连线"]
     IMAGE --> CONNECT
     VIDEO --> CONNECT
     AUDIO --> CONNECT
     GENERATE --> CONNECT
 
     CONNECT --> AGENT["启动 Canvas Agent Run"]
-    AGENT --> PLAN["分析节点和连接关系"]
-    PLAN --> TASK["创建图片、视频或音频子任务"]
-    TASK --> RESULT["结果写回对应节点"]
-    RESULT --> HISTORY["撤销、重做和历史记录"]
-    HISTORY --> SAVE["自动保存到服务器"]
-    SAVE --> EDITOR
+    AGENT --> PLAN["分析节点与连接"]
+    PLAN --> TASK["创建图片 / 视频 / 音频子任务"]
+    TASK --> RESULT["结果写回节点"]
+    RESULT --> SAVE["自动保存到服务器"]
 ```
 
 </details>
@@ -194,75 +185,44 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    LIST["短剧项目 /drama"] --> CREATE["创建短剧项目"]
-    CREATE --> CONFIG["设置剧集数、画幅和镜头"]
+    LIST["短剧项目 /drama"] --> CREATE["创建项目"]
+    CREATE --> CONFIG["设置剧集、画幅与镜头"]
     CONFIG --> EDITOR["短剧编辑器 /drama/:id"]
 
-    EDITOR --> SCRIPT["第一阶段：生成或编辑剧本"]
-    SCRIPT --> REVIEW["第二阶段：内容审核和人工确认"]
-    REVIEW --> ASSETS["第三阶段：角色、场景和道具"]
-    ASSETS --> STORYBOARD["第四阶段：分镜和镜头设计"]
-    STORYBOARD --> SHOTS["第五阶段：生成镜头图片和视频"]
-
-    SHOTS --> AUDIO["生成配音、音效和背景音乐"]
-    AUDIO --> SUBTITLE["生成并校对字幕"]
-    SUBTITLE --> VERSION["保存剧本、分镜和媒体版本"]
-    VERSION --> COMPOSE["使用 FFmpeg 合成成片"]
-    COMPOSE --> CHECK{"合成结果"}
-
-    CHECK -->|成功| EXPORT["预览并导出成片"]
-    CHECK -->|失败| FIX["定位失败镜头或音频"]
-    FIX --> SHOTS
+    EDITOR --> SCRIPT["剧本"]
+    SCRIPT --> REVIEW["内容审核与确认"]
+    REVIEW --> ASSETS["角色 / 场景 / 道具"]
+    ASSETS --> STORYBOARD["分镜与镜头设计"]
+    STORYBOARD --> SHOTS["镜头图片与视频"]
+    SHOTS --> AUDIO["配音 / 音效 / BGM"]
+    AUDIO --> SUBTITLE["字幕生成与校对"]
+    SUBTITLE --> VERSION["版本保存"]
+    VERSION --> COMPOSE["FFmpeg 合成成片"]
+    COMPOSE --> EXPORT["预览与导出"]
 ```
 
 </details>
 
 <details>
-<summary><strong>06｜提示词、素材、账户和支付流程</strong></summary>
+<summary><strong>06｜提示词、素材、账户与支付</strong></summary>
 
 ```mermaid
 flowchart TB
-    PROMPTS["公共提示词 /prompts"] --> FIND["分类、标签和关键词检索"]
-    FIND --> USE["用于 Agent、图片或视频创作"]
+    PROMPTS["公共提示词 /prompts"] --> USE["用于 Agent / 图片 / 视频"]
+    MY["我的提示词 /my-prompts"] --> USE
+    ASSETS["我的素材 /assets"] --> CONTINUE["发送到 Agent / 工作台 / 画布 / 短剧"]
 
-    MY["我的提示词 /my-prompts"] --> MANAGE["创建、编辑、分类、标签和删除"]
-    MANAGE --> SAVE_ASSET["保存为文本素材"]
-    MANAGE --> USE
-
-    ASSETS["我的素材 /assets"] --> FILTER["按图片、视频、音频、文本和附件筛选"]
-    FILTER --> PREVIEW["预览或下载"]
-    FILTER --> CONTINUE["发送到 Agent、工作台、Canvas 或短剧"]
-    FILTER --> DELETE["检查业务引用后删除"]
-
-    HELP["帮助中心 /help"] --> GUIDE["查看 Agent、图片、视频、Canvas、短剧和账户说明"]
-
-    PROFILE["个人中心 /profile"] --> INFO["修改资料和密码"]
-    PROFILE --> RIGHTS["查看积分、套餐、订单和消费记录"]
-    PROFILE --> EXPORT["导出个人数据"]
-    PROFILE --> CANCEL_ACCOUNT["提交账号注销申请"]
-    CANCEL_ACCOUNT --> ADMIN_REVIEW["管理员受理或拒绝"]
-
-    BILLING["充值中心 /billing"] --> PRODUCT["选择套餐或积分商品"]
-    PRODUCT --> ORDER["创建待支付订单"]
-    ORDER --> CHECKOUT["订单支付 /billing/checkout"]
-    CHECKOUT --> CHANNEL["选择可用支付渠道"]
-    CHANNEL --> PAY{"支付结果"}
-
-    PAY -->|成功| SUCCESS["支付成功 /billing/success"]
-    SUCCESS --> CONFIRM["确认支付回调和订单状态"]
-    CONFIRM --> GRANT["套餐或积分入账"]
-    GRANT --> REFRESH["刷新用户余额和订单记录"]
-
-    PAY -->|取消或失败| CANCEL["支付取消 /billing/cancel"]
-    CANCEL --> CHOICE{"订单处理"}
-    CHOICE -->|继续支付| CHECKOUT
-    CHOICE -->|放弃支付| CLOSE["关闭或保留待支付订单"]
+    PROFILE["个人中心 /profile"] --> INFO["资料与密码"]
+    PROFILE --> RIGHTS["积分、套餐与订单"]
+    BILLING["充值中心 /billing"] --> ORDER["创建订单"]
+    ORDER --> CHECKOUT["支付 /billing/checkout"]
+    CHECKOUT --> GRANT["套餐或积分入账"]
 ```
 
 </details>
 
 <details>
-<summary><strong>07｜商业 SaaS 后台经营和财务流程</strong></summary>
+<summary><strong>07｜管理后台经营与财务</strong></summary>
 
 ```mermaid
 flowchart TB
@@ -270,40 +230,21 @@ flowchart TB
     ADMIN --> PRODUCT["商品运营"]
     ADMIN --> FINANCE["财务管理"]
 
-    ANALYSIS --> OVERVIEW["经营看板<br/>用户、收入、积分负债、订单和生成指标"]
-    ANALYSIS --> USERS["用户运营<br/>创建用户、角色、状态、套餐和积分"]
-    ANALYSIS --> LOGS["调用记录<br/>用户、入口、模型、状态和失败原因"]
-    ANALYSIS --> GENERATION["生成运营<br/>任务查询、取消、失败记录和重试"]
-
-    PRODUCT --> PRODUCTS["套餐管理<br/>商品价格、权益、支付类型和上下架"]
-    PRODUCT --> ORDERS["订单管理<br/>查询、人工完成、关闭和退款"]
-
-    FINANCE --> POINTS["积分规则<br/>免费额度、模型单价和参数倍率"]
-    FINANCE --> PAYMENTS["支付渠道<br/>商户配置、回调地址、检测和启停"]
-    FINANCE --> CDK["CDK 兑换<br/>批量生成、筛选、停用和兑换追踪"]
-    FINANCE --> WALLET["财务流水<br/>充值、扣费、退款和余额变化"]
-
-    BILLING_ADMIN["财务运营 /admin/billing"] --> ORDERS
-    BILLING_ADMIN --> PRODUCTS
-    BILLING_ADMIN --> PAYMENTS
-
-    PRODUCTS --> USER_BUY["用户选择商品"]
-    USER_BUY --> ORDERS
-    ORDERS --> PAYMENTS
-    PAYMENTS --> PAY_RESULT{"支付结果"}
-
-    PAY_RESULT -->|成功| WALLET
-    PAY_RESULT -->|失败| REFUND["关闭订单或执行退款"]
-    REFUND --> WALLET
-
-    POINTS --> GENERATION
-    GENERATION --> WALLET
+    ANALYSIS --> OVERVIEW["经营看板"]
+    ANALYSIS --> USERS["用户运营"]
+    ANALYSIS --> GENERATION["生成运营"]
+    PRODUCT --> PRODUCTS["套餐管理"]
+    PRODUCT --> ORDERS["订单管理"]
+    FINANCE --> POINTS["积分规则"]
+    FINANCE --> PAYMENTS["支付渠道"]
+    FINANCE --> CDK["CDK"]
+    FINANCE --> WALLET["财务流水"]
 ```
 
 </details>
 
 <details>
-<summary><strong>08｜后台模型、系统、存储和内容管理</strong></summary>
+<summary><strong>08｜模型、系统、存储与内容</strong></summary>
 
 ```mermaid
 flowchart TB
@@ -312,72 +253,38 @@ flowchart TB
     ADMIN --> STORAGE["存储与备份"]
     ADMIN --> CONTENT["内容运营"]
 
-    UPSTREAM --> CHANNELS["模型渠道<br/>协议、Base URL、API Key 和模型目录"]
-    CHANNELS --> DETECT["检测文本、图片、视频和音频能力"]
-    DETECT --> LOGICAL["绑定逻辑模型、优先级和默认模型"]
-    UPSTREAM --> SKILLS["Agent Skills<br/>分类、触发规则、能力约束和启停"]
-
-    SYSTEM --> SITE["站点资料<br/>名称、Logo、SEO、首页内容和友情链接"]
-    SYSTEM --> SETTINGS["基础设置<br/>注册、SMTP、默认参数、并发和安全"]
-    SYSTEM --> DELETION["注销申请<br/>筛选、受理、拒绝和处理备注"]
-    SYSTEM --> UPDATES["版本更新<br/>当前版本、Release、日志和升级检查"]
-
-    STORAGE --> LOCAL["本地媒体<br/>分类、归属、期限和引用保护删除"]
-    STORAGE --> S3["外部存储<br/>S3 配置、连接检测、对象管理和迁移"]
-    STORAGE --> BACKUP["数据备份<br/>导入导出和完整备份边界"]
-
-    CONTENT --> ANNOUNCEMENT["公告管理<br/>创建、编辑、置顶、发布和下线"]
-    CONTENT --> PROMPT["提示词管理<br/>搜索、分类、标签和展示状态"]
-
-    SETUP["初始化配置 /admin/setup"] --> SITE
-    SETUP --> CHANNELS
-    SETUP --> SETTINGS
-    SETUP --> PRODUCTS["套餐商品"]
-    SETUP --> PAYMENTS["支付渠道"]
-    SETUP --> S3
-    SETUP --> BACKUP
-
-    ANNOUNCEMENT --> PUBLIC_ANN["用户公告中心"]
-    PROMPT --> PUBLIC_PROMPT["用户公共提示词库"]
-    LOGICAL --> GENERATION["用户生成任务"]
-    SKILLS --> GENERATION
+    UPSTREAM --> CHANNELS["模型渠道"]
+    CHANNELS --> LOGICAL["逻辑模型与默认值"]
+    UPSTREAM --> SKILLS["Agent Skills"]
+    SYSTEM --> SITE["站点资料"]
+    SYSTEM --> SETTINGS["基础设置"]
+    STORAGE --> LOCAL["本地媒体"]
+    STORAGE --> S3["S3 兼容对象存储"]
+    CONTENT --> ANNOUNCEMENT["公告"]
+    CONTENT --> PROMPT["提示词库"]
 ```
 
 </details>
 
 <details>
-<summary><strong>09｜全平台服务端数据流程</strong></summary>
+<summary><strong>09｜服务端数据流程</strong></summary>
 
 ```mermaid
 flowchart LR
-    PAGE["所有用户页和管理页"] --> CLIENT["前端 API Service"]
-    CLIENT --> ROUTE["Next.js Route Handler"]
-    ROUTE --> AUTH["Session、用户归属和角色鉴权"]
-    AUTH --> SERVICE["业务服务和任务编排"]
-
-    SERVICE --> REPO["Repository<br/>参数化查询和事务"]
+    PAGE["页面"] --> CLIENT["前端 API Service"]
+    CLIENT --> ROUTE["Route Handler"]
+    ROUTE --> AUTH["Session 与权限"]
+    AUTH --> SERVICE["业务服务"]
+    SERVICE --> REPO["Repository"]
     REPO --> PG[("PostgreSQL 16")]
-
     SERVICE --> ROUTER["逻辑模型路由"]
-    ROUTER --> PROVIDER["外部 AI 模型"]
-    PROVIDER --> TASK["幂等任务和状态轮询"]
-
-    TASK --> BILLING["积分扣费和套餐用量"]
-    BILLING --> PG
-
-    TASK -->|失败或取消| REFUND["幂等退款"]
-    REFUND --> PG
-
-    TASK --> MEDIA["媒体下载、规范化和登记"]
-    MEDIA --> SWITCH{"存储位置"}
-    SWITCH -->|本地| LOCAL["服务器数据目录"]
-    SWITCH -->|外部| S3["S3 兼容对象存储"]
+    ROUTER --> PROVIDER["上游模型"]
+    PROVIDER --> TASK["幂等任务与轮询"]
+    TASK --> BILLING["积分扣费"]
+    TASK --> MEDIA["媒体登记"]
+    MEDIA --> LOCAL["本地目录"]
+    MEDIA --> S3["对象存储"]
     MEDIA --> PG
-
-    PG --> RESPONSE["统一返回 code / data / msg"]
-    LOCAL --> RESPONSE
-    S3 --> RESPONSE
-    RESPONSE --> PAGE
 ```
 
 </details>
@@ -388,36 +295,36 @@ flowchart LR
 
 ## 最低服务器配置
 
-VOZEB PRO 调用外部 AI 模型，不要求 GPU。服务器主要承担 Web、PostgreSQL、媒体下载/存储和可选 FFmpeg 转码。
+JoveCanvas 调用外部 AI 模型，不要求 GPU。服务器主要承担 Web、PostgreSQL、媒体下载 / 存储和可选 FFmpeg 转码。
 
-| 使用方式                   | CPU      | 内存           | 磁盘      | 说明                                                                |
-| -------------------------- | -------- | -------------- | --------- | ------------------------------------------------------------------- |
-| 最低可启动                 | 1 核     | 1GB + 1GB swap | 10GB SSD  | 使用发布镜像、外部 PostgreSQL 和外部 S3/OSS；只适合安装体验和低并发 |
-| 标准小型部署               | 2 核     | 2GB + 1GB swap | 20GB SSD  | 应用与 PostgreSQL 同机，适合少量用户；不要在服务器现场构建镜像      |
-| 推荐日常使用               | 2–4 核   | 4GB            | 40GB+ SSD | 适合图片/视频工作台、Canvas、后台和少量并发                         |
-| 短剧合成或频繁本地视频处理 | 4 核以上 | 8GB 以上       | 80GB+ SSD | FFmpeg、长视频下载、转码和字幕合成会明显占用 CPU、内存和临时磁盘    |
+| 使用方式 | CPU | 内存 | 磁盘 | 说明 |
+| --- | --- | --- | --- | --- |
+| 最低可启动 | 1 核 | 1GB + 1GB swap | 10GB SSD | 发布镜像 + 外部 PostgreSQL + 外部对象存储；仅适合安装体验 |
+| 标准小型部署 | 2 核 | 2GB + 1GB swap | 20GB SSD | 应用与数据库同机；不要在服务器现场构建镜像 |
+| 推荐日常使用 | 2–4 核 | 4GB | 40GB+ SSD | 图片 / 视频工作台、画布、后台与少量并发 |
+| 短剧合成或重视频处理 | 4 核以上 | 8GB 以上 | 80GB+ SSD | FFmpeg 与长视频会明显占用 CPU、内存和临时磁盘 |
 
-最低环境还需要：64 位 Linux、Docker 与 Compose v2、PostgreSQL 16、可用域名和 HTTPS、能够访问模型上游的出站网络。源码开发或现场构建建议至少 2GB 内存，4GB 更稳妥；本地保存视频时请按实际媒体量扩大磁盘。完整说明见[低内存服务器部署](docs/content/docs/overview/low-memory.mdx)。
+最低环境还需要：64 位 Linux、Docker 与 Compose v2、PostgreSQL 16、可用域名和 HTTPS、能够访问模型上游的出站网络。源码开发建议至少 2GB 内存，4GB 更稳妥。完整说明见[低内存服务器部署](docs/content/docs/overview/low-memory.mdx)。
 
 ## 快速开始
 
 ### Docker Compose
 
-环境要求：可运行 Docker Compose 的 Linux 服务器、HTTPS 域名，以及按业务需要准备的模型渠道。
-
 ```bash
-git clone https://github.com/csyqlz/VOZEB-PRO.git
-cd VOZEB-PRO
+git clone https://github.com/jiujiu532/JoveCanvas.git
+cd JoveCanvas
 cp .env.example .env
 ```
 
 至少修改：
 
 ```dotenv
-NEXT_PUBLIC_SITE_URL=https://vozeb-pro.example.com
+NEXT_PUBLIC_SITE_URL=https://jove-canvas.example.com
 POSTGRES_PASSWORD=replace-with-a-strong-password
 VOZEB_PRO_ENCRYPTION_KEY=replace-with-openssl-rand-hex-32
 ```
+
+> 说明：运行时环境变量仍以 `VOZEB_PRO_*` 为前缀（与现有代码一致），不影响产品对外品牌 **JoveCanvas**。
 
 生成加密密钥并启动：
 
@@ -428,17 +335,13 @@ docker compose up -d
 docker compose ps
 ```
 
-打开 `https://你的域名/install`，依次检查数据库、初始化表结构并创建首个管理员。
+打开 `https://你的域名/install`，检查数据库、初始化表结构并创建首个管理员。
 
 ### 宝塔 PostgreSQL
-
-宝塔已安装 PostgreSQL 时使用：
 
 ```bash
 docker compose -f docker-compose.baota.yml up -d
 ```
-
-`.env` 中的数据库连接使用宿主机回环地址：
 
 ```dotenv
 VOZEB_PRO_DATABASE_PROVIDER=postgres
@@ -447,7 +350,7 @@ VOZEB_PRO_DATABASE_SSL=0
 VOZEB_PRO_TRUSTED_PROXY_HOPS=1
 ```
 
-宝塔 Nginx 反向代理到应用后，应转发 `Host`、`X-Forwarded-Host`、`X-Forwarded-Proto` 和 `X-Forwarded-For`。详细步骤见[生产上线基线](docs/content/docs/overview/production-readiness.mdx)和[Docker 部署](docs/content/docs/overview/docker.mdx)。
+宝塔 Nginx 反向代理应转发 `Host`、`X-Forwarded-Host`、`X-Forwarded-Proto` 和 `X-Forwarded-For`。详见[生产上线基线](docs/content/docs/overview/production-readiness.mdx)与[Docker 部署](docs/content/docs/overview/docker.mdx)。
 
 ### 源码开发
 
@@ -460,7 +363,7 @@ pnpm install --frozen-lockfile
 pnpm run dev
 ```
 
-访问 `http://localhost:3000/install`。文档站在 `docs/` 中独立运行：
+访问 `http://localhost:3000/install`（若本地端口配置不同，以实际启动端口为准）。文档站在 `docs/` 中独立运行：
 
 ```bash
 cd docs
@@ -471,41 +374,38 @@ pnpm run dev
 ## 首次配置顺序
 
 1. 在 `/install` 完成数据库初始化和首个管理员创建。
-2. 在后台“模型渠道”配置 Base URL、API Key、协议和模型目录。
+2. 在后台「模型渠道」配置 Base URL、API Key、协议和模型目录。
 3. 检测文本、图片、视频和音频能力，创建逻辑模型并设置默认值。
 4. 配置套餐、积分规则和可选支付渠道。
 5. 配置 SMTP、注册策略、本地媒体或 S3 兼容对象存储。
-6. 在“初始化配置”检查上线项，再验证真实生成、退款和备份恢复。
+6. 在「初始化配置」检查上线项，再验证真实生成、退款和备份恢复。
 
 ## 项目文件
 
-| 路径                                        | 文件里是什么                                                               |
-| ------------------------------------------- | -------------------------------------------------------------------------- |
-| `web/src/app/`                              | Next.js 页面、布局、安装页、用户工作区、管理后台和本站 API Route Handler   |
-| `web/src/lib/server/`                       | Agent 编排、模型路由、生成任务、计费、媒体、对象存储、支付和服务端安全逻辑 |
-| `web/src/lib/server/database/`              | PostgreSQL 表结构、参数化 Repository、查询映射和文件 Provider 回退         |
-| `web/src/components/` / `web/src/hooks/`    | 跨页面 UI、工作台控制器、素材选择、复制下载和会话交互                      |
-| `web/src/services/api/` / `web/src/stores/` | 浏览器访问本站 API 的类型化客户端，以及用户、主题、配置和素材瞬时状态      |
-| `web/scripts/`                              | standalone 启动、管理员密码重置和发布前检查脚本                            |
-| `web/public/`                               | 站点 Logo、浏览器图标和模型品牌图标                                        |
-| `docs/content/docs/`                        | 功能、安装、部署、数据库、商业准备、进度和排障文档                         |
-| `docs/public/screenshots/`                  | 用户端、公开页和管理后台的脱敏 WebP 功能截图                               |
-| `.github/workflows/quality.yml`             | Web 与文档的安装、类型检查、测试、格式检查和生产构建                       |
-| `.github/workflows/docker-image.yml`        | 主应用 amd64/arm64 镜像构建与 GHCR 多架构合并                              |
-| `.github/workflows/docs-docker-image.yml`   | 文档站 amd64/arm64 镜像构建与 GHCR 多架构合并                              |
-| `.env.example`                              | 数据库、站点、加密、代理、媒体、模型、支付和部署变量模板                   |
-| `Dockerfile` / `docker-compose*.yml`        | standalone 生产镜像，以及标准、源码、宝塔、外部数据库和低内存部署拓扑      |
-| `VERSION` / `CHANGELOG.md`                  | 当前版本号和版本级变更记录                                                 |
-| `LICENSE` / `CLA.md` / `SECURITY.md`        | AGPL-3.0 协议、贡献者授权和漏洞提交规则                                    |
-| `AGENTS.md` / `CONTRIBUTING.md`             | 项目工程约束，以及开发者提交 Issue、代码和文档的流程                       |
+| 路径 | 内容 |
+| --- | --- |
+| `web/src/app/` | Next.js 页面、布局、安装页、用户工作区、管理后台与 API Route Handler |
+| `web/src/lib/server/` | Agent 编排、模型路由、生成任务、计费、媒体、对象存储、支付与安全 |
+| `web/src/lib/server/database/` | PostgreSQL 表结构、参数化 Repository、文件 Provider 回退 |
+| `web/src/components/` / `web/src/hooks/` | 跨页面 UI、工作台控制器、素材选择与会话交互 |
+| `web/src/services/api/` / `web/src/stores/` | 浏览器访问本站 API 的类型化客户端与瞬时状态 |
+| `web/scripts/` | standalone 启动、管理员密码重置、发布前检查、提示词种子导入 |
+| `web/public/` | 站点 Logo、浏览器图标与模型品牌图标 |
+| `docs/content/docs/` | 功能、安装、部署、数据库与排障文档 |
+| `docs/public/screenshots/` | 用户端与管理后台的脱敏功能截图 |
+| `.env.example` | 数据库、站点、加密、代理、媒体、模型、支付与部署变量模板 |
+| `Dockerfile` / `docker-compose*.yml` | 生产镜像与多种部署拓扑 |
+| `VERSION` / `CHANGELOG.md` | 版本号与变更记录 |
+| `LICENSE` / `CLA.md` / `SECURITY.md` | AGPL-3.0、贡献者授权与安全策略 |
+| `AGENTS.md` / `CONTRIBUTING.md` | 工程约束与贡献流程 |
 
-更完整的目录树、关键源码入口、Service、Route Handler、Repository 和任务 Store 职责见[项目结构与流程](docs/content/docs/overview/project-structure.mdx)。
+更完整的目录树与关键入口见[项目结构与流程](docs/content/docs/overview/project-structure.mdx)。
 
 ## 页面展示
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/public/screenshots/pages/03a-canvas-editor.webp" alt="Canvas 编辑器"></td>
+    <td width="50%"><img src="docs/public/screenshots/pages/03a-canvas-editor.webp" alt="画布编辑器"></td>
     <td width="50%"><img src="docs/public/screenshots/pages/04a-drama-editor.webp" alt="短剧生产编辑器"></td>
   </tr>
   <tr>
@@ -518,15 +418,15 @@ pnpm run dev
   </tr>
 </table>
 
-用户端、公开页和管理后台共 42 张功能截图见[页面功能图册](docs/content/docs/overview/page-gallery.mdx)。
+更多截图见[页面功能图册](docs/content/docs/overview/page-gallery.mdx)。
 
 ## 数据与安全
 
-- PostgreSQL 保存用户、会话、设置、创作会话、Canvas、素材、短剧、生成任务、积分和订单。
+- PostgreSQL 保存用户、会话、设置、创作会话、画布、素材、短剧、生成任务、积分和订单。
 - 外部存储关闭时新媒体只写 `VOZEB_PRO_DATA_DIR`；开启时新媒体只写 S3 兼容对象存储。历史媒体按登记 Provider 读取。
 - 业务记录保存稳定站内 `storageKey`，不保存 base64、对象 Key 或临时签名 URL。
 - `.env`、API Key、支付密钥、数据库、媒体文件、备份、日志和构建产物不得提交 Git。
-- 生产备份必须同时覆盖 PostgreSQL 和本地媒体或对象存储，不能只备份其中一部分。
+- 生产备份必须同时覆盖 PostgreSQL 和本地媒体或对象存储。
 
 ## 验证
 
