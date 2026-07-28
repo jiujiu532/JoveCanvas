@@ -99,8 +99,8 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
     brandProductName: "",
     canvasProjectPrefix: "",
     mailBrandName: "",
-    repositoryUrl: "https://github.com/csyqlz/VOZEB-PRO",
-    versionCheckUrl: "https://raw.githubusercontent.com/csyqlz/VOZEB-PRO/main",
+    repositoryUrl: "https://github.com/jiujiu532/JoveCanvas",
+    versionCheckUrl: "https://raw.githubusercontent.com/jiujiu532/JoveCanvas/main",
 };
 export const DEFAULT_MAIL_SETTINGS: MailSettings = {
     provider: "QQ 邮箱",

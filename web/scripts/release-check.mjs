@@ -29,7 +29,7 @@ run(pnpm, ["run", "build"], webRoot, "Next.js 低内存构建", {
 const standaloneServer = path.join(webRoot, ".next", "standalone", "server.js");
 if (!existsSync(standaloneServer)) fail("构建完成但没有找到 .next/standalone/server.js，请检查 Next standalone 输出。");
 
-console.log("\nVOZEB PRO 发布前检查通过。");
+console.log("\nJoveCanvas 发布前检查通过。");
 console.log("移动端发布前还需要人工打开：首页、画布、积分弹窗、图片工作台、视频工作台、管理员后台。");
 
 function run(command, args, cwd, label, options = {}) {

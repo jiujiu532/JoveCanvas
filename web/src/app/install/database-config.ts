@@ -67,7 +67,7 @@ function bundledCompose(config: DatabaseConfig, database: string, username: stri
     restart: unless-stopped
 
   app:
-    image: ghcr.io/csyqlz/vozeb-pro:latest
+    image: ghcr.io/jiujiu532/jovecanvas:latest
     ports:
       - "127.0.0.1:3000:3000"
     volumes:
@@ -89,7 +89,7 @@ volumes:
 function externalCompose(config: DatabaseConfig, databaseUrl: string) {
     return `services:
   app:
-    image: ghcr.io/csyqlz/vozeb-pro:latest
+    image: ghcr.io/jiujiu532/jovecanvas:latest
     ports:
       - "127.0.0.1:3000:3000"
     volumes:
@@ -108,7 +108,7 @@ volumes:
 function baotaCompose(config: DatabaseConfig, databaseUrl: string) {
     return `services:
   app:
-    image: ghcr.io/csyqlz/vozeb-pro:latest
+    image: ghcr.io/jiujiu532/jovecanvas:latest
     network_mode: host
     volumes:
       - vozeb-pro-data:/app/web/.data

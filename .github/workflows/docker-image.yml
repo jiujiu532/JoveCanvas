@@ -4,7 +4,28 @@ run-name: 主应用多架构镜像 · ${{ github.ref_name }}
 on:
   push:
     branches: ["main"]
-    tags: ["v*", "VOZEB-PRO-v*"]
+    tags: ["v*"]
+    # 仅文档 / README / 临时脚本等不影响主应用镜像内容时跳过构建
+    paths-ignore:
+      - "README.md"
+      - "README.en.md"
+      - "docs/**"
+      - "web/scripts/_*.py"
+      - "web/scripts/_**"
+      - "vendor/**"
+      - ".claude/**"
+      - ".trellis/**"
+      - ".grok/**"
+      - ".opencode/**"
+      - "LICENSE"
+      - "CLA.md"
+      - "SECURITY.md"
+      - "CONTRIBUTING.md"
+      - "AGENTS.md"
+      - "CLAUDE.md"
+      - ".gitignore"
+      - ".editorconfig"
+      - "**/*.mdx"
   workflow_dispatch:
 
 permissions:
@@ -12,7 +33,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/csyqlz/vozeb-pro
+  IMAGE_NAME: ghcr.io/jiujiu532/jovecanvas
 
 jobs:
   meta:

@@ -69,7 +69,7 @@ async function fetchMedia(target: URL, method: "GET" | "HEAD", range: string | n
         const response = await fetch(current, {
             method,
             headers: {
-                "User-Agent": "VOZEB-PRO-Media-Proxy/0.0.2",
+                "User-Agent": "JoveCanvas-Media-Proxy/0.0.1",
                 ...(range ? { Range: range } : {}),
             },
             cache: "no-store",

@@ -4,7 +4,12 @@ run-name: 文档站多架构镜像 · ${{ github.ref_name }}
 on:
   push:
     branches: ["main"]
-    tags: ["v*", "VOZEB-PRO-v*"]
+    tags: ["v*"]
+    # 仅文档站相关路径变更时构建文档镜像
+    paths:
+      - "docs/**"
+      - "CHANGELOG.md"
+      - ".github/workflows/docs-docker-image.yml"
   workflow_dispatch:
 
 permissions:
@@ -12,7 +17,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/csyqlz/vozeb-pro-docs
+  IMAGE_NAME: ghcr.io/jiujiu532/jovecanvas-docs
 
 jobs:
   meta:

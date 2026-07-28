@@ -20,7 +20,7 @@ services:
     restart: unless-stopped
 
   app:
-    image: ${VOZEB_PRO_IMAGE:-ghcr.io/csyqlz/vozeb-pro:latest}
+    image: ${VOZEB_PRO_IMAGE:-ghcr.io/jiujiu532/jovecanvas:latest}
     container_name: vozeb-pro
     env_file:
       - .env

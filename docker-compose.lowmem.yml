@@ -1,6 +1,6 @@
 services:
   app:
-    image: ghcr.io/csyqlz/vozeb-pro:latest
+    image: ghcr.io/jiujiu532/jovecanvas:latest
     env_file:
       - .env
     ports:
