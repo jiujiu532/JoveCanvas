@@ -20,7 +20,6 @@
 </p>
 
 <p align="center">
-  <a href="https://www.vozeb.com">演示站</a> ·
   <a href="docs/index.md">文档索引</a> ·
   <a href="docs/content/docs/overview/project-structure.mdx">项目结构</a> ·
   <a href="docs/content/docs/overview/page-gallery.mdx">页面图册</a> ·
@@ -554,21 +553,3 @@ pnpm run build
 - [安全策略](SECURITY.md)
 - [AGPL-3.0](LICENSE)
 - [贡献者协议](CLA.md)
-
-## 社区交流
-
-<table>
-  <tr>
-    <td width="260"><a href="https://qm.qq.com/q/9MVLTxuRd6"><img src="docs/public/community/qq-vozeb-group-1049777515.webp" width="240" alt="VOZEB 开源交流 QQ 群二维码"></a></td>
-    <td>
-      <strong>VOZEB 开源交流</strong><br>
-      QQ 群：<code>1049777515</code> · <a href="https://qm.qq.com/q/9MVLTxuRd6">点击加入群聊</a><br><br>
-      欢迎交流部署、模型渠道适配、工作台使用、Bug 复现和代码贡献。请勿在群内发送 API Key、数据库密码、支付密钥、服务器私钥或未经脱敏的生产日志。
-    </td>
-  </tr>
-</table>
-
-## 致谢
-
-- 感谢原创开源作者 **basketikun** 对画布创作工作流、Canvas Agent 和 Codex 插件能力的开源贡献。
-- 感谢 [LINUX DO](https://linux.do) 社区、相关提示词开源仓库、Codex / Claude Code 生态，以及项目使用的所有开源工具与基础设施。

@@ -20,7 +20,6 @@
 </p>
 
 <p align="center">
-  <a href="https://www.vozeb.com">Demo</a> ·
   <a href="docs/index.md">Docs index</a> ·
   <a href="docs/content/docs/overview/project-structure.mdx">Project structure</a> ·
   <a href="docs/content/docs/overview/page-gallery.mdx">Page gallery</a> ·
@@ -554,21 +553,3 @@ pnpm run build
 - [Security policy](SECURITY.md)
 - [AGPL-3.0](LICENSE)
 - [Contributor agreement](CLA.md)
-
-## Community
-
-<table>
-  <tr>
-    <td width="260"><a href="https://qm.qq.com/q/9MVLTxuRd6"><img src="docs/public/community/qq-vozeb-group-1049777515.webp" width="240" alt="VOZEB open-source QQ group QR"></a></td>
-    <td>
-      <strong>VOZEB open-source chat</strong><br>
-      QQ group: <code>1049777515</code> · <a href="https://qm.qq.com/q/9MVLTxuRd6">Join the group</a><br><br>
-      Discuss deploy, model-channel adapters, workbench usage, bug reproduction, and code contributions. Do <strong>not</strong> post API keys, database passwords, payment secrets, server private keys, or unredacted production logs in the group.
-    </td>
-  </tr>
-</table>
-
-## Acknowledgements
-
-- Thanks to original open-source author **basketikun** for canvas creative workflows, Canvas Agent, and Codex plugin capabilities.
-- Thanks to the [LINUX DO](https://linux.do) community, related open prompt repositories, the Codex / Claude Code ecosystem, and every open-source tool and infrastructure this project builds on.
