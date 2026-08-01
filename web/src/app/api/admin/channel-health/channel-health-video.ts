@@ -200,7 +200,7 @@ function videoHealthConfig(baseUrl: string, model: string, path: string): Partia
             resultField: "/videos/:task_id/content",
             statusField: "status",
             durationRange: "按上游模型限制",
-            referenceRule: "参考图使用 multipart 文件上传，由 VOZEB PRO 自动组装。",
+            referenceRule: "参考图使用 multipart 文件上传，由 JoveCanvas 自动组装。",
             supportsReferenceImage: true,
             supportsReferenceVideo: false,
             supportsReferenceAudio: false,

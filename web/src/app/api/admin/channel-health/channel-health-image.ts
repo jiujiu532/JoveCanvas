@@ -37,7 +37,7 @@ export async function testImage(baseUrl: string, apiKey: string, model: string, 
                 editPath: "/images/edits",
                 requestTemplate: '{"model":"{{model}}","prompt":"{{prompt}}","size":"{{size}}","response_format":"url"}',
                 resultField: "data[0].url / data[0].b64_json",
-                referenceRule: "图生图使用 /images/edits；VOZEB PRO 会按 multipart、image、images、image_url、input_image 等常见字段自动兼容。",
+                referenceRule: "图生图使用 /images/edits；JoveCanvas 会按 multipart、image、images、image_url、input_image 等常见字段自动兼容。",
                 supportsReferenceImage: true,
                 ...imageHealthReferenceConfig(baseUrl),
                 remoteUrl: findStringByKeys(payload, [

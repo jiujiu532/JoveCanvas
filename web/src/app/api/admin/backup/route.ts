@@ -30,7 +30,7 @@ export async function GET() {
     const exportedAt = new Date().toISOString();
     const data = await readAdminBackupData();
     const backup = {
-        app: "VOZEB PRO",
+        app: "JoveCanvas",
         version: 1,
         exportedAt,
         files: {

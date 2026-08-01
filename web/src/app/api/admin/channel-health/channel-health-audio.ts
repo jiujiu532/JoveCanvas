@@ -5,7 +5,7 @@ export async function testAudio(baseUrl: string, apiKey: string, model: string):
     const response = await fetch(apiUrl(baseUrl, "/audio/speech"), {
         method: "POST",
         headers: jsonHeaders(apiKey),
-        body: JSON.stringify({ model, input: "VOZEB PRO audio health check.", voice: "alloy", response_format: "mp3" }),
+        body: JSON.stringify({ model, input: "JoveCanvas audio health check.", voice: "alloy", response_format: "mp3" }),
         cache: "no-store",
         signal: AbortSignal.timeout(HEALTH_REQUEST_TIMEOUT_MS),
     });

@@ -327,14 +327,14 @@ export type SiteSocialSettings = Record<
 >;
 
 export const DEFAULT_SITE_SOCIALS: SiteSocialSettings = {
-    email: { enabled: true, label: "邮箱联系", url: "mailto:csyqlz@gmail.com" },
+    email: { enabled: true, label: "邮箱联系", url: "" },
     telegram: { enabled: false, label: "Telegram", url: "" },
     x: { enabled: false, label: "X", url: "" },
     instagram: { enabled: false, label: "Instagram", url: "" },
 };
 
 export const DEFAULT_SITE_FRIEND_LINKS: SiteFriendLink[] = [
-    { id: "vozeb-pro-home", label: "VOZEB PRO", url: "https://www.vozeb.com/", enabled: true },
+    { id: "vozeb-pro-home", label: "JoveCanvas", url: "https://github.com/jiujiu532/JoveCanvas", enabled: true },
     { id: "qq-vozeb-open-source", label: "VOZEB 开源交流 QQ 群", url: VOZEB_QQ_GROUP_URL, enabled: true },
     { id: "linux-do", label: "Linux.do", url: "https://linux.do/", enabled: true },
 ];
