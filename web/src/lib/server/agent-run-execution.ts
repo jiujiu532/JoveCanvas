@@ -20,6 +20,7 @@ import type { AgentFunctionCallResult } from "./agent-function-call";
 import { agentSurfaceImageSize, canvasSnapshotNodes, isMediaReferenceType, resolveAgentTaskRatio, resolveCanvasTaskTargetNodeId } from "./agent-run-task-input";
 import { planToOps, taskResultOps } from "./agent-run-canvas-ops";
 import { hasSystemAiCharge, readSystemAiBilling, systemAiBillingHeaders } from "./system-ai-billing";
+import { logger } from "@/lib/server/logger";
 
 export { planToOps, taskResultOps } from "./agent-run-canvas-ops";
 
@@ -422,7 +423,7 @@ export async function processAgentRunReview(run: AgentRun, origin: string, cooki
             return { status: "unavailable" as const, attempts };
         }
         await updateAgentRunById(started.id, { reviewStatus: "review_pending" }, { type: "run.review.deferred", data: { attempt: attempts } }, ["completed"]);
-        console.warn("Agent background review deferred", { runId: started.id, attempt: attempts, error: message });
+        logger.warn("Agent background review deferred", { runId: started.id, attempt: attempts, error: message });
         return { status: "retry" as const, attempts };
     }
 }

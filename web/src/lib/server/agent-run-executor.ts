@@ -13,6 +13,7 @@ import { normalizeCanvasPlanForSelection } from "./agent-run-task-input";
 import { GenerationSubmissionUncertainError } from "@/lib/server/generation-submission-error";
 import { rankTextPlanningCandidates } from "@/lib/server/text-planning-runtime";
 import { filterAgentPlannerModels } from "@/lib/server/agent-run-planning-profile";
+import { logger, toLogError } from "@/lib/server/logger";
 
 const globalAgentExecutors = globalThis as typeof globalThis & { __vozebProAgentRunControllers?: Map<string, AbortController> };
 const controllers = (globalAgentExecutors.__vozebProAgentRunControllers ??= new Map<string, AbortController>());
@@ -165,7 +166,7 @@ export async function executeAgentRun(run: AgentRun, origin: string, cookie: str
         try {
             await refundAcceptedPlan();
         } catch (refundError) {
-            console.error("Agent planning refund failed", refundError instanceof Error ? refundError.message : refundError);
+            logger.error("Agent planning refund failed", { error: toLogError(refundError) });
             failure = refundError;
         }
         const latest = await getAgentRun(run.id);

@@ -14,6 +14,23 @@ import type { AiConfig } from "@/stores/use-config-store";
 import type { ReferenceImage } from "@/types/image";
 import type { ReferenceAudio, ReferenceVideo } from "@/types/media";
 
+import {
+    formatWorkbenchTime,
+    readStoredLogs as readStoredLogsBase,
+    removeStoredLogs,
+    saveStoredLog,
+    withLogOwner,
+    WORKBENCH_DEFAULT_ERROR,
+    WORKBENCH_DEFAULT_TITLE,
+    type BaseGenerationFailure,
+    type BaseGenerationLog,
+    type BaseGenerationResult,
+    type BaseGenerationSnapshot,
+} from "../shared/workbench-records-base";
+
+export type { BaseGenerationFailure, BaseGenerationLog, BaseGenerationResult, BaseGenerationSnapshot };
+export { withLogOwner };
+
 export type GeneratedVideo = {
     id: string;
     slotId?: string;
@@ -28,67 +45,46 @@ export type GeneratedVideo = {
     mimeType: string;
 };
 
-export type GenerationFailure = {
-    resultId: string;
-    error: string;
+export type GenerationFailure = BaseGenerationFailure & {
     canRetry?: boolean;
 };
 
-export type GenerationResult = {
-    id: string;
-    status: "pending" | "success" | "failed";
+export type GenerationResult = BaseGenerationResult & {
     video?: GeneratedVideo;
-    error?: string;
     canRetry?: boolean;
 };
 
-export type GenerationLog = {
-    id: string;
-    ownerUserId?: string;
-    creativeConversationId?: string;
-    createdAt: number;
-    title: string;
-    prompt: string;
-    time: string;
-    model: string;
+export type GenerationLog = BaseGenerationLog & {
     config: GenerationLogConfig;
     references: ReferenceImage[];
     videoReferences: ReferenceVideo[];
     audioReferences: ReferenceAudio[];
-    durationMs: number;
     size: string;
     resolution: string;
     seconds: string;
-    status: "生成中" | "成功" | "失败";
     task?: VideoGenerationTask;
     taskStartedAt?: number;
     taskResultId?: string;
     video?: GeneratedVideo;
     videos?: GeneratedVideo[];
     failures?: GenerationFailure[];
-    requestSnapshot?: GenerationLogRequestSnapshot;
-    error?: string;
     resultDeleted?: boolean;
 };
 
 export type GenerationLogConfig = Pick<AiConfig, "model" | "videoModel" | "size" | "vquality" | "videoSeconds" | "videoGenerateAudio" | "videoWatermark">;
-export type GenerationSnapshot = { text: string; userText?: string; config: AiConfig; references: ReferenceImage[]; videoReferences: ReferenceVideo[]; audioReferences: ReferenceAudio[] };
+export type GenerationSnapshot = BaseGenerationSnapshot & { references: ReferenceImage[]; videoReferences: ReferenceVideo[]; audioReferences: ReferenceAudio[] };
 export type ReferenceDropTarget = "image" | "video" | "audio";
 
 export async function readStoredLogs(userId: string) {
-    return (await readServerVideoLogs()).map((log) => withLogOwner(log, userId));
-}
-
-export function withLogOwner(log: GenerationLog, userId: string): GenerationLog {
-    return userId ? { ...log, ownerUserId: userId } : log;
+    return readStoredLogsBase(userId, readServerVideoLogs);
 }
 
 export function saveStoredVideoLog(log: GenerationLog) {
-    return recordVideoGenerationLog(log);
+    return saveStoredLog(log, recordVideoGenerationLog);
 }
 
 export function removeStoredVideoLogs(ids: string[]) {
-    return Promise.resolve(ids);
+    return removeStoredLogs(ids, (logIds) => Promise.resolve(logIds));
 }
 
 export async function readServerVideoLogs() {
@@ -143,7 +139,7 @@ export async function serverVideoLogToWorkbenchLog(record: StoredGenerationLogRe
         createdAt,
         title: record.title || record.prompt || record.model,
         prompt: record.prompt,
-        time: new Date(createdAt).toLocaleString("zh-CN", { hour12: false }),
+        time: formatWorkbenchTime(createdAt),
         model: record.model,
         config: {
             model: parameters.model || record.model,
@@ -167,7 +163,7 @@ export async function serverVideoLogToWorkbenchLog(record: StoredGenerationLogRe
         taskResultId: pendingSlot?.id,
         video: videos[videos.length - 1],
         videos,
-        failures: (snapshot?.slots || []).flatMap((slot) => (slot.status === "failed" ? [{ resultId: slot.id, error: slot.error || record.error || "生成失败", canRetry: slot.canRetry === true }] : [])),
+        failures: (snapshot?.slots || []).flatMap((slot) => (slot.status === "failed" ? [{ resultId: slot.id, error: slot.error || record.error || WORKBENCH_DEFAULT_ERROR, canRetry: slot.canRetry === true }] : [])),
         requestSnapshot: snapshot,
         error: record.error,
         resultDeleted: !videos.length && record.status === "success",
@@ -229,9 +225,9 @@ export async function normalizeLog(log: Partial<GenerationLog>): Promise<Generat
         ownerUserId: log.ownerUserId,
         creativeConversationId: log.creativeConversationId,
         createdAt: log.createdAt || Date.now(),
-        title: log.title || log.model || "未命名",
+        title: log.title || log.model || WORKBENCH_DEFAULT_TITLE,
         prompt: log.prompt || "",
-        time: log.time || new Date().toLocaleString("zh-CN", { hour12: false }),
+        time: log.time || formatWorkbenchTime(),
         model: log.model || config.videoModel || "",
         config,
         references,
@@ -323,7 +319,7 @@ export function replaceResult(results: GenerationResult[], resultId: string, nex
 
 export function buildLogFromVideoResults(baseLog: GenerationLog | null, snapshot: GenerationSnapshot, results: GenerationResult[], durationMs: number, error?: string, pending?: { task: VideoGenerationTask; taskResultId: string }): GenerationLog {
     const videos = results.flatMap((result) => (result.status === "success" && result.video ? [result.video] : []));
-    const failures = results.flatMap((result) => (result.status === "failed" ? [{ resultId: result.id, error: result.error || error || "生成失败", canRetry: result.canRetry === true }] : []));
+    const failures = results.flatMap((result) => (result.status === "failed" ? [{ resultId: result.id, error: result.error || error || WORKBENCH_DEFAULT_ERROR, canRetry: result.canRetry === true }] : []));
     const hasPending = results.some((result) => result.status === "pending");
     const status: GenerationLog["status"] = hasPending ? "生成中" : videos.length ? "成功" : "失败";
     const latestVideo = videos[videos.length - 1];
@@ -432,9 +428,9 @@ export function buildLog({
         id: baseLog?.id || nanoid(),
         creativeConversationId: baseLog?.creativeConversationId,
         createdAt: baseLog?.createdAt || Date.now(),
-        title: baseLog?.title || requestSnapshot.userPrompt?.slice(0, 12) || prompt.slice(0, 12) || "未命名",
+        title: baseLog?.title || requestSnapshot.userPrompt?.slice(0, 12) || prompt.slice(0, 12) || WORKBENCH_DEFAULT_TITLE,
         prompt,
-        time: new Date().toLocaleString("zh-CN", { hour12: false }),
+        time: formatWorkbenchTime(),
         model,
         config: logConfig,
         references,
@@ -533,7 +529,7 @@ function mergeVideoRequestSnapshot(
             taskResultUrl: task?.resultUrl || previous?.taskResultUrl,
             serverTaskId: task?.serverTaskId || previous?.serverTaskId,
             startedAt: task ? Date.now() : previous?.startedAt,
-            error: result.status === "failed" ? result.error || error || previous?.error || "生成失败" : undefined,
+            error: result.status === "failed" ? result.error || error || previous?.error || WORKBENCH_DEFAULT_ERROR : undefined,
             canRetry: result.status === "failed" ? result.canRetry === true : undefined,
         };
         if (result.status === "success") assetIndex += 1;

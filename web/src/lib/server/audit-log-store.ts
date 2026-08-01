@@ -3,7 +3,9 @@ import { randomUUID } from "node:crypto";
 import type { PublicUser, UserRole } from "@/lib/auth/store";
 import { ensurePostgresSchema, isPostgresDatabaseEnabled, postgresQuery, withPostgresTransaction, type QueryExecutor } from "@/lib/server/database";
 import { readJsonDataFile, writeJsonDataFile } from "@/lib/server/data-adapter";
-import { normalizeText } from "@/lib/server/normalize-utils";
+import { dbOptionalText, dbText } from "@/lib/server/database/repository-utils";
+import { logger, toLogError } from "@/lib/server/logger";
+import { normalizeOptionalText, normalizeText } from "@/lib/server/normalize-utils";
 import { getClientIp } from "@/lib/server/security";
 
 type AuditLogStatus = "success" | "failure";
@@ -107,7 +109,7 @@ export async function safeRecordAuditLog(input: AuditLogInput) {
     try {
         return await recordAuditLog(input);
     } catch (error) {
-        console.error("Audit log write failed", error);
+        logger.error("Audit log write failed", { error: toLogError(error) });
         return null;
     }
 }
@@ -273,15 +275,6 @@ function mapPostgresAuditLog(row: Record<string, unknown>): StoredAuditLog {
     });
 }
 
-function dbText(value: unknown) {
-    return typeof value === "string" ? value : value === null || value === undefined ? "" : String(value);
-}
-
-function dbOptionalText(value: unknown) {
-    const text = dbText(value);
-    return text || undefined;
-}
-
 function dbIso(value: unknown) {
     const date = value instanceof Date ? value : new Date(dbText(value));
     return Number.isFinite(date.getTime()) ? date.toISOString() : new Date().toISOString();
@@ -357,11 +350,6 @@ function sanitizeValue(value: unknown, depth: number): unknown {
 
 function normalizeAction(value: unknown) {
     return normalizeText(value, "unknown", 120).replace(/[^a-z0-9_.:-]/gi, "");
-}
-
-function normalizeOptionalText(value: unknown, maxLength: number) {
-    const text = normalizeText(value, "", maxLength);
-    return text || undefined;
 }
 
 function normalizeTime(value: unknown, fallback: string | number) {

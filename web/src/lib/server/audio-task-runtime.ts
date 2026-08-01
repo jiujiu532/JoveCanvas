@@ -12,6 +12,7 @@ import { writePersistentMediaDataUrl } from "@/lib/server/reference-asset-store"
 import { registerGenerationTaskAssetsForUser } from "@/lib/server/creative-runtime-service";
 import { scheduleGenerationTask } from "@/lib/server/generation-task-scheduler";
 import { GenerationSubmissionSafeFailure, GenerationSubmissionUncertainError, generationSubmissionResponseError, generationSubmissionUncertainError } from "@/lib/server/generation-submission-error";
+import { logger, toLogError } from "@/lib/server/logger";
 import { systemAiBillingHeaders } from "@/lib/server/system-ai-billing";
 
 export type AudioUpstreamStep =
@@ -191,7 +192,7 @@ async function completeAudioTask(task: AudioTask, url: string, mimeType: string)
         taskId: completed.id,
         title: completed.prompt.slice(0, 80) || "生成音频",
         assets: [{ type: "audio", url, mimeType }],
-    }).catch((error) => console.error("Creative audio asset registration failed", error));
+    }).catch((error) => logger.error("Creative audio asset registration failed", { error: toLogError(error) }));
     return completed;
 }
 

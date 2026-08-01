@@ -5,11 +5,11 @@ import { DEFAULT_ALIPAY_PAYMENT_MODE, isAlipayPaymentMode } from "@/lib/payment-
 import { BillingInputError } from "@/lib/server/billing-errors";
 import { getPaymentRuntimeEnv, getPaymentRuntimeValue, type PaymentRuntimeConfig } from "@/lib/server/payment-config-store";
 import type { BillingOrderRecord, JsonValue } from "@/lib/server/database";
-import { normalizeProvider, normalizeText } from "@/lib/server/normalize-utils";
+import { normalizeId, normalizeOptionalText, normalizeProvider, normalizeText } from "@/lib/server/normalize-utils";
 import { loadPaymentPublicKey, verifyRsaSha256 } from "@/lib/server/payment-signature-utils";
 import type { CreatePaymentCheckoutOptions, PaymentCheckoutKind, PaymentCheckoutResult } from "./payment-checkout-types";
 
-export { normalizeProvider };
+export { normalizeId, normalizeProvider };
 
 export async function createProviderCheckout(provider: string, order: BillingOrderRecord, options: CreatePaymentCheckoutOptions, paymentConfig: PaymentRuntimeConfig): Promise<PaymentCheckoutResult> {
     if (provider === "stripe") return createStripeCheckout(order, options, paymentConfig);
@@ -572,15 +572,6 @@ function normalizeOptionalIso(value: unknown) {
     if (!value) return undefined;
     const date = new Date(typeof value === "string" || typeof value === "number" ? value : "");
     return Number.isFinite(date.getTime()) ? date.toISOString() : undefined;
-}
-
-export function normalizeId(value: unknown) {
-    return normalizeText(value, "", 120).replace(/[^a-zA-Z0-9_.:-]/g, "");
-}
-
-function normalizeOptionalText(value: unknown, maxLength: number) {
-    const text = normalizeText(value, "", maxLength);
-    return text || undefined;
 }
 
 function escapeHtml(value: string) {

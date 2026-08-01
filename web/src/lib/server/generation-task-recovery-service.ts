@@ -13,6 +13,7 @@ import { maintenanceWorkerContext } from "@/lib/server/maintenance-auth";
 import { executeAgentRun } from "@/lib/server/agent-run-executor";
 import { processAgentRunReview } from "@/lib/server/agent-run-execution";
 import { getAgentRun, type AgentRun } from "@/lib/server/agent-run-store";
+import { logger, toLogError } from "@/lib/server/logger";
 
 type RecoveryResult = "pending" | "result_ready" | "completed" | "failed" | "needs_review" | "deferred";
 
@@ -23,7 +24,7 @@ export async function runGenerationTaskRecoveryBatch(input: { origin: string; pu
 
     const taskIds = leases.map((lease) => lease.id);
     const heartbeat = setInterval(() => {
-        void renewGenerationTaskLeases(workerId, taskIds, 90_000).catch((error) => console.error("Generation worker lease heartbeat failed", { workerId, error }));
+        void renewGenerationTaskLeases(workerId, taskIds, 90_000).catch((error) => logger.error("Generation worker lease heartbeat failed", { workerId, error: toLogError(error) }));
     }, 25_000);
     try {
         const persistence = leases.filter(needsPersistence);
@@ -111,7 +112,7 @@ async function processAgentLease(lease: GenerationTaskLease, workerId: string, o
             lastPollAt: Date.now(),
             lastUpstreamStatus: `query_error:${count}`,
         });
-        console.warn("Agent task recovery deferred", { runId: run.id, error: safeError(error) });
+        logger.warn("Agent task recovery deferred", { runId: run.id, error: safeError(error) });
         return "deferred";
     }
 }
@@ -175,7 +176,7 @@ async function processTextLease(lease: GenerationTaskLease, workerId: string, or
             lastPollAt: Date.now(),
             lastUpstreamStatus: upstreamTaskId ? `query_error:${count}` : "submission_outcome_unknown",
         });
-        console.warn(upstreamTaskId ? "Text task recovery deferred" : "Text task execution needs review", { taskId: task.id, error: safeError(error) });
+        logger.warn(upstreamTaskId ? "Text task recovery deferred" : "Text task execution needs review", { taskId: task.id, error: safeError(error) });
         return upstreamTaskId ? "deferred" : "needs_review";
     }
 }
@@ -230,7 +231,7 @@ async function processImageLease(lease: GenerationTaskLease, workerId: string, o
             lastPollAt: Date.now(),
             lastUpstreamStatus: submitted ? `query_error:${count}` : "submission_outcome_unknown",
         });
-        console.warn("Image task step deferred", { taskId: task.id, error: safeError(error) });
+        logger.warn("Image task step deferred", { taskId: task.id, error: safeError(error) });
         return submitted ? "deferred" : "needs_review";
     }
 }
@@ -251,7 +252,7 @@ async function persistImageLease(task: ImageTask, lease: GenerationTaskLease, wo
     } catch (error) {
         const count = errorCount(lease.lastUpstreamStatus) + 1;
         await releaseGenerationTaskLease("image", task.id, workerId, { executionPhase: "persisting", nextPollAt: generationTaskNextPollAt({ consecutiveErrors: count }), lastUpstreamStatus: `persist_error:${count}` });
-        console.warn("Image result persistence deferred", { taskId: task.id, error: safeError(error) });
+        logger.warn("Image result persistence deferred", { taskId: task.id, error: safeError(error) });
         return "deferred";
     }
 }
@@ -324,7 +325,7 @@ async function persistAudioLease(task: AudioTask, lease: GenerationTaskLease, wo
     } catch (error) {
         const count = errorCount(lease.lastUpstreamStatus) + 1;
         await releaseGenerationTaskLease("audio", task.id, workerId, { executionPhase: "persisting", nextPollAt: generationTaskNextPollAt({ consecutiveErrors: count }), lastUpstreamStatus: `persist_error:${count}` });
-        console.warn("Audio result persistence deferred", { taskId: task.id, error: safeError(error) });
+        logger.warn("Audio result persistence deferred", { taskId: task.id, error: safeError(error) });
         return "deferred";
     }
 }
@@ -374,7 +375,7 @@ async function processVideoLease(lease: GenerationTaskLease, workerId: string, o
             lastPollAt: Date.now(),
             lastUpstreamStatus: `query_error:${count}`,
         });
-        console.warn("Video task query deferred", { taskId: task.id, error: safeError(error) });
+        logger.warn("Video task query deferred", { taskId: task.id, error: safeError(error) });
         return "deferred";
     }
 }
@@ -399,7 +400,7 @@ async function persistVideoLease(task: VideoTask, lease: GenerationTaskLease, wo
             nextPollAt: generationTaskNextPollAt({ consecutiveErrors: count }),
             lastUpstreamStatus: `persist_error:${count}`,
         });
-        console.warn("Video result persistence deferred", { taskId: task.id, error: safeError(error) });
+        logger.warn("Video result persistence deferred", { taskId: task.id, error: safeError(error) });
         return "deferred";
     }
 }

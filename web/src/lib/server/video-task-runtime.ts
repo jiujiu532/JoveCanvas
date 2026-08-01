@@ -9,6 +9,7 @@ import { registerGenerationTaskAssetsForUser } from "@/lib/server/creative-runti
 import { normalizeVideoResult } from "@/lib/server/video-result-normalizer";
 import { VIDEO_PROVIDER_FAILED, VIDEO_PROVIDER_SUCCESS, parseVideoProviderJson, readVideoProviderHttpError, readVideoProviderStatus, readVideoProviderUrl, videoProviderMediaUrl } from "@/lib/server/video-provider-response";
 import { claimVideoTaskPoll, completeReconciledVideoTask, failReconciledVideoTask, getVideoTask, updateVideoTask, type VideoTask } from "@/lib/server/video-task-store";
+import { logger, toLogError } from "@/lib/server/logger";
 import { maintenanceWorkerHeaders } from "@/lib/server/maintenance-auth";
 
 export type VideoUpstreamStep = { state: "pending"; status: string } | { state: "result_ready"; status: string; resultUrl: string } | { state: "failed"; status: string; error: string };
@@ -90,7 +91,7 @@ async function registerVideoAsset(task: VideoTask) {
         taskId: task.id,
         title: task.prompt?.slice(0, 80) || "生成视频",
         assets: [{ type: "video", url, mimeType: task.result?.mimeType || "video/mp4", durationMs: task.result?.durationMs }],
-    }).catch((error) => console.error("Creative video asset registration failed", error));
+    }).catch((error) => logger.error("Creative video asset registration failed", { error: toLogError(error) }));
 }
 
 async function refundVideoTask(task: VideoTask) {

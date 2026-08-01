@@ -2,10 +2,11 @@ import { createDecipheriv, createHmac, timingSafeEqual } from "node:crypto";
 
 import { normalizePaymentProvider } from "@/lib/payment-provider";
 import { BillingInputError } from "@/lib/server/billing-errors";
-import type { JsonValue } from "@/lib/server/database";
-import { normalizeText } from "@/lib/server/normalize-utils";
+import { normalizeOptionalText, normalizeText, sanitizeJson } from "@/lib/server/normalize-utils";
 import { getPaymentRuntimeEnv, getPaymentRuntimeValue, type PaymentRuntimeConfig } from "@/lib/server/payment-config-store";
 import { loadPaymentPublicKey, verifyRsaSha256 } from "@/lib/server/payment-signature-utils";
+
+export { sanitizeJson };
 
 type WebhookStatus = "succeeded" | "ignored";
 
@@ -340,11 +341,6 @@ function normalizeOptionalId(value: unknown) {
     return id || undefined;
 }
 
-function normalizeOptionalText(value: unknown, maxLength: number) {
-    const text = normalizeText(value, "", maxLength);
-    return text || undefined;
-}
-
 function normalizeOptionalInteger(value: unknown) {
     if (value === null || value === undefined || value === "") return undefined;
     const number = Number(value);
@@ -413,17 +409,4 @@ function stripeToleranceMs(paymentConfig: PaymentRuntimeConfig) {
 function wechatToleranceMs(paymentConfig: PaymentRuntimeConfig) {
     const seconds = Number(getPaymentRuntimeEnv(paymentConfig, "VOZEB_PRO_WECHAT_PAY_WEBHOOK_TOLERANCE_SECONDS") || 300);
     return Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : 300_000;
-}
-
-export function sanitizeJson(value: unknown, depth = 0): JsonValue {
-    if (depth > 4) return "[truncated]";
-    if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
-    if (Array.isArray(value)) return value.slice(0, 80).map((item) => sanitizeJson(item, depth + 1));
-    if (!value || typeof value !== "object") return {};
-    return Object.fromEntries(
-        Object.entries(value as Record<string, unknown>)
-            .slice(0, 120)
-            .map(([key, item]) => [normalizeText(key, "", 100), sanitizeJson(item, depth + 1)] as const)
-            .filter(([key]) => Boolean(key)),
-    ) as { [key: string]: JsonValue };
 }

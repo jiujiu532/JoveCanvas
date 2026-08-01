@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { BillingInputError } from "@/lib/server/billing-errors";
 import { completeBillingOrderPayment } from "@/lib/server/billing-service";
 import { createPostgresRepositories, ensurePostgresSchema, isPostgresDatabaseEnabled, type JsonValue } from "@/lib/server/database";
+import { logger, toLogError } from "@/lib/server/logger";
 import { getPaymentRuntimeConfig } from "@/lib/server/payment-config-store";
 import { deterministicEventId, normalizeProvider, parseFallbackEvent, resolveWebhookAdapter, sanitizeJson, type ParsedPaymentWebhook } from "./payment-webhook-adapters";
 
@@ -132,7 +133,7 @@ async function safeRecordWebhookEvent(provider: string, parsed: { eventId?: stri
             updatedAt: now,
         });
     } catch (error) {
-        console.error("Payment webhook event write failed", error);
+        logger.error("Payment webhook event write failed", { error: toLogError(error) });
     }
 }
 

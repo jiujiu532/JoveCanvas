@@ -3,10 +3,10 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import type { BillingProductInput } from "@/lib/server/billing-service";
 import { BillingInputError } from "@/lib/server/billing-errors";
 import { createPostgresRepositories, ensurePostgresSchema, isPostgresDatabaseEnabled, type BillingOrderRecord, type BillingProductRecord, type JsonValue, type QueryExecutor, type UserPlanAssignmentRecord } from "@/lib/server/database";
-import { normalizeProvider, normalizeText } from "@/lib/server/normalize-utils";
+import { normalizeId, normalizeOptionalText, normalizeProvider, normalizeText, sanitizeJson } from "@/lib/server/normalize-utils";
 import type { PaymentRefundResult } from "@/lib/server/payment-refund-service";
 
-export { normalizeProvider, normalizeText };
+export { normalizeId, normalizeOptionalText, normalizeProvider, normalizeText, sanitizeJson };
 
 const DEFAULT_ORDER_EXPIRES_MINUTES = 30;
 const REFUND_CLAIM_TTL_MS = 10 * 60 * 1000;
@@ -178,10 +178,6 @@ export function orderExpiresMinutes() {
     return normalizeInteger(process.env.VOZEB_PRO_BILLING_ORDER_EXPIRES_MINUTES, 1, 24 * 60, DEFAULT_ORDER_EXPIRES_MINUTES);
 }
 
-export function normalizeId(value: unknown) {
-    return normalizeText(value, "", 120).replace(/[^a-zA-Z0-9_.:-]/g, "");
-}
-
 export function normalizeCurrency(value: unknown) {
     const currency = normalizeText(value, "CNY", 8).toUpperCase();
     return /^[A-Z]{3,8}$/.test(currency) ? currency : "CNY";
@@ -219,11 +215,6 @@ export function roundAmount(value: number) {
     return Number(value.toFixed(2));
 }
 
-export function normalizeOptionalText(value: unknown, maxLength: number) {
-    const text = normalizeText(value, "", maxLength);
-    return text || undefined;
-}
-
 export function mergeJson(current: JsonValue | undefined, patch: Record<string, JsonValue>): JsonValue {
     const source = current && typeof current === "object" && !Array.isArray(current) ? (current as Record<string, JsonValue>) : {};
     return { ...source, ...patch };
@@ -237,19 +228,6 @@ export function paymentRefundMetadata(refund: PaymentRefundResult, includeRawPay
     };
     if (includeRawPayload && refund.rawPayload !== undefined) metadata.rawPayload = refund.rawPayload;
     return metadata;
-}
-
-export function sanitizeJson(value: unknown, depth = 0): JsonValue {
-    if (depth > 4) return "[truncated]";
-    if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
-    if (Array.isArray(value)) return value.slice(0, 50).map((item) => sanitizeJson(item, depth + 1));
-    if (!value || typeof value !== "object") return {};
-    return Object.fromEntries(
-        Object.entries(value as Record<string, unknown>)
-            .slice(0, 80)
-            .map(([key, item]) => [normalizeText(key, "", 80), sanitizeJson(item, depth + 1)] as const)
-            .filter(([key]) => Boolean(key)),
-    );
 }
 
 export function pad2(value: number) {

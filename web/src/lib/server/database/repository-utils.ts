@@ -34,6 +34,14 @@ export function optionalString(value: unknown) {
     return text || undefined;
 }
 
+export function dbText(value: unknown) {
+    return stringValue(value);
+}
+
+export function dbOptionalText(value: unknown) {
+    return optionalString(value);
+}
+
 export function numberValue(value: unknown) {
     const number = Number(value);
     return Number.isFinite(number) ? number : 0;

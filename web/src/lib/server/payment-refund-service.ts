@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { normalizePaymentProvider } from "@/lib/payment-provider";
 import { BillingInputError } from "@/lib/server/billing-errors";
 import type { BillingOrderRecord, JsonValue, PaymentTransactionRecord } from "@/lib/server/database";
-import { normalizeText } from "@/lib/server/normalize-utils";
+import { normalizeOptionalText, normalizeText, sanitizeJson } from "@/lib/server/normalize-utils";
 import { getPaymentRuntimeConfig, getPaymentRuntimeEnv, getPaymentRuntimeValue, type PaymentRuntimeConfig } from "@/lib/server/payment-config-store";
 
 export type PaymentRefundStatus = "succeeded" | "pending" | "manual";
@@ -426,11 +426,6 @@ function normalizeWechatRefundStatus(value: unknown): Exclude<PaymentRefundStatu
     return undefined;
 }
 
-function normalizeOptionalText(value: unknown, maxLength: number) {
-    const text = normalizeText(value, "", maxLength);
-    return text || undefined;
-}
-
 function centsToDecimal(cents: number) {
     return (cents / 100).toFixed(2);
 }
@@ -449,17 +444,4 @@ function alipayTimestamp(date = new Date()) {
     const parts = formatter.formatToParts(date);
     const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
     return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
-}
-
-function sanitizeJson(value: unknown, depth = 0): JsonValue {
-    if (depth > 4) return "[truncated]";
-    if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
-    if (Array.isArray(value)) return value.slice(0, 80).map((item) => sanitizeJson(item, depth + 1));
-    if (!value || typeof value !== "object") return {};
-    return Object.fromEntries(
-        Object.entries(value as Record<string, unknown>)
-            .slice(0, 120)
-            .map(([key, item]) => [normalizeText(key, "", 100), sanitizeJson(item, depth + 1)] as const)
-            .filter(([key]) => Boolean(key)),
-    ) as { [key: string]: JsonValue };
 }

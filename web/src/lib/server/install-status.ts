@@ -1,5 +1,6 @@
 import { DEFAULT_SITE_SETTINGS, getPublicUserSummary } from "@/lib/auth/store";
 import { getDatabaseProvider, getPostgresConnectionString, initializePostgresSchema, postgresQuery } from "@/lib/server/database";
+import { logger, toLogError } from "@/lib/server/logger";
 import { getEncryptionKeyStatus } from "@/lib/server/secret-crypto";
 
 export type InstallStatus = {
@@ -78,7 +79,7 @@ async function loadInstallStatus(provider: "file" | "postgres", encryption = get
                 },
             });
         } catch (error) {
-            console.error("File install status check failed", error);
+            logger.error("File install status check failed", { error: toLogError(error) });
             return buildStatus({
                 provider,
                 userCount: 0,
@@ -115,7 +116,7 @@ async function loadInstallStatus(provider: "file" | "postgres", encryption = get
     try {
         await postgresQuery("SELECT 1");
     } catch (error) {
-        console.error("PostgreSQL install connection check failed", error);
+        logger.error("PostgreSQL install connection check failed", { error: toLogError(error) });
         return buildStatus({
             provider,
             userCount: 0,
@@ -162,7 +163,7 @@ async function loadInstallStatus(provider: "file" | "postgres", encryption = get
             },
         });
     } catch (error) {
-        console.error("PostgreSQL install schema check failed", error);
+        logger.error("PostgreSQL install schema check failed", { error: toLogError(error) });
         return buildStatus({
             provider,
             userCount: 0,
@@ -186,7 +187,7 @@ export async function initializeInstallDatabase() {
     try {
         await initializePostgresSchema();
     } catch (error) {
-        console.error("PostgreSQL install initialization failed", error);
+        logger.error("PostgreSQL install initialization failed", { error: toLogError(error) });
         throw new InstallInitializationError("数据库初始化失败，请查看服务器日志并检查数据库账号权限", 500);
     }
     invalidateInstallStatusCache();

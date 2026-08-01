@@ -6,6 +6,7 @@ import { dirname, resolve, sep } from "node:path";
 import { ensureMediaFileExtension, mediaFileExtension } from "@/lib/media-file";
 import type { GenerationLogReferenceSnapshot, GenerationLogRequestSnapshot, GenerationLogSlotSnapshot, GenerationLogSnapshotParameters } from "@/lib/generation-log-snapshot";
 import { ensurePostgresSchema, isPostgresDatabaseEnabled, postgresQuery, withPostgresTransaction, type QueryExecutor } from "@/lib/server/database";
+import { dbOptionalText, dbText } from "@/lib/server/database/repository-utils";
 import { readJsonDataFile, writeJsonDataFile } from "@/lib/server/data-adapter";
 import { normalizeGeneratedImageBytes } from "@/lib/server/generated-image-normalizer";
 import { createDatedMediaPath, GENERATION_MEDIA_ROOT } from "@/lib/server/local-media-storage";
@@ -15,7 +16,7 @@ import { deleteExternalMediaObject, persistExternalMediaIfEnabled } from "@/lib/
 import { isPublicIpAddress } from "@/lib/server/security";
 import type { GenerationLogAsset, GenerationLogDatabase, GenerationLogKind, GenerationLogSource, GenerationLogStatus, StoredGenerationLog } from "./generation-log-types";
 
-export { normalizeText };
+export { dbOptionalText, dbText, normalizeText };
 
 const LOG_DATA_FILE = "generation-logs.json";
 const ASSET_ROOT = GENERATION_MEDIA_ROOT;
@@ -419,15 +420,6 @@ export function mapPostgresGenerationLogAsset(row: Record<string, unknown>): Gen
         height: dbOptionalNumber(row.height),
         bytes: dbOptionalNumber(row.bytes),
     };
-}
-
-export function dbText(value: unknown) {
-    return typeof value === "string" ? value : value === null || value === undefined ? "" : String(value);
-}
-
-export function dbOptionalText(value: unknown) {
-    const text = dbText(value);
-    return text || undefined;
 }
 
 export function dbNumber(value: unknown, fallback: number) {

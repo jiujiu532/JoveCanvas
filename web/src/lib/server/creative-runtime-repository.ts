@@ -3,7 +3,10 @@ import { nanoid } from "nanoid";
 import { creativeConversationSourceForSurface, normalizeCreativeConversationSource, type CreativeAsset, type CreativeConversation, type CreativeMessage, type CreativeRunEvent, type CreativeSurface } from "@/lib/creative-runtime-contract";
 import { readJsonDataFile, writeJsonDataFile } from "@/lib/server/data-adapter";
 import { ensurePostgresSchema, withPostgresTransaction, type QueryExecutor } from "@/lib/server/database";
+import { dbOptionalText, dbText } from "@/lib/server/database/repository-utils";
 import type { StoredGenerationTaskRecord } from "@/lib/server/generation-task-store";
+
+export { dbOptionalText, dbText };
 
 export type RuntimeFileDatabase = {
     version: 1;
@@ -462,14 +465,6 @@ export function cleanText(value: unknown, max: number) {
 export function boundedLimit(value: number | undefined, fallback: number) {
     const number = Math.floor(Number(value));
     return Number.isFinite(number) && number > 0 ? Math.min(200, number) : fallback;
-}
-
-export function dbText(value: unknown) {
-    return value === null || value === undefined ? "" : String(value);
-}
-
-export function dbOptionalText(value: unknown) {
-    return dbText(value) || undefined;
 }
 
 export function dbOptionalNumber(value: unknown) {

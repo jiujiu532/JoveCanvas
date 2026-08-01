@@ -1,4 +1,5 @@
 import { getDatabaseProvider, getPostgresConnectionString, subscribePostgresNotification } from "@/lib/server/database";
+import { logger, toLogError } from "@/lib/server/logger";
 
 type RunEventListener = () => void;
 
@@ -45,6 +46,6 @@ function ensurePostgresEventBridge() {
         if (id && id.length <= 160) notifyCreativeRunEvent(id);
     }).catch((error) => {
         globalSignals.__vozebProCreativeRunSignalBridge = undefined;
-        console.warn("Creative run PostgreSQL notification bridge unavailable", { error: error instanceof Error ? error.message : String(error) });
+        logger.warn("Creative run PostgreSQL notification bridge unavailable", { error: toLogError(error) });
     });
 }

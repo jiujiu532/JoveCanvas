@@ -11,6 +11,7 @@ import { generationModelId } from "@/lib/server/generation-channel";
 import { scheduleGenerationTask } from "@/lib/server/generation-task-scheduler";
 import { GenerationSubmissionSafeFailure, generationSubmissionUncertainError } from "@/lib/server/generation-submission-error";
 import { getImageTask, transitionImageTask, updateImageTask, type ImageTask } from "@/lib/server/image-task-store";
+import { logger, toLogError } from "@/lib/server/logger";
 import { maintenanceWorkerContext } from "@/lib/server/maintenance-auth";
 
 export type ImageUpstreamStep =
@@ -104,7 +105,7 @@ export async function markImageTaskFailed(task: ImageTask, error: string) {
     });
     await updateImageTask(current.id, { attempts, candidateConfigs: [], attemptNo: attempts.at(-1)?.attemptNo });
     const failed = await transitionImageTask(current, ["pending", "running"], { status: "error", error: error.slice(0, 500) });
-    await writeImageGenerationLog(current, "failed", "", Date.now() - current.createdAt, error).catch((logError) => console.error("Image generation failure log write failed", logError));
+    await writeImageGenerationLog(current, "failed", "", Date.now() - current.createdAt, error).catch((logError) => logger.error("Image generation failure log write failed", { error: toLogError(logError) }));
     return failed;
 }
 
@@ -121,7 +122,7 @@ async function handleImageProviderResult(task: ImageTask, result: ImageTaskRunRe
         await completeImageResult(task, result, origin, authContext);
     } catch (error) {
         if (error instanceof GenerationSubmissionSafeFailure) throw error;
-        console.warn("Image result validation or persistence failed", { taskId: task.id, error: error instanceof Error ? error.message : String(error) });
+        logger.warn("Image result validation or persistence failed", { taskId: task.id, error: toLogError(error) });
         throw new GenerationSubmissionSafeFailure("上游返回的图片文件无效或保存失败");
     }
     return { state: "completed" };
@@ -177,6 +178,6 @@ async function completeImageResult(task: ImageTask, result: ImageTaskRunResult, 
             taskId: completed.id,
             title: completed.title || completed.prompt.slice(0, 80),
             assets: [{ type: "image", url }],
-        }).catch((error) => console.error("Creative image asset registration failed", error));
+        }).catch((error) => logger.error("Creative image asset registration failed", { error: toLogError(error) }));
     return completed;
 }
