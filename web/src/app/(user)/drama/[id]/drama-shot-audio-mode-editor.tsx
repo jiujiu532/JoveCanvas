@@ -1,21 +1,20 @@
 "use client";
 
 import { Segmented } from "antd";
-import { useTranslations } from "next-intl";
 
 import { useDramaStore } from "../stores/use-drama-store";
 import type { DramaShot, DramaShotAudioMode } from "../types";
 
+const descriptions: Record<DramaShotAudioMode, string> = {
+    source: "保留即梦等视频模型生成的对白、环境声和音乐。",
+    voiceover: "关闭视频模型原声，按角色音色生成独立配音并替换音轨。",
+    mute: "生成静音镜头，整集合成时不保留视频原声。",
+};
+
 export function DramaShotAudioModeEditor({ projectId, episodeId, shot }: { projectId: string; episodeId: string; shot: DramaShot }) {
-    const t = useTranslations("drama");
     const updateShot = useDramaStore((state) => state.updateShot);
     const audioMode = shot.audioMode || "source";
     const audioActive = shot.audioStatus === "queued" || shot.audioStatus === "running";
-    const descriptions: Record<DramaShotAudioMode, string> = {
-        source: t("storyboard.audioModeDescriptions.source"),
-        voiceover: t("storyboard.audioModeDescriptions.voiceover"),
-        mute: t("storyboard.audioModeDescriptions.mute"),
-    };
     const changeMode = (value: string | number) => {
         const next = value as DramaShotAudioMode;
         updateShot(projectId, episodeId, shot.id, {
@@ -31,8 +30,8 @@ export function DramaShotAudioModeEditor({ projectId, episodeId, shot }: { proje
     return (
         <div className="mt-3.5">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1.5">
-                <span className="text-sm font-medium">{t("storyboard.audioModeLabel")}</span>
-                <span className="text-xs text-muted-foreground">{t("storyboard.audioModeHint")}</span>
+                <span className="text-sm font-medium">成片声音</span>
+                <span className="text-xs text-muted-foreground">按镜头选择，不会重复配音</span>
             </div>
             <Segmented
                 block
@@ -40,9 +39,9 @@ export function DramaShotAudioModeEditor({ projectId, episodeId, shot }: { proje
                 className="!mt-2 !min-w-0 !w-full [&_.ant-segmented-item]:!min-w-0 [&_.ant-segmented-item-label]:!truncate [&_.ant-segmented-item-label]:!px-1.5 sm:[&_.ant-segmented-item-label]:!px-3"
                 value={audioMode}
                 options={[
-                    { label: t("storyboard.audioModes.source"), value: "source" },
-                    { label: t("storyboard.audioModes.voiceover"), value: "voiceover" },
-                    { label: t("storyboard.audioModes.mute"), value: "mute" },
+                    { label: "视频原声", value: "source" },
+                    { label: "AI 配音", value: "voiceover" },
+                    { label: "静音", value: "mute" },
                 ]}
                 onChange={changeMode}
             />

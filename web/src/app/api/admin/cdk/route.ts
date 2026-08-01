@@ -5,14 +5,13 @@ import { readJsonBody } from "@/lib/auth/request";
 import { getCurrentUser } from "@/lib/auth/session";
 import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-log-store";
 
-import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
 
     const page = Number(request.nextUrl.searchParams.get("page") || 1);
     const pageSize = Number(request.nextUrl.searchParams.get("pageSize") || 20);
@@ -23,8 +22,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
 
     try {
         const body = await readJsonBody<{ count?: number; points?: number; maxRedemptions?: number; expiresAt?: string; expiresInDays?: number; note?: string }>(request);
@@ -44,16 +43,16 @@ export async function POST(request: Request) {
             target: { type: "cdk" },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
+        if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
         console.error("Create CDK failed", error);
-        return NextResponse.json({ error: await serverMessage("auth.cdkGenerateFailed") }, { status: 500 });
+        return NextResponse.json({ error: "生成 CDK 失败" }, { status: 500 });
     }
 }
 
 export async function DELETE(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
 
     try {
         const body = await readJsonBody<{ ids?: string[] }>(request);
@@ -74,8 +73,8 @@ export async function DELETE(request: Request) {
             target: { type: "cdk" },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
+        if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
         console.error("Delete CDK failed", error);
-        return NextResponse.json({ error: await serverMessage("auth.cdkDeleteFailed") }, { status: 500 });
+        return NextResponse.json({ error: "删除 CDK 失败" }, { status: 500 });
     }
 }

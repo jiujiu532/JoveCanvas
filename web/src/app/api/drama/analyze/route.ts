@@ -3,25 +3,13 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { readJsonBody } from "@/lib/auth/request";
 import { getAuthSettings, isAuthInputError, refundUserPoints } from "@/lib/auth/store";
-import {
-    describeDramaAnalysisCandidate,
-    describeDramaModelOutput,
-    dramaContentTool,
-    dramaVisualTool,
-    hasUsableDramaToolArguments,
-    normalizeDramaContentAnalysis,
-    normalizeDramaVisualAnalysis,
-    readDramaChatArguments,
-    readDramaResponsesArguments,
-    readDramaUpstreamError,
-} from "@/lib/server/drama-analysis";
-import { fetchInternalApi, resolveInternalOrigin } from "@/lib/server/internal-origin";
+import { describeDramaAnalysisCandidate, describeDramaModelOutput, dramaContentTool, dramaVisualTool, hasUsableDramaToolArguments, normalizeDramaContentAnalysis, normalizeDramaVisualAnalysis } from "@/lib/server/drama-analysis";
+import { resolveInternalOrigin } from "@/lib/server/internal-origin";
 import { resolveLogicalModelCandidates } from "@/lib/server/logical-model-router";
-import { fetchOptionalResponses } from "@/lib/server/responses-request";
 import { checkRateLimit } from "@/lib/server/security";
-import { hasSystemAiCharge, readSystemAiBilling, systemAiBillingHeaders, type SystemAiBilling } from "@/lib/server/system-ai-billing";
+import { hasSystemAiCharge, readSystemAiBilling, systemAiBillingHeaders, systemAiIdempotencyKey, type SystemAiBilling } from "@/lib/server/system-ai-billing";
+import { rankTextPlanningCandidates, requestStructuredText, type TextPlanningCandidate } from "@/lib/server/text-planning-runtime";
 
-import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 
 type AnalyzeBody = {
@@ -39,28 +27,27 @@ type AnalyzeBody = {
 
 export async function POST(request: Request) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
-    if (!(await checkRateLimit(`drama-analyze:${user.id}`, { maxRequests: 10, windowMs: 60_000 })).allowed)
-        return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.scriptAnalyze") }) }, { status: 429 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!(await checkRateLimit(`drama-analyze:${user.id}`, { maxRequests: 10, windowMs: 60_000 })).allowed) return NextResponse.json({ code: 429, data: null, msg: "剧本解析过于频繁，请稍后重试" }, { status: 429 });
     let body: AnalyzeBody;
     try {
         body = await readJsonBody(request, 8 * 1024 * 1024);
     } catch (error) {
-        if (isAuthInputError(error)) return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });
+        if (isAuthInputError(error)) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
         throw error;
     }
     const phase = body.phase === "visual" ? "visual" : "content";
     const script = cleanText(body.script, 30_000);
-    if (phase === "content" && !script) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("drama.scriptRequired") }, { status: 400 });
-    if (typeof body.script === "string" && body.script.trim().length > 30_000) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("drama.scriptTooLong") }, { status: 400 });
+    if (phase === "content" && !script) return NextResponse.json({ code: 400, data: null, msg: "请先填写剧本" }, { status: 400 });
+    if (typeof body.script === "string" && body.script.trim().length > 30_000) return NextResponse.json({ code: 400, data: null, msg: "单次解析剧本不能超过 30000 字" }, { status: 400 });
 
     const visualInput = phase === "visual" ? normalizeVisualInput(body) : null;
-    if (phase === "visual" && !visualInput?.shotIds.length) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("drama.contentReviewRequired") }, { status: 400 });
+    if (phase === "visual" && !visualInput?.shotIds.length) return NextResponse.json({ code: 400, data: null, msg: "请先完成内容审核" }, { status: 400 });
 
     const settings = await getAuthSettings();
     const model = settings.defaultModels.textModel;
     const candidates = resolveLogicalModelCandidates(settings, "text", model);
-    if (!model || !candidates.length) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("admin.defaultTextModelMissing") }, { status: 400 });
+    if (!model || !candidates.length) return NextResponse.json({ code: 400, data: null, msg: "后台尚未配置可用的默认文本模型" }, { status: 400 });
 
     let refundedPointsRemaining: number | undefined;
     try {
@@ -78,9 +65,18 @@ export async function POST(request: Request) {
             { role: "user", content: JSON.stringify(input) },
         ];
         let latestError: unknown;
-        for (const candidate of candidates) {
+        for (const candidate of rankTextPlanningCandidates(candidates.map((candidate) => ({ ...candidate, channelId: candidate.channel.id })))) {
             try {
-                const call = await requestFunctionCall(resolveInternalOrigin(new URL(request.url).origin), request.headers.get("cookie") || "", candidate.channel.id, candidate.upstreamModel, model, messages, user.id, tool);
+                const call = await requestFunctionCall(
+                    resolveInternalOrigin(new URL(request.url).origin),
+                    request.headers.get("cookie") || "",
+                    candidate,
+                    model,
+                    messages,
+                    user.id,
+                    tool,
+                    systemAiIdempotencyKey("drama-analyze", user.id, phase, JSON.stringify(input), candidate.channel.id, candidate.upstreamModel),
+                );
                 try {
                     const parsed = JSON.parse(call.args);
                     const data = phase === "visual" ? normalizeDramaVisualAnalysis(parsed, visualInput!.shotIds) : normalizeDramaContentAnalysis(parsed, settings.generationDefaults.videoSeconds, script);
@@ -112,48 +108,29 @@ export async function POST(request: Request) {
 async function requestFunctionCall(
     origin: string,
     cookie: string,
-    channelId: string,
-    model: string,
+    candidate: TextPlanningCandidate,
     billingModel: string,
     messages: Array<{ role: string; content: string }>,
     userId: string,
     tool: { name: string; description: string; parameters: Record<string, unknown> },
+    idempotencyKey: string,
 ) {
-    const base = `${origin}/api/ai/system/${encodeURIComponent(channelId)}`;
-    const headers = { "Content-Type": "application/json", cookie, ...systemAiBillingHeaders(billingModel) };
-    const response = await fetchOptionalResponses(`${base}/responses`, {
-        method: "POST",
+    const headers = { "Content-Type": "application/json", cookie, ...systemAiBillingHeaders(billingModel, idempotencyKey, candidate.upstreamModel) };
+    const call = await requestStructuredText({
+        origin,
+        cookie,
+        candidate,
+        messages,
+        tool,
         headers,
-        body: JSON.stringify({
-            model,
-            input: messages,
-            tools: [{ type: "function", name: tool.name, description: tool.description, parameters: tool.parameters }],
-            tool_choice: { type: "function", name: tool.name },
-            text: { format: { type: "json_schema", name: tool.name, schema: tool.parameters, strict: false } },
-        }),
+        onInvalidResponse: (responseHeaders) => refund(userId, billingModel, responseHeaders),
     });
-    if (response?.ok) {
-        const payload = await response.json();
-        const args = readDramaResponsesArguments(payload, tool.name);
-        if (args && hasUsableDramaToolArguments(args, tool.name)) return readCallResult(args, response.headers);
-        console.error("[drama-analyze] structured output invalid", JSON.stringify({ endpoint: "responses", channelId, model, status: response.status, outputShape: describeDramaModelOutput(payload), argumentShape: describeArgumentsText(args) }));
-        await refund(userId, model, response.headers);
-    }
-    const fallback = await fetchInternalApi(`${base}/chat/completions`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ model, messages, tools: [{ type: "function", function: tool }], tool_choice: { type: "function", function: { name: tool.name } } }),
-        signal: AbortSignal.timeout(2 * 60_000),
-    });
-    if (!fallback.ok) throw new Error(readDramaUpstreamError(await fallback.text(), fallback.status));
-    const payload = await fallback.json();
-    const args = readDramaChatArguments(payload, tool.name);
-    if (!args || !hasUsableDramaToolArguments(args, tool.name)) {
-        console.error("[drama-analyze] structured output invalid", JSON.stringify({ endpoint: "chat/completions", channelId, model, status: fallback.status, outputShape: describeDramaModelOutput(payload), argumentShape: describeArgumentsText(args) }));
-        await refund(userId, model, fallback.headers);
+    if (!hasUsableDramaToolArguments(call.arguments, tool.name)) {
+        console.error("[drama-analyze] structured output invalid", JSON.stringify({ endpoint: call.protocol, channelId: candidate.channel.id, model: candidate.upstreamModel, argumentShape: describeArgumentsText(call.arguments) }));
+        await refund(userId, billingModel, call.headers);
         throw new Error("模型没有返回结构化剧本结果");
     }
-    return readCallResult(args, fallback.headers);
+    return readCallResult(call.arguments, call.headers);
 }
 
 function normalizeVisualInput(body: AnalyzeBody) {

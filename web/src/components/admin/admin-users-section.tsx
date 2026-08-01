@@ -2,25 +2,23 @@
 
 import { Button, Grid, Input, Popconfirm, Table } from "antd";
 import { Plus, Search, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
 
 import { Panel, PanelHeader } from "@/components/admin/admin-panel";
 import type { AdminDashboardController } from "./use-admin-dashboard-controller";
 import { USER_PAGE_SIZE } from "./use-admin-dashboard-controller";
 
 export function AdminUsersSection({ controller }: { controller: AdminDashboardController }) {
-    const t = useTranslations("admin");
     const { currentUser, userSearch, setUserSearch, selectedUserIds, setSelectedUserIds, bulkDeletingUsers, activeSection, filteredUsers, usersLoading, userPage, setUserPage, userTotal, bulkDeleteUsers, openCreateUserEditor, userColumns } = controller;
     const screens = Grid.useBreakpoint();
     if (activeSection !== "users") return null;
     return (
         <Panel>
             <PanelHeader
-                title={t("users.title")}
-                description={t("users.description")}
+                title="用户管理"
+                description="调整角色、账号状态和积分余额。"
                 actions={
                     <Button icon={<Plus className="size-4" />} onClick={openCreateUserEditor}>
-                        {t("users.addUser")}
+                        新增用户
                     </Button>
                 }
             />
@@ -30,19 +28,19 @@ export function AdminUsersSection({ controller }: { controller: AdminDashboardCo
                         allowClear
                         className="w-full min-w-0 sm:max-w-2xl xl:max-w-3xl"
                         prefix={<Search className="size-4 text-stone-400" />}
-                        placeholder={t("users.searchPlaceholder")}
+                        placeholder="搜索昵称、用户名、邮箱、用户 ID、角色或状态"
+                        aria-label="搜索用户"
                         value={userSearch}
                         onChange={(event) => setUserSearch(event.target.value)}
                     />
                     <div className="flex w-full flex-wrap items-center justify-between gap-2 xl:w-auto xl:justify-end">
                         <span className="inline-flex h-8 shrink-0 items-center rounded-md border border-stone-200 bg-white px-2.5 text-xs font-medium text-stone-600 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-300">
-                            {t("users.selected")} <strong className="mx-1 text-stone-950 dark:text-stone-100">{selectedUserIds.length}</strong>
-                            <span className="mx-1 text-stone-300 dark:text-stone-700">/</span>
-                            {t("users.total")} <strong className="ml-1 text-stone-950 dark:text-stone-100">{userTotal}</strong>
+                            已选 <strong className="mx-1 text-stone-950 dark:text-stone-100">{selectedUserIds.length}</strong>
+                            <span className="mx-1 text-stone-300 dark:text-stone-700">/</span>共 <strong className="ml-1 text-stone-950 dark:text-stone-100">{userTotal}</strong>
                         </span>
-                        <Popconfirm title={t("users.bulkDeleteConfirmTitle")} description={t("users.bulkDeleteConfirmDescription")} okText={t("users.table.deleteOk")} cancelText={t("users.table.deleteCancel")} onConfirm={() => void bulkDeleteUsers()}>
+                        <Popconfirm title="批量删除选中用户？" description="会逐个清理用户会话、积分和额度记录；当前账号和最后一个管理员会被系统阻止删除。" okText="删除" cancelText="取消" onConfirm={() => void bulkDeleteUsers()}>
                             <Button danger icon={<Trash2 className="size-4" />} disabled={!selectedUserIds.length} loading={bulkDeletingUsers}>
-                                {t("users.bulkDelete")}
+                                批量删除
                             </Button>
                         </Popconfirm>
                     </div>
@@ -60,10 +58,10 @@ export function AdminUsersSection({ controller }: { controller: AdminDashboardCo
                     onChange: (keys) => setSelectedUserIds(keys.map(String)),
                     getCheckboxProps: (record) => ({
                         disabled: record.id === currentUser.id,
-                        title: record.id === currentUser.id ? t("users.cannotSelectSelf") : undefined,
+                        title: record.id === currentUser.id ? "不能选择当前登录账号" : undefined,
                     }),
                 }}
-                scroll={screens.sm ? { x: 1250 } : undefined}
+                scroll={screens.sm ? { x: 1370 } : undefined}
                 size="middle"
             />
         </Panel>

@@ -4,6 +4,9 @@ const mocks = vi.hoisted(() => ({
     after: vi.fn(),
     fetchInternalApi: vi.fn(),
     createVideoTask: vi.fn(),
+    claimVideoTaskPoll: vi.fn(),
+    completeReconciledVideoTask: vi.fn(),
+    failReconciledVideoTask: vi.fn(),
     getAuthSettings: vi.fn(),
     getVideoTask: vi.fn(),
     linkStoredGenerationTask: vi.fn(),
@@ -11,6 +14,8 @@ const mocks = vi.hoisted(() => ({
     touchVideoTask: vi.fn(),
     transitionVideoTask: vi.fn(),
     updateVideoTask: vi.fn(),
+    scheduleGenerationTask: vi.fn(),
+    withGenerationConcurrencyLimit: vi.fn(async (_userId, _type, _staleMs, _limit, handler) => handler()),
 }));
 
 vi.mock("next/server", async (importOriginal) => {
@@ -26,7 +31,7 @@ vi.mock("@/lib/auth/store", () => {
 });
 vi.mock("@/lib/server/internal-origin", () => ({ fetchInternalApi: mocks.fetchInternalApi, resolveInternalOrigin: vi.fn(() => "http://localhost") }));
 vi.mock("@/lib/server/generation-task-store", () => ({
-    withGenerationConcurrencyLimit: vi.fn(async (_userId, _type, _staleMs, _limit, handler) => handler()),
+    withGenerationConcurrencyLimit: mocks.withGenerationConcurrencyLimit,
     linkStoredGenerationTask: mocks.linkStoredGenerationTask,
     getStoredGenerationTaskByRequest: mocks.getStoredGenerationTaskByRequest,
 }));
@@ -34,8 +39,13 @@ vi.mock("@/lib/server/security", () => ({
     checkGenerationRateLimit: vi.fn(async () => ({ allowed: true, remaining: 5, resetAt: Date.now() + 60_000 })),
     rateLimitHeaders: vi.fn(() => ({})),
 }));
+vi.mock("@/lib/server/generation-task-recovery-service", () => ({ runGenerationTaskRecoveryBatch: vi.fn() }));
+vi.mock("@/lib/server/generation-task-scheduler", () => ({ scheduleGenerationTask: mocks.scheduleGenerationTask }));
 vi.mock("@/lib/server/video-task-store", () => ({
     createVideoTask: mocks.createVideoTask,
+    claimVideoTaskPoll: mocks.claimVideoTaskPoll,
+    completeReconciledVideoTask: mocks.completeReconciledVideoTask,
+    failReconciledVideoTask: mocks.failReconciledVideoTask,
     getVideoTask: mocks.getVideoTask,
     touchVideoTask: mocks.touchVideoTask,
     transitionVideoTask: mocks.transitionVideoTask,
@@ -71,11 +81,20 @@ const settings = {
 };
 
 describe("video generation candidate failover", () => {
+    let storedTask: Record<string, unknown> | undefined;
+
     beforeEach(() => {
         vi.clearAllMocks();
+        mocks.fetchInternalApi.mockReset();
         resetChannelRuntimeHealth();
         mocks.getAuthSettings.mockResolvedValue(settings);
-        mocks.createVideoTask.mockImplementation(async (input) => ({ ...input, id: "local-task", status: "running", createdAt: Date.now(), updatedAt: Date.now() }));
+        storedTask = undefined;
+        mocks.createVideoTask.mockImplementation(async (input) => {
+            storedTask = { ...input, id: "local-task", status: "running", createdAt: Date.now(), updatedAt: Date.now() };
+            return storedTask;
+        });
+        mocks.getVideoTask.mockImplementation(async () => storedTask);
+        mocks.claimVideoTaskPoll.mockImplementation(async () => storedTask);
         mocks.after.mockImplementation(() => undefined);
     });
 
@@ -91,14 +110,31 @@ describe("video generation candidate failover", () => {
         expect(mocks.fetchInternalApi.mock.calls.some(([url]) => String(url).includes("/api/ai/system/two/"))).toBe(true);
     });
 
+    it("returns the original idempotent task before checking concurrency", async () => {
+        mocks.getStoredGenerationTaskByRequest.mockResolvedValueOnce({
+            id: "existing-task",
+            status: "running",
+            config: { model: "video-one", logicalModelId: "video" },
+            upstream: { id: "existing-upstream" },
+        });
+
+        const response = await POST(request({ model: "video" }, [], { clientRequestId: "same-request" }));
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toMatchObject({ task: { id: "existing-task", upstreamId: "existing-upstream" } });
+        expect(mocks.withGenerationConcurrencyLimit).not.toHaveBeenCalled();
+        expect(mocks.fetchInternalApi).not.toHaveBeenCalled();
+    });
+
     it("does not retry another binding after an ambiguous 2xx response", async () => {
         mocks.fetchInternalApi.mockResolvedValue(new Response("not-json", { status: 200 }));
 
         const response = await POST(request());
 
-        expect(response.status).toBe(502);
+        expect(response.status).toBe(202);
         expect(mocks.fetchInternalApi.mock.calls.some(([url]) => String(url).includes("/api/ai/system/two/"))).toBe(false);
-        expect(mocks.createVideoTask).not.toHaveBeenCalled();
+        expect(mocks.createVideoTask).toHaveBeenCalledOnce();
+        expect(mocks.scheduleGenerationTask).toHaveBeenLastCalledWith("video", "local-task", expect.objectContaining({ executionPhase: "needs_review", nextPollAt: undefined, lastUpstreamStatus: "submission_outcome_unknown" }));
     });
 
     it("does not retry another path or binding after an ambiguous server failure", async () => {
@@ -106,40 +142,35 @@ describe("video generation candidate failover", () => {
 
         const response = await POST(request());
 
-        expect(response.status).toBe(502);
+        expect(response.status).toBe(202);
         expect(mocks.fetchInternalApi).toHaveBeenCalledTimes(1);
         expect(mocks.fetchInternalApi.mock.calls.some(([url]) => String(url).includes("/api/ai/system/two/"))).toBe(false);
-        expect(mocks.createVideoTask).not.toHaveBeenCalled();
+        expect(mocks.createVideoTask).toHaveBeenCalledOnce();
     });
 
-    it("surfaces a provider business error returned with HTTP 200", async () => {
-        mocks.fetchInternalApi.mockResolvedValue(json({ code: "204", msg: "登录验证失败" }));
+    it("surfaces an explicit HTTP 200 business failure after safe candidate fallback", async () => {
+        mocks.fetchInternalApi.mockImplementation(async () => json({ code: "204", msg: "登录验证失败" }));
 
         const response = await POST(request());
 
         expect(response.status).toBe(502);
         expect((await response.json()).error).toBe("登录验证失败");
-        expect(mocks.createVideoTask).not.toHaveBeenCalled();
+        expect(mocks.createVideoTask).toHaveBeenCalledOnce();
     });
 
-    it("ends a GlobalAiOpc task when its status endpoint returns a business error", async () => {
-        const jobs: Array<() => void | Promise<void>> = [];
-        mocks.after.mockImplementation((job) => jobs.push(job));
+    it("enqueues a GlobalAiOpc task for the recovery worker after creation", async () => {
         mocks.getAuthSettings.mockResolvedValue({
             ...settings,
             systemChannels: [{ ...channels[0], advancedConfig: { protocol: "globalaiopc", globalAiOpcPreset: "video-videos" } }],
             logicalModels: [{ ...settings.logicalModels[0], bindings: [settings.logicalModels[0].bindings[0]] }],
         });
-        mocks.fetchInternalApi.mockResolvedValueOnce(json({ id: "global-video-task", status: "queued" })).mockResolvedValueOnce(json({ code: "204", msg: "登录验证失败" }));
-        mocks.getVideoTask.mockResolvedValue({ id: "local-task", status: "running" });
-        mocks.transitionVideoTask.mockResolvedValue({ id: "local-task", status: "error" });
+        mocks.fetchInternalApi.mockResolvedValueOnce(json({ id: "global-video-task", status: "queued" }));
 
         const response = await POST(request());
-        await jobs[0]?.();
 
         expect(response.status).toBe(200);
-        expect(mocks.fetchInternalApi.mock.calls[1]?.[0]).toContain("/api/ai/system/one/result/global-video-task");
-        expect(mocks.transitionVideoTask).toHaveBeenCalledWith(expect.objectContaining({ id: "local-task" }), { status: "error", error: "登录验证失败" });
+        expect(mocks.scheduleGenerationTask).toHaveBeenLastCalledWith("video", "local-task", expect.objectContaining({ executionPhase: "submitted", upstreamTaskId: "global-video-task" }));
+        expect(mocks.after).toHaveBeenCalledWith(expect.any(Function));
     });
 
     it("uses the backend default logical model when the client omits a model", async () => {
@@ -149,6 +180,142 @@ describe("video generation candidate failover", () => {
 
         expect(response.status).toBe(200);
         expect((await response.json()).task.model).toBe("video");
+    });
+
+    it("forwards the authenticated maintenance worker identity to the internal system proxy", async () => {
+        const token = "maintenance-token-used-by-generation-worker";
+        vi.stubEnv("VOZEB_PRO_MAINTENANCE_TOKEN", token);
+        mocks.fetchInternalApi.mockResolvedValue(json({ id: "upstream-worker", status: "queued" }));
+
+        const response = await POST(
+            new Request("http://localhost/api/video-generation-tasks", {
+                method: "POST",
+                headers: {
+                    authorization: `Bearer ${token}`,
+                    "content-type": "application/json",
+                    "x-vozeb-pro-worker-user-id": "user",
+                },
+                body: JSON.stringify({ config: { model: "video" }, prompt: "A test video", references: [] }),
+            }),
+        );
+        const headers = new Headers((mocks.fetchInternalApi.mock.calls[0]?.[1] as RequestInit).headers);
+
+        expect(response.status).toBe(200);
+        expect(headers.get("authorization")).toBe(`Bearer ${token}`);
+        expect(headers.get("x-vozeb-pro-worker-user-id")).toBe("user");
+        expect(headers.has("cookie")).toBe(false);
+        vi.unstubAllEnvs();
+    });
+
+    it("uses the SD2.0 model route without affecting OpenAI models on the same channel", async () => {
+        mocks.getAuthSettings.mockResolvedValue({
+            ...settings,
+            systemChannels: [
+                {
+                    ...channels[0],
+                    models: ["openai-text", "sd2.0"],
+                    advancedConfig: {
+                        protocol: "auto",
+                        createPath: "/wrong-channel-path",
+                        modelConfigs: { "sd2.0": { capability: "video", protocol: "seedance", createPath: "/sd2/videos", queryPath: "/sd2/videos/:task_id" } },
+                    },
+                },
+            ],
+            logicalModels: [{ ...settings.logicalModels[0], bindings: [{ ...settings.logicalModels[0].bindings[0], upstreamModel: "sd2.0" }] }],
+        });
+        mocks.fetchInternalApi.mockResolvedValue(json({ id: "upstream-sd2", status: "queued" }));
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(200);
+        expect(mocks.fetchInternalApi.mock.calls[0][0]).toContain("/api/ai/system/one/sd2/videos");
+    });
+
+    it("uses separate text-to-video and image-to-video paths with trusted billing headers", async () => {
+        mocks.getAuthSettings.mockResolvedValue({
+            ...settings,
+            systemChannels: [
+                {
+                    ...channels[0],
+                    advancedConfig: {
+                        protocol: "custom",
+                        modelConfigs: {
+                            "video-one": {
+                                capability: "video",
+                                protocol: "custom",
+                                createPath: "/text-to-video",
+                                imageToVideoPath: "/image-to-video",
+                                requestTemplate: '{"model":"{{model}}","prompt":"{{prompt}}","images":"{{images}}"}',
+                                resultField: "id",
+                                supportsReferenceImage: true,
+                            },
+                        },
+                    },
+                },
+            ],
+            logicalModels: [{ ...settings.logicalModels[0], bindings: [settings.logicalModels[0].bindings[0]] }],
+        });
+        mocks.fetchInternalApi.mockImplementation(async () => json({ id: "upstream-custom", status: "queued" }));
+
+        const textResponse = await POST(request({ model: "video" }, [], { clientRequestId: "video-text" }));
+        const imageResponse = await POST(request({ model: "video" }, [{ type: "image", url: "https://cdn.example.com/reference.jpg" }], { clientRequestId: "video-image" }));
+        const imagePayload = await imageResponse.clone().json();
+        const [textUrl, textInit] = mocks.fetchInternalApi.mock.calls[0] as [string, RequestInit];
+        const [imageUrl, imageInit] = mocks.fetchInternalApi.mock.calls[1] as [string, RequestInit];
+        const textHeaders = new Headers(textInit.headers);
+        const imageHeaders = new Headers(imageInit.headers);
+
+        expect(textResponse.status).toBe(200);
+        expect(imageResponse.status, JSON.stringify(imagePayload)).toBe(200);
+        expect(textUrl).toContain("/api/ai/system/one/text-to-video");
+        expect(imageUrl).toContain("/api/ai/system/one/image-to-video");
+        expect(textHeaders.get("x-vozeb-pro-logical-model")).toBe("video");
+        expect(textHeaders.get("x-vozeb-pro-upstream-model")).toBe("video-one");
+        expect(textHeaders.get("x-vozeb-pro-points-idempotency-key")).toBe("video-request:video-text");
+        expect(imageHeaders.get("x-vozeb-pro-points-idempotency-key")).toBe("video-request:video-image");
+    });
+
+    it("builds an OpenAI video multipart request and uses its image-to-video path", async () => {
+        mocks.getAuthSettings.mockResolvedValue({
+            ...settings,
+            systemChannels: [
+                {
+                    ...channels[0],
+                    advancedConfig: {
+                        protocol: "openai",
+                        modelConfigs: {
+                            "video-one": {
+                                capability: "video",
+                                protocol: "openai",
+                                createPath: "/videos",
+                                imageToVideoPath: "/videos",
+                                queryPath: "/videos/:task_id",
+                                requestTemplate: "multipart/form-data: model、prompt、seconds、size、input_reference",
+                                resultField: "/videos/:task_id/content",
+                                statusField: "status",
+                                supportsReferenceImage: true,
+                            },
+                        },
+                    },
+                },
+            ],
+            logicalModels: [{ ...settings.logicalModels[0], bindings: [settings.logicalModels[0].bindings[0]] }],
+        });
+        mocks.fetchInternalApi.mockResolvedValue(json({ id: "upstream-openai", status: "queued" }));
+        const reference = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=";
+
+        const response = await POST(request({ model: "video", videoSeconds: "5", size: "16:9" }, [{ type: "image", url: reference }]));
+        const [url, init] = mocks.fetchInternalApi.mock.calls[0] as [string, RequestInit];
+        const body = init.body as FormData;
+
+        expect(response.status).toBe(200);
+        expect(url).toContain("/api/ai/system/one/videos");
+        expect(init.body).toBeInstanceOf(FormData);
+        expect(new Headers(init.headers).has("content-type")).toBe(false);
+        expect(body.get("model")).toBe("video-one");
+        expect(body.get("seconds")).toBe("5");
+        expect(body.get("size")).toBe("1280x720");
+        expect(body.get("input_reference")).toBeInstanceOf(File);
     });
 
     it("persists the Drama project, episode and shot task context", async () => {
@@ -172,20 +339,20 @@ describe("video generation candidate failover", () => {
     it("rejects an image logical model for a video task", async () => {
         mocks.getAuthSettings.mockResolvedValue({
             ...settings,
-            systemChannels: [...channels, { id: "image", name: "图片渠道", baseUrl: "https://image.example.com/v1", apiKey: "image-secret", apiFormat: "openai", models: ["sd2"], enabled: true, advancedConfig: { protocol: "openai" } }],
+            systemChannels: [...channels, { id: "image", name: "图片渠道", baseUrl: "https://image.example.com/v1", apiKey: "image-secret", apiFormat: "openai", models: ["stable-diffusion-2.0"], enabled: true, advancedConfig: { protocol: "openai" } }],
             logicalModels: [
                 ...settings.logicalModels,
                 {
-                    id: "sd2",
+                    id: "stable-diffusion-2.0",
                     name: "Stable Diffusion",
                     capability: "image",
                     enabled: true,
-                    bindings: [{ id: "image-binding", channelId: "image", upstreamModel: "sd2", enabled: true, priority: 1 }],
+                    bindings: [{ id: "image-binding", channelId: "image", upstreamModel: "stable-diffusion-2.0", enabled: true, priority: 1 }],
                 },
             ],
         });
 
-        const response = await POST(request({ model: "sd2" }));
+        const response = await POST(request({ model: "stable-diffusion-2.0" }));
 
         expect(response.status).toBe(400);
         expect(mocks.fetchInternalApi).not.toHaveBeenCalled();
@@ -232,6 +399,41 @@ describe("video generation candidate failover", () => {
 
         expect(response.status).toBe(200);
         expect(JSON.parse(String(init.body))).toMatchObject({ ratio: "16:9" });
+    });
+
+    it("rounds a requested duration up to the next duration supported by the selected upstream", async () => {
+        mocks.getAuthSettings.mockResolvedValue({
+            ...settings,
+            systemChannels: [
+                {
+                    ...channels[0],
+                    advancedConfig: {
+                        protocol: "custom",
+                        modelConfigs: {
+                            "video-one": {
+                                capability: "video",
+                                protocol: "custom",
+                                createPath: "/videos",
+                                queryPath: "/videos/:task_id",
+                                requestTemplate: '{"model":"{{model}}","prompt":"{{prompt}}","duration":"{{duration}}"}',
+                                resultField: "id",
+                                durationRange: "5、8、10 秒",
+                            },
+                        },
+                    },
+                },
+            ],
+            logicalModels: [{ ...settings.logicalModels[0], bindings: [settings.logicalModels[0].bindings[0]] }],
+        });
+        mocks.fetchInternalApi.mockResolvedValue(json({ id: "upstream-duration", status: "queued" }));
+
+        const response = await POST(request({ model: "video", videoSeconds: 7 }));
+        const init = mocks.fetchInternalApi.mock.calls[0]?.[1] as RequestInit;
+
+        expect(response.status).toBe(200);
+        expect(JSON.parse(String(init.body))).toMatchObject({ duration: 8 });
+        expect(mocks.createVideoTask).toHaveBeenCalledWith(expect.objectContaining({ requestedDurationSeconds: 8 }));
+        expect((await response.json()).task.durationSeconds).toBe(8);
     });
 
     it("uses the selected GlobalAiOpc preset path and Seedance content request body", async () => {

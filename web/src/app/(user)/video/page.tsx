@@ -6,7 +6,6 @@ import { useEffect, useRef, useState, type DragEvent as ReactDragEvent } from "r
 import { App, Button, Drawer, Modal, Tag, Typography } from "antd";
 import { nanoid } from "nanoid";
 import { saveAs } from "file-saver";
-import { useTranslations } from "next-intl";
 
 import type { InsertAssetPayload } from "@/app/(user)/canvas/components/asset-picker-modal";
 import { AudioSettingsPanel } from "@/components/audio-settings-panel";
@@ -16,6 +15,7 @@ import { VideoSettingsPanel, videoSizeLabel } from "@/components/video-settings-
 import { canvasThemes } from "@/lib/canvas-theme";
 import { preloadOnIdle } from "@/lib/preload-on-idle";
 import { droppedFiles, leftDropTarget, preventFileDragEvent } from "@/lib/file-drop";
+import { generationLogPublicPrompt } from "@/lib/generation-log-snapshot";
 import { formatBytes, formatDuration } from "@/lib/image-utils";
 import { imagePreviewUrl } from "@/lib/media-image-url";
 import { seedanceReferenceLabel, seedanceVideoReferenceError, seedanceVideoReferenceHint, SEEDANCE_REFERENCE_LIMITS } from "@/lib/seedance-video";
@@ -27,6 +27,7 @@ import { useAssetStore } from "@/stores/use-asset-store";
 import { modelOptionLabel, selectableModelsByCapability, useConfigStore, useEffectiveConfig, type AiConfig } from "@/stores/use-config-store";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { WorkbenchAgentConversation, WorkbenchAgentHeader, WorkbenchBackgroundTaskNotice, WorkbenchComposerFrame, WorkbenchSkillEmptyState, type WorkbenchAgentMessage } from "@/components/agent/workbench-agent-panel";
+import { workbenchReferencesFromAttachments } from "@/components/agent/workbench-agent-references";
 import { CompactEmptyState } from "@/components/compact-empty-state";
 import { WorkbenchGenerationActivity, WorkbenchGenerationPlaceholder } from "@/components/agent/workbench-generation-placeholder";
 import { WorkbenchHistoryPanel } from "@/components/agent/workbench-history-panel";
@@ -68,7 +69,6 @@ import { UpdateAiConfig, selectVideoModel, GenerationSettings, ResultVideoCard, 
 import { useVideoWorkbenchController } from "./use-video-workbench-controller";
 
 export default function VideoPage() {
-    const t = useTranslations("workspace.video");
     const controller = useVideoWorkbenchController();
     const {
         searchParams,
@@ -171,6 +171,7 @@ export default function VideoPage() {
         generate,
         agentRunning,
         runAgentGenerate,
+        retryAgentMessage,
         cancelAgentRun,
         buildRequestSnapshot,
         retryResult,
@@ -201,12 +202,12 @@ export default function VideoPage() {
                 <section className="grid h-auto gap-3 sm:h-full lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] lg:overflow-hidden">
                     <div className="order-1 flex min-h-[9rem] flex-col overflow-hidden rounded-lg border border-border bg-card p-2 sm:min-h-[calc(100dvh-96px)] sm:rounded-xl sm:p-4 lg:order-2 lg:min-h-0">
                         <WorkbenchAgentHeader
-                            subtitle={t("assistantSubtitle")}
+                            subtitle="视频创作助手"
                             onNew={createSession}
                             historyContent={(query, closeHistory) => {
                                 const filteredLogs = logs.filter((log) => {
                                     const session = agentSessionByRecordId.get(log.id);
-                                    return matchesWorkbenchHistoryQuery(query, log.title, log.prompt, session?.searchText || "", ...(session?.messages.map((item) => item.text) || []));
+                                    return matchesWorkbenchHistoryQuery(query, log.title, generationLogPublicPrompt(log), session?.searchText || "", ...(session?.messages.map((item) => item.text) || []));
                                 });
                                 return (
                                     <LogPanel
@@ -238,17 +239,22 @@ export default function VideoPage() {
                                     if (choice.action === "upload") fileInputRef.current?.click();
                                     else setPrompt(choice.prompt || choice.description);
                                 }}
-                                onEditMessage={(text) => {
-                                    setPrompt(text);
-                                    message.info(t("messageRefilled"));
+                                onEditMessage={(editedMessage) => {
+                                    const restored = workbenchReferencesFromAttachments(editedMessage.attachments);
+                                    setPrompt(editedMessage.text);
+                                    setReferences(restored.images);
+                                    setVideoReferences(restored.videos);
+                                    setAudioReferences(restored.audio);
+                                    message.info("已回填消息，可修改后重新发送");
                                 }}
+                                onRetryMessage={retryAgentMessage}
                             />
                         ) : (
                             <WorkbenchSkillEmptyState skills={availableSkills} onSelect={selectSkill} />
                         )}
 
                         <WorkbenchComposerFrame
-                            summary={t("composerSummary", { size: videoSizeLabel(effectiveConfig.size), seconds: normalizeVideoSeconds(effectiveConfig.videoSeconds) })}
+                            summary={`${videoSizeLabel(effectiveConfig.size)} · ${normalizeVideoSeconds(effectiveConfig.videoSeconds)} 秒`}
                             onAdd={() => fileInputRef.current?.click()}
                             onLibrary={() => setAssetPickerOpen(true)}
                             settingsContent={
@@ -270,7 +276,7 @@ export default function VideoPage() {
                             onClearModels={enableSmartPlanning}
                             submit={
                                 agentRunning ? (
-                                    <Button danger shape="circle" className="!h-9 !w-9 !min-w-9" icon={<Square className="size-3.5 fill-current" />} onClick={cancelAgentRun} aria-label={t("stopAgentAriaLabel")} />
+                                    <Button danger shape="circle" className="!h-9 !w-9 !min-w-9" icon={<Square className="size-3.5 fill-current" />} onClick={cancelAgentRun} aria-label="停止 Agent 并取消本次生成" />
                                 ) : (
                                     <Button
                                         type="primary"
@@ -279,9 +285,9 @@ export default function VideoPage() {
                                         disabled={!canGenerate || activeVideoCount >= videoConcurrencyLimit}
                                         icon={<Sparkles className="size-4" />}
                                         onClick={() => void runAgentGenerate()}
-                                        aria-label={t("generateAriaLabel", { cost: formatCreditAmount(pointsCost) })}
+                                        aria-label={`开始生成，消耗 ${formatCreditAmount(pointsCost)} 积分`}
                                     >
-                                        <span className="text-xs font-semibold">{t("generate")}</span>
+                                        <span className="text-xs font-semibold">生成</span>
                                         <span className="hidden text-xs font-semibold opacity-80 sm:inline">· {formatCreditAmount(pointsCost)}</span>
                                     </Button>
                                 )
@@ -289,7 +295,7 @@ export default function VideoPage() {
                         >
                             <WorkbenchPromptEditor
                                 value={prompt}
-                                placeholder={t("promptPlaceholder")}
+                                placeholder="今天我们要创作什么，可直接粘贴文字或素材"
                                 onChange={setPrompt}
                                 onSubmit={() => void runAgentGenerate()}
                                 onPasteFiles={(files) => void addReferences(files)}
@@ -299,13 +305,13 @@ export default function VideoPage() {
 
                             <div className={cn("order-1 min-w-0", !references.length && "hidden")}>
                                 <div className="hidden">
-                                    <span className="text-base font-semibold">{t("referenceImages")}</span>
+                                    <span className="text-base font-semibold">参考图</span>
                                     <div className="flex gap-2">
                                         <Button size="small" icon={<ClipboardPaste className="size-3.5" />} onClick={() => void addReferencesFromClipboard()}>
-                                            {t("clipboardButton")}
+                                            剪切板
                                         </Button>
                                         <Button size="small" icon={<Upload className="size-3.5" />} onClick={() => fileInputRef.current?.click()}>
-                                            {t("uploadButton")}
+                                            上传
                                         </Button>
                                     </div>
                                 </div>
@@ -325,21 +331,21 @@ export default function VideoPage() {
                                                 type="button"
                                                 className="absolute right-1 top-1 flex size-6 items-center justify-center rounded bg-white/95 text-red-600 opacity-90 shadow-sm ring-1 ring-red-200 transition hover:opacity-100 dark:bg-black/70 dark:text-red-200 dark:ring-red-900/60"
                                                 onClick={() => setReferences((value) => value.filter((ref) => ref.id !== item.id))}
-                                                aria-label={t("removeReferenceImage")}
+                                                aria-label="移除参考图"
                                             >
                                                 <Trash2 className="size-3.5" />
                                             </button>
                                         </div>
                                     ))}
-                                    {!references.length ? <div className="flex min-w-full items-center justify-center text-sm text-stone-500">{t("emptyImageHint")}</div> : null}
+                                    {!references.length ? <div className="flex min-w-full items-center justify-center text-sm text-stone-500">暂无参考图，最多 9 张</div> : null}
                                 </div>
                             </div>
 
                             <div className={cn("order-1 min-w-0", !videoReferences.length && "hidden")}>
                                 <div className="hidden">
-                                    <span className="text-base font-semibold">{t("referenceVideos")}</span>
+                                    <span className="text-base font-semibold">参考视频</span>
                                     <Button size="small" icon={<Upload className="size-3.5" />} onClick={() => fileInputRef.current?.click()}>
-                                        {t("uploadButton")}
+                                        上传
                                     </Button>
                                 </div>
                                 <div
@@ -358,21 +364,21 @@ export default function VideoPage() {
                                                 type="button"
                                                 className="absolute right-1 top-1 flex size-6 items-center justify-center rounded bg-white/95 text-red-600 opacity-90 shadow-sm ring-1 ring-red-200 transition hover:opacity-100 dark:bg-black/70 dark:text-red-200 dark:ring-red-900/60"
                                                 onClick={() => setVideoReferences((value) => value.filter((ref) => ref.id !== item.id))}
-                                                aria-label={t("removeReferenceVideo")}
+                                                aria-label="移除参考视频"
                                             >
                                                 <Trash2 className="size-3.5" />
                                             </button>
                                         </div>
                                     ))}
-                                    {!videoReferences.length ? <div className="flex min-w-full items-center justify-center text-sm text-stone-500">{t("emptyVideoHint")}</div> : null}
+                                    {!videoReferences.length ? <div className="flex min-w-full items-center justify-center text-sm text-stone-500">暂无参考视频，最多 3 个</div> : null}
                                 </div>
                             </div>
 
                             <div className={cn("order-1 min-w-0", !audioReferences.length && "hidden")}>
                                 <div className="hidden">
-                                    <span className="text-base font-semibold">{t("referenceAudio")}</span>
+                                    <span className="text-base font-semibold">参考音频</span>
                                     <Button size="small" icon={<Upload className="size-3.5" />} onClick={() => fileInputRef.current?.click()}>
-                                        {t("uploadButton")}
+                                        上传
                                     </Button>
                                 </div>
                                 <div
@@ -395,13 +401,13 @@ export default function VideoPage() {
                                                 type="button"
                                                 className="absolute right-1 top-1 flex size-6 items-center justify-center rounded bg-white/95 text-red-600 opacity-90 shadow-sm ring-1 ring-red-200 transition hover:opacity-100 dark:bg-black/70 dark:text-red-200 dark:ring-red-900/60"
                                                 onClick={() => setAudioReferences((value) => value.filter((ref) => ref.id !== item.id))}
-                                                aria-label={t("removeReferenceAudio")}
+                                                aria-label="移除参考音频"
                                             >
                                                 <Trash2 className="size-3.5" />
                                             </button>
                                         </div>
                                     ))}
-                                    {!audioReferences.length ? <div className="flex min-w-full items-center justify-center text-center text-sm text-stone-500">{t("emptyAudioHint")}</div> : null}
+                                    {!audioReferences.length ? <div className="flex min-w-full items-center justify-center text-center text-sm text-stone-500">暂无参考音频，最多 3 个，mp3/wav，单个 15MB 内</div> : null}
                                 </div>
                             </div>
                         </WorkbenchComposerFrame>
@@ -413,26 +419,33 @@ export default function VideoPage() {
                                         <Sparkles className="size-[17px]" />
                                         <span className="text-sm font-semibold leading-none">{formatCreditAmount(pointsCost)}</span>
                                     </span>
-                                    <span>{t("startGeneration")}</span>
+                                    <span>开始生成</span>
                                 </span>
                             </Button>
-                            {activeVideoCount ? <div className="mt-2 text-center text-xs text-stone-500 dark:text-stone-400">{t("currentUserRunning", { active: activeVideoCount, limit: videoConcurrencyLimit })}</div> : null}
+                            {activeVideoCount ? (
+                                <div className="mt-2 text-center text-xs text-stone-500 dark:text-stone-400">
+                                    当前用户运行 {activeVideoCount}/{videoConcurrencyLimit}
+                                </div>
+                            ) : null}
                         </div>
                     </div>
 
                     <div className="thin-scrollbar order-2 rounded-xl border border-border bg-card p-2.5 lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:p-5 sm:p-4">
                         <div className="mb-2.5 flex items-center justify-between gap-2 sm:mb-4 sm:gap-3">
-                            <h2 className="text-lg font-semibold sm:text-xl">{t("resultsTitle")}</h2>
+                            <h2 className="text-lg font-semibold sm:text-xl">生成结果</h2>
                             <div className="flex flex-wrap items-center justify-end gap-2">
                                 <Button size="small" icon={<CheckSquare className="size-3.5" />} disabled={!results.length} onClick={toggleAllResults}>
-                                    {allResultsSelected ? t("cancel") : t("selectAll")}
+                                    {allResultsSelected ? "取消" : "全选"}
                                 </Button>
                                 <Button size="small" danger icon={<Trash2 className="size-3.5" />} disabled={!selectedVisibleResultIds.length} onClick={() => void deleteSelectedResults()}>
-                                    {t("delete")}
-                                    {selectedVisibleResultIds.length ? ` ${selectedVisibleResultIds.length}` : ""}
+                                    删除{selectedVisibleResultIds.length ? ` ${selectedVisibleResultIds.length}` : ""}
                                 </Button>
                                 {previewPendingCount ? <WorkbenchGenerationActivity kind="video" count={previewPendingCount} /> : null}
-                                {activeVideoCount ? <Tag className="m-0 px-2 py-1">{t("runningCount", { active: activeVideoCount, limit: videoConcurrencyLimit })}</Tag> : null}
+                                {activeVideoCount ? (
+                                    <Tag className="m-0 px-2 py-1">
+                                        运行 {activeVideoCount}/{videoConcurrencyLimit}
+                                    </Tag>
+                                ) : null}
                             </div>
                         </div>
                         {results.length ? (
@@ -451,7 +464,8 @@ export default function VideoPage() {
                                     ) : result.status === "failed" ? (
                                         <FailedVideoCard
                                             key={result.id}
-                                            error={result.error || t("generationFailed")}
+                                            error={result.error || "生成失败"}
+                                            retryable={result.canRetry === true}
                                             selected={selectedResultIds.includes(result.id)}
                                             onSelectedChange={(checked) => toggleResultSelected(result.id, checked)}
                                             onRetry={retryResult}
@@ -462,13 +476,13 @@ export default function VideoPage() {
                                 )}
                             </div>
                         ) : (
-                            <CompactEmptyState title={t("emptyResultsTitle")} description={t("emptyResultsDescription")} icon={<VideoIcon className="size-4" />} className="min-h-20 sm:min-h-40 lg:min-h-[360px]" />
+                            <CompactEmptyState title="还没有生成视频" description="完成一次生成后，结果会按时间保留在这里。" icon={<VideoIcon className="size-4" />} className="min-h-20 sm:min-h-40 lg:min-h-[360px]" />
                         )}
                     </div>
                 </section>
             </main>
             <WorkbenchFileInput inputRef={fileInputRef} accept="image/*,video/mp4,video/quicktime,audio/mpeg,audio/wav,audio/x-wav,.mp3,.wav" onFiles={(files) => void addReferences(files)} />
-            <Drawer title={t("generationHistory")} placement="bottom" size="min(86dvh, 720px)" open={logsOpen} onClose={() => setLogsOpen(false)} styles={{ body: { padding: 0, overflow: "hidden" } }}>
+            <Drawer title="生成记录" placement="bottom" size="min(86dvh, 720px)" open={logsOpen} onClose={() => setLogsOpen(false)} styles={{ body: { padding: 0, overflow: "hidden" } }}>
                 <div className="thin-scrollbar h-full overflow-y-auto px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4">
                     <LogPanel
                         logs={logs}
@@ -490,8 +504,8 @@ export default function VideoPage() {
                 onAssetInsert={(payload) => void insertPickedAsset(payload)}
                 onAssetClose={() => setAssetPickerOpen(false)}
             />
-            <Modal title={t("deleteLogsModalTitle")} open={deleteConfirmOpen} onCancel={() => setDeleteConfirmOpen(false)} onOk={deleteSelectedLogs} okText={t("delete")} okButtonProps={{ danger: true }} cancelText={t("cancel")}>
-                {t("deleteLogsConfirm", { count: selectedLogIds.length })}
+            <Modal title="删除生成记录" open={deleteConfirmOpen} onCancel={() => setDeleteConfirmOpen(false)} onOk={deleteSelectedLogs} okText="删除" okButtonProps={{ danger: true }} cancelText="取消">
+                确定删除选中的 {selectedLogIds.length} 条生成记录吗？
             </Modal>
         </div>
     );

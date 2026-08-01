@@ -7,29 +7,19 @@ import { summarizeDramaProject } from "@/lib/drama-project-summary";
 import type { DramaSourceEpisodeDraft } from "@/lib/drama-source-splitter";
 import { createDramaProject, createDramaProjectVersion, deleteDramaProject, getDramaProject, listDramaProjectSummaries, listDramaProjectVersions, restoreDramaProjectVersion, saveDramaProject } from "@/services/api/drama-projects";
 import { useUserStore } from "@/stores/use-user-store";
-import { dramaT } from "./drama-i18n-runtime";
-
-// 投模型用的默认生成文案固定中文，不随 UI locale 切换
-const MODEL_DEFAULT_CONTEXT_SEPARATOR = "，";
-const MODEL_DEFAULT_PARAGRAPH_BOUNDARY = "段落边界";
-const MODEL_DEFAULT_CAMERA_MOTION = "自然镜头运动";
-const MODEL_DEFAULT_NEGATIVE_PROMPT = "文字、水印、角色身份漂移、服装变化、错误肢体";
-
-function modelDefaultImagePrompt(context: string) {
-    return `${context}，角色与画风保持一致，电影分镜画面`;
-}
-
-function modelDefaultVideoPrompt(context: string) {
-    return `${context}，镜头运动自然，人物动作连续，保持角色一致性`;
-}
 
 type DramaStore = {
     hydrated: boolean;
     hydratedUserId: string;
     syncError?: string;
     summaries: DramaProjectSummary[];
+    summaryTotal: number;
+    summaryPage: number;
+    summaryPageSize: number;
+    summaryLoadingMore: boolean;
     projects: DramaProject[];
     hydrate: (force?: boolean) => Promise<void>;
+    loadMore: () => Promise<void>;
     loadProject: (id: string, force?: boolean) => Promise<DramaProject>;
     createProject: (input: CreateDramaProjectInput) => Promise<string>;
     deleteProject: (id: string) => Promise<void>;
@@ -68,37 +58,74 @@ const projectRequests = new Map<string, Promise<DramaProject>>();
 const sessionEpoch = createClientSessionEpoch(() => useUserStore.getState().user?.id || "");
 let hydrateRequestId = 0;
 let hydrateRequest: (ClientSessionStamp & { requestId: number; promise: Promise<void> }) | null = null;
+const SUMMARY_PAGE_SIZE = 12;
 
 export const useDramaStore = create<DramaStore>((set, get) => ({
     hydrated: false,
     hydratedUserId: "",
     summaries: [],
+    summaryTotal: 0,
+    summaryPage: 0,
+    summaryPageSize: SUMMARY_PAGE_SIZE,
+    summaryLoadingMore: false,
     projects: [],
     hydrate: async (force = false) => {
         const userId = useUserStore.getState().user?.id || "";
         if (!userId) {
             invalidateSession();
-            set({ hydrated: true, hydratedUserId: "", summaries: [], projects: [], syncError: undefined });
+            set({ hydrated: true, hydratedUserId: "", summaries: [], summaryTotal: 0, summaryPage: 0, summaryLoadingMore: false, projects: [], syncError: undefined });
             return;
         }
         if (!force && get().hydrated && get().hydratedUserId === userId) return;
         const session = sessionEpoch.capture();
         if (!force && hydrateRequest?.userId === session.userId && hydrateRequest.epoch === session.epoch) return hydrateRequest.promise;
         const requestId = ++hydrateRequestId;
-        set((state) => ({ hydrated: false, hydratedUserId: userId, summaries: state.hydratedUserId === userId ? state.summaries : [], projects: state.hydratedUserId === userId ? state.projects : [], syncError: undefined }));
-        const promise = listDramaProjectSummaries()
-            .then((summaries) => {
+        set((state) => ({
+            hydrated: false,
+            hydratedUserId: userId,
+            summaries: state.hydratedUserId === userId ? state.summaries : [],
+            summaryTotal: state.hydratedUserId === userId ? state.summaryTotal : 0,
+            summaryPage: state.hydratedUserId === userId ? state.summaryPage : 0,
+            summaryLoadingMore: false,
+            projects: state.hydratedUserId === userId ? state.projects : [],
+            syncError: undefined,
+        }));
+        const promise = listDramaProjectSummaries({ page: 1, pageSize: SUMMARY_PAGE_SIZE })
+            .then((result) => {
                 if (!isActiveHydrate(session, requestId)) return;
-                set({ summaries, hydrated: true, hydratedUserId: userId });
+                set({ summaries: result.projects, summaryTotal: result.total, summaryPage: result.page, summaryPageSize: result.pageSize, hydrated: true, hydratedUserId: userId });
             })
             .catch((error) => {
-                if (isActiveHydrate(session, requestId)) set({ summaries: [], hydrated: false, hydratedUserId: userId, syncError: error instanceof Error ? error.message : dramaT()("store.projectLoadFailed") });
+                if (isActiveHydrate(session, requestId)) set({ summaries: [], summaryTotal: 0, summaryPage: 0, hydrated: false, hydratedUserId: userId, syncError: error instanceof Error ? error.message : "短剧项目加载失败" });
             })
             .finally(() => {
                 if (hydrateRequest?.requestId === requestId) hydrateRequest = null;
             });
         hydrateRequest = { ...session, requestId, promise };
         return promise;
+    },
+    loadMore: async () => {
+        const session = requireSession();
+        const state = get();
+        if (!state.hydrated || state.summaryLoadingMore || state.summaries.length >= state.summaryTotal) return;
+        const page = state.summaryPage + 1;
+        set({ summaryLoadingMore: true, syncError: undefined });
+        try {
+            const result = await listDramaProjectSummaries({ page, pageSize: state.summaryPageSize });
+            assertCurrent(session);
+            set((current) => {
+                const existing = new Set(current.summaries.map((item) => item.id));
+                return {
+                    summaries: [...current.summaries, ...result.projects.filter((item) => !existing.has(item.id))],
+                    summaryTotal: result.total,
+                    summaryPage: result.page,
+                    summaryPageSize: result.pageSize,
+                    summaryLoadingMore: false,
+                };
+            });
+        } catch (error) {
+            if (sessionEpoch.isCurrent(session)) set({ summaryLoadingMore: false, syncError: error instanceof Error ? error.message : "更多项目加载失败" });
+        }
     },
     loadProject: async (id, force = false) => {
         const session = requireSession();
@@ -128,7 +155,14 @@ export const useDramaStore = create<DramaStore>((set, get) => ({
         const session = requireSession();
         const project = await createDramaProject(input);
         assertCurrent(session);
-        set((state) => ({ projects: [project, ...state.projects.filter((item) => item.id !== project.id)], summaries: upsertSummary(state.summaries, project) }));
+        set((state) => {
+            const known = state.summaries.some((item) => item.id === project.id);
+            return {
+                projects: [project, ...state.projects.filter((item) => item.id !== project.id)],
+                summaries: upsertSummary(state.summaries, project),
+                summaryTotal: known ? state.summaryTotal : state.summaryTotal + 1,
+            };
+        });
         return project.id;
     },
     deleteProject: async (id) => {
@@ -140,7 +174,7 @@ export const useDramaStore = create<DramaStore>((set, get) => ({
         await deleteDramaProject(id);
         if (!sessionEpoch.isCurrent(session)) return;
         latestProjectTimes.delete(key);
-        set((state) => ({ projects: state.projects.filter((project) => project.id !== id), summaries: state.summaries.filter((project) => project.id !== id) }));
+        set((state) => ({ projects: state.projects.filter((project) => project.id !== id), summaries: state.summaries.filter((project) => project.id !== id), summaryTotal: Math.max(0, state.summaryTotal - 1) }));
     },
     updateProject: (id, patch) => mutateProject(id, (project) => ({ ...project, ...patch })),
     addCharacter: (projectId, input) => mutateProject(projectId, (project) => ({ ...project, characters: [...project.characters, { ...input, id: `character-${nanoid()}` }] })),
@@ -169,7 +203,7 @@ export const useDramaStore = create<DramaStore>((set, get) => ({
         mutateProject(projectId, (project) => {
             const episode: DramaEpisode = {
                 id: `episode-${nanoid()}`,
-                title: dramaT()("store.episodeTitleTemplate", { n: project.episodes.length + 1 }),
+                title: `第 ${project.episodes.length + 1} 集`,
                 script: "",
                 outline: "",
                 hook: "",
@@ -184,7 +218,7 @@ export const useDramaStore = create<DramaStore>((set, get) => ({
         mutateProject(projectId, (project) => {
             const episodes = drafts.slice(0, 100).map<DramaEpisode>((draft, index) => ({
                 id: `episode-${nanoid()}`,
-                title: draft.title || dramaT()("store.episodeTitleTemplate", { n: index + 1 }),
+                title: draft.title || `第 ${index + 1} 集`,
                 script: draft.script,
                 outline: "",
                 hook: "",
@@ -387,7 +421,7 @@ export const useDramaStore = create<DramaStore>((set, get) => ({
         ),
     reset: () => {
         invalidateSession();
-        set({ hydrated: false, hydratedUserId: "", summaries: [], projects: [], syncError: undefined });
+        set({ hydrated: false, hydratedUserId: "", summaries: [], summaryTotal: 0, summaryPage: 0, summaryPageSize: SUMMARY_PAGE_SIZE, summaryLoadingMore: false, projects: [], syncError: undefined });
     },
 }));
 
@@ -471,7 +505,7 @@ function queueSave(session: ClientSessionStamp, project: DramaProject) {
                 } catch (error) {
                     if (!sessionEpoch.isCurrent(session)) return;
                     const latest = useDramaStore.getState().projects.find((item) => item.id === project.id);
-                    if (latest?.updatedAt === project.updatedAt) useDramaStore.setState({ syncError: error instanceof Error ? error.message : dramaT()("store.projectSaveFailed") });
+                    if (latest?.updatedAt === project.updatedAt) useDramaStore.setState({ syncError: error instanceof Error ? error.message : "短剧项目保存失败" });
                 }
             });
             saveQueues.set(key, operation);
@@ -503,12 +537,12 @@ function isActiveHydrate(session: ClientSessionStamp, requestId: number) {
 
 function requireSession() {
     const session = sessionEpoch.capture();
-    if (!session.userId) throw new Error(dramaT()("store.loginRequired"));
+    if (!session.userId) throw new Error("请先登录");
     return session;
 }
 
 function assertCurrent(session: ClientSessionStamp) {
-    if (!sessionEpoch.isCurrent(session)) throw new Error(dramaT()("store.sessionChanged"));
+    if (!sessionEpoch.isCurrent(session)) throw new Error("登录会话已变更，请重试");
 }
 
 function invalidateSession() {
@@ -533,23 +567,23 @@ function scriptToShots(script: string, project: DramaProject): DramaShot[] {
         .filter(Boolean)
         .slice(0, 24)
         .map((text, index) => {
-            const context = [project.style, project.summary, text].filter(Boolean).join(MODEL_DEFAULT_CONTEXT_SEPARATOR);
+            const context = [project.style, project.summary, text].filter(Boolean).join("，");
             return {
                 id: `shot-${nanoid()}`,
                 order: index + 1,
-                title: dramaT()("storyboard.shotTitleFallback", { order: String(index + 1).padStart(2, "0") }),
+                title: `镜头 ${String(index + 1).padStart(2, "0")}`,
                 description: text,
                 sourceText: text,
-                shotBoundary: MODEL_DEFAULT_PARAGRAPH_BOUNDARY,
+                shotBoundary: "段落边界",
                 dialogue: "",
                 narration: "",
                 utterances: [],
-                imagePrompt: modelDefaultImagePrompt(context),
-                videoPrompt: modelDefaultVideoPrompt(context),
-                cameraMotion: MODEL_DEFAULT_CAMERA_MOTION,
+                imagePrompt: `${context}，角色与画风保持一致，电影分镜画面`,
+                videoPrompt: `${context}，镜头运动自然，人物动作连续，保持角色一致性`,
+                cameraMotion: "自然镜头运动",
                 startFramePrompt: text,
                 endFramePrompt: text,
-                negativePrompt: MODEL_DEFAULT_NEGATIVE_PROMPT,
+                negativePrompt: "文字、水印、角色身份漂移、服装变化、错误肢体",
                 continuity: emptyContinuity(),
                 duration: 5,
                 characterIds: [],

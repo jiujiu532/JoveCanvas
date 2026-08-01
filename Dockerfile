@@ -21,7 +21,12 @@ RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --store
 COPY VERSION /app/VERSION
 COPY CHANGELOG.md /app/CHANGELOG.md
 COPY web ./
-RUN --mount=type=cache,target=/app/web/.next/cache pnpm run build
+RUN --mount=type=cache,target=/app/web/.next/cache pnpm run typecheck && NEXT_SKIP_BUILD_TYPECHECK=1 pnpm run build
+RUN set -eux; \
+    mkdir -p /app/sharp-runtime/node_modules/.pnpm; \
+    find node_modules/.pnpm -mindepth 1 -maxdepth 1 -type d -name '@img+sharp-*' -exec cp -a {} /app/sharp-runtime/node_modules/.pnpm/ \;; \
+    test -n "$(find /app/sharp-runtime/node_modules/.pnpm -mindepth 1 -maxdepth 1 -type d -name '@img+sharp-linux-*' -print -quit)"; \
+    test -n "$(find /app/sharp-runtime/node_modules/.pnpm -mindepth 1 -maxdepth 1 -type d -name '@img+sharp-libvips-linux-*' -print -quit)"
 
 FROM node:22-bookworm-slim
 
@@ -43,7 +48,12 @@ COPY CHANGELOG.md /app/CHANGELOG.md
 COPY --from=web-build /app/web/public /app/web/public
 COPY --from=web-build /app/web/.next/standalone /app/web
 COPY --from=web-build /app/web/.next/static /app/web/.next/static
+COPY --from=web-build /app/sharp-runtime/node_modules/.pnpm /app/web/node_modules/.pnpm
 COPY web/scripts/reset-admin-password.mjs /app/web/scripts/reset-admin-password.mjs
+COPY web/scripts/generation-runtime.mjs /app/web/scripts/generation-runtime.mjs
+COPY web/scripts/generation-worker.mjs /app/web/scripts/generation-worker.mjs
+
+RUN cd /app/web && node -e "require('sharp')"
 
 EXPOSE 3000
 CMD ["sh", "-c", "cd /app/web && PORT=3000 node server.js"]

@@ -8,7 +8,6 @@ import { ImageIcon, List, Music2, Settings2, Video } from "lucide-react";
 import { saveAs } from "file-saver";
 
 import { createImageGenerationTask, waitForImageGenerationTask, type ImageGenerationTask } from "@/services/api/image";
-import { requestAudioGeneration, storeGeneratedAudio } from "@/services/api/audio";
 import { recordGenerationLog } from "@/services/api/generation-logs";
 import { createTextGenerationTask, waitForTextGenerationTask, type TextGenerationTask } from "@/services/api/text";
 import { createServerVideoGenerationTask, storeGeneratedVideo, waitForVideoGenerationTask } from "@/services/api/video";
@@ -25,7 +24,7 @@ import { useAssetStore } from "@/stores/use-asset-store";
 import { useUserStore } from "@/stores/use-user-store";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { cropDataUrl, splitDataUrl, upscaleDataUrl } from "../utils/canvas-image-data";
-import { fitNodeSize, nodeSizeFromRatio } from "../utils/canvas-node-size";
+import { fitNodeSize, nodeSizeFromRatio, resizeImageNodeToNaturalRatio } from "../utils/canvas-node-size";
 import { App, Button, Modal } from "antd";
 import { NODE_DEFAULT_SIZE, getNodeSpec } from "../constants";
 import { ActiveConnectionPath, ConnectionPath } from "../components/canvas-connections";
@@ -109,15 +108,12 @@ export function audioExtension(mimeType?: string) {
     return "mp3";
 }
 
-// 纯 ts 模块无法调用 useTranslations，文案由调用方（组件/hook）传入的翻译函数提供
-export type CanvasTranslate = (key: string, values?: Record<string, string | number>) => string;
-
 export async function uploadCanvasImage(input: string | Blob): Promise<UploadedImage> {
     const image = await uploadImage(input);
     return { ...image, url: await resolveStoredImageDataUrl(image.storageKey, image.url) };
 }
 
-export async function uploadGeneratedCanvasImage(url: string, remoteFallback = "", serverFallback = "", t: CanvasTranslate): Promise<UploadedImage> {
+export async function uploadGeneratedCanvasImage(url: string, remoteFallback = "", serverFallback = ""): Promise<UploadedImage> {
     const remoteUrl = isRemoteGeneratedUrl(remoteFallback) ? remoteFallback : isRemoteGeneratedUrl(url) ? url : "";
     const serverUrl = isServerGeneratedUrl(serverFallback) ? serverFallback : isServerGeneratedUrl(url) ? url : "";
     const localUrl = isLocalGeneratedUrl(url) ? url : "";
@@ -130,7 +126,7 @@ export async function uploadGeneratedCanvasImage(url: string, remoteFallback = "
             // Try the next fallback source.
         }
     }
-    throw new Error(t("node.errors.saveImageFailed"));
+    throw new Error("图片保存到服务器失败");
 }
 
 export function imageMetadata(image: UploadedImage): CanvasNodeMetadata {
@@ -150,6 +146,8 @@ export function canvasNodeReferenceImage(node: CanvasNodeData): ReferenceImage {
         url: serverUrl || remoteUrl || undefined,
         remoteUrl: remoteUrl || undefined,
         serverUrl: serverUrl || undefined,
+        width: node.metadata?.naturalWidth || node.width,
+        height: node.metadata?.naturalHeight || node.height,
     };
 }
 
@@ -230,22 +228,28 @@ export async function resolveMetadataReferences(metadata: CanvasNodeMetadata) {
 }
 
 export async function hydrateCanvasImages(nodes: CanvasNodeData[]) {
-    return Promise.all(
-        nodes.map(async (node) => {
-            const content = node.metadata?.content;
-            const fallbackContent = generatedContentFallback(content, node.metadata?.remoteUrl, node.metadata?.serverUrl);
-            if ((node.type === CanvasNodeType.Video || node.type === CanvasNodeType.Audio) && node.metadata?.storageKey) return { ...node, metadata: { ...node.metadata, content: await resolveMediaUrl(node.metadata.storageKey, fallbackContent) } };
-            if ((node.type === CanvasNodeType.Video || node.type === CanvasNodeType.Audio) && content?.startsWith("blob:") && fallbackContent) return { ...node, metadata: { ...node.metadata, content: fallbackContent } };
-            if ((node.type === CanvasNodeType.Video || node.type === CanvasNodeType.Audio) && !content && fallbackContent) return { ...node, metadata: { ...node.metadata, content: fallbackContent } };
-            if (!isCanvasImageNodeType(node.type) || !fallbackContent) return node;
-            if (node.metadata?.storageKey) return { ...node, metadata: { ...node.metadata, content: await resolveStoredImageDataUrl(node.metadata.storageKey, fallbackContent) } };
-            if (content?.startsWith("blob:") && fallbackContent) return { ...node, metadata: { ...node.metadata, content: fallbackContent } };
-            if (!content && fallbackContent) return { ...node, metadata: { ...node.metadata, content: fallbackContent } };
-            const contentValue = content || "";
-            if (!contentValue.startsWith("data:image/")) return node;
-            return { ...node, metadata: { ...node.metadata, ...imageMetadata(await uploadCanvasImage(contentValue)) } };
-        }),
-    );
+    return Promise.all(nodes.map((node) => hydrateCanvasNode(node).catch(() => node)));
+}
+
+async function hydrateCanvasNode(node: CanvasNodeData) {
+    const content = node.metadata?.content;
+    const fallbackContent = generatedContentFallback(content, node.metadata?.remoteUrl, node.metadata?.serverUrl);
+    if ((node.type === CanvasNodeType.Video || node.type === CanvasNodeType.Audio) && node.metadata?.storageKey) return { ...node, metadata: { ...node.metadata, content: await resolveMediaUrl(node.metadata.storageKey, fallbackContent) } };
+    if ((node.type === CanvasNodeType.Video || node.type === CanvasNodeType.Audio) && content?.startsWith("blob:") && fallbackContent) return { ...node, metadata: { ...node.metadata, content: fallbackContent } };
+    if ((node.type === CanvasNodeType.Video || node.type === CanvasNodeType.Audio) && !content && fallbackContent) return { ...node, metadata: { ...node.metadata, content: fallbackContent } };
+    if (!isCanvasImageNodeType(node.type) || !fallbackContent) return node;
+    let hydratedNode = node;
+    if (node.metadata?.storageKey) hydratedNode = { ...node, metadata: { ...node.metadata, content: await resolveStoredImageDataUrl(node.metadata.storageKey, fallbackContent) } };
+    else if (content?.startsWith("blob:") && fallbackContent) hydratedNode = { ...node, metadata: { ...node.metadata, content: fallbackContent } };
+    else if (!content && fallbackContent) hydratedNode = { ...node, metadata: { ...node.metadata, content: fallbackContent } };
+    const contentValue = content || "";
+    if (contentValue.startsWith("data:image/")) hydratedNode = { ...node, metadata: { ...node.metadata, ...imageMetadata(await uploadCanvasImage(contentValue)) } };
+    if (hydratedNode.type === CanvasNodeType.Panorama) return hydratedNode;
+    const naturalWidth = hydratedNode.metadata?.naturalWidth;
+    const naturalHeight = hydratedNode.metadata?.naturalHeight;
+    if (naturalWidth && naturalHeight) return resizeImageNodeToNaturalRatio(hydratedNode, naturalWidth, naturalHeight);
+    const dimensions = await readImageMeta(hydratedNode.metadata?.content || fallbackContent);
+    return resizeImageNodeToNaturalRatio(hydratedNode, dimensions.width, dimensions.height);
 }
 
 export function generatedContentFallback(content?: string, remoteFallback?: string, serverFallback?: string) {
@@ -259,10 +263,14 @@ export function generatedContentFallback(content?: string, remoteFallback?: stri
 
 export async function hydrateAssistantImages(sessions: CanvasAssistantSession[]) {
     const hydrateItem = async <T extends { dataUrl?: string; storageKey?: string }>(item: T) => {
-        if (item.storageKey) return { ...item, dataUrl: await resolveStoredImageDataUrl(item.storageKey, item.dataUrl) };
-        if (item.dataUrl?.startsWith("data:image/")) {
-            const image = await uploadCanvasImage(item.dataUrl);
-            return { ...item, dataUrl: image.url, storageKey: image.storageKey };
+        try {
+            if (item.storageKey) return { ...item, dataUrl: await resolveStoredImageDataUrl(item.storageKey, item.dataUrl) };
+            if (item.dataUrl?.startsWith("data:image/")) {
+                const image = await uploadCanvasImage(item.dataUrl);
+                return { ...item, dataUrl: image.url, storageKey: image.storageKey };
+            }
+        } catch {
+            return item;
         }
         return item;
     };
@@ -345,19 +353,8 @@ export function modelMatchesCanvasGenerationMode(model: string, mode: CanvasNode
     return modelMatchesCapability(model, mode);
 }
 
-export function resetInterruptedGeneration(nodes: CanvasNodeData[], t: CanvasTranslate) {
-    return nodes.map((node) =>
-        node.metadata?.status === "loading" && !node.metadata.videoTask && !node.metadata.imageTask && !node.metadata.textTask
-            ? { ...node, metadata: { ...node.metadata, status: "error" as const, errorDetails: t("node.errors.interruptedByRefresh") } }
-            : node,
-    );
-}
-
 export function isGenerationCanceled(error: unknown) {
-    // 匹配上游/浏览器取消文案（含历史中文 "请求已取消"），本身不向 UI 展示
-    if (!(error instanceof Error)) return false;
-    if (error.name === "AbortError") return true;
-    return /请求已取消|request cancelled|request canceled|aborted/i.test(error.message);
+    return error instanceof Error && (error.message === "请求已取消" || error.name === "AbortError");
 }
 
 export function findRetrySourceNode(nodeId: string, nodes: CanvasNodeData[], connections: CanvasConnection[]) {
@@ -398,12 +395,12 @@ export function isHiddenBatchConnectionEndpoint(node: CanvasNodeData, nodes: Can
     return Boolean(root && !root.metadata?.imageBatchExpanded);
 }
 
-export function buildAngleLabel(params: CanvasImageAngleParams, t: CanvasTranslate) {
-    const horizontal = params.horizontalAngle === 0 ? t("node.angle.front") : params.horizontalAngle > 0 ? t("node.angle.rotateRight", { degree: params.horizontalAngle }) : t("node.angle.rotateLeft", { degree: Math.abs(params.horizontalAngle) });
-    const pitch = params.pitchAngle === 0 ? t("node.angle.level") : params.pitchAngle > 0 ? t("node.angle.pitchDown", { degree: params.pitchAngle }) : t("node.angle.pitchUp", { degree: Math.abs(params.pitchAngle) });
-    return t("node.angle.summary", { horizontal, pitch, distance: params.cameraDistance.toFixed(1), lens: params.wideAngle ? t("node.angle.wide") : t("node.angle.standard") });
+export function buildAngleLabel(params: CanvasImageAngleParams) {
+    const horizontal = params.horizontalAngle === 0 ? "正面视角" : params.horizontalAngle > 0 ? `向右旋转 ${params.horizontalAngle} 度` : `向左旋转 ${Math.abs(params.horizontalAngle)} 度`;
+    const pitch = params.pitchAngle === 0 ? "水平视角" : params.pitchAngle > 0 ? `俯视 ${params.pitchAngle} 度` : `仰视 ${Math.abs(params.pitchAngle)} 度`;
+    return `AI 多角度：${horizontal}，${pitch}，镜头距离 ${params.cameraDistance.toFixed(1)}，${params.wideAngle ? "广角" : "标准"}镜头`;
 }
 
-export function buildAnglePrompt(params: CanvasImageAngleParams, t: CanvasTranslate) {
-    return t("node.angle.prompt", { label: buildAngleLabel(params, t) });
+export function buildAnglePrompt(params: CanvasImageAngleParams) {
+    return `基于参考图重新生成同一主体的新视角，保持主体、颜色、材质和画面风格一致，不要只做透视变形。${buildAngleLabel(params)}。`;
 }

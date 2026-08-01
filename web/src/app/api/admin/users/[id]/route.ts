@@ -6,7 +6,6 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { deleteGenerationLogsByUserId } from "@/lib/server/generation-log-store";
 import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-log-store";
 
-import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 
 type RouteContext = {
@@ -15,8 +14,8 @@ type RouteContext = {
 
 export async function PATCH(request: Request, context: RouteContext) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
 
     try {
         const { id } = await context.params;
@@ -47,16 +46,16 @@ export async function PATCH(request: Request, context: RouteContext) {
             target: { type: "user" },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
+        if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
         console.error("Admin user update failed", error);
-        return NextResponse.json({ error: await serverMessage("auth.userUpdateFailed") }, { status: 500 });
+        return NextResponse.json({ error: "更新用户失败" }, { status: 500 });
     }
 }
 
 export async function DELETE(request: Request, context: RouteContext) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
 
     try {
         const { id } = await context.params;
@@ -76,8 +75,8 @@ export async function DELETE(request: Request, context: RouteContext) {
             target: { type: "user" },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
+        if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
         console.error("Admin user delete failed", error);
-        return NextResponse.json({ error: await serverMessage("auth.userDeleteFailed") }, { status: 500 });
+        return NextResponse.json({ error: "删除用户失败" }, { status: 500 });
     }
 }

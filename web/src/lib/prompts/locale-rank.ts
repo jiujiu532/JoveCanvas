@@ -24,11 +24,7 @@ export function localeRank(locale: string | undefined | null, prefer: PreferLoca
     return 3;
 }
 
-export function comparePromptsByPreferLocale(
-    a: { locale?: string | null; updatedAt: string },
-    b: { locale?: string | null; updatedAt: string },
-    prefer: PreferLocale,
-): number {
+export function comparePromptsByPreferLocale(a: { locale?: string | null; updatedAt: string }, b: { locale?: string | null; updatedAt: string }, prefer: PreferLocale): number {
     const byLocale = localeRank(a.locale, prefer) - localeRank(b.locale, prefer);
     if (byLocale !== 0) return byLocale;
     return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);

@@ -4,7 +4,6 @@ import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
 
 import { navigationTools, type NavigationToolSlug } from "@/constant/navigation-tools";
 import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
@@ -16,11 +15,10 @@ import { usePublicSessionStore } from "@/stores/use-public-session-store";
 export function AppTopNav() {
     const pathname = usePathname();
     const router = useRouter();
-    const t = useTranslations("layout");
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const navItemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
     const [navIndicator, setNavIndicator] = useState({ left: 7, width: 0, visible: false });
-    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", logoUrl: "/logo.svg" };
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", logoUrl: "/logo.svg" };
     const hideHeader = /^\/canvas\/[^/]+/.test(pathname);
     const slug = pathname.split("/").filter(Boolean)[0];
     const activeToolSlug = navigationTools.some((tool) => tool.slug === slug) ? (slug as NavigationToolSlug) : undefined;
@@ -51,15 +49,15 @@ export function AppTopNav() {
                         <div className="flex min-w-0 items-center justify-start overflow-hidden">
                             <Link href="/" className="flex h-full min-w-0 items-center gap-2.5 text-sm font-semibold leading-none tracking-tight text-stone-950 transition hover:text-stone-600 dark:text-stone-100 dark:hover:text-stone-300">
                                 <SiteLogo logoUrl={site.logoUrl} className="size-9" />
-                                <span className="max-w-[24vw] truncate text-xl font-semibold sm:max-w-[30vw] lg:max-w-none">{site.title || "JoveCanvas"}</span>
+                                <span className="max-w-[24vw] truncate text-xl font-semibold sm:max-w-[30vw] lg:max-w-none">{site.title || "VOZEB PRO"}</span>
                             </Link>
 
                             <button
                                 type="button"
                                 className="ml-3 inline-flex size-8 shrink-0 items-center justify-center text-stone-600 transition hover:text-stone-950 lg:hidden dark:text-stone-300 dark:hover:text-white"
                                 onClick={() => setMobileNavOpen(true)}
-                                aria-label={t("openNavMenu")}
-                                title={t("navMenu")}
+                                aria-label="打开导航菜单"
+                                title="导航菜单"
                             >
                                 <Menu className="size-5" />
                             </button>
@@ -95,13 +93,13 @@ export function AppTopNav() {
                                         className={cn("app-shell-nav-link flex h-10 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium leading-none xl:px-3.5", active && "is-active")}
                                     >
                                         <Icon className="size-[17px]" />
-                                        <span className="truncate">{t(`nav.${tool.slug}.label`)}</span>
+                                        <span className="truncate">{tool.label}</span>
                                     </Link>
                                 );
                             })}
                         </nav>
 
-                        <div className="app-shell-actions my-auto flex h-9 max-w-[calc(100vw-9rem)] min-w-0 items-center justify-end gap-1.5 overflow-visible whitespace-nowrap sm:max-w-[calc(100vw-12rem)] sm:gap-2 lg:max-w-none">
+                        <div className="app-shell-actions my-auto flex h-9 max-w-[calc(100vw-9rem)] min-w-0 items-center justify-end overflow-visible whitespace-nowrap sm:max-w-[calc(100vw-12rem)] lg:max-w-none">
                             <UserStatusActions />
                         </div>
                     </div>

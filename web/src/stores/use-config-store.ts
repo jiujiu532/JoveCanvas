@@ -4,37 +4,21 @@ import { useMemo } from "react";
 import { create } from "zustand";
 import { nanoid } from "nanoid";
 
-import { resolveClientStoreLocale } from "@/lib/client-store-locale";
 import { flattenPublicCapabilityModels, resolvePublicCapabilityModels } from "@/lib/public-model-catalog";
 import type { GlobalAiOpcPresetId } from "@/lib/globalaiopc-catalog";
+import { resolveChannelModelAdvancedConfig } from "@/lib/channel-protocol-registry";
+import { inferModelCapability, normalizeModelId } from "@/lib/model-capability";
 import { materializeLogicalModelPointCosts } from "@/lib/model-point-cost";
 
-// Zustand 非 React 上下文：按 cookie 语言读字典，默认中文
-const STORE_MESSAGES = {
-    zh: {
-        newChannel: "新渠道",
-        defaultChannel: "默认渠道",
-        channelN: (n: number) => `渠道 ${n}`,
-        systemChannelOnly: "客户端只能调用系统模型渠道",
-    },
-    en: {
-        newChannel: "New channel",
-        defaultChannel: "Default channel",
-        channelN: (n: number) => `Channel ${n}`,
-        systemChannelOnly: "Client can only call system model channels",
-    },
-} as const;
-
-function storeMessage<K extends keyof (typeof STORE_MESSAGES)["zh"]>(key: K): (typeof STORE_MESSAGES)["zh"][K] {
-    // en/zh 模板字面量返回类型不同，统一按中文侧签名消费
-    return STORE_MESSAGES[resolveClientStoreLocale()][key] as (typeof STORE_MESSAGES)["zh"][K];
-}
-
 type ApiCallFormat = "openai" | "gemini";
-type SystemChannelProtocol = "auto" | "openai" | "sub2api" | "qingyan" | "globalaiopc" | "seedance" | "compatible";
+type SystemChannelProtocol = "auto" | "openai" | "sub2api" | "newapi" | "qingyan" | "globalaiopc" | "seedance" | "stable-diffusion" | "volcengine-video" | "seedance-special" | "custom" | "compatible";
 
 type SystemChannelAdvancedConfig = {
     protocol: SystemChannelProtocol;
+    authMode?: "none" | "bearer" | "x-api-key" | "custom-header";
+    authHeader?: string;
+    authPrefix?: string;
+    documentationUrl?: string;
     globalAiOpcPreset?: GlobalAiOpcPresetId;
     globalAiOpcPresets?: GlobalAiOpcPresetId[];
     textModel: string;
@@ -50,6 +34,27 @@ type SystemChannelAdvancedConfig = {
     supportsReferenceImage: boolean;
     supportsReferenceVideo: boolean;
     supportsReferenceAudio: boolean;
+    modelCatalogPaths?: string[];
+    modelCapabilities?: Record<string, ModelCapability>;
+    modelConfigs?: Record<
+        string,
+        {
+            capability: ModelCapability;
+            source?: "manual" | "provider" | "official" | "health";
+            apiFormat?: ApiCallFormat;
+            protocol?: SystemChannelProtocol;
+            createPath?: string;
+            queryPath?: string;
+            requestTemplate?: string;
+            resultField?: string;
+            statusField?: string;
+            durationRange?: string;
+            referenceRule?: string;
+            supportsReferenceImage?: boolean;
+            supportsReferenceVideo?: boolean;
+            supportsReferenceAudio?: boolean;
+        }
+    >;
 };
 
 type ModelChannel = {
@@ -206,64 +211,8 @@ type ConfigStore = {
     clearPromptContinue: () => void;
 };
 
-function isVideoModelName(model: string) {
-    const value = modelOptionName(model).toLowerCase();
-    return value.includes("seedance") || value.includes("video") || value.includes("sora") || value.includes("veo") || value.includes("kling") || value.includes("wan") || value.includes("hailuo");
-}
-
-function isImageModelName(model: string) {
-    const value = modelOptionName(model).toLowerCase();
-    return (
-        !isVideoModelName(model) &&
-        !isAudioModelName(model) &&
-        (value.includes("seedream") ||
-            value.includes("gpt-image") ||
-            value.includes("image") ||
-            value.includes("dall-e") ||
-            value.includes("dalle") ||
-            value.includes("imagen") ||
-            value.includes("flux") ||
-            isStableDiffusionImageModelName(value) ||
-            value.includes("sdxl") ||
-            value.includes("stable-diffusion") ||
-            value.includes("midjourney"))
-    );
-}
-
-function isStableDiffusionImageModelName(value: string) {
-    return value === "sd" || value.includes("stable diffusion") || value.includes("stable_diffusion") || /^sd(?:xl|[-_.\s]?\d)/.test(value);
-}
-
-function isAudioModelName(model: string) {
-    const value = modelOptionName(model).toLowerCase();
-    return value.includes("audio") || value.includes("tts") || value.includes("speech") || value.includes("voice") || value.includes("music") || value.includes("sound");
-}
-
-function isTextModelName(model: string) {
-    return !isImageModelName(model) && !isVideoModelName(model) && !isAudioModelName(model);
-}
-
-function normalizePublicLogicalModelCapability(model: LogicalModel): LogicalModel {
-    const modelNames = [model.id, ...(model.bindings || []).map((binding) => binding.upstreamModel)].map((item) => modelOptionName(item).trim()).filter(Boolean);
-    const inferredCapability = inferKnownModelCapability(modelNames);
-    if (!inferredCapability) return model;
-    return { ...model, capability: inferredCapability };
-}
-
-function inferKnownModelCapability(models: string[]): ModelCapability | null {
-    if (models.some((model) => isStableDiffusionImageModelName(model.toLowerCase()))) return "image";
-    if (models.some(isImageModelName)) return "image";
-    if (models.some(isVideoModelName)) return "video";
-    if (models.some(isAudioModelName)) return "audio";
-    return null;
-}
-
 export function modelMatchesCapability(model: string, capability?: ModelCapability) {
-    if (!capability) return true;
-    if (capability === "image") return isImageModelName(model);
-    if (capability === "video") return isVideoModelName(model);
-    if (capability === "audio") return isAudioModelName(model);
-    return isTextModelName(model);
+    return !capability || inferModelCapability(modelOptionName(model)) === capability;
 }
 
 function filterModelsByCapability(models: string[], capability?: ModelCapability) {
@@ -297,13 +246,11 @@ export function applyPublicSystemSettings(config: AiConfig, settings?: PublicSys
             models: uniqueRawModels(channel.models || []),
             ...(channel.advancedConfig ? { advancedConfig: channel.advancedConfig } : {}),
         }));
-    const logicalModels = (settings?.logicalModels || [])
-        .map(normalizePublicLogicalModelCapability)
-        .filter(
-            (model) =>
-                model.enabled &&
-                model.bindings.some((binding) => binding.enabled && channels.some((channel) => channel.id === binding.channelId && channel.models.some((upstream) => normalizedModelName(upstream) === normalizedModelName(binding.upstreamModel)))),
-        );
+    const logicalModels = (settings?.logicalModels || []).filter(
+        (model) =>
+            model.enabled &&
+            model.bindings.some((binding) => binding.enabled && channels.some((channel) => channel.id === binding.channelId && channel.models.some((upstream) => normalizedModelName(upstream) === normalizedModelName(binding.upstreamModel)))),
+    );
     const rawModels = modelOptionsFromChannels(channels);
     const capabilityModels = resolvePublicCapabilityModels(logicalModels, {
         image: filterModelsByCapability(rawModels, "image"),
@@ -422,7 +369,7 @@ export function useEffectiveConfig() {
 function createModelChannel(channel?: Partial<ModelChannel>): ModelChannel {
     return {
         id: channel?.id?.trim() || nanoid(),
-        name: channel?.name?.trim() || storeMessage("newChannel"),
+        name: channel?.name?.trim() || "新渠道",
         baseUrl: channel?.baseUrl?.trim() || DEFAULT_SYSTEM_BASE_URL,
         apiKey: channel?.apiKey || "",
         apiFormat: channel?.apiFormat === "gemini" ? "gemini" : "openai",
@@ -513,18 +460,20 @@ export function resolveModelChannel(config: AiConfig, value: string) {
         .sort((a, b) => a.priority - b.priority)
         .find((item) => channels.some((channel) => channel.id === item.channelId));
     const matched = binding ? channels.find((channel) => channel.id === binding.channelId) : decoded ? channels.find((channel) => channel.id === decoded.channelId) : channels.find((channel) => channel.models.includes(model));
-    return matched || channels[0] || createModelChannel({ id: "default", name: storeMessage("defaultChannel"), models: config.models.map(modelOptionName) });
+    return matched || channels[0] || createModelChannel({ id: "default", name: "默认渠道", models: config.models.map(modelOptionName) });
 }
 
 export function resolveModelRequestConfig(config: AiConfig, value: string) {
     const channel = resolveModelChannel(config, value);
+    const model = modelOptionName(value || config.model);
+    const advancedConfig = channel.advancedConfig ? resolveChannelModelAdvancedConfig(channel.advancedConfig, model) : undefined;
     return {
         ...config,
-        model: modelOptionName(value || config.model),
+        model,
         baseUrl: channel.baseUrl,
         apiKey: channel.apiKey,
-        apiFormat: channel.apiFormat,
-        ...(channel.advancedConfig ? { advancedConfig: channel.advancedConfig } : {}),
+        apiFormat: channel.advancedConfig?.modelConfigs?.[normalizeModelId(model)]?.apiFormat || channel.apiFormat,
+        ...(advancedConfig ? { advancedConfig } : {}),
         systemPrompt: "",
     };
 }
@@ -537,7 +486,7 @@ function normalizeChannels(config: AiConfig) {
             createModelChannel({
                 ...channel,
                 id: channel.id || (index === 0 ? "default" : `channel-${index + 1}`),
-                name: channel.name || (index === 0 ? storeMessage("defaultChannel") : storeMessage("channelN")(index + 1)),
+                name: channel.name || (index === 0 ? "默认渠道" : `渠道 ${index + 1}`),
                 apiKey: "system",
                 models: uniqueRawModels(channel.models || []),
             }),
@@ -563,7 +512,7 @@ function normalizedModelName(model: string) {
 
 export function buildApiUrl(baseUrl: string, path: string) {
     let normalizedBaseUrl = baseUrl.trim().replace(/\/+$/, "");
-    if (!normalizedBaseUrl.startsWith("/api/ai/system/")) throw new Error(storeMessage("systemChannelOnly"));
+    if (!normalizedBaseUrl.startsWith("/api/ai/system/")) throw new Error("客户端只能调用后台系统模型渠道");
     normalizedBaseUrl = normalizeArkPlanBaseUrl(normalizedBaseUrl);
     const lowerBaseUrl = normalizedBaseUrl.toLowerCase();
     const apiBaseUrl = lowerBaseUrl.endsWith("/v1") || lowerBaseUrl.endsWith("/api/v3") || lowerBaseUrl.endsWith("/api/plan/v3") ? normalizedBaseUrl : `${normalizedBaseUrl}/v1`;

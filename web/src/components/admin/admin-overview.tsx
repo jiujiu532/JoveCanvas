@@ -2,7 +2,6 @@
 
 import { Button, Tag } from "antd";
 import { CircleDollarSign, Database, PlugZap, RefreshCw, UsersRound } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
 
 import { generationKindLabel, generationSourceLabel } from "@/components/admin/admin-generation-log";
 import { Metric, Panel, PanelHeader } from "@/components/admin/admin-panel";
@@ -31,116 +30,67 @@ type AdminOverviewProps = {
 };
 
 export function AdminOverview({ stats, settingsSummary, walletSummary, billingSummary, operationsSummary, promptCount, assetStats, enabledProducts, loading, onRefresh }: AdminOverviewProps) {
-    const t = useTranslations("admin");
     return (
         <div className="space-y-3 sm:space-y-5">
             <section className="admin-metric-grid grid grid-cols-2 overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 xl:grid-cols-4">
-                <Metric label={t("overview.metrics.totalUsers")} value={stats.total} detail={t("overview.metrics.totalUsersDetail", { count: stats.active })} icon={<UsersRound className="size-5" />} tone="slate" />
-                <Metric
-                    label={t("overview.metrics.channelConfig")}
-                    value={settingsSummary.enabledChannels}
-                    detail={t("overview.metrics.channelConfigDetail", { count: settingsSummary.totalChannels })}
-                    icon={<PlugZap className="size-5" />}
-                    tone="emerald"
-                />
-                <Metric
-                    label={t("overview.metrics.paidAmount")}
-                    value={formatAdminMoney(billingSummary?.orders.paidAmountCents || 0)}
-                    detail={t("overview.metrics.paidAmountDetail", { count: billingSummary?.orders.paid || 0 })}
-                    icon={<CircleDollarSign className="size-5" />}
-                    tone="slate"
-                />
-                <Metric
-                    label={t("overview.metrics.dailyCalls")}
-                    value={operationsSummary.dailyCalls.at(-1)?.value || 0}
-                    detail={t("overview.metrics.dailyCallsDetail", { days: operationsSummary.windowDays, count: operationsSummary.totalCalls })}
-                    icon={<Database className="size-5" />}
-                    tone="slate"
-                />
+                <Metric label="用户总数" value={stats.total} detail={stats.active + " 个可用账号"} icon={<UsersRound className="size-5" />} tone="slate" />
+                <Metric label="接口配置" value={settingsSummary.enabledChannels} detail={"共 " + settingsSummary.totalChannels + " 个渠道"} icon={<PlugZap className="size-5" />} tone="emerald" />
+                <Metric label="实收金额" value={formatAdminMoney(billingSummary?.orders.paidAmountCents || 0)} detail={(billingSummary?.orders.paid || 0) + " 笔已支付订单"} icon={<CircleDollarSign className="size-5" />} tone="slate" />
+                <Metric label="今日调用" value={operationsSummary.dailyCalls.at(-1)?.value || 0} detail={`近 ${operationsSummary.windowDays} 日 ${operationsSummary.totalCalls} 次调用`} icon={<Database className="size-5" />} tone="slate" />
             </section>
             <Panel>
                 <PanelHeader
-                    title={t("overview.breakdown.title")}
-                    description={t("overview.breakdown.description")}
+                    title="平台运营拆分"
+                    description="把用户、收入、模型能力和初始化进度放在同一张运营看板里，方便按商业后台的方式巡检。"
                     actions={
                         <div className="flex flex-wrap justify-end gap-2">
-                            <Tag className="m-0">{t("overview.breakdown.admins", { count: stats.admins })}</Tag>
-                            <Tag className="m-0">{t("overview.breakdown.prompts", { count: promptCount })}</Tag>
-                            <Tag className="m-0">{t("overview.breakdown.assets", { count: assetStats ? assetStats.totalFiles : "-" })}</Tag>
+                            <Tag className="m-0">管理员 {stats.admins}</Tag>
+                            <Tag className="m-0">提示词 {promptCount}</Tag>
+                            <Tag className="m-0">资源 {assetStats ? assetStats.totalFiles : "-"}</Tag>
                         </div>
                     }
                 />
                 <div className="admin-resource-grid grid grid-cols-2 lg:grid-cols-4">
-                    <ResourceStat
-                        label={t("overview.resource.successCalls")}
-                        value={t("overview.resource.timesValue", { count: operationsSummary.successCalls })}
-                        detail={t("overview.resource.successRateDetail", { rate: operationsSummary.successRate })}
-                    />
-                    <ResourceStat label={t("overview.resource.activeUsers")} value={t("overview.resource.peopleValue", { count: operationsSummary.activeUsers })} detail={t("overview.resource.activeUsersDetail", { days: operationsSummary.windowDays })} />
-                    <ResourceStat label={t("overview.resource.enabledProducts")} value={t("overview.resource.countValue", { count: enabledProducts })} detail={t("overview.resource.enabledProductsDetail", { count: walletSummary.enabledPlans })} />
-                    <ResourceStat
-                        label={t("overview.resource.localAssets")}
-                        value={assetStats ? t("overview.resource.countValue", { count: assetStats.totalFiles }) : "-"}
-                        detail={assetStats ? formatBytes(assetStats.totalBytes) : t("overview.resource.awaitingStats")}
-                    />
+                    <ResourceStat label="成功调用" value={operationsSummary.successCalls + " 次"} detail={"成功率 " + operationsSummary.successRate + "%"} />
+                    <ResourceStat label="活跃用户" value={operationsSummary.activeUsers + " 人"} detail={`近 ${operationsSummary.windowDays} 日去重用户`} />
+                    <ResourceStat label="上架商品" value={enabledProducts + " 个"} detail={walletSummary.enabledPlans + " 个在售套餐"} />
+                    <ResourceStat label="本地预览资源" value={assetStats ? assetStats.totalFiles + " 个" : "-"} detail={assetStats ? formatBytes(assetStats.totalBytes) : "等待统计"} />
                 </div>
             </Panel>
             <div className="grid gap-3 sm:gap-5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-                <ModelDistributionPanel items={operationsSummary.modelDistribution} emptyText={t("overview.modelDistribution.empty")} />
+                <ModelDistributionPanel items={operationsSummary.modelDistribution} emptyText="暂无模型请求记录" />
                 <UsageLinePanel items={operationsSummary.dailyCalls} loading={loading} onRefresh={onRefresh} />
             </div>
             <div className="grid gap-3 sm:gap-5 lg:grid-cols-2">
-                <CompactDonutPanel
-                    title={t("overview.entrySource.title")}
-                    description={t("overview.entrySource.description")}
-                    items={operationsSummary.sourceDistribution}
-                    emptyText={t("overview.entrySource.empty")}
-                    totalLabel={t("overview.entrySource.totalLabel")}
-                />
-                <CompactDonutPanel
-                    title={t("overview.contentType.title")}
-                    description={t("overview.contentType.description")}
-                    items={operationsSummary.kindDistribution}
-                    emptyText={t("overview.contentType.empty")}
-                    totalLabel={t("overview.contentType.totalLabel")}
-                />
+                <CompactDonutPanel title="入口分布" description="查看调用来自画布、生图工作台或视频创作台。" items={operationsSummary.sourceDistribution} emptyText="暂无入口记录" totalLabel="入口请求" />
+                <CompactDonutPanel title="内容类型分布" description="对图片、视频等生成类型做运营观察。" items={operationsSummary.kindDistribution} emptyText="暂无类型记录" totalLabel="类型请求" />
             </div>
             <Panel>
-                <PanelHeader title={t("overview.businessHealth.title")} description={t("overview.businessHealth.description")} />
+                <PanelHeader title="业务健康" description="商业化后台首页只放运营判断相关信息；媒体文件维护已归入本地媒体页面。" />
                 <div className="admin-resource-grid grid grid-cols-2 lg:grid-cols-4">
-                    <ResourceStat
-                        label={t("overview.businessHealth.plansOnSale")}
-                        value={t("overview.resource.countValue", { count: walletSummary.enabledPlans })}
-                        detail={t("overview.businessHealth.plansOnSaleDetail", { count: walletSummary.usersWithPlan })}
-                    />
-                    <ResourceStat
-                        label={t("overview.businessHealth.enabledChannels")}
-                        value={t("overview.resource.countValue", { count: settingsSummary.enabledChannels })}
-                        detail={t("overview.metrics.channelConfigDetail", { count: settingsSummary.totalChannels })}
-                    />
-                    <ResourceStat label={t("overview.businessHealth.failedCalls")} value={t("overview.resource.timesValue", { count: operationsSummary.failedCalls })} detail={t("overview.businessHealth.failedCallsDetail")} />
-                    <ResourceStat label={t("overview.businessHealth.assetIssues")} value={assetStats ? t("overview.resource.countValue", { count: assetStats.missingReferences }) : "-"} detail={t("overview.businessHealth.assetIssuesDetail")} />
+                    <ResourceStat label="在售套餐" value={walletSummary.enabledPlans + " 个"} detail={walletSummary.usersWithPlan + " 个套餐用户"} />
+                    <ResourceStat label="启用模型渠道" value={settingsSummary.enabledChannels + " 个"} detail={"共 " + settingsSummary.totalChannels + " 个渠道"} />
+                    <ResourceStat label="失败调用" value={operationsSummary.failedCalls + " 次"} detail="用于排查模型、额度或上游异常" />
+                    <ResourceStat label="资源异常" value={assetStats ? assetStats.missingReferences + " 个" : "-"} detail="日志记录存在但文件不存在" />
                 </div>
             </Panel>
         </div>
     );
 }
 function ModelDistributionPanel({ items, emptyText }: { items: DistributionItem[]; emptyText: string }) {
-    const t = useTranslations("admin");
-    const locale = useLocale();
     const displayItems = items.length ? items : [{ label: emptyText, value: 0, percent: 100 }];
     return (
         <Panel>
-            <PanelHeader title={t("overview.modelDistribution.title")} description={t("overview.modelDistribution.description")} />
+            <PanelHeader title="模型分布" description="统计近 7 日不同模型的请求占比，便于调整默认模型和套餐成本。" />
             <div className="grid gap-3 p-3 sm:gap-6 sm:p-5 lg:grid-cols-[220px_minmax(0,1fr)]">
                 <div className="flex items-center justify-center">
-                    <DonutChart items={items} emptyText={emptyText} totalLabel={t("overview.modelDistribution.totalLabel")} variant="large" />
+                    <DonutChart items={items} emptyText={emptyText} totalLabel="请求总量" variant="large" />
                 </div>
                 <div className="min-w-0 overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-800">
                     <div className="grid grid-cols-[minmax(0,1.2fr)_58px_58px] border-b border-zinc-200 bg-zinc-50 px-3 py-2 text-[10px] font-semibold text-zinc-500 sm:grid-cols-[minmax(0,1.2fr)_72px_72px] sm:px-4 sm:py-2.5 sm:text-[11px] dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-                        <span>{t("overview.modelDistribution.model")}</span>
-                        <span className="text-right">{t("overview.modelDistribution.requests")}</span>
-                        <span className="text-right">{t("overview.modelDistribution.percent")}</span>
+                        <span>模型</span>
+                        <span className="text-right">请求</span>
+                        <span className="text-right">占比</span>
                     </div>
                     {displayItems.map((item, index) => (
                         <div
@@ -151,7 +101,7 @@ function ModelDistributionPanel({ items, emptyText }: { items: DistributionItem[
                                 <span className={`size-2.5 shrink-0 rounded-full ${items.length ? "" : "bg-stone-300 dark:bg-stone-700"}`} style={items.length ? { background: chartColor(index) } : undefined} />
                                 <span className={`min-w-0 truncate font-medium ${items.length ? "text-stone-900 dark:text-stone-100" : "text-stone-500 dark:text-stone-400"}`}>{item.label}</span>
                             </div>
-                            <span className="text-right tabular-nums text-stone-500 dark:text-stone-400">{formatCompactNumber(item.value, locale)}</span>
+                            <span className="text-right tabular-nums text-stone-500 dark:text-stone-400">{formatCompactNumber(item.value)}</span>
                             <span className="text-right tabular-nums font-semibold text-stone-950 dark:text-stone-100">{items.length ? `${item.percent}%` : "-"}</span>
                         </div>
                     ))}
@@ -162,8 +112,6 @@ function ModelDistributionPanel({ items, emptyText }: { items: DistributionItem[
 }
 
 function CompactDonutPanel({ title, description, items, emptyText, totalLabel }: { title: string; description: string; items: DistributionItem[]; emptyText: string; totalLabel: string }) {
-    const t = useTranslations("admin");
-    const locale = useLocale();
     const displayItems = items.length ? items : [{ label: emptyText, value: 0, percent: 100 }];
     return (
         <Panel>
@@ -182,7 +130,7 @@ function CompactDonutPanel({ title, description, items, emptyText, totalLabel }:
                                 </span>
                                 <span className="shrink-0 tabular-nums font-semibold text-stone-950 dark:text-stone-100">{items.length ? `${item.percent}%` : "-"}</span>
                             </div>
-                            <div className="mt-2 text-xs tabular-nums text-stone-500 dark:text-stone-400">{t("overview.resource.timesValue", { count: formatCompactNumber(item.value, locale) })}</div>
+                            <div className="mt-2 text-xs tabular-nums text-stone-500 dark:text-stone-400">{formatCompactNumber(item.value)} 次</div>
                         </div>
                     ))}
                 </div>
@@ -197,7 +145,6 @@ const donutChartVariants = {
 } as const;
 
 function DonutChart({ items, emptyText, totalLabel, variant }: { items: DistributionItem[]; emptyText: string; totalLabel: string; variant: keyof typeof donutChartVariants }) {
-    const locale = useLocale();
     const { sizeClass, viewBoxSize, radius, strokeWidth, totalClassName, labelClassName } = donutChartVariants[variant];
     const total = items.reduce((sum, item) => sum + item.value, 0);
     const displayItems = items.length ? items : [{ label: emptyText, value: 0, percent: 100 }];
@@ -232,7 +179,7 @@ function DonutChart({ items, emptyText, totalLabel, variant }: { items: Distribu
             </svg>
             <div className="absolute inset-0 grid place-items-center text-center">
                 <div>
-                    <div className={`${totalClassName} font-semibold tracking-normal text-stone-950 dark:text-stone-100`}>{formatCompactNumber(total, locale)}</div>
+                    <div className={`${totalClassName} font-semibold tracking-normal text-stone-950 dark:text-stone-100`}>{formatCompactNumber(total)}</div>
                     <div className={`mt-1 ${labelClassName} text-stone-500 dark:text-stone-400`}>{totalLabel}</div>
                 </div>
             </div>
@@ -241,8 +188,6 @@ function DonutChart({ items, emptyText, totalLabel, variant }: { items: Distribu
 }
 
 function UsageLinePanel({ items, loading, onRefresh }: { items: Array<{ label: string; value: number }>; loading: boolean; onRefresh: () => void }) {
-    const t = useTranslations("admin");
-    const locale = useLocale();
     const max = Math.max(1, ...items.map((item) => item.value));
     const width = 640;
     const height = 240;
@@ -260,11 +205,11 @@ function UsageLinePanel({ items, loading, onRefresh }: { items: Array<{ label: s
     return (
         <Panel>
             <PanelHeader
-                title={t("overview.usageTrend.title")}
-                description={t("overview.usageTrend.description")}
+                title="调用趋势"
+                description="近 7 日用户调用曲线，辅助判断增长、异常波动和接口稳定性。"
                 actions={
                     <Button loading={loading} icon={<RefreshCw className="size-4" />} onClick={onRefresh}>
-                        {t("overview.usageTrend.refresh")}
+                        刷新趋势
                     </Button>
                 }
             />
@@ -273,10 +218,10 @@ function UsageLinePanel({ items, loading, onRefresh }: { items: Array<{ label: s
                     <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-stone-500 sm:mb-4 dark:text-stone-400">
                         <span className="inline-flex items-center gap-1.5">
                             <span className="size-2.5 rounded-full" style={{ background: "var(--admin-chart-1)" }} />
-                            {t("overview.usageTrend.requestVolume")}
+                            请求量
                         </span>
-                        <span>{t("overview.usageTrend.peak", { count: formatCompactNumber(max, locale) })}</span>
-                        {loading ? <Tag className="m-0">{t("overview.usageTrend.loading")}</Tag> : null}
+                        <span>峰值 {formatCompactNumber(max)}</span>
+                        {loading ? <Tag className="m-0">加载中</Tag> : null}
                     </div>
                     <svg className="h-44 w-full overflow-visible sm:h-72" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden="true">
                         {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
@@ -313,7 +258,7 @@ function ResourceStat({ label, value, detail }: { label: string; value: string; 
     );
 }
 
-export function buildOperationsSummary(logs: StoredGenerationLog[], channels: SystemModelChannel[], labels: { unknownModel: string; unknown: string }, t: ReturnType<typeof useTranslations<"admin">>) {
+export function buildOperationsSummary(logs: StoredGenerationLog[], channels: SystemModelChannel[]) {
     const totalCalls = logs.length;
     const successCalls = logs.filter((log) => log.status === "success").length;
     const failedCalls = logs.filter((log) => log.status === "failed").length;
@@ -323,7 +268,7 @@ export function buildOperationsSummary(logs: StoredGenerationLog[], channels: Sy
         const date = new Date(today);
         date.setDate(today.getDate() - (6 - offset));
         const key = date.toISOString().slice(0, 10);
-        const label = date.toLocaleDateString(undefined, { month: "2-digit", day: "2-digit" });
+        const label = date.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" });
         return { key, label, value: 0 };
     });
     const dayMap = new Map(dayItems.map((item) => [item.key, item]));
@@ -334,20 +279,11 @@ export function buildOperationsSummary(logs: StoredGenerationLog[], channels: Sy
     }
     const knownModels = new Set(channels.flatMap((channel) => channel.models));
     const modelDistribution = distributionFromValues(
-        logs.map((log) => log.model || labels.unknownModel),
-        (value) => (knownModels.has(value) ? value : value || labels.unknownModel),
-        labels.unknown,
+        logs.map((log) => log.model || "未记录模型"),
+        (value) => (knownModels.has(value) ? value : value || "未记录模型"),
     );
-    const sourceDistribution = distributionFromValues(
-        logs.map((log) => generationSourceLabel(log.source, t)),
-        (value) => value,
-        labels.unknown,
-    );
-    const kindDistribution = distributionFromValues(
-        logs.map((log) => generationKindLabel(log.kind, t)),
-        (value) => value,
-        labels.unknown,
-    );
+    const sourceDistribution = distributionFromValues(logs.map((log) => generationSourceLabel(log.source)));
+    const kindDistribution = distributionFromValues(logs.map((log) => generationKindLabel(log.kind)));
     return {
         totalCalls,
         successCalls,
@@ -361,10 +297,10 @@ export function buildOperationsSummary(logs: StoredGenerationLog[], channels: Sy
     };
 }
 
-function distributionFromValues(values: string[], normalize: (value: string) => string = (value) => value, unknownLabel = "-") {
+function distributionFromValues(values: string[], normalize: (value: string) => string = (value) => value) {
     const counts = new Map<string, number>();
     for (const value of values) {
-        const label = normalize(value).trim() || unknownLabel;
+        const label = normalize(value).trim() || "未记录";
         counts.set(label, (counts.get(label) || 0) + 1);
     }
     const total = Array.from(counts.values()).reduce((sum, value) => sum + value, 0);
@@ -374,9 +310,18 @@ function distributionFromValues(values: string[], normalize: (value: string) => 
         .slice(0, 6);
 }
 
-function formatCompactNumber(value: number, locale: string) {
+function formatCompactNumber(value: number) {
     const numberValue = Number(value || 0);
-    return new Intl.NumberFormat(locale === "en" ? "en-US" : "zh-CN", { notation: "compact", maximumFractionDigits: numberValue >= 100000000 ? 2 : 1 }).format(numberValue);
+    if (numberValue >= 100000000) return `${trimFixed(numberValue / 100000000, 2)}亿`;
+    if (numberValue >= 10000) return `${trimFixed(numberValue / 10000, 1)}万`;
+    return `${numberValue}`;
+}
+
+function trimFixed(value: number, digits: number) {
+    return value
+        .toFixed(digits)
+        .replace(/\.0+$/, "")
+        .replace(/(\.\d*[1-9])0+$/, "$1");
 }
 
 function chartColor(index: number) {

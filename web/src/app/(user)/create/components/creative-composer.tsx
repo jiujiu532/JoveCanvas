@@ -4,7 +4,6 @@ import { Button, Input, Popover, Tooltip } from "antd";
 import type { TextAreaRef } from "antd/es/input/TextArea";
 import { ArrowUp, Boxes, Check, ChevronLeft, ChevronRight, FileAudio, FileVideo, ImageIcon, Lightbulb, LoaderCircle, Orbit, Paperclip, Sparkles, Square, X } from "lucide-react";
 import { useEffect, useRef, useState, type MouseEventHandler, type PointerEventHandler, type RefObject, type WheelEvent } from "react";
-import { useTranslations } from "next-intl";
 
 import type { CreativeAsset } from "@/lib/creative-runtime-contract";
 import { clipboardImageFiles } from "@/lib/clipboard-image-files";
@@ -71,7 +70,6 @@ export function CreativeComposer({
     centered?: boolean;
 }) {
     const [skillPickerOpen, setSkillPickerOpen] = useState(false);
-    const t = useTranslations("workspace.create.composer");
     const [skillCategory, setSkillCategory] = useState<SkillCategory>("all");
     const { scrollRef: skillCategoryScrollRef, dragScrollProps: skillCategoryDragScrollProps } = useHorizontalMouseDragScroll<HTMLDivElement>();
     const [modelPickerOpen, setModelPickerOpen] = useState(false);
@@ -82,11 +80,11 @@ export function CreativeComposer({
         if (selectedModelCapability) setModelCategory(selectedModelCapability);
     }, [selectedModelCapability]);
 
-    const skillCategories = skillCategoryOptions(skills, t);
+    const skillCategories = skillCategoryOptions(skills);
     const visibleSkills = skills.filter((skill) => matchesSkillCategory(skill, skillCategory));
 
     return (
-        <div className={cn("mx-auto w-full max-w-[1120px]", centered ? "" : "px-3 pb-3 sm:px-6 sm:pb-5")}>
+        <div className={cn("mx-auto w-full", centered ? "max-w-[960px]" : "max-w-[1120px] px-3 pb-3 sm:px-6 sm:pb-5")}>
             <div className="creative-composer rounded-[14px] border border-[#dde2e7] bg-white p-2 shadow-[0_14px_38px_rgba(32,36,42,0.09)] dark:border-[#30363e] dark:bg-[#181b20] dark:shadow-black/30">
                 {selectedSkill || attachments.length || uploading ? (
                     <div className="flex gap-2 overflow-x-auto px-2 pb-1 pt-1">
@@ -100,8 +98,8 @@ export function CreativeComposer({
                                     type="button"
                                     className="grid size-5 shrink-0 place-items-center rounded-md text-[#7c8795] transition hover:bg-[#dfe5ec] hover:text-[#263141] dark:text-[#aab3bf] dark:hover:bg-[#343c46] dark:hover:text-white"
                                     onClick={onRemoveSkill}
-                                    aria-label={t("removeSkillWithName", { name: selectedSkill.name })}
-                                    title={t("removeSkill")}
+                                    aria-label={`移除 Skill ${selectedSkill.name}`}
+                                    title="移除 Skill"
                                 >
                                     <X className="size-3" />
                                 </button>
@@ -117,7 +115,7 @@ export function CreativeComposer({
                                         type="button"
                                         className="grid size-5 shrink-0 place-items-center rounded text-stone-400 hover:bg-stone-200 hover:text-stone-800 dark:hover:bg-stone-700 dark:hover:text-white"
                                         onClick={() => onRemoveAttachment(asset.id)}
-                                        aria-label={t("removeAttachmentWithName", { name: asset.title })}
+                                        aria-label={`移除${asset.title}`}
                                     >
                                         <X className="size-3" />
                                     </button>
@@ -126,7 +124,7 @@ export function CreativeComposer({
                         })}
                         {uploading ? (
                             <span className="flex h-9 shrink-0 items-center gap-2 px-2 text-xs text-stone-500 dark:text-stone-400">
-                                <LoaderCircle className="size-3.5 animate-spin" /> {t("uploading")}
+                                <LoaderCircle className="size-3.5 animate-spin" /> 上传中
                             </span>
                         ) : null}
                     </div>
@@ -138,7 +136,7 @@ export function CreativeComposer({
                     autoSize={{ minRows: centered ? 3 : 2, maxRows: 8 }}
                     variant="borderless"
                     className="creative-composer-input !border-0 !bg-transparent !px-3 !py-2 !text-[15px] !leading-7 !shadow-none !outline-none"
-                    placeholder={t("inputPlaceholder")}
+                    placeholder="描述你的想法，或添加参考素材"
                     onChange={(event) => onChange(event.target.value)}
                     onPaste={(event) => {
                         const files = clipboardImageFiles(event.clipboardData);
@@ -153,8 +151,8 @@ export function CreativeComposer({
                     }}
                 />
                 <div className="flex items-center gap-2 px-1 pb-1">
-                    <Tooltip title={t("addAttachment")}>
-                        <Button type="text" shape="circle" className="!size-9 !min-w-9" icon={<Paperclip className="size-4" />} onClick={onAttachment} loading={uploading} aria-label={t("addAttachment")} />
+                    <Tooltip title="添加素材">
+                        <Button type="text" shape="circle" className="!size-9 !min-w-9" icon={<Paperclip className="size-4" />} onClick={onAttachment} loading={uploading} aria-label="添加素材" />
                     </Tooltip>
                     <Popover
                         trigger="click"
@@ -163,16 +161,16 @@ export function CreativeComposer({
                         onOpenChange={setSkillPickerOpen}
                         content={
                             <div className="w-[calc(100vw-56px)] max-w-[300px] py-1 sm:w-80 sm:max-w-none">
-                                <p className="px-2 pb-2 text-sm font-semibold text-[#20242a] dark:text-[#f3f5f7]">{t("chooseCreativeSkill")}</p>
-                                {skillsLoading ? <p className="px-2 py-3 text-xs text-[#8b949f] dark:text-[#7f8996]">{t("loadingEllipsis")}</p> : null}
-                                {!skillsLoading && !skills.length ? <p className="px-2 py-3 text-xs text-[#8b949f] dark:text-[#7f8996]">{t("noSkillsAvailable")}</p> : null}
+                                <p className="px-2 pb-2 text-sm font-semibold text-[#20242a] dark:text-[#f3f5f7]">选择创作 Skill</p>
+                                {skillsLoading ? <p className="px-2 py-3 text-xs text-[#8b949f] dark:text-[#7f8996]">正在加载...</p> : null}
+                                {!skillsLoading && !skills.length ? <p className="px-2 py-3 text-xs text-[#8b949f] dark:text-[#7f8996]">暂无可用 Skill</p> : null}
                                 {skills.length ? (
                                     <div className="mb-2 grid grid-cols-[28px_minmax(0,1fr)_28px] items-center gap-1">
                                         <button
                                             type="button"
                                             className="grid size-7 place-items-center rounded-md text-[#7c8794] transition hover:bg-[#eef1f4] hover:text-[#20242a] disabled:cursor-default disabled:opacity-30 dark:text-[#929ca8] dark:hover:bg-[#292f37] dark:hover:text-white"
                                             onClick={() => skillCategoryScrollRef.current?.scrollBy({ left: -180, behavior: "smooth" })}
-                                            aria-label={t("scrollLeftSkillCategories")}
+                                            aria-label="向左查看更多 Skill 分类"
                                         >
                                             <ChevronLeft className="size-4" />
                                         </button>
@@ -182,7 +180,7 @@ export function CreativeComposer({
                                             onWheel={scrollHorizontalCategories}
                                             {...skillCategoryDragScrollProps}
                                             role="tablist"
-                                            aria-label={t("skillCategoriesAriaLabel")}
+                                            aria-label="Skill 分类，可左右滑动查看更多"
                                         >
                                             {skillCategories.map((category) => (
                                                 <button
@@ -206,7 +204,7 @@ export function CreativeComposer({
                                             type="button"
                                             className="grid size-7 place-items-center rounded-md text-[#7c8794] transition hover:bg-[#eef1f4] hover:text-[#20242a] dark:text-[#929ca8] dark:hover:bg-[#292f37] dark:hover:text-white"
                                             onClick={() => skillCategoryScrollRef.current?.scrollBy({ left: 180, behavior: "smooth" })}
-                                            aria-label={t("scrollRightSkillCategories")}
+                                            aria-label="向右查看更多 Skill 分类"
                                         >
                                             <ChevronRight className="size-4" />
                                         </button>
@@ -214,7 +212,7 @@ export function CreativeComposer({
                                 ) : null}
                                 <div className="relative">
                                     <div className="hide-scrollbar max-h-[142px] space-y-1 overflow-y-auto overscroll-contain [scrollbar-width:none] sm:max-h-[154px] [&::-webkit-scrollbar]:hidden">
-                                        {!skillsLoading && skills.length && !visibleSkills.length ? <p className="px-2 py-5 text-center text-xs text-[#8b949f] dark:text-[#7f8996]">{t("noSkillsInCategory")}</p> : null}
+                                        {!skillsLoading && skills.length && !visibleSkills.length ? <p className="px-2 py-5 text-center text-xs text-[#8b949f] dark:text-[#7f8996]">当前分类暂无可用 Skill</p> : null}
                                         {visibleSkills.map((skill) => {
                                             const selected = selectedSkill?.id === skill.id;
                                             const visual = skillOptionVisual(skill);
@@ -248,16 +246,10 @@ export function CreativeComposer({
                             </div>
                         }
                     >
-                        <Button
-                            type="text"
-                            shape="circle"
-                            className={cn("!size-9 !min-w-9", selectedSkill && "!bg-[#eef1f4] !text-[#20242a] dark:!bg-[#292f37] dark:!text-white")}
-                            icon={<Boxes className="size-4" />}
-                            aria-label={t("chooseCreativeSkill")}
-                        />
+                        <Button type="text" shape="circle" className={cn("!size-9 !min-w-9", selectedSkill && "!bg-[#eef1f4] !text-[#20242a] dark:!bg-[#292f37] dark:!text-white")} icon={<Boxes className="size-4" />} aria-label="选择创作 Skill" />
                     </Popover>
                     <span className="min-w-0 flex-1" />
-                    <Tooltip title={smartPlanning ? t("smartPlanningOn") : t("smartPlanningOff")}>
+                    <Tooltip title={smartPlanning ? "智能规划：已开启" : "智能规划：已关闭"}>
                         <Button
                             type="text"
                             shape="circle"
@@ -268,7 +260,7 @@ export function CreativeComposer({
                                     : "!bg-transparent !text-[#8b949f] hover:!bg-[#eef1f4] hover:!text-[#20242a] dark:!text-[#77818d] dark:hover:!bg-[#292f37] dark:hover:!text-white",
                             )}
                             icon={<Lightbulb className="size-4" />}
-                            aria-label={smartPlanning ? t("smartPlanningOnAria") : t("smartPlanningOffAria")}
+                            aria-label={smartPlanning ? "智能规划已开启，点击关闭" : "智能规划已关闭，点击开启"}
                             aria-pressed={smartPlanning}
                             onClick={() => {
                                 onToggleSmartPlanning();
@@ -285,21 +277,21 @@ export function CreativeComposer({
                             <div className="w-[calc(100vw-56px)] max-w-[300px] py-1 sm:w-80 sm:max-w-none">
                                 <div className="flex items-center justify-between gap-3 px-2 pb-3">
                                     <div className="min-w-0">
-                                        <p className="text-sm font-semibold text-[#20242a] dark:text-[#f3f5f7]">{t("generationModel")}</p>
-                                        <p className="mt-0.5 truncate text-[11px] text-[#8b949f] dark:text-[#7f8996]">{selectedModels.length ? t("selectedModelsCount", { count: selectedModels.length }) : t("autoMatchBySmartPlanning")}</p>
+                                        <p className="text-sm font-semibold text-[#20242a] dark:text-[#f3f5f7]">生成模型</p>
+                                        <p className="mt-0.5 truncate text-[11px] text-[#8b949f] dark:text-[#7f8996]">{selectedModels.length ? `已选择 ${selectedModels.length} 个模型` : "默认由智能规划自动匹配"}</p>
                                     </div>
                                     <button
                                         type="button"
                                         role="switch"
                                         aria-checked={smartPlanning}
-                                        aria-label={smartPlanning ? t("closeAutoSmartPlanning") : t("openAutoSmartPlanning")}
+                                        aria-label={smartPlanning ? "关闭自动智能规划" : "开启自动智能规划"}
                                         className={cn(
                                             "flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 text-xs font-medium transition-colors",
                                             smartPlanning ? "bg-[#edf4f9] text-[#315f7d] dark:bg-[#6f9fbd]/12 dark:text-[#8eb8d1]" : "text-[#7f8995] hover:bg-[#f2f4f6] dark:text-[#8b95a1] dark:hover:bg-[#292f37]",
                                         )}
                                         onClick={onToggleSmartPlanning}
                                     >
-                                        <span>{smartPlanning ? t("enabled") : t("disabled")}</span>
+                                        <span>{smartPlanning ? "已开启" : "已关闭"}</span>
                                         <span
                                             className={cn(
                                                 "relative h-5 w-9 rounded-full border transition-colors",
@@ -312,7 +304,7 @@ export function CreativeComposer({
                                 </div>
                                 <div className="grid grid-cols-3 gap-1 rounded-lg bg-[#eef1f4] p-1 dark:bg-[#252a31]">
                                     {(["image", "video", "audio"] as const).map((capability) => {
-                                        const label = capabilityLabel(capability, t);
+                                        const label = capabilityLabel(capability);
                                         const count = models.filter((model) => model.capability === capability).length;
                                         return (
                                             <button
@@ -330,9 +322,7 @@ export function CreativeComposer({
                                     })}
                                 </div>
                                 <div className="hide-scrollbar mt-2 max-h-52 space-y-1 overflow-y-auto sm:max-h-64">
-                                    {!models.some((model) => model.capability === modelCategory) ? (
-                                        <p className="px-2 py-5 text-center text-xs text-[#8b949f] dark:text-[#7f8996]">{t("noModelsForCapability", { capability: capabilityLabel(modelCategory, t) })}</p>
-                                    ) : null}
+                                    {!models.some((model) => model.capability === modelCategory) ? <p className="px-2 py-5 text-center text-xs text-[#8b949f] dark:text-[#7f8996]">当前未配置可用的{capabilityLabel(modelCategory)}模型</p> : null}
                                     {models
                                         .filter((model) => model.capability === modelCategory)
                                         .map((model) => {
@@ -352,7 +342,7 @@ export function CreativeComposer({
                                                     </span>
                                                     <span className="min-w-0 flex-1">
                                                         <span className="block truncate text-xs font-medium">{model.name}</span>
-                                                        <span className="mt-0.5 block text-[11px] leading-4 text-[#8b949f] dark:text-[#7f8996]">{t("modelCapabilityHint", { capability: capabilityLabel(model.capability, t) })}</span>
+                                                        <span className="mt-0.5 block text-[11px] leading-4 text-[#8b949f] dark:text-[#7f8996]">{capabilityLabel(model.capability)}模型 · 可与其他模型同时生成</span>
                                                     </span>
                                                     <span
                                                         className={cn(
@@ -372,7 +362,7 @@ export function CreativeComposer({
                                         className="mt-2 w-full rounded-lg px-2 py-2 text-xs font-medium text-[#6d7784] transition hover:bg-[#f3f5f7] hover:text-[#20242a] dark:text-[#98a2ae] dark:hover:bg-[#252a31] dark:hover:text-white"
                                         onClick={onClearModels}
                                     >
-                                        {t("clearSelectionRestoreSmart")}
+                                        清除选择并恢复智能规划
                                     </button>
                                 ) : null}
                             </div>
@@ -383,15 +373,15 @@ export function CreativeComposer({
                             shape="circle"
                             className={cn("relative !size-9 !min-w-9 !text-[#6f7b89] dark:!text-[#96a0ac]", selectedModels.length && "!bg-[#eef1f4] !text-[#20242a] dark:!bg-[#292f37] dark:!text-white")}
                             icon={<Orbit className="size-4" />}
-                            aria-label={t("selectGenerationModel")}
-                            title={selectedModels.length ? t("selectedModelsCount", { count: selectedModels.length }) : t("selectGenerationModel")}
+                            aria-label="选择生成模型"
+                            title={selectedModels.length ? `已选择 ${selectedModels.length} 个模型` : "选择生成模型"}
                         >
                             {selectedModels.length ? (
                                 <span className="absolute -right-0.5 -top-0.5 grid size-4 place-items-center rounded-full bg-[#20242a] text-[9px] font-semibold text-white dark:bg-white dark:text-[#20242a]">{selectedModels.length}</span>
                             ) : null}
                         </Button>
                     </Popover>
-                    <Tooltip title={busy ? t("stopGeneration") : t("send")}>
+                    <Tooltip title={busy ? "停止生成" : "发送"}>
                         <Button
                             type="primary"
                             shape="circle"
@@ -399,7 +389,7 @@ export function CreativeComposer({
                             icon={busy ? <Square className="size-3.5 fill-current" /> : <ArrowUp className="size-4" />}
                             disabled={!busy && !value.trim()}
                             onClick={busy ? onCancel : onSubmit}
-                            aria-label={busy ? t("stopGeneration") : t("send")}
+                            aria-label={busy ? "停止生成" : "发送"}
                         />
                     </Tooltip>
                 </div>
@@ -408,8 +398,8 @@ export function CreativeComposer({
     );
 }
 
-function capabilityLabel(capability: ModelCapability, t: ReturnType<typeof useTranslations>) {
-    return capability === "image" ? t("capabilityImage") : capability === "video" ? t("capabilityVideo") : t("capabilityAudio");
+function capabilityLabel(capability: ModelCapability) {
+    return capability === "image" ? "图片" : capability === "video" ? "视频" : "音频";
 }
 
 function scrollHorizontalCategories(event: WheelEvent<HTMLDivElement>) {
@@ -426,7 +416,6 @@ function useHorizontalMouseDragScroll<T extends HTMLElement>() {
     const onPointerDown: PointerEventHandler<T> = (event) => {
         if (event.pointerType !== "mouse" || event.button !== 0) return;
         dragRef.current = { pointerId: event.pointerId, startX: event.clientX, startScrollLeft: event.currentTarget.scrollLeft, moved: false };
-        event.currentTarget.setPointerCapture(event.pointerId);
     };
 
     const onPointerMove: PointerEventHandler<T> = (event) => {
@@ -434,7 +423,10 @@ function useHorizontalMouseDragScroll<T extends HTMLElement>() {
         if (drag.pointerId !== event.pointerId) return;
         const distance = event.clientX - drag.startX;
         if (!drag.moved && Math.abs(distance) < 4) return;
-        drag.moved = true;
+        if (!drag.moved) {
+            drag.moved = true;
+            event.currentTarget.setPointerCapture(event.pointerId);
+        }
         event.preventDefault();
         event.currentTarget.scrollLeft = drag.startScrollLeft - distance;
     };
@@ -465,14 +457,14 @@ function useHorizontalMouseDragScroll<T extends HTMLElement>() {
     };
 }
 
-function skillCategoryOptions(skills: SkillOption[], t: ReturnType<typeof useTranslations>) {
+function skillCategoryOptions(skills: SkillOption[]) {
     const categories: Array<{ id: SkillCategory; label: string }> = [
-        { id: "all", label: t("categoryAll") },
-        { id: "image", label: t("categoryImage") },
-        { id: "video", label: t("categoryVideo") },
-        { id: "canvas", label: t("categoryCanvas") },
-        { id: "drama", label: t("categoryDrama") },
-        { id: "edit", label: t("categoryEdit") },
+        { id: "all", label: "全部" },
+        { id: "image", label: "图片" },
+        { id: "video", label: "视频" },
+        { id: "canvas", label: "画布" },
+        { id: "drama", label: "短剧" },
+        { id: "edit", label: "编辑" },
     ];
     return categories.map((category) => ({ ...category, count: skills.filter((skill) => matchesSkillCategory(skill, category.id)).length })).filter((category) => category.id === "all" || category.count > 0);
 }

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { Image, Modal } from "antd";
 import type { ImageProps } from "antd";
 import { Maximize2, PlayCircle } from "lucide-react";
-import { useTranslations } from "next-intl";
 
 import { imagePreviewUrl } from "@/lib/media-image-url";
 import { cn } from "@/lib/utils";
@@ -36,7 +35,6 @@ export function AgentMediaPreview({
     fit?: "cover" | "contain";
     onDimensions?: (width: number, height: number) => void;
 }) {
-    const t = useTranslations("layout");
     const [videoOpen, setVideoOpen] = useState(false);
     const mediaRootRef = useRef<HTMLDivElement>(null);
 
@@ -65,9 +63,9 @@ export function AgentMediaPreview({
                 <Image
                     src={thumbnailUrl}
                     alt={title}
-                    className={cn("!block", fit === "contain" ? "!h-auto !max-h-[min(42dvh,360px)] !w-auto !max-w-full object-contain" : "!h-full !w-full object-cover")}
+                    className={cn("!block", fit === "contain" ? "!size-full object-contain" : "!h-full !w-full object-cover")}
                     classNames={{
-                        root: cn("cursor-zoom-in overflow-hidden", fit === "contain" ? "!flex !h-auto !max-h-[min(42dvh,360px)] !w-full !items-center !justify-center" : "!block !h-full !w-full"),
+                        root: cn("cursor-zoom-in overflow-hidden", fit === "contain" ? "!block !size-full" : "!block !h-full !w-full"),
                         popup: { root: "agent-media-image-preview" },
                     }}
                     styles={agentMediaPreviewPopupStyles}
@@ -77,7 +75,7 @@ export function AgentMediaPreview({
                         cover: (
                             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-white">
                                 <Maximize2 className="size-3.5" />
-                                {t("agent.media.viewLarge")}
+                                查看大图
                             </span>
                         ),
                     }}
@@ -89,8 +87,8 @@ export function AgentMediaPreview({
         return (
             <>
                 <div ref={mediaRootRef} className={cn("group/media relative overflow-hidden bg-black text-white", className)}>
-                    <button type="button" className="block size-full" onClick={() => setVideoOpen(true)} aria-label={t("agent.media.openVideo", { title })}>
-                        <video src={url} muted playsInline preload="metadata" className="size-full object-cover" />
+                    <button type="button" className="block size-full" onClick={() => setVideoOpen(true)} aria-label={`打开视频：${title}`}>
+                        <video src={url} muted playsInline preload="metadata" className={cn("size-full", fit === "contain" ? "object-contain" : "object-cover")} />
                         <span className="absolute inset-0 grid place-items-center bg-black/10 transition group-hover/media:bg-black/20">
                             <span className="grid size-11 place-items-center rounded-full bg-black/55 shadow-sm backdrop-blur-sm">
                                 <PlayCircle className="size-6" />

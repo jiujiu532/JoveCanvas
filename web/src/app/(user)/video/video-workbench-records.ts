@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 
 import { normalizeVideoResolutionValue, normalizeVideoSizeValue } from "@/components/video-settings-panel";
 import { browserReadableMediaUrl, isRemoteMediaUrl } from "@/lib/browser-media-url";
-import { resolveClientStoreLocale } from "@/lib/client-store-locale";
+import { generationLogPublicPrompt, type GenerationLogReferenceSnapshot, type GenerationLogRequestSnapshot, type GenerationLogSlotSnapshot, type GenerationLogSnapshotParameters } from "@/lib/generation-log-snapshot";
 import { boolConfig, isSeedanceVideoConfig, normalizeSeedanceRatio } from "@/lib/seedance-video";
 import { resolveMediaUrl } from "@/services/file-storage";
 import { resolveImageUrl } from "@/services/image-storage";
@@ -14,32 +14,9 @@ import type { AiConfig } from "@/stores/use-config-store";
 import type { ReferenceImage } from "@/types/image";
 import type { ReferenceAudio, ReferenceVideo } from "@/types/media";
 
-// 工作台记录用户可见文案：按 cookie 语言，默认中文
-const STORE_MESSAGES = {
-    zh: {
-        summaryPending: "视频生成中",
-        summaryFailed: "视频生成失败",
-        summaryComplete: "视频生成完成",
-        untitled: "未命名",
-        generationFailed: "生成失败",
-        audioDurationLimit: "已忽略不符合时长限制的参考音频：单段须 2-15 秒，总时长不超过 15 秒",
-    },
-    en: {
-        summaryPending: "Video generation in progress",
-        summaryFailed: "Video generation failed",
-        summaryComplete: "Video generation completed",
-        untitled: "Untitled",
-        generationFailed: "Generation failed",
-        audioDurationLimit: "Ignored reference audio outside the duration limits: each clip must be 2-15 seconds, and total duration cannot exceed 15 seconds",
-    },
-} as const;
-
-function storeMessage(key: keyof (typeof STORE_MESSAGES)["zh"]) {
-    return STORE_MESSAGES[resolveClientStoreLocale()][key];
-}
-
 export type GeneratedVideo = {
     id: string;
+    slotId?: string;
     url: string;
     remoteUrl?: string;
     serverUrl?: string;
@@ -54,6 +31,7 @@ export type GeneratedVideo = {
 export type GenerationFailure = {
     resultId: string;
     error: string;
+    canRetry?: boolean;
 };
 
 export type GenerationResult = {
@@ -61,6 +39,7 @@ export type GenerationResult = {
     status: "pending" | "success" | "failed";
     video?: GeneratedVideo;
     error?: string;
+    canRetry?: boolean;
 };
 
 export type GenerationLog = {
@@ -80,19 +59,20 @@ export type GenerationLog = {
     size: string;
     resolution: string;
     seconds: string;
-    status: "pending" | "success" | "failed";
+    status: "生成中" | "成功" | "失败";
     task?: VideoGenerationTask;
     taskStartedAt?: number;
     taskResultId?: string;
     video?: GeneratedVideo;
     videos?: GeneratedVideo[];
     failures?: GenerationFailure[];
+    requestSnapshot?: GenerationLogRequestSnapshot;
     error?: string;
     resultDeleted?: boolean;
 };
 
 export type GenerationLogConfig = Pick<AiConfig, "model" | "videoModel" | "size" | "vquality" | "videoSeconds" | "videoGenerateAudio" | "videoWatermark">;
-export type GenerationSnapshot = { text: string; config: AiConfig; references: ReferenceImage[]; videoReferences: ReferenceVideo[]; audioReferences: ReferenceAudio[] };
+export type GenerationSnapshot = { text: string; userText?: string; config: AiConfig; references: ReferenceImage[]; videoReferences: ReferenceVideo[]; audioReferences: ReferenceAudio[] };
 export type ReferenceDropTarget = "image" | "video" | "audio";
 
 export async function readStoredLogs(userId: string) {
@@ -122,12 +102,16 @@ export async function readServerVideoLogs() {
 
 export async function serverVideoLogToWorkbenchLog(record: StoredGenerationLogRecord): Promise<GenerationLog> {
     const createdAt = Date.parse(record.createdAt) || Date.now();
+    const snapshot = record.requestSnapshot;
+    const slotsByAssetIndex = new Map((snapshot?.slots || []).filter((slot) => slot.status === "success" && slot.assetIndex !== undefined).map((slot) => [slot.assetIndex!, slot]));
     const videos: GeneratedVideo[] = record.assets.flatMap((asset, index) => {
         const url = browserReadableMediaUrl(asset.serverUrl || asset.url || asset.remoteUrl || "");
         if (!url) return [];
+        const slot = slotsByAssetIndex.get(index);
         return [
             {
                 id: `${serverVideoLogId(record)}:${index}`,
+                slotId: slot?.id,
                 url,
                 remoteUrl: asset.remoteUrl,
                 serverUrl: asset.serverUrl,
@@ -140,26 +124,51 @@ export async function serverVideoLogToWorkbenchLog(record: StoredGenerationLogRe
             },
         ];
     });
+    const parameters = snapshot?.parameters || {};
+    const pendingSlot = snapshot?.slots.find((slot) => slot.status === "pending" && slot.taskId);
+    const task = pendingSlot?.taskId
+        ? {
+              id: pendingSlot.taskId,
+              provider: pendingSlot.taskProvider || "generation",
+              model: pendingSlot.taskModel || parameters.model || record.model,
+              pollPath: pendingSlot.taskPollPath,
+              resultUrl: pendingSlot.taskResultUrl,
+              serverTaskId: pendingSlot.serverTaskId,
+          }
+        : undefined;
+    const restoredReferences = (snapshot?.references || []).flatMap(referenceFromSnapshot);
     return normalizeLog({
         id: serverVideoLogId(record),
         creativeConversationId: record.conversationId,
         createdAt,
         title: record.title || record.prompt || record.model,
         prompt: record.prompt,
-        time: new Date(createdAt).toLocaleString(resolveClientStoreLocale() === "en" ? "en-US" : "zh-CN", { hour12: false }),
+        time: new Date(createdAt).toLocaleString("zh-CN", { hour12: false }),
         model: record.model,
-        config: { model: record.model, videoModel: record.model, size: "", vquality: "", videoSeconds: "", videoGenerateAudio: "true", videoWatermark: "false" },
-        references: [],
-        videoReferences: [],
-        audioReferences: [],
+        config: {
+            model: parameters.model || record.model,
+            videoModel: parameters.model || record.model,
+            size: parameters.size || "",
+            vquality: parameters.resolution || "",
+            videoSeconds: parameters.seconds || "",
+            videoGenerateAudio: parameters.generateAudio || "true",
+            videoWatermark: parameters.watermark || "false",
+        },
+        references: restoredReferences.flatMap((item) => (item.kind === "image" ? [item.value] : [])),
+        videoReferences: restoredReferences.flatMap((item) => (item.kind === "video" ? [item.value] : [])),
+        audioReferences: restoredReferences.flatMap((item) => (item.kind === "audio" ? [item.value] : [])),
         durationMs: record.durationMs || 0,
         size: "",
         resolution: "",
         seconds: "",
-        status: record.status === "pending" ? "pending" : record.status === "failed" ? "failed" : "success",
+        status: record.status === "pending" ? "生成中" : record.status === "failed" ? "失败" : "成功",
+        task,
+        taskStartedAt: pendingSlot?.startedAt,
+        taskResultId: pendingSlot?.id,
         video: videos[videos.length - 1],
         videos,
-        failures: record.status === "failed" ? [{ resultId: serverVideoLogId(record), error: record.error || storeMessage("generationFailed") }] : [],
+        failures: (snapshot?.slots || []).flatMap((slot) => (slot.status === "failed" ? [{ resultId: slot.id, error: slot.error || record.error || "生成失败", canRetry: slot.canRetry === true }] : [])),
+        requestSnapshot: snapshot,
         error: record.error,
         resultDeleted: !videos.length && record.status === "success",
     });
@@ -189,19 +198,20 @@ export async function recordVideoGenerationLog(log: GenerationLog) {
             id: `video-workbench:${log.id}`,
             kind: "video",
             source: "video-workbench",
-            status: log.status === "success" ? "success" : log.status === "failed" ? "failed" : "pending",
+            status: log.status === "成功" ? "success" : log.status === "失败" ? "failed" : "pending",
             title: log.title,
             prompt: log.prompt,
             model: log.model || log.config.videoModel || log.config.model,
-            summary: log.status === "success" ? storeMessage("summaryComplete") : log.status === "failed" ? storeMessage("summaryFailed") : storeMessage("summaryPending"),
+            summary: log.status === "成功" ? "视频生成完成" : log.status === "失败" ? "视频生成失败" : "视频生成中",
             durationMs: log.durationMs,
             count: Math.max(1, resultsFromLog(log).length),
             successCount: videos.length,
-            failCount: log.failures?.length || (log.status === "failed" ? 1 : 0),
+            failCount: log.failures?.length || (log.status === "失败" ? 1 : 0),
             assets,
+            requestSnapshot: log.requestSnapshot,
             error: log.error,
             createdAt: log.createdAt,
-            completedAt: Date.now(),
+            completedAt: log.status === "生成中" ? undefined : Date.now(),
         })
     ).assets[0];
 }
@@ -219,9 +229,9 @@ export async function normalizeLog(log: Partial<GenerationLog>): Promise<Generat
         ownerUserId: log.ownerUserId,
         creativeConversationId: log.creativeConversationId,
         createdAt: log.createdAt || Date.now(),
-        title: log.title || log.model || storeMessage("untitled"),
+        title: log.title || log.model || "未命名",
         prompt: log.prompt || "",
-        time: log.time || new Date().toLocaleString(resolveClientStoreLocale() === "en" ? "en-US" : "zh-CN", { hour12: false }),
+        time: log.time || new Date().toLocaleString("zh-CN", { hour12: false }),
         model: log.model || config.videoModel || "",
         config,
         references,
@@ -231,13 +241,14 @@ export async function normalizeLog(log: Partial<GenerationLog>): Promise<Generat
         size: log.size || config.size || "",
         resolution: normalizeResolution(log.resolution || config.vquality || ""),
         seconds: log.seconds || config.videoSeconds || "",
-        status: log.status || "success",
+        status: log.status || "成功",
         task: log.task,
         taskStartedAt: log.taskStartedAt,
         taskResultId: log.taskResultId,
         video: videos[videos.length - 1],
         videos,
         failures: log.failures || [],
+        requestSnapshot: log.requestSnapshot,
         error: log.error,
         resultDeleted: Boolean(log.resultDeleted),
     };
@@ -269,9 +280,9 @@ export function serializeLog(log: GenerationLog): GenerationLog {
 
 export function resultsFromLog(log: GenerationLog): GenerationResult[] {
     if (log.resultDeleted) return [];
-    const results: GenerationResult[] = (log.videos?.length ? log.videos : log.video ? [log.video] : []).map((video) => ({ id: video.id, status: "success", video }));
-    (log.failures || []).forEach((failure) => results.push({ id: failure.resultId, status: "failed", error: failure.error }));
-    if (log.status === "pending" && log.task) results.push({ id: log.taskResultId || log.id, status: "pending" });
+    const results: GenerationResult[] = (log.videos?.length ? log.videos : log.video ? [log.video] : []).map((video) => ({ id: video.slotId || video.id, status: "success", video }));
+    (log.failures || []).forEach((failure) => results.push({ id: failure.resultId, status: "failed", error: failure.error, ...(failure.canRetry ? { canRetry: true } : {}) }));
+    if (log.status === "生成中" && log.task) results.push({ id: log.taskResultId || log.id, status: "pending" });
     if (!results.length && log.error) results.push({ id: log.id, status: "failed", error: log.error });
     return results;
 }
@@ -296,7 +307,7 @@ export function filterAudioReferencesByDuration(existing: ReferenceAudio[], next
         total += item.durationMs || 0;
         accepted.push(item);
     }
-    if (skipped) warn(storeMessage("audioDurationLimit"));
+    if (skipped) warn("已忽略不符合时长要求的参考音频：单个 2-15 秒，总时长不超过 15 秒");
     return accepted;
 }
 
@@ -312,10 +323,11 @@ export function replaceResult(results: GenerationResult[], resultId: string, nex
 
 export function buildLogFromVideoResults(baseLog: GenerationLog | null, snapshot: GenerationSnapshot, results: GenerationResult[], durationMs: number, error?: string, pending?: { task: VideoGenerationTask; taskResultId: string }): GenerationLog {
     const videos = results.flatMap((result) => (result.status === "success" && result.video ? [result.video] : []));
-    const failures = results.flatMap((result) => (result.status === "failed" ? [{ resultId: result.id, error: result.error || error || storeMessage("generationFailed") }] : []));
+    const failures = results.flatMap((result) => (result.status === "failed" ? [{ resultId: result.id, error: result.error || error || "生成失败", canRetry: result.canRetry === true }] : []));
     const hasPending = results.some((result) => result.status === "pending");
-    const status: GenerationLog["status"] = hasPending ? "pending" : videos.length ? "success" : "failed";
+    const status: GenerationLog["status"] = hasPending ? "生成中" : videos.length ? "成功" : "失败";
     const latestVideo = videos[videos.length - 1];
+    const requestSnapshot = mergeVideoRequestSnapshot(baseLog?.requestSnapshot, snapshot, results, pending, error || failures[0]?.error);
     return buildLog({
         baseLog,
         prompt: snapshot.text,
@@ -331,18 +343,41 @@ export function buildLogFromVideoResults(baseLog: GenerationLog | null, snapshot
         video: latestVideo,
         videos,
         failures,
+        requestSnapshot,
         error: error || failures[0]?.error,
         resultDeleted: !results.length,
     });
 }
 
-export function snapshotFromLog(log: GenerationLog, config: AiConfig): GenerationSnapshot {
+export function snapshotFromLog(log: GenerationLog, config: AiConfig, resultId?: string): GenerationSnapshot {
+    const slot = resultId ? log.requestSnapshot?.slots.find((item) => item.id === resultId) : undefined;
+    const parameters = { ...log.requestSnapshot?.parameters, ...slot?.parameters };
+    const referenceIds = slot?.referenceIds?.length ? new Set(slot.referenceIds) : undefined;
+    const restoredReferences = (log.requestSnapshot?.references || []).filter((item) => !referenceIds || referenceIds.has(item.id)).flatMap(referenceFromSnapshot);
+    const imageReferences = restoredReferences.flatMap((item) => (item.kind === "image" ? [item.value] : []));
+    const videoReferences = restoredReferences.flatMap((item) => (item.kind === "video" ? [item.value] : []));
+    const audioReferences = restoredReferences.flatMap((item) => (item.kind === "audio" ? [item.value] : []));
+    const model = parameters.model || log.config.videoModel || log.model || config.videoModel || config.model;
     return {
-        text: log.prompt,
-        config,
-        references: log.references || [],
-        videoReferences: log.videoReferences || [],
-        audioReferences: log.audioReferences || [],
+        text: slot?.prompt || log.prompt,
+        userText: generationLogPublicPrompt(log),
+        config: buildVideoConfig(
+            {
+                ...config,
+                ...log.config,
+                model,
+                videoModel: model,
+                size: parameters.size || log.config.size || config.size,
+                vquality: parameters.resolution || log.config.vquality || config.vquality,
+                videoSeconds: parameters.seconds || log.config.videoSeconds || config.videoSeconds,
+                videoGenerateAudio: parameters.generateAudio || log.config.videoGenerateAudio || config.videoGenerateAudio,
+                videoWatermark: parameters.watermark || log.config.videoWatermark || config.videoWatermark,
+            },
+            model,
+        ),
+        references: imageReferences.length ? imageReferences : log.references || [],
+        videoReferences: videoReferences.length ? videoReferences : log.videoReferences || [],
+        audioReferences: audioReferences.length ? audioReferences : log.audioReferences || [],
     };
 }
 
@@ -361,6 +396,7 @@ export function buildLog({
     video,
     videos,
     failures,
+    requestSnapshot,
     error,
     resultDeleted,
 }: {
@@ -378,6 +414,7 @@ export function buildLog({
     video?: GeneratedVideo;
     videos?: GeneratedVideo[];
     failures?: GenerationFailure[];
+    requestSnapshot: GenerationLogRequestSnapshot;
     error?: string;
     resultDeleted?: boolean;
 }): GenerationLog {
@@ -395,9 +432,9 @@ export function buildLog({
         id: baseLog?.id || nanoid(),
         creativeConversationId: baseLog?.creativeConversationId,
         createdAt: baseLog?.createdAt || Date.now(),
-        title: baseLog?.title || prompt.slice(0, 12) || storeMessage("untitled"),
+        title: baseLog?.title || requestSnapshot.userPrompt?.slice(0, 12) || prompt.slice(0, 12) || "未命名",
         prompt,
-        time: new Date().toLocaleString(resolveClientStoreLocale() === "en" ? "en-US" : "zh-CN", { hour12: false }),
+        time: new Date().toLocaleString("zh-CN", { hour12: false }),
         model,
         config: logConfig,
         references,
@@ -414,6 +451,7 @@ export function buildLog({
         video: video || nextVideos[nextVideos.length - 1],
         videos: nextVideos,
         failures,
+        requestSnapshot,
         error,
         resultDeleted,
     };
@@ -461,6 +499,114 @@ export function normalizeLogConfig(log: Partial<GenerationLog>): GenerationLogCo
         videoGenerateAudio: log.config?.videoGenerateAudio || "true",
         videoWatermark: log.config?.videoWatermark || "false",
     };
+}
+
+function mergeVideoRequestSnapshot(
+    base: GenerationLogRequestSnapshot | undefined,
+    snapshot: GenerationSnapshot,
+    results: GenerationResult[],
+    pending: { task: VideoGenerationTask; taskResultId: string } | undefined,
+    error?: string,
+): GenerationLogRequestSnapshot {
+    const parameters = videoSnapshotParameters(snapshot.config);
+    const currentReferences = [...snapshot.references.map(imageReferenceSnapshot), ...snapshot.videoReferences.map(videoReferenceSnapshot), ...snapshot.audioReferences.map(audioReferenceSnapshot)];
+    const references = Array.from(new Map([...(base?.references || []), ...currentReferences].map((item) => [item.id, item])).values());
+    const currentReferenceIds = currentReferences.map((item) => item.id);
+    const previousSlots = new Map((base?.slots || []).map((slot) => [slot.id, slot]));
+    let assetIndex = 0;
+    const slots = results.map((result, index): GenerationLogSlotSnapshot => {
+        const previous = previousSlots.get(result.id);
+        const task = pending?.taskResultId === result.id ? pending.task : undefined;
+        const slot: GenerationLogSlotSnapshot = {
+            ...previous,
+            id: result.id,
+            index,
+            status: result.status,
+            prompt: previous?.prompt || snapshot.text,
+            parameters: previous?.parameters || parameters,
+            referenceIds: previous?.referenceIds || currentReferenceIds,
+            assetIndex: result.status === "success" ? assetIndex : undefined,
+            taskId: task?.id || previous?.taskId,
+            taskProvider: task?.provider || previous?.taskProvider,
+            taskModel: task?.model || previous?.taskModel || parameters.model,
+            taskPollPath: task?.pollPath || previous?.taskPollPath,
+            taskResultUrl: task?.resultUrl || previous?.taskResultUrl,
+            serverTaskId: task?.serverTaskId || previous?.serverTaskId,
+            startedAt: task ? Date.now() : previous?.startedAt,
+            error: result.status === "failed" ? result.error || error || previous?.error || "生成失败" : undefined,
+            canRetry: result.status === "failed" ? result.canRetry === true : undefined,
+        };
+        if (result.status === "success") assetIndex += 1;
+        return slot;
+    });
+    const userPrompt = base?.userPrompt || snapshot.userText || snapshot.text;
+    return { version: 1, userPrompt, parameters, references, slots };
+}
+
+function videoSnapshotParameters(config: AiConfig | GenerationLogConfig): GenerationLogSnapshotParameters {
+    return {
+        model: config.videoModel || config.model,
+        size: config.size,
+        resolution: config.vquality,
+        seconds: config.videoSeconds,
+        generateAudio: config.videoGenerateAudio,
+        watermark: config.videoWatermark,
+    };
+}
+
+function imageReferenceSnapshot(reference: ReferenceImage): GenerationLogReferenceSnapshot {
+    return mediaReferenceSnapshot("image", reference.id, reference.name, reference.type, reference.serverUrl || reference.url || reference.remoteUrl || reference.dataUrl, reference.storageKey, {
+        width: reference.width,
+        height: reference.height,
+    });
+}
+
+function videoReferenceSnapshot(reference: ReferenceVideo): GenerationLogReferenceSnapshot {
+    return mediaReferenceSnapshot("video", reference.id, reference.name, reference.type, reference.url, reference.storageKey, reference);
+}
+
+function audioReferenceSnapshot(reference: ReferenceAudio): GenerationLogReferenceSnapshot {
+    return mediaReferenceSnapshot("audio", reference.id, reference.name, reference.type, reference.url, reference.storageKey, reference);
+}
+
+function mediaReferenceSnapshot(
+    kind: GenerationLogReferenceSnapshot["kind"],
+    id: string,
+    name: string,
+    mimeType: string,
+    candidateUrl: string,
+    storageKey?: string,
+    metadata: { bytes?: number; width?: number; height?: number; durationMs?: number } = {},
+): GenerationLogReferenceSnapshot {
+    const url = candidateUrl && !/^(?:data|blob):/i.test(candidateUrl) ? candidateUrl : undefined;
+    return { id, kind, name, mimeType, url, serverUrl: url?.startsWith("/api/") ? url : undefined, storageKey, ...metadata };
+}
+
+function referenceFromSnapshot(reference: GenerationLogReferenceSnapshot): Array<{ kind: "image"; value: ReferenceImage } | { kind: "video"; value: ReferenceVideo } | { kind: "audio"; value: ReferenceAudio }> {
+    const url = browserReadableMediaUrl(reference.serverUrl || reference.url || reference.remoteUrl || "");
+    if (!url && !reference.storageKey) return [];
+    if (reference.kind === "image") {
+        return [
+            {
+                kind: "image",
+                value: {
+                    id: reference.id,
+                    name: reference.name,
+                    type: reference.mimeType,
+                    dataUrl: url,
+                    url: reference.url,
+                    remoteUrl: reference.remoteUrl,
+                    serverUrl: reference.serverUrl,
+                    storageKey: reference.storageKey,
+                    width: reference.width,
+                    height: reference.height,
+                },
+            },
+        ];
+    }
+    const value = { id: reference.id, name: reference.name, type: reference.mimeType, url, storageKey: reference.storageKey, durationMs: reference.durationMs };
+    if (reference.kind === "video") return [{ kind: "video", value: { ...value, bytes: reference.bytes, width: reference.width, height: reference.height } }];
+    return [{ kind: "audio", value }];
 }
 
 function serverVideoLogId(record: StoredGenerationLogRecord) {

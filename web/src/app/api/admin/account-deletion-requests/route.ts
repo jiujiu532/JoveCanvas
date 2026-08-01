@@ -4,14 +4,13 @@ import { ACCOUNT_DELETION_REQUEST_STATUSES, type AccountDeletionRequestStatus } 
 import { getCurrentUser } from "@/lib/auth/session";
 import { listAdminAccountDeletionRequests } from "@/lib/server/account-deletion-request-service";
 
-import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ code: 403, data: null, msg: await serverMessage("common.adminRequired") }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ code: 403, data: null, msg: "需要管理员权限" }, { status: 403 });
 
     const params = new URL(request.url).searchParams;
     const statusValue = params.get("status");

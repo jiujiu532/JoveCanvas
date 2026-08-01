@@ -12,8 +12,11 @@ import {
     updateCreativeConversation,
 } from "@/lib/server/creative-runtime-store";
 import { writePersistentMediaDataUrl } from "@/lib/server/reference-asset-store";
+import { getLocalMediaRegistrations } from "@/lib/server/local-media-registry";
 import { getCreativeWorkbenchSessionDetail, listCreativeWorkbenchSessionSummaries } from "@/lib/server/creative-workbench-session-store";
 import type { WorkbenchWorkspace } from "@/lib/workbench-session-contract";
+import { normalizeWorkbenchAgentAttachments, type WorkbenchAgentAttachment } from "@/lib/workbench-agent-attachment";
+import { WORKBENCH_PUBLIC_MESSAGE_VISIBILITY } from "@/lib/workbench-session-contract";
 
 export class CreativeRuntimeServiceError extends Error {
     constructor(
@@ -127,16 +130,38 @@ export async function uploadAssetForUser(userId: string, conversationId: string,
     return asset;
 }
 
-export async function appendWorkbenchExchangeForUser(userId: string, input: { conversationId: string; workspace: "image" | "video"; prompt: string; reply: string }) {
+export async function appendWorkbenchExchangeForUser(userId: string, input: { conversationId: string; workspace: "image" | "video"; prompt: string; reply: string; requestId?: string; attachments?: unknown }) {
     const conversation = await getConversationForUser(userId, input.conversationId);
     if (conversation.surface !== "chat" || conversation.source !== `${input.workspace}-workbench`) throw new CreativeRuntimeServiceError("工作台会话入口不正确", 409);
+    const attachments = await validateWorkbenchAttachments(userId, input.attachments);
     return appendCreativeConversationExchange({
         userId,
         conversationId: conversation.id,
         userContent: input.prompt,
         assistantContent: input.reply,
-        userMetadata: { workspace: input.workspace },
-        assistantMetadata: { workspace: input.workspace },
+        ...(input.requestId ? { runId: input.requestId } : {}),
+        userMetadata: { workspace: input.workspace, contentVisibility: WORKBENCH_PUBLIC_MESSAGE_VISIBILITY, ...(attachments.length ? { attachments } : {}) },
+        assistantMetadata: { workspace: input.workspace, contentVisibility: WORKBENCH_PUBLIC_MESSAGE_VISIBILITY },
+    });
+}
+
+async function validateWorkbenchAttachments(userId: string, value: unknown): Promise<WorkbenchAgentAttachment[]> {
+    if (value === undefined) return [];
+    const input = Array.isArray(value) ? value : [];
+    const requested = normalizeWorkbenchAgentAttachments(value);
+    if (!input.length || requested.length !== input.length) throw new CreativeRuntimeServiceError("参考素材信息无效", 400);
+    const registrations = await getLocalMediaRegistrations(requested.map((item) => item.storageKey));
+    const registrationByKey = new Map(registrations.map((item) => [item.storageKey, item]));
+    return requested.map((item) => {
+        const registration = registrationByKey.get(item.storageKey);
+        if (!registration || registration.ownerUserId !== userId || registration.storageClass !== "permanent" || registration.type !== item.kind) throw new CreativeRuntimeServiceError("参考素材不存在或无权访问", 404);
+        const prefix = registration.scope === "generation" ? "/api/generation-log-assets/" : "/api/reference-assets/";
+        return {
+            ...item,
+            name: registration.originalName || item.name,
+            url: `${prefix}${registration.storageKey.split("/").map(encodeURIComponent).join("/")}`,
+            mimeType: registration.mimeType,
+        };
     });
 }
 

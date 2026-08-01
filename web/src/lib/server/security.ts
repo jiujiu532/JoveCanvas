@@ -29,6 +29,8 @@ const generationRateLimits: Record<GenerationRateLimitType, RateLimitConfig> = {
 const mediaProxyRateLimit: RateLimitConfig = { maxRequests: 120, windowMs: 60 * 1000 };
 const localMediaRateLimit: RateLimitConfig = { maxRequests: 240, windowMs: 60 * 1000 };
 const signedMediaRateLimit: RateLimitConfig = { maxRequests: 60, windowMs: 60 * 1000 };
+const publicMediaResourceRateLimit: RateLimitConfig = { maxRequests: 2400, windowMs: 60 * 1000 };
+const publicMediaIpRateLimit: RateLimitConfig = { maxRequests: 240, windowMs: 60 * 1000 };
 
 const blockedHostnames = ["metadata.google.internal", "metadata.goog", "metadata.azure.com", "instance-data"];
 
@@ -40,10 +42,7 @@ const rateLimits = (globalSecurityStore.__vozebProRateLimits ??= new Map<string,
 
 export function getClientIp(request: Request) {
     const trustedProxyHops = readTrustedProxyHops();
-    if (trustedProxyHops <= 0) {
-        // hops=0: do not trust XFF, but still accept platform-provided client IP headers when present.
-        return request.headers.get("cf-connecting-ip")?.trim() || request.headers.get("x-real-ip")?.trim() || "unknown";
-    }
+    if (trustedProxyHops <= 0) return "unknown";
 
     const forwarded = request.headers
         .get("x-forwarded-for")
@@ -98,6 +97,16 @@ export async function checkLocalMediaRateLimit(identity: string, request: Reques
     return ipLimit.allowed ? identityLimit : ipLimit;
 }
 
+export async function checkPublicMediaRateLimit(resource: string, request: Request) {
+    const resourceLimit = await checkRateLimit(`public-media:resource:${resource}`, publicMediaResourceRateLimit);
+    if (!resourceLimit.allowed) return resourceLimit;
+
+    const clientIp = getClientIp(request);
+    if (clientIp === "unknown") return resourceLimit;
+    const ipLimit = await checkRateLimit(`public-media:ip:${clientIp}`, publicMediaIpRateLimit);
+    return ipLimit.allowed ? resourceLimit : ipLimit;
+}
+
 export function rateLimitHeaders(result: RateLimitResult) {
     return { "Retry-After": String(Math.max(1, Math.ceil((result.resetAt - Date.now()) / 1000))) };
 }
@@ -144,10 +153,26 @@ export async function isSafeOutboundUrl(value: string, options?: { allowCredenti
         const url = new URL(value);
         if (url.protocol !== "http:" && url.protocol !== "https:") return false;
         if (!options?.allowCredentials && (url.username || url.password)) return false;
+        if (privateUpstreamHostAllowed(url.hostname)) return true;
         return isSafeOutboundHost(url.hostname);
     } catch {
         return false;
     }
+}
+
+function privateUpstreamHostAllowed(hostname: string) {
+    if (process.env.VOZEB_PRO_ALLOW_PRIVATE_UPSTREAMS !== "1") return false;
+    const host = hostname.replace(/^\[|\]$/g, "").toLowerCase();
+    return (process.env.VOZEB_PRO_PRIVATE_UPSTREAM_HOSTS || "")
+        .split(",")
+        .map((value) =>
+            value
+                .trim()
+                .replace(/^\[|\]$/g, "")
+                .toLowerCase(),
+        )
+        .filter(Boolean)
+        .includes(host);
 }
 
 async function isSafeOutboundHost(hostname: string) {
@@ -186,8 +211,6 @@ export function isPublicIpAddress(address: string) {
         if (normalized === "::" || normalized === "::1") return false;
         if (normalized.startsWith("fc") || normalized.startsWith("fd") || /^fe[89ab]/.test(normalized)) return false;
         if (normalized.startsWith("ff") || normalized.startsWith("2001:db8:")) return false;
-        // NAT64 well-known prefix 64:ff9b::/96 maps IPv4 into IPv6 and must not be treated as public outbound.
-        if (normalized.startsWith("64:ff9b:")) return false;
         if (normalized.startsWith("::ffff:")) return isPublicIpAddress(normalized.slice("::ffff:".length));
         return true;
     }

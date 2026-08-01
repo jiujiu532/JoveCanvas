@@ -3,7 +3,6 @@
 import { Button, Input, Modal } from "antd";
 import { MessageSquareText, PencilLine, Plus, Trash2 } from "lucide-react";
 import { nanoid } from "nanoid";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import type { DramaShot, DramaUtterance } from "../types";
@@ -12,7 +11,6 @@ import { useDramaStore } from "../stores/use-drama-store";
 const dialogueInputClass = "!shadow-none hover:!border-foreground/25 focus:!border-foreground/35 focus:!shadow-none";
 
 export function DramaShotDialogueEditor({ projectId, episodeId, shot }: { projectId: string; episodeId: string; shot: DramaShot }) {
-    const t = useTranslations("drama");
     const updateShot = useDramaStore((state) => state.updateShot);
     const [editorOpen, setEditorOpen] = useState(false);
     const existingRows = shot.utterances.filter((item) => item.type === "dialogue");
@@ -51,8 +49,8 @@ export function DramaShotDialogueEditor({ projectId, episodeId, shot }: { projec
                 <div className="flex min-w-0 items-center justify-between gap-2">
                     <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
                         <MessageSquareText className="size-3.5 shrink-0" />
-                        {t("storyboard.dialogue.title")}
-                        {rows.length ? <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-normal tabular-nums">{t("storyboard.dialogue.countBadge", { count: rows.length })}</span> : null}
+                        对白（原话）
+                        {rows.length ? <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-normal tabular-nums">{rows.length} 句</span> : null}
                     </span>
                     <Button
                         size="small"
@@ -60,30 +58,25 @@ export function DramaShotDialogueEditor({ projectId, episodeId, shot }: { projec
                         icon={rows.length ? <PencilLine className="size-3.5" /> : <Plus className="size-3.5" />}
                         onClick={openEditor}
                     >
-                        {rows.length ? t("storyboard.dialogue.editButton") : t("storyboard.dialogue.addButton")}
+                        {rows.length ? "编辑对白" : "添加对白"}
                     </Button>
                 </div>
                 {previewRows.length ? (
-                    <button
-                        type="button"
-                        className="mt-1.5 block min-w-0 w-full rounded-md border-l-2 border-foreground/10 px-2.5 py-1.5 text-left transition hover:bg-muted/25"
-                        aria-label={t("storyboard.dialogue.editButton")}
-                        onClick={() => setEditorOpen(true)}
-                    >
+                    <button type="button" className="mt-1.5 block min-w-0 w-full rounded-md border-l-2 border-foreground/10 px-2.5 py-1.5 text-left transition hover:bg-muted/25" aria-label="打开对白编辑" onClick={() => setEditorOpen(true)}>
                         <span className="line-clamp-2 min-w-0 text-xs leading-5 text-muted-foreground">
                             {previewRows.map((row, index) => (
                                 <span key={row.id}>
                                     {index ? <span className="mx-1 text-foreground/25">·</span> : null}
-                                    <span className="font-medium text-foreground/80">{row.speaker.trim() || t("storyboard.dialogue.unlabeledSpeaker")}：</span>
-                                    <span>{row.text.trim() || t("storyboard.dialogue.pendingText")}</span>
+                                    <span className="font-medium text-foreground/80">{row.speaker.trim() || "未标注"}：</span>
+                                    <span>{row.text.trim() || "待填写对白内容"}</span>
                                 </span>
                             ))}
-                            {rows.length > previewRows.length ? <span className="text-xs text-muted-foreground">{t("storyboard.dialogue.moreCount", { count: rows.length - previewRows.length })}</span> : null}
+                            {rows.length > previewRows.length ? <span className="text-xs text-muted-foreground"> · 还有 {rows.length - previewRows.length} 句</span> : null}
                         </span>
                     </button>
                 ) : (
                     <button type="button" className="mt-1 flex h-9 w-full items-center border-y border-border/55 text-left text-xs text-muted-foreground transition hover:bg-muted/35 hover:text-foreground" onClick={openEditor}>
-                        {t("storyboard.dialogue.emptyHint")}
+                        暂无对白，点击添加角色原话
                     </button>
                 )}
             </div>
@@ -91,8 +84,8 @@ export function DramaShotDialogueEditor({ projectId, episodeId, shot }: { projec
             <Modal
                 title={
                     <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold">{t("storyboard.dialogue.modalTitle")}</div>
-                        <div className="mt-0.5 truncate text-xs font-normal text-muted-foreground">{shot.title || t("storyboard.shotTitleFallback", { order: shot.order })}</div>
+                        <div className="truncate text-sm font-semibold">对白编辑</div>
+                        <div className="mt-0.5 truncate text-xs font-normal text-muted-foreground">{shot.title || `镜头 ${shot.order}`}</div>
                     </div>
                 }
                 centered
@@ -102,15 +95,15 @@ export function DramaShotDialogueEditor({ projectId, episodeId, shot }: { projec
                 onCancel={() => setEditorOpen(false)}
                 footer={
                     <Button onClick={addRow} icon={<Plus className="size-4" />}>
-                        {t("storyboard.dialogue.addRowButton")}
+                        添加一句对白
                     </Button>
                 }
                 styles={{ body: { padding: 0 } }}
             >
                 <div className="flex min-h-0 flex-col">
                     <div className="flex items-center justify-between gap-3 border-b border-border/70 px-4 py-2.5">
-                        <p className="min-w-0 text-xs leading-5 text-muted-foreground">{t("storyboard.dialogue.modalHint")}</p>
-                        <span className="shrink-0 text-xs font-medium tabular-nums">{t("storyboard.dialogue.countBadge", { count: rows.length })}</span>
+                        <p className="min-w-0 text-xs leading-5 text-muted-foreground">按“说话人 + 原话”逐句核对，长对白只在这里滚动。</p>
+                        <span className="shrink-0 text-xs font-medium tabular-nums">{rows.length} 句</span>
                     </div>
                     <div className="max-h-[min(62vh,560px)] overflow-y-auto overscroll-contain px-4">
                         <div className="divide-y divide-border/65">
@@ -121,16 +114,16 @@ export function DramaShotDialogueEditor({ projectId, episodeId, shot }: { projec
                                         <Input
                                             className={`${dialogueInputClass} !h-8 !px-2 !text-xs`}
                                             value={row.speaker}
-                                            placeholder={t("storyboard.dialogue.speakerPlaceholder")}
-                                            aria-label={t("storyboard.dialogue.speakerAria", { index: index + 1 })}
+                                            placeholder="说话人"
+                                            aria-label={`第 ${index + 1} 句对白的说话人`}
                                             onChange={(event) => commit(rows.map((item) => (item.id === row.id ? { ...item, speaker: event.target.value } : item)))}
                                         />
                                         <Input.TextArea
                                             className={`${dialogueInputClass} !min-w-0 !text-sm`}
                                             value={row.text}
                                             autoSize={{ minRows: 1, maxRows: 4 }}
-                                            placeholder={t("storyboard.dialogue.textPlaceholder")}
-                                            aria-label={t("storyboard.dialogue.textAria", { index: index + 1 })}
+                                            placeholder="角色实际说出的原话"
+                                            aria-label={`第 ${index + 1} 句对白内容`}
                                             onChange={(event) => commit(rows.map((item) => (item.id === row.id ? { ...item, text: event.target.value } : item)))}
                                         />
                                     </div>
@@ -138,7 +131,7 @@ export function DramaShotDialogueEditor({ projectId, episodeId, shot }: { projec
                                         type="text"
                                         className="!size-7 !p-0 !text-muted-foreground hover:!bg-muted hover:!text-foreground"
                                         icon={<Trash2 className="size-3.5" />}
-                                        aria-label={t("storyboard.dialogue.deleteAria", { index: index + 1 })}
+                                        aria-label={`删除第 ${index + 1} 句对白`}
                                         onClick={() => commit(rows.filter((item) => item.id !== row.id))}
                                     />
                                 </div>

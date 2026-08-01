@@ -22,13 +22,17 @@ export default async function UserLayout({ children }: { children: ReactNode }) 
         <AuthUserHydrator
             user={{
                 id: user.id,
+                accountId: user.accountId,
                 username: user.username,
                 email: user.email,
                 displayName: user.displayName,
+                bio: user.bio,
+                avatarUrl: user.avatarUrl,
                 role: user.role,
                 status: user.status,
                 planId: user.planId,
                 planName: user.planName,
+                hasActivePlan: user.hasActivePlan,
                 pointsBalance: user.pointsBalance,
                 permanentPointsBalance: user.permanentPointsBalance,
                 dailyPointsBalance: user.dailyPointsBalance,

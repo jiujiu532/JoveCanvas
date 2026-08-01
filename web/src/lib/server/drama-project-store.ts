@@ -1,4 +1,5 @@
-import type { DramaProject, DramaProjectSummary } from "@/lib/drama-project-contract";
+import type { DramaProject, DramaProjectSummary, DramaProjectSummaryPage } from "@/lib/drama-project-contract";
+import { normalizeDramaImageSize } from "@/lib/drama-image-size";
 import { summarizeDramaProject } from "@/lib/drama-project-summary";
 import { readJsonDataFile, writeJsonDataFile } from "@/lib/server/data-adapter";
 import { ensurePostgresSchema, getDatabaseProvider, postgresQuery } from "@/lib/server/database";
@@ -8,7 +9,9 @@ type DramaProjectDatabase = { version: 1; projects: DramaProjectRecord[] };
 
 const FILE_NAME = "drama-projects.json";
 
-export async function listDramaProjectSummaries(userId: string): Promise<DramaProjectSummary[]> {
+export async function listDramaProjectSummaries(userId: string, input: { page?: number; pageSize?: number } = {}): Promise<DramaProjectSummaryPage> {
+    const page = Math.max(1, Math.floor(Number(input.page) || 1));
+    const pageSize = Math.max(1, Math.min(100, Math.floor(Number(input.pageSize) || 20)));
     if (getDatabaseProvider() === "postgres") {
         await ensurePostgresSchema();
         const result = await postgresQuery<DramaProjectSummaryRow>(
@@ -25,6 +28,7 @@ export async function listDramaProjectSummaries(userId: string): Promise<DramaPr
                 COALESCE(tasks.shot_count, 0) AS shot_count,
                 COALESCE(tasks.pending_task_count, 0) AS pending_task_count,
                 COALESCE(tasks.failed_task_count, 0) AS failed_task_count,
+                COUNT(*) OVER() AS total_count,
                 project.created_at,
                 project.updated_at
              FROM drama_projects project
@@ -47,15 +51,17 @@ export async function listDramaProjectSummaries(userId: string): Promise<DramaPr
                 CROSS JOIN LATERAL jsonb_array_elements(COALESCE(episode->'shots', '[]'::jsonb)) shot
              ) tasks ON TRUE
              WHERE project.user_id = $1
-             ORDER BY project.updated_at DESC`,
-            [userId],
+             ORDER BY project.updated_at DESC
+             LIMIT $2 OFFSET $3`,
+            [userId, pageSize, (page - 1) * pageSize],
         );
-        return result.rows.map(summaryFromRow);
+        return { items: result.rows.map(summaryFromRow), total: Number(result.rows[0]?.total_count) || 0, page, pageSize };
     }
-    return (await readDatabase()).projects
+    const summaries = (await readDatabase()).projects
         .filter((record) => record.userId === userId)
         .map((record) => summarizeDramaProject(record.project))
         .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    return { items: summaries.slice((page - 1) * pageSize, page * pageSize), total: summaries.length, page, pageSize };
 }
 
 export async function findDramaProjectBySourceHandoffId(userId: string, sourceHandoffId: string) {
@@ -180,6 +186,7 @@ type DramaProjectSummaryRow = {
     shot_count: number;
     pending_task_count: number;
     failed_task_count: number;
+    total_count: number;
     created_at: Date | string;
     updated_at: Date | string;
 };
@@ -190,7 +197,7 @@ function summaryFromRow(row: DramaProjectSummaryRow): DramaProjectSummary {
         title: row.title,
         summary: row.summary || "",
         style: row.style || "",
-        ratio: row.ratio === "16:9" ? "16:9" : "9:16",
+        ratio: normalizeDramaImageSize(row.ratio) || "9:16",
         status: row.status,
         episodeCount: Number(row.episode_count) || 0,
         characterCount: Number(row.character_count) || 0,

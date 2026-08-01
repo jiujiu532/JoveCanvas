@@ -3,36 +3,12 @@
 import { nanoid } from "nanoid";
 
 import { browserReadableMediaUrl } from "@/lib/browser-media-url";
-import { resolveClientStoreLocale } from "@/lib/client-store-locale";
+import { generationLogPublicPrompt, type GenerationLogReferenceSnapshot, type GenerationLogRequestSnapshot, type GenerationLogSlotSnapshot, type GenerationLogSnapshotParameters } from "@/lib/generation-log-snapshot";
 import { readImageMeta } from "@/lib/image-utils";
 import { deleteGenerationLogs as deleteServerGenerationLogs, listGenerationLogs, recordGenerationLog, type StoredGenerationLogRecord } from "@/services/api/generation-logs";
 import { resolveImageUrl, uploadImage } from "@/services/image-storage";
 import type { AiConfig } from "@/stores/use-config-store";
 import type { ReferenceImage } from "@/types/image";
-
-// 工作台记录用户可见文案：按 cookie 语言，默认中文
-const STORE_MESSAGES = {
-    zh: {
-        summaryPending: "图片生成中",
-        summaryFailed: "图片生成失败",
-        summaryComplete: "图片生成完成",
-        untitled: "未命名",
-        resultNotSaved: "生成结果未保存到服务器，请重试",
-        generationFailed: "生成失败",
-    },
-    en: {
-        summaryPending: "Image generation in progress",
-        summaryFailed: "Image generation failed",
-        summaryComplete: "Image generation complete",
-        untitled: "Untitled",
-        resultNotSaved: "Generation result was not saved to the server, please retry",
-        generationFailed: "Generation failed",
-    },
-} as const;
-
-function storeMessage(key: keyof (typeof STORE_MESSAGES)["zh"]) {
-    return STORE_MESSAGES[resolveClientStoreLocale()][key];
-}
 
 export type GeneratedImage = {
     id: string;
@@ -89,17 +65,18 @@ export type GenerationLog = {
     imageCount: number;
     size: string;
     quality: string;
-    status: "success" | "failed" | "pending";
+    status: "成功" | "失败" | "生成中";
     images: GeneratedImage[];
     thumbnails: string[];
     pendingCount?: number;
     error?: string;
     imageTasks?: PendingImageTask[];
     failures?: GenerationFailure[];
+    requestSnapshot?: GenerationLogRequestSnapshot;
 };
 
 export type GenerationLogConfig = Pick<AiConfig, "model" | "imageModel" | "quality" | "size" | "count">;
-export type GenerationSnapshot = { text: string; config: AiConfig; references: ReferenceImage[] };
+export type GenerationSnapshot = { text: string; userText?: string; config: AiConfig; references: ReferenceImage[]; count?: number };
 
 export function updateResultAt(results: GenerationResult[], index: number, next: Partial<GenerationResult>) {
     return results.map((item, itemIndex) => (itemIndex === index ? { ...item, ...next } : item));
@@ -271,39 +248,60 @@ export function stableResultImageUrl(image?: GeneratedImage) {
 
 export async function serverImageLogToWorkbenchLog(record: StoredGenerationLogRecord): Promise<GenerationLog> {
     const createdAt = Date.parse(record.createdAt) || Date.now();
+    const snapshot = record.requestSnapshot;
+    const slotsByAssetIndex = new Map((snapshot?.slots || []).filter((slot) => slot.status === "success" && slot.assetIndex !== undefined).map((slot) => [slot.assetIndex!, slot]));
     const images: GeneratedImage[] = record.assets.map((asset, index) => ({
-        id: `${serverWorkbenchLogId(record)}:${index}`,
+        id: slotsByAssetIndex.get(index)?.id || `${serverWorkbenchLogId(record)}:${index}`,
         dataUrl: browserReadableMediaUrl(stableAssetUrl(asset)),
         remoteUrl: asset.remoteUrl,
         serverUrl: asset.serverUrl,
         storageKey: undefined,
-        taskId: record.taskId || (record.id.startsWith("image-task:") ? record.id.replace(/^image-task:/, "") : undefined),
-        slotIndex: index,
+        taskId: slotsByAssetIndex.get(index)?.taskId || record.taskId || (record.id.startsWith("image-task:") ? record.id.replace(/^image-task:/, "") : undefined),
+        slotIndex: slotsByAssetIndex.get(index)?.index ?? index,
         durationMs: record.durationMs || 0,
         width: asset.width || 0,
         height: asset.height || 0,
         bytes: asset.bytes || 0,
         mimeType: asset.mimeType,
     }));
+    const parameters = snapshot?.parameters || {};
+    const imageTasks = (snapshot?.slots || []).flatMap((slot): PendingImageTask[] =>
+        slot.status === "pending" && slot.taskId
+            ? [{ resultId: slot.id, taskId: slot.taskId, kind: slot.taskKind === "edit" ? "edit" : "generation", model: slot.taskModel || parameters.model || record.model, index: slot.index, startedAt: slot.startedAt || createdAt }]
+            : [],
+    );
+    const failures = (snapshot?.slots || []).flatMap((slot): GenerationFailure[] => (slot.status === "failed" ? [{ resultId: slot.id, index: slot.index, error: slot.error || record.error || "生成失败" }] : []));
+    const references = (snapshot?.references || []).flatMap(imageReferenceFromSnapshot);
+    const pendingCount = (snapshot?.slots || []).filter((slot) => slot.status === "pending").length;
     return normalizeLog({
         id: serverWorkbenchLogId(record),
         creativeConversationId: record.conversationId,
         createdAt,
         title: record.title || record.prompt || record.model,
         prompt: record.prompt,
-        time: new Date(createdAt).toLocaleString(resolveClientStoreLocale() === "en" ? "en-US" : "zh-CN", { hour12: false }),
+        time: new Date(createdAt).toLocaleString("zh-CN", { hour12: false }),
         model: record.model,
-        config: { model: record.model, imageModel: record.model, quality: "", size: "", count: String(record.count || Math.max(1, images.length)) },
-        references: [],
+        config: {
+            model: parameters.model || record.model,
+            imageModel: parameters.model || record.model,
+            quality: parameters.quality || "",
+            size: parameters.size || "",
+            count: parameters.count || String(record.count || Math.max(1, images.length)),
+        },
+        references,
         durationMs: record.durationMs || 0,
         successCount: record.successCount || images.length,
-        failCount: record.failCount || 0,
+        failCount: failures.length || record.failCount || 0,
+        pendingCount,
         imageCount: record.count || Math.max(1, images.length + (record.failCount || 0)),
         size: "",
         quality: "",
-        status: record.status === "pending" ? "pending" : record.status === "failed" ? "failed" : "success",
+        status: record.status === "pending" ? "生成中" : record.status === "failed" ? "失败" : "成功",
         images,
         thumbnails: images.map((image) => image.dataUrl),
+        imageTasks,
+        failures,
+        requestSnapshot: snapshot,
         error: record.error,
     });
 }
@@ -339,12 +337,13 @@ export async function recordImageWorkbenchLog(log: GenerationLog) {
         title: log.title,
         prompt: log.prompt,
         model: log.model || log.config.imageModel || log.config.model,
-        summary: log.pendingCount ? storeMessage("summaryPending") : log.failCount && !log.successCount ? storeMessage("summaryFailed") : storeMessage("summaryComplete"),
+        summary: log.pendingCount ? "图片生成中" : log.failCount && !log.successCount ? "图片生成失败" : "图片生成完成",
         durationMs: log.durationMs,
         count: log.imageCount || Math.max(1, assets.length + (log.failCount || 0)),
         successCount: log.successCount || assets.length,
         failCount: log.failCount || 0,
         assets,
+        requestSnapshot: log.requestSnapshot,
         error: log.error,
         createdAt: log.createdAt,
         completedAt: log.pendingCount ? undefined : Date.now(),
@@ -374,9 +373,9 @@ async function normalizeLog(log: Partial<GenerationLog>): Promise<GenerationLog>
         ownerUserId: log.ownerUserId,
         creativeConversationId: log.creativeConversationId,
         createdAt: log.createdAt || Date.now(),
-        title: log.title || log.model || storeMessage("untitled"),
+        title: log.title || log.model || "未命名",
         prompt: log.prompt || log.title || "",
-        time: log.time || new Date().toLocaleString(resolveClientStoreLocale() === "en" ? "en-US" : "zh-CN", { hour12: false }),
+        time: log.time || new Date().toLocaleString("zh-CN", { hour12: false }),
         model: log.model || config.imageModel || "",
         config,
         references,
@@ -387,11 +386,12 @@ async function normalizeLog(log: Partial<GenerationLog>): Promise<GenerationLog>
         imageCount: log.imageCount || log.successCount || images.length + failCount + pendingCount,
         size: log.size || config.size || "",
         quality: log.quality || config.quality || "",
-        status: pendingCount ? "pending" : log.status || "success",
+        status: pendingCount ? "生成中" : log.status || "成功",
         images,
         thumbnails: images.map((image) => image.dataUrl).filter(Boolean),
         imageTasks,
         failures,
+        requestSnapshot: log.requestSnapshot,
         error: log.error,
     };
 }
@@ -411,18 +411,32 @@ async function hydrateGeneratedImageUrl(storageKey?: string, fallback = "", remo
     return browserReadableMediaUrl(serverUrl || remoteUrl || (!storageKey && !isLocalImageUrl(fallback) ? fallback : ""));
 }
 
-export async function normalizeGeneratedImage(url: string, remoteFallback = "", serverFallback = "") {
+export async function normalizeGeneratedImage(url: string, remoteFallback = "", serverFallback = "", authoritativeMeta?: { width?: number; height?: number; bytes?: number; mimeType?: string }) {
     const remoteUrl = isRemoteImageUrl(remoteFallback) ? remoteFallback : isRemoteImageUrl(url) ? url : "";
     const serverUrl = isServerImageUrl(serverFallback) ? serverFallback : isServerImageUrl(url) ? url : "";
     const fallbackUrl = serverUrl || (!isLocalImageUrl(url) ? url : "") || remoteUrl;
-    if (!fallbackUrl) throw new Error(storeMessage("resultNotSaved"));
+    if (!fallbackUrl) throw new Error("生成结果未保存到服务器，请重试");
     if (!serverUrl) {
         const stored = await uploadImage(fallbackUrl);
         return { url: stored.url, remoteUrl: remoteUrl || undefined, serverUrl: stored.url, width: stored.width, height: stored.height, bytes: stored.bytes, mimeType: stored.mimeType, storageKey: stored.storageKey };
     }
     const safeUrl = browserReadableMediaUrl(fallbackUrl);
+    const trustedMeta = authoritativeGeneratedImageMeta(authoritativeMeta);
+    if (trustedMeta) return { url: safeUrl, remoteUrl: remoteUrl || undefined, serverUrl: serverUrl || undefined, storageKey: undefined, ...trustedMeta };
     const meta = await readImageMeta(safeUrl);
     return { url: safeUrl, remoteUrl: remoteUrl || undefined, serverUrl: serverUrl || undefined, width: meta.width, height: meta.height, bytes: 0, mimeType: meta.mimeType, storageKey: undefined };
+}
+
+export function authoritativeGeneratedImageMeta(value?: { width?: number; height?: number; bytes?: number; mimeType?: string }) {
+    const width = Math.floor(Number(value?.width) || 0);
+    const height = Math.floor(Number(value?.height) || 0);
+    if (width <= 0 || height <= 0) return null;
+    return {
+        width,
+        height,
+        bytes: Math.max(0, Math.floor(Number(value?.bytes) || 0)),
+        mimeType: typeof value?.mimeType === "string" && value.mimeType.startsWith("image/") ? value.mimeType : "image/png",
+    };
 }
 
 function isStableImageUrl(value?: string) {
@@ -456,7 +470,7 @@ export function resultsFromLog(log: GenerationLog): GenerationResult[] {
     (log.failures || []).forEach((failure, fallbackIndex) => {
         if (usedResultIds.has(failure.resultId)) return;
         usedResultIds.add(failure.resultId);
-        entries.push({ index: failure.index ?? entries.length + fallbackIndex, result: { id: failure.resultId, status: "failed", error: failure.error || log.error || storeMessage("generationFailed") } });
+        entries.push({ index: failure.index ?? entries.length + fallbackIndex, result: { id: failure.resultId, status: "failed", error: failure.error || log.error || "生成失败" } });
     });
     const knownPendingCount = entries.filter((entry) => entry.result.status === "pending").length;
     const missingPendingCount = Math.max(0, (log.pendingCount || 0) - knownPendingCount);
@@ -466,7 +480,7 @@ export function resultsFromLog(log: GenerationLog): GenerationResult[] {
     const knownFailureCount = entries.filter((entry) => entry.result.status === "failed").length;
     const missingFailureCount = Math.max(0, (log.failCount || 0) - knownFailureCount);
     for (let index = 0; index < missingFailureCount; index += 1) {
-        entries.push({ index: entries.length, result: { id: `${log.id}-failed-${index}`, status: "failed", error: log.error || storeMessage("generationFailed") } });
+        entries.push({ index: entries.length, result: { id: `${log.id}-failed-${index}`, status: "failed", error: log.error || "生成失败" } });
     }
     return entries.sort((a, b) => a.index - b.index).map((entry) => entry.result);
 }
@@ -484,12 +498,13 @@ function normalizeLogConfig(log: Partial<GenerationLog>): GenerationLogConfig {
 export function buildLogFromResults(baseLog: GenerationLog | null, snapshot: GenerationSnapshot, results: GenerationResult[], durationMs: number, count: string, error?: string): GenerationLog {
     const images = results.flatMap((item, index) => (item.status === "success" && item.image ? [{ ...item.image, id: item.id, slotIndex: item.image.slotIndex ?? index }] : []));
     const imageTasks = results.flatMap((item, index) => (item.status === "pending" && item.task ? [{ ...item.task, resultId: item.id, index }] : []));
-    const failures = results.flatMap((item, index) => (item.status === "failed" ? [{ resultId: item.id, index, error: item.error || error || storeMessage("generationFailed") }] : []));
+    const failures = results.flatMap((item, index) => (item.status === "failed" ? [{ resultId: item.id, index, error: item.error || error || "生成失败" }] : []));
     const pendingCount = results.filter((item) => item.status === "pending").length;
     const failCount = failures.length;
     const logConfig = buildLogConfig(snapshot.config, count);
-    const status: GenerationLog["status"] = pendingCount ? "pending" : images.length ? "success" : "failed";
+    const status: GenerationLog["status"] = pendingCount ? "生成中" : images.length ? "成功" : "失败";
     const errorMessage = error || failures[0]?.error;
+    const requestSnapshot = mergeImageRequestSnapshot(baseLog?.requestSnapshot, snapshot, results, count, errorMessage);
     return buildLog({
         baseLog,
         prompt: snapshot.text,
@@ -505,6 +520,7 @@ export function buildLogFromResults(baseLog: GenerationLog | null, snapshot: Gen
         images,
         imageTasks,
         failures,
+        requestSnapshot,
         error: errorMessage,
     });
 }
@@ -524,6 +540,7 @@ function buildLog({
     images,
     imageTasks,
     failures,
+    requestSnapshot,
     error,
 }: {
     baseLog?: GenerationLog | null;
@@ -540,6 +557,7 @@ function buildLog({
     images: GeneratedImage[];
     imageTasks: PendingImageTask[];
     failures: GenerationFailure[];
+    requestSnapshot: GenerationLogRequestSnapshot;
     error?: string;
 }): GenerationLog {
     const logConfig = {
@@ -553,9 +571,9 @@ function buildLog({
         id: baseLog?.id || nanoid(),
         creativeConversationId: baseLog?.creativeConversationId,
         createdAt: baseLog?.createdAt || Date.now(),
-        title: baseLog?.title || prompt.slice(0, 12) || storeMessage("untitled"),
+        title: baseLog?.title || requestSnapshot.userPrompt?.slice(0, 12) || prompt.slice(0, 12) || "未命名",
         prompt,
-        time: new Date().toLocaleString(resolveClientStoreLocale() === "en" ? "en-US" : "zh-CN", { hour12: false }),
+        time: new Date().toLocaleString("zh-CN", { hour12: false }),
         model,
         config: logConfig,
         references,
@@ -571,6 +589,7 @@ function buildLog({
         thumbnails: images.map((image) => image.dataUrl).filter(Boolean),
         imageTasks,
         failures,
+        requestSnapshot,
         error,
     };
 }
@@ -585,17 +604,103 @@ function buildLogConfig(config: AiConfig, count: string): GenerationLogConfig {
     };
 }
 
-export function snapshotFromLog(log: GenerationLog, fallbackConfig: AiConfig): GenerationSnapshot {
-    const model = log.config.imageModel || log.model || fallbackConfig.imageModel || fallbackConfig.model;
+export function snapshotFromLog(log: GenerationLog, fallbackConfig: AiConfig, resultId?: string): GenerationSnapshot {
+    const slot = resultId ? log.requestSnapshot?.slots.find((item) => item.id === resultId) : undefined;
+    const parameters = { ...log.requestSnapshot?.parameters, ...slot?.parameters };
+    const model = parameters.model || log.config.imageModel || log.model || fallbackConfig.imageModel || fallbackConfig.model;
+    const snapshotReferences = log.requestSnapshot?.references || [];
+    const referenceIds = slot?.referenceIds?.length ? new Set(slot.referenceIds) : undefined;
+    const restoredReferences = snapshotReferences.filter((item) => !referenceIds || referenceIds.has(item.id)).flatMap(imageReferenceFromSnapshot);
     return {
-        text: log.prompt,
-        references: log.references || [],
+        text: slot?.prompt || log.prompt,
+        userText: generationLogPublicPrompt(log),
+        references: restoredReferences.length ? restoredReferences : log.references || [],
         config: {
             ...fallbackConfig,
             ...log.config,
             model,
             imageModel: model,
+            size: parameters.size || log.config.size || fallbackConfig.size,
+            quality: parameters.quality || log.config.quality || fallbackConfig.quality,
             count: "1",
         },
+        count: 1,
     };
+}
+
+function mergeImageRequestSnapshot(base: GenerationLogRequestSnapshot | undefined, snapshot: GenerationSnapshot, results: GenerationResult[], count: string, error?: string): GenerationLogRequestSnapshot {
+    const parameters = imageSnapshotParameters(snapshot.config, count);
+    const currentReferences = snapshot.references.map(imageReferenceSnapshot);
+    const references = Array.from(new Map([...(base?.references || []), ...currentReferences].map((item) => [item.id, item])).values());
+    const currentReferenceIds = currentReferences.map((item) => item.id);
+    const previousSlots = new Map((base?.slots || []).map((slot) => [slot.id, slot]));
+    let assetIndex = 0;
+    const slots = results.map((result, index): GenerationLogSlotSnapshot => {
+        const previous = previousSlots.get(result.id);
+        const task = result.task;
+        const slot: GenerationLogSlotSnapshot = {
+            ...previous,
+            id: result.id,
+            index,
+            status: result.status,
+            prompt: previous?.prompt || snapshot.text,
+            parameters: previous?.parameters || parameters,
+            referenceIds: previous?.referenceIds || currentReferenceIds,
+            assetIndex: result.status === "success" ? assetIndex : undefined,
+            taskId: task?.taskId || result.image?.taskId || previous?.taskId,
+            taskKind: task?.kind || previous?.taskKind,
+            taskModel: task?.model || previous?.taskModel || parameters.model,
+            startedAt: task?.startedAt || previous?.startedAt,
+            error: result.status === "failed" ? result.error || error || previous?.error || "生成失败" : undefined,
+        };
+        if (result.status === "success") assetIndex += 1;
+        return slot;
+    });
+    const userPrompt = base?.userPrompt || snapshot.userText || snapshot.text;
+    return { version: 1, userPrompt, parameters, references, slots };
+}
+
+function imageSnapshotParameters(config: GenerationLogConfig | AiConfig, count: string): GenerationLogSnapshotParameters {
+    return {
+        model: config.imageModel || config.model,
+        size: config.size,
+        quality: config.quality,
+        count,
+    };
+}
+
+function imageReferenceSnapshot(reference: ReferenceImage): GenerationLogReferenceSnapshot {
+    const stableUrl = [reference.serverUrl, reference.url, reference.remoteUrl, reference.dataUrl].find((value) => value && !/^(?:data|blob):/i.test(value));
+    return {
+        id: reference.id,
+        kind: "image",
+        name: reference.name,
+        mimeType: reference.type,
+        url: stableUrl,
+        remoteUrl: reference.remoteUrl,
+        serverUrl: reference.serverUrl,
+        storageKey: reference.storageKey,
+        width: reference.width,
+        height: reference.height,
+    };
+}
+
+function imageReferenceFromSnapshot(reference: GenerationLogReferenceSnapshot): ReferenceImage[] {
+    if (reference.kind !== "image") return [];
+    const dataUrl = browserReadableMediaUrl(reference.serverUrl || reference.url || reference.remoteUrl || "");
+    if (!dataUrl && !reference.storageKey) return [];
+    return [
+        {
+            id: reference.id,
+            name: reference.name,
+            type: reference.mimeType,
+            dataUrl,
+            url: reference.url,
+            remoteUrl: reference.remoteUrl,
+            serverUrl: reference.serverUrl,
+            storageKey: reference.storageKey,
+            width: reference.width,
+            height: reference.height,
+        },
+    ];
 }

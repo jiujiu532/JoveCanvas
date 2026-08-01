@@ -1,31 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { canvasThemes } from "@/lib/canvas-theme";
 import { useThemeStore } from "@/stores/use-theme-store";
-import canvasMessages from "../../../../../messages/zh/canvas.json";
 import { CanvasNodeType, type CanvasNodeData } from "../types";
 import { CanvasNode } from "./canvas-node";
-
-function readNested(dict: unknown, key: string): string | undefined {
-    let current: unknown = dict;
-    for (const part of key.split(".")) {
-        if (typeof current !== "object" || current === null) return undefined;
-        current = (current as Record<string, unknown>)[part];
-    }
-    return typeof current === "string" ? current : undefined;
-}
-
-// 子组件通过 useTranslations("canvas") 取文案；用 zh 字典 mock 避免依赖 NextIntlClientProvider。
-vi.mock("next-intl", () => ({
-    useTranslations: (namespace?: string) => (key: string, params?: Record<string, string | number>) => {
-        const fullKey = namespace && namespace !== "canvas" ? `${namespace}.${key}` : key;
-        const template = readNested(canvasMessages, fullKey) ?? key;
-        if (!params) return template;
-        return template.replace(/\{(\w+)\}/g, (matched, name: string) => (name in params ? String(params[name]) : matched));
-    },
-    useLocale: () => "zh",
-}));
 
 const imageNode: CanvasNodeData = {
     id: "generated-image",
@@ -34,7 +13,7 @@ const imageNode: CanvasNodeData = {
     position: { x: 120, y: 80 },
     width: 320,
     height: 320,
-    metadata: { content: "/generated-image.webp" },
+    metadata: { content: "/api/reference-assets/permanent/generated-image.png" },
 };
 
 const noop = () => undefined;
@@ -72,6 +51,7 @@ describe("CanvasNode image border", () => {
         expect(markup).toContain(`border-color:${canvasThemes.light.node.stroke}`);
         expect(markup).toContain("rounded-3xl border-2");
         expect(markup).toContain("overflow-hidden rounded-3xl");
+        expect(markup).toContain("/api/reference-assets/permanent/generated-image.png?format=webp&amp;width=1920");
     });
 
     it("keeps the blue active border when the image is selected", () => {
@@ -88,5 +68,45 @@ describe("CanvasNode image border", () => {
         const markup = renderImageNode({ data: batchChild, isRelated: true });
 
         expect(markup).toContain(`class="relative h-full w-full overflow-visible rounded-3xl border-2" style="background:transparent;border-color:${canvasThemes.light.node.stroke}"`);
+    });
+});
+
+describe("CanvasNode task content", () => {
+    it("keeps long task text scrollable while preserving the footer", () => {
+        const taskNode: CanvasNodeData = {
+            ...imageNode,
+            id: "task",
+            type: CanvasNodeType.Task,
+            title: "Agent 任务",
+            height: 210,
+            metadata: { agentTaskStatus: "completed", prompt: "很长的任务说明".repeat(30), agentTaskAttempts: 1 },
+        };
+
+        const markup = renderImageNode({ data: taskNode });
+
+        expect(markup).toContain("thin-scrollbar min-h-0 flex-1 overflow-y-auto");
+        expect(markup).toContain("mt-3 flex shrink-0");
+    });
+});
+
+describe("CanvasNode error content", () => {
+    it("centers the error and retry action inside the node", () => {
+        const failedNode: CanvasNodeData = { ...imageNode, metadata: { status: "error", errorDetails: "生成失败，请稍后重试" } };
+
+        const markup = renderImageNode({ data: failedNode, onRetry: noop });
+
+        expect(markup).toContain("h-full w-full flex-col items-center justify-center");
+        expect(markup).toContain(`color:${canvasThemes.light.node.danger}`);
+        expect(markup).toContain("生成失败，请稍后重试");
+        expect(markup).toContain("重试");
+    });
+
+    it("renders a cancelled terminal state without a retry action", () => {
+        const cancelledNode: CanvasNodeData = { ...imageNode, metadata: { status: "cancelled", agentTaskStatus: "cancelled" } };
+
+        const markup = renderImageNode({ data: cancelledNode, onRetry: noop });
+
+        expect(markup).toContain("任务已取消");
+        expect(markup).not.toContain("重试");
     });
 });

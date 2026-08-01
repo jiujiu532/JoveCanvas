@@ -2,19 +2,7 @@ import type { PromptLocale } from "@/lib/prompts/locale-rank";
 
 export type SeedSourceKey = "youmind-skill" | "gptimage2-json";
 
-export type SceneSlug =
-    | "portrait"
-    | "poster"
-    | "product"
-    | "ui"
-    | "infographic"
-    | "illustration"
-    | "photo"
-    | "3d"
-    | "storyboard"
-    | "game"
-    | "logo"
-    | "other";
+export type SceneSlug = "portrait" | "poster" | "product" | "ui" | "infographic" | "illustration" | "photo" | "3d" | "storyboard" | "game" | "logo" | "other";
 
 export type SeedDraft = {
     stableId: string;
@@ -30,19 +18,7 @@ export type SeedDraft = {
     sourceKey: SeedSourceKey;
 };
 
-export type SkipReason =
-    | "quality_title"
-    | "quality_prompt_short"
-    | "quality_prompt_long"
-    | "quality_cover"
-    | "quality_meta_prompt"
-    | "quality_nsfw"
-    | "prompt_hash"
-    | "cover_and_title"
-    | "cover_collision"
-    | "quota"
-    | "rehost"
-    | "other";
+export type SkipReason = "quality_title" | "quality_prompt_short" | "quality_prompt_long" | "quality_cover" | "quality_meta_prompt" | "quality_nsfw" | "prompt_hash" | "cover_and_title" | "cover_collision" | "quota" | "rehost" | "other";
 
 export type CuratedSeed = SeedDraft & {
     category: SceneSlug;
@@ -65,10 +41,7 @@ export type SkipDecision = {
 
 export type GateDecision = AcceptDecision | SkipDecision;
 
-export const SEED_SOURCE_META: Record<
-    SeedSourceKey,
-    { sourcePrefix: string; source: string; idPrefix: string; mediaSource: string; targetMin: number; targetMax: number }
-> = {
+export const SEED_SOURCE_META: Record<SeedSourceKey, { sourcePrefix: string; source: string; idPrefix: string; mediaSource: string; targetMin: number; targetMax: number }> = {
     "youmind-skill": {
         sourcePrefix: "vozeb-pro/youmind-skill",
         source: "vozeb-pro/youmind-skill:v1",

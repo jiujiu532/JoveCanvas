@@ -6,7 +6,6 @@ import { useEffect, useRef, useState, type DragEvent as ReactDragEvent } from "r
 import { App, Button, Drawer, Empty, Modal, Tag, Typography } from "antd";
 import { nanoid } from "nanoid";
 import { saveAs } from "file-saver";
-import { useTranslations } from "next-intl";
 
 import type { InsertAssetPayload } from "@/app/(user)/canvas/components/asset-picker-modal";
 import { AudioSettingsPanel } from "@/components/audio-settings-panel";
@@ -70,7 +69,6 @@ export function selectVideoModel(config: AiConfig, options = selectableModelsByC
 }
 
 export function GenerationSettings({ config, model, updateConfig, openConfigDialog, hideModel = false }: { config: AiConfig; model: string; updateConfig: UpdateAiConfig; openConfigDialog: (shouldPromptContinue?: boolean) => void; hideModel?: boolean }) {
-    const t = useTranslations("workspace.video");
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
     const [audioOpen, setAudioOpen] = useState(false);
 
@@ -78,7 +76,7 @@ export function GenerationSettings({ config, model, updateConfig, openConfigDial
         <>
             {!hideModel ? (
                 <label className="col-span-2 block min-w-0 sm:col-span-1">
-                    <span className="mb-1.5 block text-sm font-semibold sm:mb-2 sm:text-base">{t("modelLabel")}</span>
+                    <span className="mb-1.5 block text-sm font-semibold sm:mb-2 sm:text-base">模型</span>
                     <ModelPicker config={config} value={model} onChange={(value) => updateConfig("videoModel", value)} capability="video" fullWidth onMissingConfig={() => openConfigDialog(true)} />
                 </label>
             ) : null}
@@ -88,7 +86,7 @@ export function GenerationSettings({ config, model, updateConfig, openConfigDial
             <div className="col-span-2 border-t pt-2" style={{ borderColor: theme.node.stroke }}>
                 <button type="button" className="flex h-9 w-full items-center justify-between rounded-lg px-2 text-sm font-medium transition hover:bg-black/5 dark:hover:bg-white/5" onClick={() => setAudioOpen((open) => !open)} aria-expanded={audioOpen}>
                     <span className="flex items-center gap-2">
-                        <Music2 className="size-4" /> {t("audioSettings")}
+                        <Music2 className="size-4" /> 音频设置
                     </span>
                     <ChevronDown className={cn("size-4 transition-transform", audioOpen && "rotate-180")} />
                 </button>
@@ -113,7 +111,6 @@ export function ResultVideoCard({
     onDownload: (video: GeneratedVideo) => void;
     onSaveAsset: (video: GeneratedVideo) => void;
 }) {
-    const t = useTranslations("workspace.video");
     return (
         <div className="relative overflow-hidden rounded-lg border border-stone-200 bg-background dark:border-stone-800">
             <ResultSelectCheckbox selected={selected} onSelectedChange={onSelectedChange} />
@@ -130,10 +127,10 @@ export function ResultVideoCard({
                 </div>
                 <div className="flex shrink-0 gap-1">
                     <Button size="small" icon={<FolderPlus className="size-3.5" />} onClick={() => onSaveAsset(video)}>
-                        {t("addToAssets")}
+                        添加到素材
                     </Button>
                     <Button size="small" icon={<Download className="size-3.5" />} onClick={() => onDownload(video)}>
-                        {t("download")}
+                        下载
                     </Button>
                 </div>
             </div>
@@ -145,9 +142,8 @@ export function PendingVideoCard() {
     return <WorkbenchGenerationPlaceholder kind="video" className="h-[144px] sm:aspect-video sm:h-auto" />;
 }
 
-export function FailedVideoCard({ error, selected, onSelectedChange, onRetry }: { error: string; selected?: boolean; onSelectedChange?: (checked: boolean) => void; onRetry: () => void }) {
-    const t = useTranslations("workspace.video");
-    const failure = videoFailureDisplay(error, t);
+export function FailedVideoCard({ error, retryable, selected, onSelectedChange, onRetry }: { error: string; retryable?: boolean; selected?: boolean; onSelectedChange?: (checked: boolean) => void; onRetry: () => void }) {
+    const failure = videoFailureDisplay(error);
     return (
         <div className="relative overflow-hidden rounded-lg border border-red-200 bg-red-50 dark:border-red-950 dark:bg-red-950/20">
             <ResultSelectCheckbox selected={selected} onSelectedChange={onSelectedChange} />
@@ -158,22 +154,22 @@ export function FailedVideoCard({ error, selected, onSelectedChange, onRetry }: 
                     {error}
                 </Typography.Paragraph>
             </div>
-            <div className="flex justify-end border-t border-red-200 p-2 sm:p-3 dark:border-red-950">
-                <Button size="small" danger onClick={onRetry}>
-                    {t("retry")}
-                </Button>
-            </div>
+            {retryable ? (
+                <div className="flex justify-end border-t border-red-200 p-2 sm:p-3 dark:border-red-950">
+                    <Button size="small" danger onClick={onRetry}>
+                        重试
+                    </Button>
+                </div>
+            ) : null}
         </div>
     );
 }
 
-export function videoFailureDisplay(error: string, t: (key: string) => string) {
-    if (error.startsWith("上游生成阶段失败") || error.startsWith("Upstream generation stage failed")) return { title: t("failureUpstreamTitle"), hint: t("failureUpstreamHint") };
-    if (error.startsWith("视频任务创建失败") || error.startsWith("Seedance 任务创建失败") || error.startsWith("Video task creation failed") || error.startsWith("Seedance task creation failed"))
-        return { title: t("failureCreateTitle"), hint: t("failureCreateHint") };
-    if (error.startsWith("视频任务查询失败") || error.startsWith("Seedance 任务查询失败") || error.startsWith("Video task query failed") || error.startsWith("Seedance task query failed"))
-        return { title: t("failurePollTitle"), hint: t("failurePollHint") };
-    return { title: t("failureDefaultTitle"), hint: t("failureDefaultHint") };
+export function videoFailureDisplay(error: string) {
+    if (error.startsWith("上游生成阶段失败")) return { title: "上游生成失败", hint: "任务已创建，但上游生成阶段失败。" };
+    if (error.startsWith("视频任务创建失败") || error.startsWith("Seedance 任务创建失败")) return { title: "任务创建失败", hint: "当前请求未能成功创建生成任务。" };
+    if (error.startsWith("视频任务查询失败") || error.startsWith("Seedance 任务查询失败")) return { title: "任务查询失败", hint: "任务已提交后，轮询上游状态失败。" };
+    return { title: "生成失败", hint: "请检查模型、额度和接口返回。" };
 }
 
 export function LogPanel({
@@ -197,8 +193,6 @@ export function LogPanel({
     onRenameLog: (log: GenerationLog, title: string) => void;
     compact?: boolean;
 }) {
-    const t = useTranslations("workspace.video");
-    const statusLabel = (status: GenerationLog["status"]) => (status === "success" ? t("statusSuccess") : status === "pending" ? t("statusPending") : t("statusFailed"));
     return (
         <WorkbenchHistoryPanel
             logs={logs}
@@ -218,9 +212,17 @@ export function LogPanel({
                         <Tag className="m-0 flex h-6 items-center rounded-md px-1.5 text-xs leading-none">{log.seconds}s</Tag>
                     </div>
                     <div className="flex min-w-0 flex-wrap gap-1">
-                        <Tag className="m-0 flex h-6 items-center rounded-md px-1.5 text-xs leading-none" color={log.status === "success" ? "blue" : log.status === "pending" ? "processing" : "red"}>
-                            {statusLabel(log.status)}
-                        </Tag>
+                        <span
+                            className={`inline-flex h-6 items-center rounded-md border px-1.5 text-xs font-medium leading-none ${
+                                log.status === "成功"
+                                    ? "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-300"
+                                    : log.status === "生成中"
+                                      ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/70 dark:bg-amber-950/35 dark:text-amber-300"
+                                      : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/35 dark:text-rose-300"
+                            }`}
+                        >
+                            {log.status}
+                        </span>
                         <Tag className="m-0 flex h-6 items-center rounded-md px-1.5 text-xs leading-none" color="green">
                             {formatDuration(log.durationMs)}
                         </Tag>

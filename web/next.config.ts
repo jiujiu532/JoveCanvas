@@ -4,16 +4,16 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { ProxyAgent, setGlobalDispatcher } from "undici";
-import createNextIntlPlugin from "next-intl/plugin";
 import { parseChangelog } from "@/lib/release";
 
-const withNextIntl = createNextIntlPlugin();
 const webDir = dirname(fileURLToPath(import.meta.url));
 const localVersion = readFileSync(resolve(webDir, "../VERSION"), "utf8").trim() || "dev";
 const localChangelog = readFileSync(resolve(webDir, "../CHANGELOG.md"), "utf8");
 const buildCpus = Math.max(1, Number.parseInt(process.env.NEXT_BUILD_CPUS || "1", 10) || 1);
+const distDir = process.env.NEXT_DIST_DIR?.trim() || ".next";
+const skipBuildTypeCheck = process.env.NEXT_SKIP_BUILD_TYPECHECK === "1";
 const nodeProxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.https_proxy || process.env.http_proxy;
-const privatePageSource = "/:section(api|admin|assets|billing|canvas|create|drama|forgot-password|help|image|install|login|my-prompts|profile|prompts|register|video)/:path*";
+const privatePageSource = "/:section(api|admin|assets|billing|canvas|community|create|drama|forgot-password|help|image|install|login|my-prompts|profile|prompts|register|video|works)/:path*";
 if (nodeProxy) setGlobalDispatcher(new ProxyAgent(nodeProxy));
 
 export default function nextConfig(phase: string): NextConfig {
@@ -36,8 +36,10 @@ export default function nextConfig(phase: string): NextConfig {
         "frame-ancestors 'none'",
     ].join("; ");
 
-    return withNextIntl({
+    return {
+        distDir,
         output: "standalone",
+        typescript: { ignoreBuildErrors: skipBuildTypeCheck },
         allowedDevOrigins: isDev ? ["*.*.*.*"] : [],
         env: {
             NEXT_PUBLIC_APP_VERSION: localVersion,
@@ -47,6 +49,13 @@ export default function nextConfig(phase: string): NextConfig {
             cpus: buildCpus,
             proxyClientMaxBodySize: "32mb",
             workerThreads: false,
+        },
+        async rewrites() {
+            return {
+                beforeFiles: [{ source: "/favicon.ico", destination: "/api/site-icon" }],
+                afterFiles: [],
+                fallback: [],
+            };
         },
         async headers() {
             return [
@@ -67,5 +76,5 @@ export default function nextConfig(phase: string): NextConfig {
                 },
             ];
         },
-    });
+    };
 }

@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import type { BillingOrderRecord, BillingProductRecord, QueryExecutor } from "./database";
-import { isAutomaticallyExpiredOrder, normalizeBillingProductPatch } from "./billing-service-helpers";
+import { isAutomaticallyExpiredOrder, normalizeBillingProductPatch, normalizeProvider } from "./billing-service-helpers";
+
+describe("billing payment provider normalization", () => {
+    it("uses the same stable provider ids as checkout and webhooks", () => {
+        expect(normalizeProvider("Stripe-Checkout")).toBe("stripe");
+        expect(normalizeProvider("ALI")).toBe("alipay");
+        expect(normalizeProvider("wechatPay")).toBe("wechat");
+        expect(normalizeProvider("pay_ply")).toBe("payply");
+    });
+});
 
 describe("billing product patch", () => {
     const current: BillingProductRecord = {
@@ -43,6 +52,9 @@ describe("billing order expiration metadata", () => {
         productKind: "points",
         status: "closed",
         subject: "积分商品",
+        listAmountCents: 100,
+        promotionDiscountCents: 0,
+        couponDiscountCents: 0,
         amountCents: 100,
         currency: "CNY",
         pointsAmount: 10,

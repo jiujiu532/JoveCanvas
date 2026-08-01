@@ -1,3 +1,5 @@
+import { formatAccountId } from "@/lib/account-id";
+
 import type {
     AnnouncementRecord,
     CdkCodeRecord,
@@ -72,9 +74,12 @@ export function optionalIso(value: unknown) {
 export function mapUser(row: Record<string, unknown>): UserRecord {
     return {
         id: stringValue(row.id),
+        accountId: formatAccountId(row.account_id),
         username: stringValue(row.username),
         email: optionalString(row.email),
         displayName: stringValue(row.display_name),
+        bio: stringValue(row.bio),
+        avatarStorageKey: optionalString(row.avatar_storage_key),
         role: row.role === "admin" ? "admin" : "user",
         status: row.status === "disabled" ? "disabled" : "active",
         planId: stringValue(row.plan_id),
@@ -182,7 +187,6 @@ export function mapAnnouncement(row: Record<string, unknown>): AnnouncementRecor
 }
 
 export function mapPrompt(row: Record<string, unknown>): PromptRecord {
-    const locale = optionalString(row.locale);
     return {
         id: stringValue(row.id),
         scope: row.scope === "user" ? "user" : "library",
@@ -195,7 +199,6 @@ export function mapPrompt(row: Record<string, unknown>): PromptRecord {
         preview: stringValue(row.preview),
         githubUrl: optionalString(row.github_url),
         source: optionalString(row.source),
-        locale: locale === "zh" || locale === "en" || locale === "mixed" ? locale : undefined,
         createdAt: isoValue(row.created_at),
         updatedAt: isoValue(row.updated_at),
     };
@@ -220,6 +223,7 @@ export function mapGenerationLog(row: Record<string, unknown>): GenerationLogRec
         successCount: numberValue(row.success_count),
         failCount: numberValue(row.fail_count),
         assets: [],
+        requestSnapshot: jsonValue(row.request_snapshot),
         taskId: optionalString(row.task_id),
         error: optionalString(row.error),
         createdAt: isoValue(row.created_at),

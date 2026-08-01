@@ -13,24 +13,7 @@ const META_PROMPT_MARKERS = [
     "write prompt content in the user's language",
 ];
 
-const NSFW_KEYWORDS = [
-    "nude",
-    "naked",
-    "nsfw",
-    "porn",
-    "xxx",
-    "explicit sexual",
-    "erotic",
-    "hentai",
-    "loli",
-    "shota",
-    "underage",
-    "nude body",
-    "全裸",
-    "裸露",
-    "色情",
-    "性暗示",
-];
+const NSFW_KEYWORDS = ["nude", "naked", "nsfw", "porn", "xxx", "explicit sexual", "erotic", "hentai", "loli", "shota", "underage", "nude body", "全裸", "裸露", "色情", "性暗示"];
 
 const MIN_PROMPT_LEN = 40;
 const MAX_PROMPT_LEN = 4000;

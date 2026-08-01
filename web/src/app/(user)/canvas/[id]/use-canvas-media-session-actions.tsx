@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import type { ChangeEvent as ReactChangeEvent, DragEvent as ReactDragEvent, MouseEvent as ReactMouseEvent } from "react";
 import { useCallback } from "react";
-import { useTranslations } from "next-intl";
 
 import { droppedFiles, preventFileDragEvent } from "@/lib/file-drop";
 import { readImageMeta } from "@/lib/image-utils";
@@ -26,7 +25,6 @@ import type { CanvasPageState } from "./use-canvas-page-state";
 import type { CanvasFileActions } from "./use-canvas-file-actions";
 
 export function useCanvasMediaSessionActions({ state, interactions, files }: { state: CanvasPageState; interactions: CanvasInteractions; files: CanvasFileActions }) {
-    const t = useTranslations("canvas");
     const {
         message,
         projectId,
@@ -119,7 +117,7 @@ export function useCanvasMediaSessionActions({ state, interactions, files }: { s
                     const dimensions = await readImageMeta(objectUrl);
                     URL.revokeObjectURL(objectUrl);
                     if (!isPanoramaRatio(dimensions.width, dimensions.height)) {
-                        message.error(t("node.panorama.ratioRequired"));
+                        message.error("全景图必须接近 2:1 比例，例如 2048x1024");
                         uploadTargetRef.current = null;
                         event.target.value = "";
                         return;
@@ -171,7 +169,7 @@ export function useCanvasMediaSessionActions({ state, interactions, files }: { s
             uploadTargetRef.current = null;
             event.target.value = "";
         },
-        [createAudioFileNode, createImageFileNode, createVideoFileNode, message, nodesRef, screenToCanvas, size.height, size.width, t],
+        [createAudioFileNode, createImageFileNode, createVideoFileNode, message, nodesRef, screenToCanvas, size.height, size.width],
     );
 
     const handleDrop = useCallback(
@@ -190,12 +188,13 @@ export function useCanvasMediaSessionActions({ state, interactions, files }: { s
     );
 
     const pasteAssistantImage = useCallback(
-        (file: File) => {
+        async (file: File) => {
             const position = screenToCanvas((containerRef.current?.getBoundingClientRect().left || 0) + size.width / 2, (containerRef.current?.getBoundingClientRect().top || 0) + size.height / 2);
-            void createImageFileNode(file, position);
-            message.success(t("node.clipboard.imageAdded"));
+            const nodeId = await createImageFileNode(file, position, true);
+            message.success("图片已添加到本轮引用");
+            return nodeId;
         },
-        [createImageFileNode, message, screenToCanvas, size.height, size.width, t],
+        [createImageFileNode, message, screenToCanvas, size.height, size.width],
     );
 
     const handleAssistantSessionsChange = useCallback((sessions: CanvasAssistantSession[], activeId: string | null) => {
@@ -204,9 +203,9 @@ export function useCanvasMediaSessionActions({ state, interactions, files }: { s
     }, []);
 
     const startTitleEditing = useCallback(() => {
-        setTitleDraft(currentProject?.title || t("editor.untitled"));
+        setTitleDraft(currentProject?.title || "未命名画布");
         setTitleEditing(true);
-    }, [currentProject?.title, t]);
+    }, [currentProject?.title]);
 
     const finishTitleEditing = useCallback(() => {
         const nextTitle = titleDraft.trim();

@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ getAgentRun: vi.fn(), getLatestCreativeRunEventId: vi.fn(), listCreativeRunEvents: vi.fn() }));
+const mocks = vi.hoisted(() => ({ getAgentRun: vi.fn(), getLatestCreativeRunEventId: vi.fn(), listCreativeRunEvents: vi.fn(), recover: vi.fn() }));
 
 vi.mock("@/lib/auth/session", () => ({ getCurrentUser: vi.fn(async () => ({ id: "user" })) }));
 vi.mock("@/lib/server/agent-run-store", () => ({ getAgentRun: mocks.getAgentRun }));
 vi.mock("@/lib/server/creative-runtime-store", () => ({ getLatestCreativeRunEventId: mocks.getLatestCreativeRunEventId, listCreativeRunEvents: mocks.listCreativeRunEvents }));
+vi.mock("@/lib/server/generation-task-recovery-service", () => ({ runGenerationTaskRecoveryBatch: mocks.recover }));
+vi.mock("@/lib/server/internal-origin", () => ({ resolveInternalOrigin: vi.fn(() => "http://localhost") }));
 
 import { GET } from "./route";
 
@@ -37,15 +39,18 @@ describe("Agent Run SSE", () => {
 
     it("starts after the latest manual retry instead of replaying an older failure", async () => {
         mocks.getAgentRun.mockResolvedValue({ id: "run", userId: "user", status: "running", tasks: [], updatedAt: 4 });
-        mocks.getLatestCreativeRunEventId.mockResolvedValue("8");
-        mocks.listCreativeRunEvents.mockResolvedValueOnce([{ id: "9", runId: "run", type: "task.running", createdAt: 4 }]).mockResolvedValue([]);
+        mocks.getLatestCreativeRunEventId.mockImplementation(async (_runId, type) => (type === "run.retry.requested" ? "11" : "8"));
+        mocks.listCreativeRunEvents.mockResolvedValueOnce([{ id: "12", runId: "run", type: "run.planning", createdAt: 4 }]).mockResolvedValue([]);
 
         const response = await GET(new Request("http://localhost/api/agent/runs/run/events"), { params: Promise.resolve({ id: "run" }) });
         const reader = response.body!.getReader();
         const first = await reader.read();
         await reader.cancel();
 
-        expect(new TextDecoder().decode(first.value)).toContain("id: 9");
-        expect(mocks.listCreativeRunEvents).toHaveBeenCalledWith("run", "8");
+        expect(new TextDecoder().decode(first.value)).toContain("id: 12");
+        expect(mocks.recover).toHaveBeenCalledWith(expect.objectContaining({ taskIds: ["run"] }));
+        expect(mocks.getLatestCreativeRunEventId).toHaveBeenCalledWith("run", "task.retry.requested");
+        expect(mocks.getLatestCreativeRunEventId).toHaveBeenCalledWith("run", "run.retry.requested");
+        expect(mocks.listCreativeRunEvents).toHaveBeenCalledWith("run", "11");
     });
 });

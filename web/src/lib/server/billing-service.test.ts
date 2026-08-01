@@ -21,6 +21,8 @@ const mocks = vi.hoisted(() => ({
     adjustPoints: vi.fn(),
     createOrderPlanAssignment: vi.fn(),
     lockAuthMutation: vi.fn(),
+    getReferralRelationshipByInviteeUserId: vi.fn(),
+    getReferralRewardsByTriggerOrder: vi.fn(),
 }));
 
 vi.mock("@/lib/server/auth-mutation-lock", () => ({ lockAuthMutation: mocks.lockAuthMutation }));
@@ -40,6 +42,10 @@ vi.mock("@/lib/server/database", () => ({
             update: mocks.updateUser,
         },
         settings: { getSettings: mocks.getSettings },
+        referrals: {
+            getRelationshipByInviteeUserId: mocks.getReferralRelationshipByInviteeUserId,
+            getRewardsByTriggerOrder: mocks.getReferralRewardsByTriggerOrder,
+        },
     })),
     ensurePostgresSchema: vi.fn(),
     isPostgresDatabaseEnabled: vi.fn(() => true),
@@ -56,8 +62,10 @@ import { completeBillingOrderPayment, refundBillingOrder } from "./billing-servi
 const now = "2026-07-23T00:00:00.000Z";
 const baseUser = {
     id: "user-one",
+    accountId: "0001",
     username: "tester",
     displayName: "测试用户",
+    bio: "",
     role: "user",
     status: "active",
     planId: "existing-plan",
@@ -74,6 +82,9 @@ const pointsOrder = {
     productKind: "points",
     status: "pending",
     subject: "500 积分",
+    listAmountCents: 990,
+    promotionDiscountCents: 0,
+    couponDiscountCents: 0,
     amountCents: 990,
     currency: "CNY",
     pointsAmount: 500,
@@ -114,6 +125,8 @@ describe("billing payment completion", () => {
             return { record: { amount: appliedAmount } };
         });
         mocks.getSettings.mockResolvedValue({ settings: { defaultPlanId: "free" } });
+        mocks.getReferralRelationshipByInviteeUserId.mockResolvedValue(undefined);
+        mocks.getReferralRewardsByTriggerOrder.mockResolvedValue([]);
     });
 
     it("credits a points product without replacing the user's plan and remains idempotent", async () => {
@@ -128,6 +141,26 @@ describe("billing payment completion", () => {
         expect(mocks.order?.status).toBe("paid");
         expect(mocks.lockAuthMutation).toHaveBeenCalledWith(mocks.client);
         expect(mocks.getOrderById).toHaveBeenCalledWith(pointsOrder.id, true);
+    });
+
+    it("rejects a verified callback from a different provider than the order snapshot", async () => {
+        await expect(completeBillingOrderPayment({ orderId: pointsOrder.id, provider: "alipay", providerTradeId: "ali-trade", paidAt: now })).rejects.toMatchObject({
+            message: "支付回调渠道与订单渠道不一致",
+            status: 409,
+        });
+        expect(mocks.upsertPayment).not.toHaveBeenCalled();
+        expect(mocks.adjustPoints).not.toHaveBeenCalled();
+    });
+
+    it("rejects a second provider transaction instead of silently treating it as the same payment", async () => {
+        await completeBillingOrderPayment({ orderId: pointsOrder.id, provider: "stripe", providerTradeId: "trade-one", paidAt: now });
+
+        await expect(completeBillingOrderPayment({ orderId: pointsOrder.id, provider: "stripe", providerTradeId: "trade-two", paidAt: now })).rejects.toMatchObject({
+            message: "订单已由另一笔支付交易完成，请人工核对并处理重复付款",
+            status: 409,
+        });
+        expect(mocks.adjustPoints).toHaveBeenCalledTimes(1);
+        expect(mocks.upsertPayment).toHaveBeenCalledTimes(1);
     });
 
     it("still applies plan products to the user and creates an assignment", async () => {

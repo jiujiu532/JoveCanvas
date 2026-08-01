@@ -22,7 +22,7 @@ type AssetExportItem = {
     bytes: number;
 };
 
-export async function exportAssets(assets: Asset[], fileName = "assets.zip") {
+export async function exportAssets(assets: Asset[]) {
     const files: AssetExportItem[] = [];
     const zipFiles: { name: string; data: BlobPart }[] = [];
 
@@ -31,7 +31,8 @@ export async function exportAssets(assets: Asset[], fileName = "assets.zip") {
             if (asset.kind !== "image" && asset.kind !== "video" && asset.kind !== "audio") return;
             const storageKey = asset.data.storageKey;
             if (!storageKey) return;
-            const blob = asset.kind === "image" ? await getImageBlob(storageKey) : await getMediaBlob(storageKey);
+            const fallback = asset.data.serverUrl || (asset.kind === "image" ? asset.data.dataUrl : asset.data.url);
+            const blob = asset.kind === "image" ? await getImageBlob(storageKey, fallback) : await getMediaBlob(storageKey, fallback);
             if (!blob) return;
             const path = `files/${safeExportFileName(storageKey)}.${exportFileExtension(blob.type, asset.kind)}`;
             files.push({ storageKey, path, mimeType: blob.type || asset.data.mimeType, bytes: blob.size });
@@ -41,7 +42,7 @@ export async function exportAssets(assets: Asset[], fileName = "assets.zip") {
 
     const data: AssetExportFile = { app: APP_EXPORT_ID, version: 1, exportedAt: new Date().toISOString(), assets, files };
     const zip = await createZip([{ name: "assets.json", data: JSON.stringify(data, null, 2) }, ...zipFiles]);
-    saveAs(zip, fileName);
+    saveAs(zip, "我的素材.zip");
 }
 
 export async function readAssetPackage(file: File): Promise<Asset[]> {
@@ -49,7 +50,7 @@ export async function readAssetPackage(file: File): Promise<Asset[]> {
     const assetFile = zip.get("assets.json");
     if (!assetFile) throw new Error("missing assets.json");
     const data = JSON.parse(await assetFile.text()) as AssetExportFile;
-    if (data.app !== APP_EXPORT_ID) throw new Error("not an asset package for this app");
+    if (data.app !== APP_EXPORT_ID) throw new Error("不是当前应用的素材包");
     const uploaded = new Map<string, Awaited<ReturnType<typeof uploadImage>> | Awaited<ReturnType<typeof uploadMediaFile>>>();
     await Promise.all(
         data.files.map(async (item) => {

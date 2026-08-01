@@ -193,19 +193,13 @@ async function main() {
     if (result.skipped) {
         // Race after rehost: batch claim lost. Drop unreferenced covers produced by this run.
         const tokens = Array.isArray(report.rehostedTokens) ? report.rehostedTokens : [];
-        console.warn(
-            `[import] skipped after apply race (source already registered) source=${report.source} rehostedTokens=${tokens.length}`,
-        );
+        console.warn(`[import] skipped after apply race (source already registered) source=${report.source} rehostedTokens=${tokens.length}`);
         if (tokens.length) {
             try {
                 const cleanup = await cleanupUnreferencedPromptSeedCovers(tokens);
-                console.log(
-                    `[import] orphan cover cleanup deleted=${cleanup.deleted} blocked=${cleanup.blocked} candidates=${tokens.length}`,
-                );
+                console.log(`[import] orphan cover cleanup deleted=${cleanup.deleted} blocked=${cleanup.blocked} candidates=${tokens.length}`);
             } catch (error) {
-                console.warn(
-                    `[import] orphan cover cleanup failed: ${error instanceof Error ? error.message : error}`,
-                );
+                console.warn(`[import] orphan cover cleanup failed: ${error instanceof Error ? error.message : error}`);
             }
         }
         return;

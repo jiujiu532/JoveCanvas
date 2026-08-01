@@ -8,21 +8,19 @@ import { normalizeDramaVisualReviewInput } from "@/lib/server/drama-visual-revie
 import { resolveInternalOrigin } from "@/lib/server/internal-origin";
 import { checkRateLimit } from "@/lib/server/security";
 
-import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export async function POST(request: Request) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
-    if (!(await checkRateLimit(`drama-review:${user.id}`, { maxRequests: 8, windowMs: 60_000 })).allowed)
-        return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.visualReview") }) }, { status: 429 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!(await checkRateLimit(`drama-review:${user.id}`, { maxRequests: 8, windowMs: 60_000 })).allowed) return NextResponse.json({ code: 429, data: null, msg: "视觉复盘请求过于频繁，请稍后重试" }, { status: 429 });
     let body: unknown;
     try {
         body = await readJsonBody(request, 2 * 1024 * 1024);
     } catch (error) {
-        if (isAuthInputError(error)) return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });
+        if (isAuthInputError(error)) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
         throw error;
     }
     const input = normalizeDramaVisualReviewInput(body);
-    if (!input.tasks.length) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("drama.storyboardRequired") }, { status: 400 });
+    if (!input.tasks.length) return NextResponse.json({ code: 400, data: null, msg: "请先生成至少一张可读取的分镜图" }, { status: 400 });
     const review = await reviewCreativeOutputs({
         origin: resolveInternalOrigin(new URL(request.url).origin),
         cookie: request.headers.get("cookie") || "",
@@ -30,5 +28,5 @@ export async function POST(request: Request) {
         foundation: input.foundation,
         tasks: input.tasks,
     });
-    return NextResponse.json({ code: 0, data: { review }, msg: await serverMessage("drama.visualReviewDone") });
+    return NextResponse.json({ code: 0, data: { review }, msg: "视觉复盘已完成" });
 }

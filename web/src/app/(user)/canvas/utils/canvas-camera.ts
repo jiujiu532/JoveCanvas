@@ -1,7 +1,6 @@
 import type { CameraControlOptions } from "../types";
 
 type CameraOption = { value: string; label: string; prompt: string };
-type CameraT = (key: string, values?: Record<string, string | number>) => string;
 
 export const CAMERA_OPTIONS: CameraOption[] = [
     { value: "arri_alexa_mini_lf", label: "ARRI Alexa Mini LF", prompt: "ARRI Alexa Mini LF large-format color science, soft highlight rolloff, natural skin tones" },
@@ -32,16 +31,6 @@ export const DEFAULT_CAMERA_CONTROL: CameraControlOptions = {
 
 const CAMERA_PROMPT_MARKER = "\n\n[Camera direction]\n";
 
-// 测试与无 React 调用点默认中文文案
-const ZH_CAMERA_MESSAGES: Record<string, string> = {
-    "camera.disabledLabel": "镜头关闭",
-    "camera.disabledSummary": "未启用镜头控制",
-};
-
-function defaultCameraT(key: string) {
-    return ZH_CAMERA_MESSAGES[key] ?? key;
-}
-
 export function normalizeCameraControl(value?: Partial<CameraControlOptions>): CameraControlOptions {
     return {
         enabled: value?.enabled === true,
@@ -52,14 +41,14 @@ export function normalizeCameraControl(value?: Partial<CameraControlOptions>): C
     };
 }
 
-export function cameraControlLabel(value?: Partial<CameraControlOptions>, t: CameraT = defaultCameraT) {
+export function cameraControlLabel(value?: Partial<CameraControlOptions>) {
     const control = normalizeCameraControl(value);
-    return control.enabled ? `${control.focalLength}mm · f/${control.aperture}` : t("camera.disabledLabel");
+    return control.enabled ? `${control.focalLength}mm · f/${control.aperture}` : "镜头关闭";
 }
 
-export function cameraControlSummary(value?: Partial<CameraControlOptions>, t: CameraT = defaultCameraT) {
+export function cameraControlSummary(value?: Partial<CameraControlOptions>) {
     const control = normalizeCameraControl(value);
-    if (!control.enabled) return t("camera.disabledSummary");
+    if (!control.enabled) return "未启用镜头控制";
     const camera = CAMERA_OPTIONS.find((item) => item.value === control.camera)!;
     const lens = LENS_OPTIONS.find((item) => item.value === control.lens)!;
     return `${camera.label} · ${lens.label} · ${control.focalLength}mm · f/${control.aperture}`;

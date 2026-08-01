@@ -2,11 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useCallback } from "react";
-import { useTranslations } from "next-intl";
 
 import { useCanvasStore } from "../stores/use-canvas-store";
-import { resolveCanvasProjectPrefix } from "@/lib/site-brand";
-import { usePublicSessionStore } from "@/stores/use-public-session-store";
 
 const CanvasAssistantPanel = dynamic(() => import("../components/canvas-assistant-panel").then((mod) => mod.CanvasAssistantPanel), { ssr: false });
 const loadAssetPickerModal = () => import("../components/asset-picker-modal").then((mod) => mod.AssetPickerModal);
@@ -17,7 +14,6 @@ import { CanvasHistoryEntry } from "./canvas-page-elements";
 import type { CanvasPageState } from "./use-canvas-page-state";
 
 export function useCanvasNavigationActions({ state }: { state: CanvasPageState }) {
-    const t = useTranslations("canvas");
     const {
         message,
         router,
@@ -49,9 +45,6 @@ export function useCanvasNavigationActions({ state }: { state: CanvasPageState }
         nodesRef,
         viewportRef,
     } = state;
-
-    const site = usePublicSessionStore((stateValue) => stateValue.payload?.settings?.site) || { title: "JoveCanvas", canvasProjectPrefix: "" };
-    const canvasProjectPrefix = resolveCanvasProjectPrefix(site);
 
     const resetViewport = useCallback(() => {
         setViewport({ x: size.width / 2, y: size.height / 2, k: 1 });
@@ -122,21 +115,21 @@ export function useCanvasNavigationActions({ state }: { state: CanvasPageState }
 
     const createAndOpenProject = useCallback(async () => {
         try {
-            const id = await createProject(t("list.defaultProjectName", { prefix: canvasProjectPrefix, index: useCanvasStore.getState().projects.length + 1 }));
+            const id = await createProject(`VOZEB PRO 画布 ${useCanvasStore.getState().summaries.length + 1}`);
             router.push(`/canvas/${id}`);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : t("list.createFailed"));
+            message.error(error instanceof Error ? error.message : "画布创建失败");
         }
-    }, [createProject, message, router, canvasProjectPrefix, t]);
+    }, [createProject, message, router]);
 
     const deleteCurrentProject = useCallback(async () => {
         try {
             await deleteProjects([projectId]);
             router.push("/canvas");
         } catch (error) {
-            message.error(error instanceof Error ? error.message : t("list.deleteDialog.failed"));
+            message.error(error instanceof Error ? error.message : "画布删除失败");
         }
-    }, [deleteProjects, message, projectId, router, t]);
+    }, [deleteProjects, message, projectId, router]);
     return {
         resetViewport,
         locateCanvasNode,

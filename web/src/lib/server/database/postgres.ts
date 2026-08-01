@@ -1,4 +1,4 @@
-import { Pool, type QueryResult, type QueryResultRow } from "pg";
+import { Client, Pool, type QueryResult, type QueryResultRow } from "pg";
 
 import { POSTGRESQL_SCHEMA_SQL } from "@/lib/server/database/schema";
 
@@ -23,8 +23,26 @@ const POSTGRES_TABLES = [
     "point_records",
     "daily_plan_point_wallets",
     "billing_products",
+    "promotion_campaigns",
+    "promotion_products",
+    "coupon_templates",
+    "coupon_template_products",
     "billing_orders",
+    "user_coupons",
+    "coupon_redemptions",
     "payment_transactions",
+    "referral_programs",
+    "referral_codes",
+    "referral_relationships",
+    "referral_rewards",
+    "published_works",
+    "published_work_versions",
+    "published_work_assets",
+    "published_work_cases",
+    "published_work_likes",
+    "user_follows",
+    "user_blocks",
+    "user_notifications",
     "billing_reconciliation_runs",
     "billing_reconciliation_rows",
     "user_plan_assignments",
@@ -37,6 +55,8 @@ const POSTGRES_TABLES = [
     "generation_logs",
     "generation_log_assets",
     "generation_tasks",
+    "generation_worker_heartbeats",
+    "generation_webhook_events",
     "creative_conversations",
     "creative_messages",
     "creative_assets",
@@ -52,6 +72,8 @@ const POSTGRES_TABLES = [
 ] as const;
 
 const POSTGRES_SCHEMA_OBJECTS = [
+    "user_account_id_seq",
+    "users_account_id_idx",
     "users_username_lower_idx",
     "users_email_lower_idx",
     "users_plan_id_idx",
@@ -69,16 +91,61 @@ const POSTGRES_SCHEMA_OBJECTS = [
     "daily_plan_point_wallets_assignment_idx",
     "billing_products_plan_idx",
     "billing_products_enabled_idx",
+    "promotion_campaigns_active_idx",
+    "promotion_products_product_idx",
+    "coupon_templates_code_idx",
+    "coupon_templates_active_idx",
+    "coupon_template_products_product_idx",
     "billing_orders_user_created_idx",
     "billing_orders_status_created_idx",
     "billing_orders_created_idx",
     "billing_orders_pending_expires_idx",
     "billing_orders_provider_idx",
     "billing_orders_product_idx",
+    "user_coupons_user_status_idx",
+    "user_coupons_template_user_idx",
+    "user_coupons_locked_order_idx",
+    "coupon_redemptions_order_idx",
+    "coupon_redemptions_coupon_idx",
     "payment_transactions_order_idx",
     "payment_transactions_user_idx",
     "payment_transactions_created_idx",
     "payment_transactions_provider_trade_idx",
+    "referral_codes_code_idx",
+    "referral_relationships_inviter_idx",
+    "referral_relationships_risk_idx",
+    "referral_relationships_ip_idx",
+    "referral_relationships_payment_idx",
+    "referral_rewards_relationship_role_idx",
+    "referral_rewards_trigger_order_idx",
+    "referral_rewards_beneficiary_idx",
+    "referral_rewards_due_idx",
+    "referral_rewards_status_idx",
+    "published_works_slug_idx",
+    "published_works_owner_updated_idx",
+    "published_works_lifecycle_idx",
+    "published_works_gallery_featured_idx",
+    "published_works_gallery_popular_idx",
+    "published_work_versions_work_number_idx",
+    "published_work_versions_moderation_idx",
+    "published_work_versions_public_idx",
+    "published_work_versions_public_category_idx",
+    "published_work_versions_public_tags_idx",
+    "published_work_versions_public_search_idx",
+    "published_work_assets_unique_role",
+    "published_work_assets_version_order_idx",
+    "published_work_assets_storage_idx",
+    "published_work_cases_open_unique_idx",
+    "published_work_cases_admin_idx",
+    "published_work_cases_work_idx",
+    "published_work_likes_user_created_idx",
+    "published_work_likes_work_created_idx",
+    "user_follows_followed_created_idx",
+    "user_follows_follower_created_idx",
+    "user_blocks_blocked_created_idx",
+    "user_notifications_dedup_idx",
+    "user_notifications_user_created_idx",
+    "user_notifications_unread_idx",
     "billing_reconciliation_runs_created_idx",
     "billing_reconciliation_runs_provider_created_idx",
     "billing_reconciliation_rows_run_idx",
@@ -90,6 +157,7 @@ const POSTGRES_SCHEMA_OBJECTS = [
     "payment_provider_events_provider_created_idx",
     "payment_provider_events_provider_event_idx",
     "cdk_codes_status_idx",
+    "cdk_codes_status_created_idx",
     "cdk_redemptions_user_id_idx",
     "announcements_visible_idx",
     "prompts_scope_updated_idx",
@@ -105,7 +173,12 @@ const POSTGRES_SCHEMA_OBJECTS = [
     "generation_tasks_user_client_request_idx",
     "generation_tasks_conversation_idx",
     "generation_tasks_run_idx",
+    "generation_tasks_user_project_idx",
+    "generation_tasks_recovery_due_idx",
+    "generation_worker_heartbeats_seen_idx",
+    "generation_webhook_events_received_idx",
     "creative_conversations_user_updated_idx",
+    "creative_conversations_user_source_idx",
     "creative_conversations_project_idx",
     "creative_messages_conversation_sequence_idx",
     "creative_messages_run_idx",
@@ -114,6 +187,8 @@ const POSTGRES_SCHEMA_OBJECTS = [
     "local_media_assets_owner_created_idx",
     "local_media_assets_source_idx",
     "local_media_assets_expires_idx",
+    "local_media_assets_local_created_idx",
+    "local_media_assets_local_filter_idx",
     "local_media_assets_storage_provider_check",
     "local_media_assets_external_object_idx",
     "canvas_projects_user_updated_idx",
@@ -131,8 +206,19 @@ const POSTGRES_SCHEMA_OBJECTS = [
     "users_set_updated_at",
     "daily_plan_point_wallets_set_updated_at",
     "billing_products_set_updated_at",
+    "promotion_campaigns_set_updated_at",
+    "coupon_templates_set_updated_at",
     "billing_orders_set_updated_at",
+    "user_coupons_set_updated_at",
+    "coupon_redemptions_set_updated_at",
     "payment_transactions_set_updated_at",
+    "referral_programs_set_updated_at",
+    "referral_codes_set_updated_at",
+    "referral_relationships_set_updated_at",
+    "referral_rewards_set_updated_at",
+    "published_works_set_updated_at",
+    "published_work_versions_set_updated_at",
+    "published_work_cases_set_updated_at",
     "billing_reconciliation_runs_set_updated_at",
     "billing_reconciliation_rows_set_updated_at",
     "user_plan_assignments_set_updated_at",
@@ -148,6 +234,15 @@ const POSTGRES_SCHEMA_OBJECTS = [
 const globalForPostgres = globalThis as typeof globalThis & {
     __vozebProPostgresPool?: Pool;
     __vozebProPostgresSchemaReady?: Promise<void>;
+    __vozebProPostgresNotifications?: PostgresNotificationState;
+};
+
+type PostgresNotificationListener = (payload: string) => void;
+type PostgresNotificationState = {
+    client?: Client;
+    connecting?: Promise<void>;
+    reconnectTimer?: ReturnType<typeof setTimeout>;
+    listeners: Map<string, Set<PostgresNotificationListener>>;
 };
 
 export function getDatabaseProvider(): DatabaseProvider {
@@ -183,22 +278,95 @@ export async function postgresQuery<T extends QueryResultRow = QueryResultRow>(t
 
 export async function withPostgresTransaction<T>(handler: (client: QueryExecutor) => Promise<T>) {
     const client = await getPostgresPool().connect();
+    let queryQueue = Promise.resolve();
+    let queryFailed = false;
+    let queryError: unknown;
     const executor: QueryExecutor = {
         query<T extends QueryResultRow = QueryResultRow>(text: string, values?: unknown[]) {
-            return client.query<T>(prefixPostgresSql(text), values);
+            const pending = queryQueue.then(async () => {
+                if (queryFailed) throw queryError;
+                try {
+                    return await client.query<T>(prefixPostgresSql(text), values);
+                } catch (error) {
+                    queryFailed = true;
+                    queryError = error;
+                    throw error;
+                }
+            });
+            queryQueue = pending.then(
+                () => undefined,
+                () => undefined,
+            );
+            return pending;
         },
     };
     try {
         await client.query("BEGIN");
         const result = await handler(executor);
+        await queryQueue;
+        if (queryFailed) throw queryError;
         await client.query("COMMIT");
         return result;
     } catch (error) {
+        await queryQueue;
         await client.query("ROLLBACK");
         throw error;
     } finally {
         client.release();
     }
+}
+
+export async function subscribePostgresNotification(channel: string, listener: PostgresNotificationListener) {
+    const name = normalizeNotificationChannel(channel);
+    const state: PostgresNotificationState = globalForPostgres.__vozebProPostgresNotifications ?? (globalForPostgres.__vozebProPostgresNotifications = { listeners: new Map() });
+    const existing = state.listeners.get(name);
+    const listeners = existing || new Set<PostgresNotificationListener>();
+    listeners.add(listener);
+    state.listeners.set(name, listeners);
+    if (state.client && !existing) await state.client.query(`LISTEN ${name}`);
+    else await ensurePostgresNotificationClient(state);
+    return () => {
+        const current = state.listeners.get(name);
+        current?.delete(listener);
+        if (!current?.size) state.listeners.delete(name);
+    };
+}
+
+async function ensurePostgresNotificationClient(state: PostgresNotificationState) {
+    if (state.client) return;
+    if (state.connecting) return state.connecting;
+    const connectionString = getPostgresConnectionString();
+    if (!connectionString) throw new Error("DATABASE_URL is required for PostgreSQL notifications");
+    const client = new Client({ connectionString, ssl: parseBoolean(process.env.VOZEB_PRO_DATABASE_SSL) ? { rejectUnauthorized: false } : undefined });
+    state.connecting = (async () => {
+        await client.connect();
+        client.on("notification", (message) => {
+            for (const listener of [...(state.listeners.get(message.channel) || [])]) listener(message.payload || "");
+        });
+        client.on("error", () => reconnectPostgresNotifications(state, client));
+        for (const channel of state.listeners.keys()) await client.query(`LISTEN ${channel}`);
+        state.client = client;
+    })().finally(() => {
+        state.connecting = undefined;
+    });
+    return state.connecting;
+}
+
+function reconnectPostgresNotifications(state: PostgresNotificationState, client: Client) {
+    if (state.client === client) state.client = undefined;
+    void client.end().catch(() => undefined);
+    if (!state.listeners.size || state.reconnectTimer) return;
+    state.reconnectTimer = setTimeout(() => {
+        state.reconnectTimer = undefined;
+        void ensurePostgresNotificationClient(state).catch(() => reconnectPostgresNotifications(state, client));
+    }, 1_000);
+    state.reconnectTimer.unref?.();
+}
+
+function normalizeNotificationChannel(value: string) {
+    const channel = value.trim().toLowerCase();
+    if (!/^[a-z][a-z0-9_]{0,62}$/.test(channel)) throw new Error("Invalid PostgreSQL notification channel");
+    return channel;
 }
 
 export async function ensurePostgresSchema() {

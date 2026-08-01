@@ -10,7 +10,10 @@ const mocks = vi.hoisted(() => ({
     disposition: vi.fn(),
     rate: vi.fn(),
     externalRead: vi.fn(),
-    getClientIp: vi.fn(() => "203.0.113.50"),
+    acquire: vi.fn(),
+    wrap: vi.fn(),
+    head: vi.fn(),
+    release: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/session", () => ({ getCurrentUser: mocks.getCurrentUser }));
@@ -19,16 +22,14 @@ vi.mock("@/lib/server/local-media-registry", () => ({ getLocalMediaRegistration:
 vi.mock("@/lib/server/reference-asset-store", () => ({ isReferenceAssetPath: mocks.isValidPath, readReferenceAsset: mocks.read }));
 vi.mock("@/lib/server/local-media-response", () => ({
     createLocalMediaResponse: mocks.stream,
+    createMediaHeadResponse: mocks.head,
     mediaContentDisposition: mocks.disposition,
 }));
-vi.mock("@/lib/server/security", () => ({
-    checkLocalMediaRateLimit: mocks.rate,
-    getClientIp: mocks.getClientIp,
-    rateLimitHeaders: vi.fn(() => ({ "Retry-After": "60" })),
-}));
+vi.mock("@/lib/server/media-concurrency", () => ({ acquireMediaConcurrency: mocks.acquire, withMediaConcurrency: mocks.wrap }));
+vi.mock("@/lib/server/security", () => ({ checkLocalMediaRateLimit: mocks.rate, rateLimitHeaders: vi.fn(() => ({ "Retry-After": "60" })) }));
 vi.mock("@/lib/server/object-storage-service", () => ({ createExternalMediaReadUrl: mocks.externalRead }));
 
-import { GET } from "./route";
+import { GET, HEAD } from "./route";
 
 const context = { params: Promise.resolve({ path: ["permanent", "2026", "07", "20", "images", "file.png"] }) };
 
@@ -39,11 +40,13 @@ describe("reference asset access", () => {
         mocks.isValidPath.mockReturnValue(true);
         mocks.read.mockResolvedValue({ filePath: "asset.png", size: 5, mimeType: "image/png", registration: { ownerUserId: "owner" } });
         mocks.stream.mockResolvedValue(new Response("image"));
-        mocks.registration.mockResolvedValue({ ownerUserId: "owner" });
+        mocks.registration.mockResolvedValue({ ownerUserId: "owner", mimeType: "image/png" });
         mocks.disposition.mockReturnValue('inline; filename="file.png"');
         mocks.rate.mockResolvedValue({ allowed: true, remaining: 239, resetAt: Date.now() + 60_000 });
         mocks.externalRead.mockResolvedValue("https://storage.example/signed");
-        mocks.getClientIp.mockReturnValue("203.0.113.50");
+        mocks.acquire.mockReturnValue({ release: mocks.release });
+        mocks.wrap.mockImplementation((response: Response) => response);
+        mocks.head.mockReturnValue(new Response(null, { status: 200, headers: { "Content-Type": "image/png", "Content-Length": "5" } }));
     });
 
     it("does not expose another user's media to an authenticated user", async () => {
@@ -62,49 +65,18 @@ describe("reference asset access", () => {
         expect(mocks.registration).not.toHaveBeenCalled();
     });
 
-    it("rejects anonymous unsigned access for non-prompt-seed media", async () => {
+    it("rejects anonymous unsigned access before querying media registrations", async () => {
         mocks.getCurrentUser.mockResolvedValue(null);
-        mocks.registration.mockResolvedValue({ ownerUserId: "owner", storageClass: "permanent", source: "user-upload" });
         const response = await GET(new Request("http://localhost/api/reference-assets/permanent/2026/07/20/images/file.png"), context);
         expect(response.status).toBe(401);
-        expect(mocks.stream).not.toHaveBeenCalled();
-    });
-
-    it("allows anonymous unsigned access for permanent prompt-seed covers (scheme C)", async () => {
-        mocks.getCurrentUser.mockResolvedValue(null);
-        mocks.registration.mockResolvedValue({ ownerUserId: "system", storageClass: "permanent", source: "prompt-seed:youmind-skill" });
-        const response = await GET(new Request("http://localhost/api/reference-assets/permanent/2026/07/20/images/file.png"), context);
-        expect(response.status).toBe(200);
-        expect(mocks.getCurrentUser).not.toHaveBeenCalled();
-        expect(mocks.stream).toHaveBeenCalled();
-        expect(mocks.rate).toHaveBeenCalled();
-    });
-
-    it("rates public prompt-seed covers by hop-aware client IP, not raw XFF string", async () => {
-        mocks.getCurrentUser.mockResolvedValue(null);
-        mocks.registration.mockResolvedValue({ ownerUserId: "system", storageClass: "permanent", source: "prompt-seed:youmind-skill" });
-        mocks.getClientIp.mockReturnValue("203.0.113.77");
-        const request = new Request("http://localhost/api/reference-assets/permanent/2026/07/20/images/file.png", {
-            headers: { "x-forwarded-for": "198.51.100.1, 203.0.113.77" },
-        });
-        const response = await GET(request, context);
-        expect(response.status).toBe(200);
-        expect(mocks.getClientIp).toHaveBeenCalledWith(request);
-        expect(mocks.rate).toHaveBeenCalledWith("public-prompt-seed:203.0.113.77", request);
-    });
-
-    it("does not treat temporary prompt-seed media as public", async () => {
-        mocks.getCurrentUser.mockResolvedValue(null);
-        mocks.registration.mockResolvedValue({ ownerUserId: "system", storageClass: "temporary", source: "prompt-seed:youmind-skill" });
-        const response = await GET(new Request("http://localhost/api/reference-assets/temporary/2026/07/20/images/file.png"), context);
-        expect(response.status).toBe(401);
-        expect(mocks.stream).not.toHaveBeenCalled();
+        expect(mocks.rate).not.toHaveBeenCalled();
+        expect(mocks.registration).not.toHaveBeenCalled();
     });
 
     it("allows the owner and administrators to read registered media", async () => {
         mocks.getCurrentUser.mockResolvedValue({ id: "owner", role: "user" });
         expect((await GET(new Request("http://localhost/api/reference-assets/permanent/2026/07/20/images/file.png"), context)).status).toBe(200);
-        expect(mocks.disposition).toHaveBeenCalledWith("inline", "file.png");
+        expect(mocks.disposition).toHaveBeenCalledWith("inline", "file.png", "image/png", "");
         mocks.getCurrentUser.mockResolvedValue({ id: "admin", role: "admin" });
         expect((await GET(new Request("http://localhost/api/reference-assets/permanent/2026/07/20/images/file.png"), context)).status).toBe(200);
     });
@@ -112,10 +84,17 @@ describe("reference asset access", () => {
     it("allows a valid short-lived signature without a login", async () => {
         mocks.verify.mockReturnValue(true);
         mocks.getCurrentUser.mockResolvedValue(null);
-        const response = await GET(new Request("http://localhost/api/reference-assets/permanent/2026/07/20/images/file.png?expires=1&signature=test"), context);
+        const response = await GET(new Request("http://localhost/api/reference-assets/permanent/2026/07/20/images/file.png?purpose=provider-read&expires=1&signature=test"), context);
         expect(response.status).toBe(200);
         expect(mocks.getCurrentUser).not.toHaveBeenCalled();
         expect(mocks.rate.mock.invocationCallOrder[0]).toBeLessThan(mocks.registration.mock.invocationCallOrder[0]);
+    });
+
+    it("does not allow an upstream signature to become an anonymous original download", async () => {
+        mocks.verify.mockReturnValue(true);
+        const response = await GET(new Request("http://localhost/api/reference-assets/permanent/2026/07/20/images/file.png?purpose=provider-read&expires=1&signature=test&download=original"), context);
+        expect(response.status).toBe(403);
+        expect(mocks.registration).not.toHaveBeenCalled();
     });
 
     it("does not expose an unregistered file through a signed url", async () => {
@@ -134,6 +113,32 @@ describe("reference asset access", () => {
         expect(response.headers.get("location")).toBe("https://storage.example/signed");
         expect(response.headers.get("cache-control")).toBe("private, no-store");
         expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow, noarchive");
+        expect(response.headers.get("cross-origin-resource-policy")).toBe("same-site");
+        expect(mocks.read).not.toHaveBeenCalled();
+    });
+
+    it("answers object-backed HEAD from registration metadata without creating a GET signature", async () => {
+        mocks.getCurrentUser.mockResolvedValue({ id: "owner", role: "user" });
+        mocks.registration.mockResolvedValue({ ownerUserId: "owner", storageProvider: "object", mimeType: "image/png", bytes: 5, originalName: "file.png" });
+        const response = await HEAD(new Request("http://localhost/api/reference-assets/permanent/2026/07/20/images/file.png", { method: "HEAD" }), context);
+        expect(response.status).toBe(200);
+        expect(mocks.head).toHaveBeenCalled();
+        expect(mocks.externalRead).not.toHaveBeenCalled();
+        expect(mocks.acquire).not.toHaveBeenCalled();
+    });
+
+    it("marks authenticated original HEAD downloads as attachments", async () => {
+        mocks.getCurrentUser.mockResolvedValue({ id: "owner", role: "user" });
+        mocks.registration.mockResolvedValue({ ownerUserId: "owner", storageProvider: "object", mimeType: "video/quicktime", bytes: 5, originalName: "generated-video" });
+        await HEAD(new Request("http://localhost/api/reference-assets/permanent/2026/07/20/images/file.png?download=original", { method: "HEAD" }), context);
+        expect(mocks.disposition).toHaveBeenCalledWith("attachment", "generated-video", "video/quicktime", "permanent/2026/07/20/images/file.png");
+    });
+
+    it("rejects excess concurrent reads before opening local media", async () => {
+        mocks.getCurrentUser.mockResolvedValue({ id: "owner", role: "user" });
+        mocks.acquire.mockReturnValue(null);
+        const response = await GET(new Request("http://localhost/api/reference-assets/permanent/2026/07/20/images/file.png"), context);
+        expect(response.status).toBe(429);
         expect(mocks.read).not.toHaveBeenCalled();
     });
 

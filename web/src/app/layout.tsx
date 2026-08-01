@@ -1,11 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages } from "next-intl/server";
 import { AppProviders } from "@/components/layout/app-providers";
-import { BRAND_ASSET_VERSION, DEFAULT_BRAND_ICON_PATH, DEFAULT_BRAND_LOGO_PATH, withBrandAssetVersion } from "@/lib/brand-assets";
 import { absoluteSiteUrl, getPublicSiteSettings, siteMetadataBase } from "@/lib/server/site-metadata";
+import { buildWebsiteStructuredData, serializeStructuredData } from "@/lib/structured-data";
 import "antd/dist/reset.css";
 import "./globals.css";
 import React from "react";
@@ -22,11 +20,9 @@ export const viewport: Viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
     const site = await getPublicSiteSettings();
-    const locale = await getLocale();
     const base = siteMetadataBase();
-    const logoUrl = absoluteSiteUrl(withBrandAssetVersion(site.logoUrl || DEFAULT_BRAND_LOGO_PATH), base);
-    // Prefer SVG icon with version query; /favicon.ico still works as redirect fallback for legacy agents.
-    const iconUrl = absoluteSiteUrl(withBrandAssetVersion(site.iconUrl || DEFAULT_BRAND_ICON_PATH), base);
+    const logoUrl = absoluteSiteUrl(site.logoUrl || "/logo.svg", base);
+    const iconUrl = absoluteSiteUrl("/favicon.ico", base);
     const title = site.seoTitle || site.title;
     return {
         metadataBase: base,
@@ -48,7 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
             description: site.seoDescription,
             siteName: site.title,
             images: logoUrl ? [{ url: logoUrl }] : undefined,
-            locale: locale === "en" ? "en_US" : "zh_CN",
+            locale: "zh_CN",
         },
         twitter: {
             card: "summary",
@@ -64,15 +60,22 @@ export default async function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const locale = await getLocale();
-    const messages = await getMessages();
+    const site = await getPublicSiteSettings();
+    const base = siteMetadataBase();
+    const websiteUrl = absoluteSiteUrl("/", base);
+    const websiteStructuredData = buildWebsiteStructuredData({
+        name: site.title,
+        description: site.seoDescription,
+        url: websiteUrl,
+        logoUrl: absoluteSiteUrl(site.logoUrl || "/logo.svg", base),
+    });
 
     return (
-        <html lang={locale === "zh" ? "zh-CN" : "en"} suppressHydrationWarning className="font-sans">
+        <html lang="zh-CN" suppressHydrationWarning className="font-sans">
             <head>
-                <link rel="icon" href={`${DEFAULT_BRAND_ICON_PATH}?v=${BRAND_ASSET_VERSION}`} type="image/svg+xml" />
-                <link rel="shortcut icon" href={`/favicon.ico?v=${BRAND_ASSET_VERSION}`} />
-                <link rel="apple-touch-icon" href={`${DEFAULT_BRAND_ICON_PATH}?v=${BRAND_ASSET_VERSION}`} />
+                <link rel="icon" href="/favicon.ico" />
+                <link rel="shortcut icon" href="/favicon.ico" />
+                <link rel="apple-touch-icon" href="/favicon.ico" />
             </head>
             <body
                 className="bg-background text-foreground antialiased"
@@ -80,6 +83,7 @@ export default async function RootLayout({
                     fontFamily: '"SF Pro Display","SF Pro Text","PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif',
                 }}
             >
+                <script id="website-json-ld" type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeStructuredData(websiteStructuredData) }} />
                 <Script
                     id="theme-script"
                     strategy="beforeInteractive"
@@ -87,11 +91,9 @@ export default async function RootLayout({
                         __html: `try{var s=JSON.parse(localStorage.getItem("vozeb-pro:theme_store")||"{}");var t=s.state&&s.state.theme==="dark"?"dark":"light";document.documentElement.classList.toggle("dark",t==="dark");document.documentElement.style.colorScheme=t}catch(e){}`,
                     }}
                 />
-                <NextIntlClientProvider locale={locale} messages={messages}>
-                    <AntdRegistry>
-                        <AppProviders>{children}</AppProviders>
-                    </AntdRegistry>
-                </NextIntlClientProvider>
+                <AntdRegistry>
+                    <AppProviders>{children}</AppProviders>
+                </AntdRegistry>
             </body>
         </html>
     );

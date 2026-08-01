@@ -264,12 +264,7 @@ describe("cleanupUnreferencedPromptSeedCovers", () => {
         });
         try {
             const { cleanupUnreferencedPromptSeedCovers } = await import("@/lib/prompts/seed-import/cleanup-orphans");
-            const result = await cleanupUnreferencedPromptSeedCovers([
-                "permanent/orphan-a.png",
-                "permanent/kept-b.png",
-                "permanent/orphan-c.png",
-                "permanent/orphan-a.png",
-            ]);
+            const result = await cleanupUnreferencedPromptSeedCovers(["permanent/orphan-a.png", "permanent/kept-b.png", "permanent/orphan-c.png", "permanent/orphan-a.png"]);
             expect(result).toEqual({ deleted: 2, blocked: 1 });
             expect(deleteSpy).toHaveBeenCalledTimes(1);
             expect(deleteSpy).toHaveBeenCalledWith(["permanent/orphan-a.png", "permanent/orphan-c.png"], "reference");

@@ -22,6 +22,7 @@ export type WorkbenchAgentMessage = {
     sequence?: number;
     role: "user" | "assistant" | "warning" | "error";
     text: string;
+    attachments?: WorkbenchAgentAttachment[];
     progress?: WorkbenchAgentProgress;
     choices?: WorkbenchAgentChoice[];
 };
@@ -41,51 +42,21 @@ export type WorkbenchAgentSession = {
     updatedAt: number;
 };
 
-type ProgressStepKey = "brief" | "direction" | "deliverables" | "submit" | "review";
-
 type ProgressStep = {
-    key: ProgressStepKey;
+    key: "brief" | "direction" | "deliverables" | "submit" | "review";
     label: string;
     status: WorkbenchAgentProgressStepStatus;
 };
 
-export type WorkbenchAgentProgressLabels = {
-    brief: string;
-    direction: string;
-    deliverables: string;
-    submit: string;
-    review: string;
-    planning: string;
-    submitting: string;
-    failed: string;
-    cancelled: string;
-    replied: string;
-    analysisDone: string;
-    ready: string;
-    initialText: string;
-};
+const stepDefinitions: Array<Pick<ProgressStep, "key" | "label">> = [
+    { key: "brief", label: "理解当前需求与参考素材" },
+    { key: "direction", label: "检查创作约束" },
+    { key: "deliverables", label: "准备生成任务" },
+    { key: "submit", label: "创建生成任务" },
+    { key: "review", label: "整理生成结果" },
+];
 
-// 默认中文文案：供 vitest 与非 React 调用点回落；UI 渲染时传入 t() 结果
-export const DEFAULT_WORKBENCH_AGENT_PROGRESS_LABELS: WorkbenchAgentProgressLabels = {
-    brief: "理解当前需求与参考素材",
-    direction: "检查创作约束",
-    deliverables: "准备生成任务",
-    submit: "创建生成任务",
-    review: "整理生成结果",
-    planning: "正在理解并规划",
-    submitting: "正在创建生成任务",
-    failed: "Agent 执行失败",
-    cancelled: "本次执行已取消",
-    replied: "已回复",
-    analysisDone: "已完成需求分析",
-    ready: "创作任务已就绪",
-    initialText: "正在理解你的需求。",
-};
-
-const stepKeys: ProgressStepKey[] = ["brief", "direction", "deliverables", "submit", "review"];
-
-export function workbenchAgentProgressSteps(progress: WorkbenchAgentProgress, labels: WorkbenchAgentProgressLabels = DEFAULT_WORKBENCH_AGENT_PROGRESS_LABELS): ProgressStep[] {
-    const stepDefinitions = stepKeys.map((key) => ({ key, label: labels[key] }));
+export function workbenchAgentProgressSteps(progress: WorkbenchAgentProgress): ProgressStep[] {
     if (progress.intent === "conversation" || (progress.phase === "planning" && !progress.intent)) {
         return [{ ...stepDefinitions[0], status: progress.phase === "completed" ? "completed" : progress.phase === "failed" ? "failed" : progress.phase === "cancelled" ? "cancelled" : "running" }];
     }
@@ -100,29 +71,27 @@ export function workbenchAgentProgressSteps(progress: WorkbenchAgentProgress, la
     }));
 }
 
-export function workbenchAgentProgressHeading(progress: WorkbenchAgentProgress, labels: WorkbenchAgentProgressLabels = DEFAULT_WORKBENCH_AGENT_PROGRESS_LABELS) {
-    if (progress.phase === "planning") return labels.planning;
-    if (progress.phase === "submitting") return labels.submitting;
-    if (progress.phase === "failed") return labels.failed;
-    if (progress.phase === "cancelled") return labels.cancelled;
-    if (progress.intent === "conversation") return labels.replied;
-    return progress.shouldGenerate === false ? labels.analysisDone : labels.ready;
+export function workbenchAgentProgressHeading(progress: WorkbenchAgentProgress) {
+    if (progress.phase === "planning") return "正在理解并规划";
+    if (progress.phase === "submitting") return "正在创建生成任务";
+    if (progress.phase === "failed") return "Agent 执行失败";
+    if (progress.phase === "cancelled") return "本次执行已取消";
+    if (progress.intent === "conversation") return "已回复";
+    return progress.shouldGenerate === false ? "已完成需求分析" : "创作任务已就绪";
 }
 
-export function createWorkbenchAgentProgressMessage(id: string, hasReferences: boolean, labels: WorkbenchAgentProgressLabels = DEFAULT_WORKBENCH_AGENT_PROGRESS_LABELS): WorkbenchAgentMessage {
+export function createWorkbenchAgentProgressMessage(id: string, hasReferences: boolean, mediaLabel = "创作需求"): WorkbenchAgentMessage {
     return {
         id,
         role: "assistant",
-        text: labels.initialText,
+        text: hasReferences ? `收到，我会根据当前参考素材完成这次${mediaLabel}。` : `收到，我会按你的要求完成这次${mediaLabel}。`,
         progress: { phase: "planning", hasReferences },
     };
 }
 
-export function appendWorkbenchAgentRequest(messages: WorkbenchAgentMessage[], text: string, progress: WorkbenchAgentMessage): WorkbenchAgentMessage[] {
+export function appendWorkbenchAgentRequest(messages: WorkbenchAgentMessage[], text: string, attachments: WorkbenchAgentAttachment[], progress: WorkbenchAgentMessage): WorkbenchAgentMessage[] {
     const normalized = text.trim();
-    const lastUserMessage = messages.findLast((message) => message.role === "user");
-    const next = lastUserMessage?.text.trim() === normalized ? messages : [...messages, { id: `${progress.id}-user`, role: "user" as const, text: normalized }];
-    return [...next, progress];
+    return [...messages, { id: `${progress.id}-user`, role: "user" as const, text: normalized, ...(attachments.length ? { attachments } : {}) }, progress];
 }
 
 export function updateWorkbenchAgentProgress(messages: WorkbenchAgentMessage[], id: string, progress: WorkbenchAgentProgress, text?: string, choices?: WorkbenchAgentChoice[]): WorkbenchAgentMessage[] {
@@ -147,3 +116,4 @@ export function applyWorkbenchAgentPlan(messages: WorkbenchAgentMessage[], id: s
 export function updateWorkbenchAgentResponse(messages: WorkbenchAgentMessage[], id: string, text: string, role: "assistant" | "warning" | "error" = "assistant"): WorkbenchAgentMessage[] {
     return messages.map((message) => (message.id === id ? { ...message, role, text, progress: undefined, choices: undefined } : message));
 }
+import type { WorkbenchAgentAttachment } from "@/lib/workbench-agent-attachment";

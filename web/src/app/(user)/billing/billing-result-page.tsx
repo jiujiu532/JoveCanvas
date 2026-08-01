@@ -4,13 +4,11 @@ import { Button, Spin, Tag } from "antd";
 import { ArrowLeft, CheckCircle2, Clock3, ReceiptText, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
 
 import { cancelBillingOrder, getBillingOrder, type BillingOrder } from "@/services/api/billing";
 import { useUserStore, type LocalUser } from "@/stores/use-user-store";
 
 export function BillingResultPage({ mode, orderId }: { mode: "success" | "cancel"; orderId: string }) {
-    const t = useTranslations("workspace.billing.result");
     const [order, setOrder] = useState<BillingOrder | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -27,7 +25,7 @@ export function BillingResultPage({ mode, orderId }: { mode: "success" | "cancel
         };
         const load = async () => {
             if (!orderId) {
-                setError(t("missingOrderId"));
+                setError("支付结果缺少订单编号");
                 setLoading(false);
                 return;
             }
@@ -46,7 +44,7 @@ export function BillingResultPage({ mode, orderId }: { mode: "success" | "cancel
                 }
             } catch (value) {
                 if (!active) return;
-                setError(value instanceof Error ? value.message : t("loadFailed"));
+                setError(value instanceof Error ? value.message : "支付结果加载失败");
                 setLoading(false);
             }
         };
@@ -55,7 +53,7 @@ export function BillingResultPage({ mode, orderId }: { mode: "success" | "cancel
             active = false;
             if (timer) clearTimeout(timer);
         };
-    }, [mode, orderId, setUser, t]);
+    }, [mode, orderId, setUser]);
 
     const paid = order?.status === "paid";
     const canceled = mode === "cancel" || order?.status === "canceled";
@@ -68,7 +66,7 @@ export function BillingResultPage({ mode, orderId }: { mode: "success" | "cancel
                     {loading ? (
                         <div className="py-2 sm:py-12">
                             <Spin />
-                            <div className="mt-4 text-sm text-stone-500 dark:text-stone-400">{t("confirming")}</div>
+                            <div className="mt-4 text-sm text-stone-500 dark:text-stone-400">正在确认支付结果…</div>
                         </div>
                     ) : (
                         <>
@@ -77,29 +75,31 @@ export function BillingResultPage({ mode, orderId }: { mode: "success" | "cancel
                             >
                                 <Icon className="size-6 sm:size-8" />
                             </span>
-                            <h1 className="mt-3 text-xl font-semibold sm:mt-5 sm:text-2xl">{paid ? t("successTitle") : canceled ? t("canceledTitle") : t("pendingTitle")}</h1>
-                            <p className="mt-2 text-sm leading-6 text-stone-500 dark:text-stone-400">{error || (paid ? t("successDesc") : canceled ? t("canceledDesc") : t("pendingDesc"))}</p>
+                            <h1 className="mt-3 text-xl font-semibold sm:mt-5 sm:text-2xl">{paid ? "支付成功" : canceled ? "支付已取消" : "支付结果确认中"}</h1>
+                            <p className="mt-2 text-sm leading-6 text-stone-500 dark:text-stone-400">
+                                {error || (paid ? "套餐权益和积分已经更新。" : canceled ? "订单已取消，你可以重新选择套餐和支付方式。" : "支付回调可能稍有延迟，可前往订单记录继续查看状态。")}
+                            </p>
                             {order ? (
                                 <div className="mt-4 rounded-xl border border-stone-200 bg-stone-50 p-3.5 text-left sm:mt-6 sm:p-4 dark:border-stone-800 dark:bg-stone-900/55">
                                     <div className="flex items-center justify-between gap-3 text-sm">
-                                        <span className="text-stone-500 dark:text-stone-400">{t("orderNoLabel")}</span>
+                                        <span className="text-stone-500 dark:text-stone-400">订单号</span>
                                         <span className="break-all font-mono text-xs">{order.orderNo}</span>
                                     </div>
                                     <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-                                        <span className="text-stone-500 dark:text-stone-400">{t("statusLabel")}</span>
-                                        <Tag color={paid ? "green" : canceled ? "default" : "gold"}>{paid ? t("statusPaid") : canceled ? t("statusCanceled") : t("statusPending")}</Tag>
+                                        <span className="text-stone-500 dark:text-stone-400">当前状态</span>
+                                        <Tag color={paid ? "green" : canceled ? "default" : "gold"}>{paid ? "已支付" : canceled ? "已取消" : "待确认"}</Tag>
                                     </div>
                                 </div>
                             ) : null}
                             <div className="mt-4 grid gap-2.5 sm:mt-6 sm:grid-cols-2 sm:gap-3">
                                 <Link href="/billing" className="block">
                                     <Button block className="!h-10" icon={<ArrowLeft className="size-4" />}>
-                                        {t("backToBilling")}
+                                        返回充值中心
                                     </Button>
                                 </Link>
                                 <Link href="/profile?section=orders" className="block">
                                     <Button block type="primary" className="profile-primary-button !h-10" icon={<ReceiptText className="size-4" />}>
-                                        {t("viewOrders")}
+                                        查看订单记录
                                     </Button>
                                 </Link>
                             </div>

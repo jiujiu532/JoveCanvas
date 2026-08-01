@@ -216,25 +216,25 @@ export async function buildSeedanceContent(prompt: string, references: Reference
 
 export async function resolveSeedanceImageUrl(image: ReferenceImage) {
     const directUrl = image.url || image.dataUrl;
-    if (isPublicMediaUrl(directUrl) || directUrl.startsWith("asset://")) return directUrl;
+    if (isPublicMediaUrl(directUrl) || /^asset(?:Id)?:\/\//i.test(directUrl)) return directUrl;
     const dataUrl = await imageToDataUrl(image);
     if (!dataUrl) throw new Error("参考图读取失败，请换一张图片或重新上传");
     return dataUrl;
 }
 
 export async function resolveSeedanceVideoUrl(video: ReferenceVideo) {
-    if (isPublicMediaUrl(video.url) || video.url.startsWith("asset://")) return video.url;
+    if (isPublicMediaUrl(video.url) || /^asset(?:Id)?:\/\//i.test(video.url)) return video.url;
     let blob: Blob | null = null;
-    if (video.storageKey) blob = await getMediaBlob(video.storageKey);
+    if (video.storageKey) blob = await getMediaBlob(video.storageKey, video.url);
     if (!blob && video.url?.startsWith("blob:")) blob = await (await fetch(video.url)).blob();
     if (!blob) throw new Error("参考视频不可用，请重新上传");
     return blobToDataUrl(blob);
 }
 
 export async function resolveSeedanceAudioUrl(audio: ReferenceAudio) {
-    if (isPublicMediaUrl(audio.url) || audio.url.startsWith("asset://")) return audio.url;
+    if (isPublicMediaUrl(audio.url) || /^asset(?:Id)?:\/\//i.test(audio.url)) return audio.url;
     let blob: Blob | null = null;
-    if (audio.storageKey) blob = await getMediaBlob(audio.storageKey);
+    if (audio.storageKey) blob = await getMediaBlob(audio.storageKey, audio.url);
     if (!blob && audio.url?.startsWith("blob:")) blob = await (await fetch(audio.url)).blob();
     if (!blob) throw new Error("参考音频不可用，请重新上传");
     return blobToDataUrl(blob);

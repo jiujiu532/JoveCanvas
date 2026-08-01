@@ -2,13 +2,10 @@
 
 import { Input, InputNumber, Select } from "antd";
 import { SlidersHorizontal, Sparkles } from "lucide-react";
-import { useTranslations } from "next-intl";
 
 import type { AuthSettings } from "@/lib/auth/store";
 import { resolveLogicalModelConfig } from "@/lib/model-routing-config";
 import { LabeledControl, SectionTitle, SettingToggle } from "@/components/admin/admin-settings-controls";
-
-type AdminTranslator = ReturnType<typeof useTranslations<"admin">>;
 
 const settingsPanelSurfaceClass = "rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950";
 
@@ -19,42 +16,40 @@ export type AgentReadiness = {
 };
 
 export function GenerationConcurrencyPanel({ settings, onChange }: { settings: AuthSettings; onChange: (key: keyof AuthSettings["generationConcurrency"], value: number | null) => void }) {
-    const t = useTranslations("admin");
     return (
         <div className={settingsPanelSurfaceClass}>
-            <SectionTitle icon={<Sparkles className="size-4" />} title={t("settings.concurrency.title")} />
+            <SectionTitle icon={<Sparkles className="size-4" />} title="每用户并发上限" />
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <LabeledControl label={t("settings.concurrency.agent")}>
+                <LabeledControl label="Agent 同时运行">
                     <InputNumber className="w-full" min={1} max={10} precision={0} value={settings.generationConcurrency.agent} onChange={(value) => onChange("agent", value)} />
                 </LabeledControl>
-                <LabeledControl label={t("settings.concurrency.image")}>
+                <LabeledControl label="生图同时生成">
                     <InputNumber className="w-full" min={1} max={10} precision={0} value={settings.generationConcurrency.image} onChange={(value) => onChange("image", value)} />
                 </LabeledControl>
-                <LabeledControl label={t("settings.concurrency.video")}>
+                <LabeledControl label="视频同时生成">
                     <InputNumber className="w-full" min={1} max={5} precision={0} value={settings.generationConcurrency.video} onChange={(value) => onChange("video", value)} />
                 </LabeledControl>
-                <LabeledControl label={t("settings.concurrency.audio")}>
+                <LabeledControl label="音频同时生成">
                     <InputNumber className="w-full" min={1} max={10} precision={0} value={settings.generationConcurrency.audio} onChange={(value) => onChange("audio", value)} />
                 </LabeledControl>
-                <LabeledControl label={t("settings.concurrency.text")}>
+                <LabeledControl label="文本同时生成">
                     <InputNumber className="w-full" min={1} max={20} precision={0} value={settings.generationConcurrency.text} onChange={(value) => onChange("text", value)} />
                 </LabeledControl>
-                <LabeledControl label={t("settings.concurrency.render")}>
+                <LabeledControl label="整集合成同时运行">
                     <InputNumber className="w-full" min={1} max={5} precision={0} value={settings.generationConcurrency.render} onChange={(value) => onChange("render", value)} />
                 </LabeledControl>
             </div>
-            <div className="mt-2 text-xs leading-5 text-stone-500 dark:text-stone-400">{t("settings.concurrency.hint")}</div>
+            <div className="mt-2 text-xs leading-5 text-stone-500 dark:text-stone-400">限制的是单个用户自己的并发任务，不是全站共享上限。</div>
         </div>
     );
 }
 
-export function localAgentReadiness(settings: AuthSettings, t: AdminTranslator): AgentReadiness {
+export function localAgentReadiness(settings: AuthSettings): AgentReadiness {
     const models = { text: settings.defaultModels.textModel, image: settings.defaultModels.imageModel, video: settings.defaultModels.videoModel, audio: settings.defaultModels.audioModel } as const;
     const capabilities = Object.entries(models).map(([type, model]) => {
         const capability = type as keyof typeof models;
         const resolved = resolveLogicalModelConfig(settings.logicalModels, settings.systemChannels, capability, model);
-        const message = !model ? t("settings.readiness.noDefaultModel") : !resolved ? t("settings.readiness.noChannelBinding") : t("settings.readiness.usingChannel", { channel: resolved.channel.name });
-        return { type: capability, model, ready: Boolean(model && resolved), message };
+        return { type: capability, model, ready: Boolean(model && resolved), message: !model ? "未设置默认模型" : !resolved ? "默认模型没有可用渠道绑定" : "使用渠道：" + resolved.channel.name };
     });
     const skills = { image: 0, video: 0, canvas: 0, drama: 0 };
     for (const skill of settings.agentSkills) if (skill.enabled) for (const workspace of skill.workspaces || ["image"]) skills[workspace] += 1;
@@ -62,18 +57,17 @@ export function localAgentReadiness(settings: AuthSettings, t: AdminTranslator):
 }
 
 export function GenerationDefaultsPanel({ settings, onChange }: { settings: AuthSettings; onChange: <K extends keyof AuthSettings["generationDefaults"]>(key: K, value: AuthSettings["generationDefaults"][K]) => void }) {
-    const t = useTranslations("admin");
     return (
         <div className={settingsPanelSurfaceClass}>
-            <SectionTitle icon={<SlidersHorizontal className="size-4" />} title={t("settings.defaults.title")} />
+            <SectionTitle icon={<SlidersHorizontal className="size-4" />} title="生成默认值" />
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <LabeledControl label={t("settings.defaults.canvasImageCount")}>
+                <LabeledControl label="画布默认生图张数">
                     <InputNumber className="w-full" min={1} max={10} precision={0} value={settings.generationDefaults.canvasImageCount} onChange={(value) => onChange("canvasImageCount", value || 1)} />
                 </LabeledControl>
-                <LabeledControl label={t("settings.defaults.workbenchImageCount")}>
+                <LabeledControl label="工作台默认生图张数">
                     <InputNumber className="w-full" min={1} max={10} precision={0} value={settings.generationDefaults.imageCount} onChange={(value) => onChange("imageCount", value || 1)} />
                 </LabeledControl>
-                <LabeledControl label={t("settings.defaults.imageSize")}>
+                <LabeledControl label="默认图片/视频比例">
                     <Select
                         className="w-full"
                         value={settings.generationDefaults.imageSize}
@@ -81,51 +75,51 @@ export function GenerationDefaultsPanel({ settings, onChange }: { settings: Auth
                         onChange={(value) => onChange("imageSize", value)}
                     />
                 </LabeledControl>
-                <LabeledControl label={t("settings.defaults.imageQuality")}>
+                <LabeledControl label="默认图片质量">
                     <Select
                         className="w-full"
                         value={settings.generationDefaults.imageQuality}
                         options={[
-                            { value: "auto", label: t("points.quota.imageQuality.auto") },
-                            { value: "low", label: t("points.quota.imageQuality.low") },
-                            { value: "medium", label: t("points.quota.imageQuality.medium") },
-                            { value: "high", label: t("points.quota.imageQuality.high") },
+                            { value: "auto", label: "自动" },
+                            { value: "low", label: "低清" },
+                            { value: "medium", label: "中等" },
+                            { value: "high", label: "高清" },
                         ]}
                         onChange={(value) => onChange("imageQuality", value)}
                     />
                 </LabeledControl>
-                <LabeledControl label={t("settings.defaults.videoQuality")}>
+                <LabeledControl label="默认视频清晰度">
                     <Select className="w-full" value={settings.generationDefaults.videoQuality} options={["480", "720", "1080"].map((value) => ({ value, label: value + "p" }))} onChange={(value) => onChange("videoQuality", value)} />
                 </LabeledControl>
-                <LabeledControl label={t("settings.defaults.videoSeconds")}>
+                <LabeledControl label="默认视频秒数">
                     <InputNumber className="w-full" min={1} max={20} precision={0} value={settings.generationDefaults.videoSeconds} onChange={(value) => onChange("videoSeconds", value || 5)} />
                 </LabeledControl>
-                <LabeledControl label={t("settings.defaults.audioVoice")}>
+                <LabeledControl label="默认音频音色">
                     <Input value={settings.generationDefaults.audioVoice} onChange={(event) => onChange("audioVoice", event.target.value)} />
                 </LabeledControl>
-                <LabeledControl label={t("settings.defaults.audioFormat")}>
+                <LabeledControl label="默认音频格式">
                     <Select className="w-full" value={settings.generationDefaults.audioFormat} options={["mp3", "wav", "opus", "aac", "flac"].map((value) => ({ value, label: value.toUpperCase() }))} onChange={(value) => onChange("audioFormat", value)} />
                 </LabeledControl>
             </div>
-            <div className="mt-2 text-xs leading-5 text-stone-500 dark:text-stone-400">{t("settings.defaults.hint")}</div>
+            <div className="mt-2 text-xs leading-5 text-stone-500 dark:text-stone-400">新建画布生图节点和配置节点默认使用，单个节点仍可单独覆盖。</div>
             <div className="mt-4 border-t border-zinc-200 pt-4 dark:border-zinc-800">
-                <div className="text-xs font-semibold text-stone-700 dark:text-stone-200">{t("settings.defaults.workbenchPlanning")}</div>
+                <div className="text-xs font-semibold text-stone-700 dark:text-stone-200">工作台 Agent 智能规划</div>
                 <div className="mt-3 grid gap-4 sm:grid-cols-2 sm:divide-x sm:divide-zinc-200 dark:sm:divide-zinc-800">
                     <SettingToggle
-                        title={t("settings.defaults.imagePlanningTitle")}
-                        description={t("settings.defaults.imagePlanningDescription")}
+                        title="生图工作台默认开启"
+                        description="关闭后，用户进入生图工作台会被引导先选择图片模型。"
                         checked={settings.generationDefaults.workbenchSmartPlanning.image}
-                        checkedChildren={t("points.quota.freeDailyPoints.on")}
-                        unCheckedChildren={t("points.quota.freeDailyPoints.off")}
+                        checkedChildren="开启"
+                        unCheckedChildren="关闭"
                         onChange={(image) => onChange("workbenchSmartPlanning", { ...settings.generationDefaults.workbenchSmartPlanning, image })}
                     />
                     <div className="sm:pl-4">
                         <SettingToggle
-                            title={t("settings.defaults.videoPlanningTitle")}
-                            description={t("settings.defaults.videoPlanningDescription")}
+                            title="视频工作台默认开启"
+                            description="关闭后，用户进入视频工作台会被引导先选择视频模型。"
                             checked={settings.generationDefaults.workbenchSmartPlanning.video}
-                            checkedChildren={t("points.quota.freeDailyPoints.on")}
-                            unCheckedChildren={t("points.quota.freeDailyPoints.off")}
+                            checkedChildren="开启"
+                            unCheckedChildren="关闭"
                             onChange={(video) => onChange("workbenchSmartPlanning", { ...settings.generationDefaults.workbenchSmartPlanning, video })}
                         />
                     </div>

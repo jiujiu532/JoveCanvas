@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { Button, Card, Form, Modal, Space, Switch, Tag, Tooltip, Typography, theme as antdTheme } from "antd";
+import { Button, Card, Form, Modal, Space, Tag, Tooltip, Typography, theme as antdTheme } from "antd";
 import { Check, Ellipsis, Image as ImageIcon, Settings2 } from "lucide-react";
-import { useTranslations } from "next-intl";
 
 import type { ImageQuickToolId } from "./canvas-image-toolbar-tools";
 
@@ -38,29 +37,24 @@ export function ImageToolSettingsModal({
     open,
     tools,
     selectedIds,
-    showLabels,
     onToggle,
-    onShowLabelsChange,
     onCancel,
     onSave,
 }: {
     open: boolean;
     tools: ImageToolbarSettingsTool[];
     selectedIds: ImageQuickToolId[];
-    showLabels: boolean;
     onToggle: (id: ImageQuickToolId, visible: boolean) => void;
-    onShowLabelsChange: (value: boolean) => void;
     onCancel: () => void;
     onSave: () => void;
 }) {
-    const t = useTranslations("canvas");
     const { token } = antdTheme.useToken();
     const previewToolbarRef = useRef<HTMLDivElement>(null);
     const scrollbarTrackRef = useRef<HTMLInputElement>(null);
     const [previewScroll, setPreviewScroll] = useState<PreviewScroll>({ left: 0, max: 0, viewport: 1, content: 1 });
     const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
     const selectedTools = tools.filter((tool) => selected.has(tool.id));
-    const previewTools: PreviewTool[] = [...selectedTools, { id: "more", title: t("actions.configQuickTools"), label: t("actions.more"), icon: <Ellipsis className="size-4" />, active: true }];
+    const previewTools: PreviewTool[] = [...selectedTools, { id: "more", title: "配置快捷工具", label: "更多", icon: <Ellipsis className="size-4" />, active: true }];
 
     const syncPreviewScroll = useCallback(() => {
         const toolbar = previewToolbarRef.current;
@@ -109,7 +103,7 @@ export function ImageToolSettingsModal({
             resizeObserver?.disconnect();
             window.removeEventListener("resize", syncPreviewScroll);
         };
-    }, [open, selectedIds, showLabels, previewTools.length, syncPreviewScroll]);
+    }, [open, selectedIds, previewTools.length, syncPreviewScroll]);
 
     const scrollbarWidth = scrollbarTrackRef.current?.clientWidth || previewScroll.viewport;
     const scrollbarThumbWidth = previewScroll.max > 0 ? Math.min(scrollbarWidth, Math.max(64, (previewScroll.viewport / previewScroll.content) * scrollbarWidth)) : scrollbarWidth;
@@ -117,29 +111,25 @@ export function ImageToolSettingsModal({
     return (
         <Modal
             className="canvas-image-toolbar-settings-modal"
-            title={t("toolbarSettings.title")}
+            title="自定义工具栏"
             open={open}
             centered
             width={760}
             onCancel={onCancel}
             destroyOnHidden
             footer={
-                <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                        <span>{t("toolbarSettings.showLabels")}</span>
-                        <Switch checked={showLabels} onChange={onShowLabelsChange} />
-                    </div>
+                <div className="flex justify-end">
                     <Space>
-                        <Button onClick={onCancel}>{t("toolbarSettings.cancel")}</Button>
+                        <Button onClick={onCancel}>取消</Button>
                         <Button type="primary" onClick={onSave}>
-                            {t("toolbarSettings.save")}
+                            保存
                         </Button>
                     </Space>
                 </div>
             }
         >
             <Typography.Paragraph type="secondary" className="!mb-4">
-                {t("toolbarSettings.description")}
+                选择你想在图片节点编辑栏中使用的快捷工具。
             </Typography.Paragraph>
 
             <Card
@@ -147,7 +137,7 @@ export function ImageToolSettingsModal({
                 title={
                     <Space size={6}>
                         <Settings2 className="size-4" />
-                        {t("toolbarSettings.nodePreview")}
+                        节点预览
                     </Space>
                 }
                 className="mb-4"
@@ -160,7 +150,7 @@ export function ImageToolSettingsModal({
                         onScroll={syncPreviewScroll}
                     >
                         {previewTools.map((tool) => (
-                            <PreviewToolbarItem key={tool.id} tool={tool} showLabels={showLabels} />
+                            <PreviewToolbarItem key={tool.id} tool={tool} />
                         ))}
                     </div>
                     <div
@@ -168,7 +158,7 @@ export function ImageToolSettingsModal({
                         style={{ background: token.colorBgContainer, borderColor: token.colorBorderSecondary, color: token.colorTextSecondary }}
                     >
                         <ImageIcon className="mb-2 size-8" />
-                        <Typography.Text type="secondary">{t("toolbarSettings.imageNode")}</Typography.Text>
+                        <Typography.Text type="secondary">图片节点</Typography.Text>
                     </div>
                     <input
                         ref={scrollbarTrackRef}
@@ -190,7 +180,7 @@ export function ImageToolSettingsModal({
                     className="!mb-4"
                     label={
                         <Space size={8}>
-                            <span>{t("toolbarSettings.quickTools")}</span>
+                            <span>快捷工具</span>
                             <Tag className="m-0">
                                 {selectedTools.length}/{tools.length}
                             </Tag>
@@ -223,14 +213,11 @@ export function ImageToolSettingsModal({
     );
 }
 
-function PreviewToolbarItem({ tool, showLabels }: { tool: PreviewTool; showLabels: boolean }) {
+function PreviewToolbarItem({ tool }: { tool: PreviewTool }) {
     return (
         <Tooltip title={tool.title}>
             <span className="flex h-12 shrink-0 items-center px-1.5" style={{ color: tool.danger ? "#ef4444" : undefined }}>
-                <span className={`flex h-9 items-center rounded-lg px-2 ${showLabels ? "gap-2" : "justify-center"}`}>
-                    {tool.icon}
-                    {showLabels ? <span className="whitespace-nowrap">{tool.label}</span> : null}
-                </span>
+                <span className="flex size-9 items-center justify-center rounded-lg">{tool.icon}</span>
             </span>
         </Tooltip>
     );

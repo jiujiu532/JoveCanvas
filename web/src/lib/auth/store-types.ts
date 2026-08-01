@@ -1,19 +1,50 @@
 export type UserRole = "admin" | "user";
 export type UserStatus = "active" | "disabled";
 import type { GlobalAiOpcPresetId } from "@/lib/globalaiopc-catalog";
+import { VOZEB_QQ_GROUP_URL } from "@/constant/community";
 
 export type ApiCallFormat = "openai" | "gemini";
-export type SystemChannelProtocol = "auto" | "openai" | "sub2api" | "qingyan" | "globalaiopc" | "seedance" | "compatible";
+export type SystemChannelProtocol = "auto" | "openai" | "sub2api" | "newapi" | "qingyan" | "globalaiopc" | "seedance" | "stable-diffusion" | "volcengine-video" | "seedance-special" | "custom" | "compatible";
+export type SystemChannelAuthMode = "none" | "bearer" | "x-api-key" | "custom-header";
+
+export type SystemChannelModelConfig = {
+    capability: LogicalModelCapability;
+    source?: "manual" | "provider" | "official" | "health";
+    apiFormat?: ApiCallFormat;
+    protocol?: SystemChannelProtocol;
+    createPath?: string;
+    editPath?: string;
+    imageToVideoPath?: string;
+    queryPath?: string;
+    cancelPath?: string;
+    cancelMethod?: "POST" | "DELETE";
+    requestTemplate?: string;
+    resultField?: string;
+    statusField?: string;
+    durationRange?: string;
+    referenceRule?: string;
+    supportsReferenceImage?: boolean;
+    supportsReferenceVideo?: boolean;
+    supportsReferenceAudio?: boolean;
+};
 
 export type SystemChannelAdvancedConfig = {
     protocol: SystemChannelProtocol;
+    authMode?: SystemChannelAuthMode;
+    authHeader?: string;
+    authPrefix?: string;
+    documentationUrl?: string;
     globalAiOpcPreset?: GlobalAiOpcPresetId;
     globalAiOpcPresets?: GlobalAiOpcPresetId[];
     textModel: string;
     imageModel: string;
     videoModel: string;
     createPath: string;
+    editPath?: string;
+    imageToVideoPath?: string;
     queryPath: string;
+    cancelPath?: string;
+    cancelMethod?: "POST" | "DELETE";
     requestTemplate: string;
     resultField: string;
     statusField: string;
@@ -22,6 +53,10 @@ export type SystemChannelAdvancedConfig = {
     supportsReferenceImage: boolean;
     supportsReferenceVideo: boolean;
     supportsReferenceAudio: boolean;
+    modelCatalogPaths?: string[];
+    modelCapabilities?: Record<string, LogicalModelCapability>;
+    modelConfigs?: Record<string, SystemChannelModelConfig>;
+    operationConfigs?: Partial<Record<LogicalModelCapability, SystemChannelModelConfig>>;
 };
 
 export type LegacyUserQuota = {
@@ -43,11 +78,28 @@ export type SystemModelChannel = {
     models: string[];
     enabled: boolean;
     advancedConfig?: SystemChannelAdvancedConfig;
+    healthResults?: Partial<Record<LogicalModelCapability, SystemChannelHealthSnapshot>>;
     hasApiKey?: boolean;
     clearApiKey?: boolean;
 };
 
 export type LogicalModelCapability = "text" | "image" | "video" | "audio";
+
+export type SystemChannelHealthSnapshot = {
+    ok: boolean;
+    kind: LogicalModelCapability;
+    model: string;
+    status: number;
+    checkedAt?: string;
+    protocolKey?: SystemChannelProtocol;
+    protocol?: string;
+    referenceImageTest?: {
+        ok: boolean;
+        status: number;
+        error?: string;
+    };
+    error?: string;
+};
 
 export type LogicalModelCapabilityProfile = {
     supportsReferenceImage?: boolean;
@@ -98,6 +150,7 @@ export type AgentSkill = {
     id: string;
     name: string;
     description: string;
+    plannerSummary?: string;
     instructions: string;
     enabled: boolean;
     keywords: string[];
@@ -168,6 +221,7 @@ export type CdkStatus = "active" | "disabled";
 
 export type PublicCdkRedemption = {
     userId: string;
+    accountId?: string;
     username: string;
     displayName: string;
     redeemedAt: string;
@@ -215,6 +269,18 @@ export type PublicAnnouncement = {
     updatedAt: string;
 };
 
+export type AnnouncementPageInput = {
+    page?: number;
+    pageSize?: number;
+};
+
+export type AnnouncementPage = {
+    items: PublicAnnouncement[];
+    total: number;
+    page: number;
+    pageSize: number;
+};
+
 export type SiteSettings = {
     title: string;
     logoUrl: string;
@@ -229,12 +295,6 @@ export type SiteSettings = {
     homeShowcaseItems: SiteShowcaseItem[];
     friendLinks: SiteFriendLink[];
     socials: SiteSocialSettings;
-    // —— 品牌进阶：留空则消费端回落到 title ——
-    brandProductName: string; // 会员产品名，如 "VOZEB PASS"；空串表示跟随站点标题
-    canvasProjectPrefix: string; // 画布默认项目名前缀；空串表示跟随站点标题
-    mailBrandName: string; // 邮件品牌名（验证码/通知邮件）；空串表示跟随站点标题
-    repositoryUrl: string; // 开源仓库地址，留空隐藏 GitHub 入口
-    versionCheckUrl: string; // 更新检查用的 raw 内容根地址，留空关闭检查更新
 };
 
 export type SiteShowcaseMode = "random" | "custom";
@@ -273,7 +333,11 @@ export const DEFAULT_SITE_SOCIALS: SiteSocialSettings = {
     instagram: { enabled: false, label: "Instagram", url: "" },
 };
 
-export const DEFAULT_SITE_FRIEND_LINKS: SiteFriendLink[] = [{ id: "linux-do", label: "Linux.do", url: "https://linux.do/", enabled: true }];
+export const DEFAULT_SITE_FRIEND_LINKS: SiteFriendLink[] = [
+    { id: "vozeb-pro-home", label: "VOZEB PRO", url: "https://www.vozeb.com/", enabled: true },
+    { id: "qq-vozeb-open-source", label: "VOZEB 开源交流 QQ 群", url: VOZEB_QQ_GROUP_URL, enabled: true },
+    { id: "linux-do", label: "Linux.do", url: "https://linux.do/", enabled: true },
+];
 
 export type MailSettings = {
     provider: string;
@@ -288,13 +352,17 @@ export type MailSettings = {
 
 export type PublicUser = {
     id: string;
+    accountId: string;
     username: string;
     email?: string;
     displayName: string;
+    bio: string;
+    avatarUrl?: string;
     role: UserRole;
     status: UserStatus;
     planId: string;
     planName: string;
+    hasActivePlan: boolean;
     pointsBalance: number;
     permanentPointsBalance: number;
     dailyPointsBalance: number;
@@ -314,7 +382,8 @@ export type PublicUserSummary = {
     totalPointsBalance: number;
 };
 
-export type StoredUser = Omit<PublicUser, "planName" | "permanentPointsBalance" | "dailyPointsBalance" | "dailyPointsExpiresAt"> & {
+export type StoredUser = Omit<PublicUser, "avatarUrl" | "planName" | "hasActivePlan" | "permanentPointsBalance" | "dailyPointsBalance" | "dailyPointsExpiresAt"> & {
+    avatarStorageKey?: string;
     passwordHash: string;
 };
 
@@ -401,6 +470,7 @@ export type AuthSettings = {
 
 export type AuthDatabase = {
     version: 1;
+    nextUserAccountId: number;
     users: StoredUser[];
     sessions: StoredSession[];
     quotaUsage: StoredQuotaUsage[];

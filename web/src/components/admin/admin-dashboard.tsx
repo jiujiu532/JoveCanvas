@@ -91,7 +91,6 @@ import type { AdminSetupSummary } from "@/lib/server/admin-setup-status";
 import type { PaymentConfigSummary } from "@/lib/payment-config-types";
 import type { AdminBillingSummary } from "@/lib/admin-billing-types";
 import type { Prompt } from "@/services/api/prompts";
-import { useTranslations } from "next-intl";
 
 type AdminDashboardProps = {
     initialUsers: PublicUser[];
@@ -160,24 +159,27 @@ const AdminWalletSection = dynamic(() => import("./admin-finance-sections").then
 const AdminPointsSection = dynamic(() => import("./admin-finance-sections").then((module) => module.AdminPointsSection), { loading: AdminSectionLoading });
 const AdminOrdersSection = dynamic(() => import("./admin-finance-sections").then((module) => module.AdminOrdersSection), { loading: AdminSectionLoading });
 const AdminProductsSection = dynamic(() => import("./admin-finance-sections").then((module) => module.AdminProductsSection), { loading: AdminSectionLoading });
+const AdminPromotionsSection = dynamic(() => import("./admin-marketing-sections").then((module) => module.AdminPromotionsSection), { loading: AdminSectionLoading });
+const AdminCouponsSection = dynamic(() => import("./admin-marketing-sections").then((module) => module.AdminCouponsSection), { loading: AdminSectionLoading });
+const AdminReferralsSection = dynamic(() => import("./admin-marketing-sections").then((module) => module.AdminReferralsSection), { loading: AdminSectionLoading });
 const AdminPaymentsSection = dynamic(() => import("./admin-finance-sections").then((module) => module.AdminPaymentsSection), { loading: AdminSectionLoading });
 const AdminCdkSection = dynamic(() => import("./admin-finance-sections").then((module) => module.AdminCdkSection), { loading: AdminSectionLoading });
 const AdminChannelsSection = dynamic(() => import("./admin-upstream-sections").then((module) => module.AdminChannelsSection), { loading: AdminSectionLoading });
 const AdminSkillsSection = dynamic(() => import("./admin-upstream-sections").then((module) => module.AdminSkillsSection), { loading: AdminSectionLoading });
 const AdminAnnouncementsSection = dynamic(() => import("./admin-content-sections").then((module) => module.AdminAnnouncementsSection), { loading: AdminSectionLoading });
 const AdminPromptsSection = dynamic(() => import("./admin-content-sections").then((module) => module.AdminPromptsSection), { loading: AdminSectionLoading });
+const AdminWorksSection = dynamic(() => import("@/app/admin/works/components/admin-works-section").then((module) => module.AdminWorksSection), { loading: AdminSectionLoading });
+const AdminHelpSection = dynamic(() => import("./admin-help-section").then((module) => module.AdminHelpSection), { loading: AdminSectionLoading });
 const AdminUsersSection = dynamic(() => import("./admin-operations-sections").then((module) => module.AdminUsersSection), { loading: AdminSectionLoading });
 const AdminLogsSection = dynamic(() => import("./admin-operations-sections").then((module) => module.AdminLogsSection), { loading: AdminSectionLoading });
 const AdminGenerationOperationsSection = dynamic(() => import("./admin-operations-sections").then((module) => module.AdminGenerationOperationsSection), { loading: AdminSectionLoading });
 const AdminAccountDeletionSection = dynamic(() => import("./admin-account-deletion-section").then((module) => module.AdminAccountDeletionSection), { loading: AdminSectionLoading });
 
 function AdminSectionLoading() {
-    const t = useTranslations("admin");
-    return <div className="flex min-h-36 items-center justify-center text-sm text-zinc-500 dark:text-zinc-400">{t("dashboard.sectionLoading")}</div>;
+    return <div className="flex min-h-36 items-center justify-center text-sm text-zinc-500 dark:text-zinc-400">正在加载分区...</div>;
 }
 
 export function AdminDashboard(props: AdminDashboardProps) {
-    const t = useTranslations("admin");
     const controller = useAdminDashboardController(props);
     const {
         initialUsers,
@@ -417,7 +419,7 @@ export function AdminDashboard(props: AdminDashboardProps) {
     } = controller;
     return (
         <div className={`admin-mobile-safe admin-dashboard-shell min-h-dvh w-full min-w-0 ${desktopNavCollapsed ? "is-sidebar-collapsed" : ""}`}>
-            {mobileNavOpen ? <button type="button" className="admin-section-nav-backdrop lg:hidden" aria-label={t("nav.collapseSidebar")} onClick={() => setMobileNavOpen(false)} /> : null}
+            {mobileNavOpen ? <button type="button" className="admin-section-nav-backdrop lg:hidden" aria-label="收起后台侧边栏" onClick={() => setMobileNavOpen(false)} /> : null}
             <AdminSectionNav
                 activeKey={activeSection}
                 onChange={setActiveSection}
@@ -434,13 +436,13 @@ export function AdminDashboard(props: AdminDashboardProps) {
                             <button
                                 type="button"
                                 className="admin-mobile-menu-trigger flex size-9 shrink-0 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 transition hover:bg-zinc-50 hover:text-zinc-950 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-900 lg:hidden"
-                                aria-label={t("nav.expandSidebar")}
+                                aria-label="展开后台侧边栏"
                                 onClick={() => setMobileNavOpen(true)}
                             >
                                 <Menu className="size-4" />
                             </button>
                             <div className="min-w-0 items-center gap-2 text-xs text-zinc-400 lg:flex">
-                                <span>{t("dashboard.breadcrumbAdmin")}</span>
+                                <span>后台</span>
                                 <span>/</span>
                                 <strong className="truncate font-medium text-zinc-700 dark:text-zinc-300">{activeSectionInfo.label}</strong>
                             </div>
@@ -449,7 +451,7 @@ export function AdminDashboard(props: AdminDashboardProps) {
                             {setupSummary && nextSetupStep ? (
                                 <Link
                                     href="/admin/setup"
-                                    title={t("dashboard.setupNextTitle", { title: nextSetupStep.title })}
+                                    title={`下一项：${nextSetupStep.title}`}
                                     className="admin-dashboard-setup-pill group flex min-w-0 items-center gap-2 rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-left transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900"
                                 >
                                     <span className="admin-dashboard-setup-icon grid size-5 shrink-0 place-items-center text-zinc-500 dark:text-zinc-400">
@@ -457,7 +459,7 @@ export function AdminDashboard(props: AdminDashboardProps) {
                                     </span>
                                     <span className="admin-dashboard-setup-copy flex min-w-0 items-center gap-2">
                                         <span className="admin-dashboard-setup-title flex items-center gap-1.5 whitespace-nowrap text-xs font-medium text-zinc-700 dark:text-zinc-200">
-                                            {t("dashboard.setupPercent", { percent: setupSummary.percent })}
+                                            初始化 {setupSummary.percent}%
                                             <ArrowRight className="admin-dashboard-setup-arrow size-3 text-zinc-400 transition group-hover:translate-x-0.5" />
                                         </span>
                                         <span className="admin-dashboard-setup-track block h-1 w-16 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
@@ -501,24 +503,29 @@ export function AdminDashboard(props: AdminDashboardProps) {
                     {activeSection === "points" ? <AdminPointsSection controller={controller} /> : null}
                     {activeSection === "orders" ? <AdminOrdersSection controller={controller} /> : null}
                     {activeSection === "products" ? <AdminProductsSection controller={controller} /> : null}
+                    {activeSection === "promotions" ? <AdminPromotionsSection controller={controller} /> : null}
+                    {activeSection === "coupons" ? <AdminCouponsSection controller={controller} /> : null}
+                    {activeSection === "referrals" ? <AdminReferralsSection controller={controller} /> : null}
                     {activeSection === "payments" ? <AdminPaymentsSection controller={controller} /> : null}
                     {activeSection === "updates" ? <AdminUpdatesSection controller={controller} /> : null}
                     {activeSection === "channels" ? <AdminChannelsSection controller={controller} /> : null}
                     {activeSection === "skills" ? <AdminSkillsSection controller={controller} /> : null}
                     {activeSection === "cdk" ? <AdminCdkSection controller={controller} /> : null}
                     {activeSection === "announcements" ? <AdminAnnouncementsSection controller={controller} /> : null}
+                    {activeSection === "works" ? <AdminWorksSection /> : null}
                     {activeSection === "prompts" ? <AdminPromptsSection controller={controller} /> : null}
                     {activeSection === "users" ? <AdminUsersSection controller={controller} /> : null}
                     {activeSection === "logs" ? <AdminLogsSection controller={controller} /> : null}
                     {activeSection === "generationOperations" ? <AdminGenerationOperationsSection controller={controller} /> : null}
+                    {activeSection === "adminHelp" ? <AdminHelpSection onOpenSection={setActiveSection} /> : null}
                 </div>
             </div>
 
             <Modal
-                title={t("dashboard.promptModal.title")}
+                title="添加公共提示词"
                 open={promptModalOpen}
-                okText={t("dashboard.promptModal.okText")}
-                cancelText={t("common.cancel")}
+                okText="保存提示词"
+                cancelText="取消"
                 confirmLoading={promptSaving}
                 mask={{ closable: !promptSaving }}
                 keyboard={!promptSaving}
@@ -531,107 +538,107 @@ export function AdminDashboard(props: AdminDashboardProps) {
                         <div className="admin-prompt-note mb-5 rounded-xl p-4">
                             <div className="flex items-center gap-2 text-sm font-semibold text-stone-950 dark:text-stone-100">
                                 <Plus className="size-4 text-stone-600 dark:text-stone-300" />
-                                {t("dashboard.promptModal.noteTitle")}
+                                新增公共提示词
                             </div>
-                            <p className="mt-1 text-xs leading-5 text-stone-600 dark:text-stone-400">{t("dashboard.promptModal.noteDesc")}</p>
+                            <p className="mt-1 text-xs leading-5 text-stone-600 dark:text-stone-400">建议填写远程图片封面 URL，用户端会直接显示封面，不走本地素材存储。</p>
                         </div>
                         <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2">
-                            <Form.Item label={t("dashboard.promptModal.fieldTitle")} name="title" rules={[{ required: true, message: t("dashboard.promptModal.titleRequired") }]}>
-                                <Input placeholder={t("dashboard.promptModal.titlePlaceholder")} />
+                            <Form.Item label="提示词标题" name="title" rules={[{ required: true, message: "请输入标题" }]}>
+                                <Input placeholder="例如：赛博城市海报" />
                             </Form.Item>
-                            <Form.Item label={t("dashboard.promptModal.fieldCategory")} name="category">
-                                <Input placeholder={t("dashboard.promptModal.categoryPlaceholder")} />
+                            <Form.Item label="分类" name="category">
+                                <Input placeholder="商业海报 / 人像 / 产品" />
                             </Form.Item>
                         </div>
                         <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2">
-                            <Form.Item label={t("dashboard.promptModal.fieldTags")} name="tags">
-                                <Input placeholder={t("dashboard.promptModal.tagsPlaceholder")} />
+                            <Form.Item label="标签" name="tags">
+                                <Input placeholder="用逗号分隔，例如：霓虹, 海报, 科幻" />
                             </Form.Item>
-                            <Form.Item label={t("dashboard.promptModal.fieldCover")} name="coverUrl">
+                            <Form.Item label="封面 URL" name="coverUrl">
                                 <Input placeholder="https://example.com/image.png" />
                             </Form.Item>
                         </div>
-                        <Form.Item label={t("dashboard.promptModal.fieldPrompt")} name="prompt" rules={[{ required: true, message: t("dashboard.promptModal.promptRequired") }]}>
-                            <Input.TextArea rows={7} placeholder={t("dashboard.promptModal.promptPlaceholder")} />
+                        <Form.Item label="提示词内容" name="prompt" rules={[{ required: true, message: "请输入提示词内容" }]}>
+                            <Input.TextArea rows={7} placeholder="写入可直接用于生成的完整提示词，支持中英文描述。" />
                         </Form.Item>
-                        <Form.Item label={t("dashboard.promptModal.fieldPreview")} name="preview">
-                            <Input.TextArea rows={3} placeholder={t("dashboard.promptModal.previewPlaceholder")} />
+                        <Form.Item label="备注 / 预览说明" name="preview">
+                            <Input.TextArea rows={3} placeholder="可补充适用场景、参数建议或出图效果。" />
                         </Form.Item>
                     </div>
                 </Form>
             </Modal>
             <Modal
-                title={creatingUser ? t("dashboard.userModal.createTitle") : editingUser ? t("dashboard.userModal.editTitle", { name: editingUser.displayName }) : t("dashboard.userModal.defaultTitle")}
+                title={creatingUser ? "新增用户" : editingUser ? `用户管理：${editingUser.displayName}` : "用户管理"}
                 open={creatingUser || Boolean(editingUser)}
-                okText={creatingUser ? t("dashboard.userModal.createOk") : t("common.save")}
-                cancelText={t("common.cancel")}
+                okText={creatingUser ? "新增" : "保存"}
+                cancelText="取消"
                 confirmLoading={creatingUser ? updatingUserId === "__new__" : Boolean(editingUser && updatingUserId === editingUser.id)}
                 onOk={() => userForm.submit()}
                 onCancel={closeUserEditor}
             >
                 <Form form={userForm} layout="vertical" requiredMark={false} onFinish={saveUserEditor}>
                     <div className="grid gap-4 md:grid-cols-2">
-                        <Form.Item label={t("dashboard.userModal.username")} name="username" rules={[{ required: creatingUser, message: t("dashboard.userModal.usernameRequired") }]}>
-                            <Input disabled={!creatingUser} placeholder={t("dashboard.userModal.usernamePlaceholder")} />
+                        <Form.Item label="用户名" name="username" rules={[{ required: creatingUser, message: "请输入用户名" }]}>
+                            <Input disabled={!creatingUser} placeholder="用于登录的账号" />
                         </Form.Item>
-                        <Form.Item label={t("dashboard.userModal.displayName")} name="displayName" rules={[{ required: true, message: t("dashboard.userModal.displayNameRequired") }]}>
-                            <Input placeholder={t("dashboard.userModal.displayNamePlaceholder")} />
+                        <Form.Item label="显示昵称" name="displayName" rules={[{ required: true, message: "请输入显示昵称" }]}>
+                            <Input placeholder="显示在顶部账号菜单" />
                         </Form.Item>
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
-                        <Form.Item label={t("dashboard.userModal.email")} name="email">
-                            <Input placeholder={t("dashboard.userModal.emailPlaceholder")} />
+                        <Form.Item label="绑定邮箱" name="email">
+                            <Input placeholder="可留空" />
                         </Form.Item>
                         <Form.Item
-                            label={creatingUser ? t("dashboard.userModal.passwordCreate") : t("dashboard.userModal.passwordReset")}
+                            label={creatingUser ? "登录密码" : "重置密码"}
                             name="password"
-                            rules={[{ required: creatingUser, message: t("dashboard.userModal.passwordRequired") }]}
-                            extra={creatingUser ? t("dashboard.userModal.passwordExtraCreate") : t("dashboard.userModal.passwordExtraEdit")}
+                            rules={[{ required: creatingUser, message: "请输入登录密码" }]}
+                            extra={creatingUser ? "至少 8 位，创建后用户可自行修改。" : "留空则不修改密码；填写后该用户需要重新登录。"}
                         >
-                            <Input.Password placeholder={t("dashboard.userModal.passwordPlaceholder")} />
+                            <Input.Password placeholder="至少 8 位" />
                         </Form.Item>
                     </div>
                     <div className="grid gap-4 md:grid-cols-3">
-                        <Form.Item label={t("dashboard.userModal.role")} name="role" rules={[{ required: true, message: t("dashboard.userModal.roleRequired") }]}>
+                        <Form.Item label="角色" name="role" rules={[{ required: true, message: "请选择角色" }]}>
                             <Select
                                 options={[
-                                    { value: "user", label: t("dashboard.userModal.roleUser") },
-                                    { value: "admin", label: t("dashboard.userModal.roleAdmin") },
+                                    { value: "user", label: "普通用户" },
+                                    { value: "admin", label: "管理员" },
                                 ]}
                             />
                         </Form.Item>
-                        <Form.Item label={t("dashboard.userModal.status")} name="status" rules={[{ required: true, message: t("dashboard.userModal.statusRequired") }]}>
+                        <Form.Item label="账号状态" name="status" rules={[{ required: true, message: "请选择状态" }]}>
                             <Select
                                 disabled={editingUser?.id === currentUser.id}
                                 options={[
-                                    { value: "active", label: t("dashboard.userModal.statusActive") },
-                                    { value: "disabled", label: t("dashboard.userModal.statusDisabled") },
+                                    { value: "active", label: "可用" },
+                                    { value: "disabled", label: "禁用" },
                                 ]}
                             />
                         </Form.Item>
-                        <Form.Item label={t("dashboard.userModal.points")} name="pointsBalance" extra={editingUser ? t("dashboard.userModal.pointsExtra") : undefined} rules={[{ required: true, message: t("dashboard.userModal.pointsRequired") }]}>
+                        <Form.Item label="永久积分" name="pointsBalance" extra={editingUser ? "每日积分由系统自动结算" : undefined} rules={[{ required: true, message: "请输入永久积分" }]}>
                             <InputNumber className="!w-full" min={0} precision={2} />
                         </Form.Item>
                     </div>
                 </Form>
             </Modal>
-            <Modal title={t("dashboard.generationLogDetailTitle")} open={Boolean(viewingGenerationLog)} footer={null} onCancel={() => setViewingGenerationLog(null)} width={860}>
+            <Modal title="生成日志详情" open={Boolean(viewingGenerationLog)} footer={null} onCancel={() => setViewingGenerationLog(null)} width={860}>
                 {viewingGenerationLog ? <GenerationLogDetail log={viewingGenerationLog} /> : null}
             </Modal>
-            <Modal title={t("dashboard.cdkDetailTitle")} open={Boolean(viewingCdkCode)} footer={null} onCancel={() => setViewingCdkCode(null)} width={760}>
+            <Modal title="CDK 明细" open={Boolean(viewingCdkCode)} footer={null} onCancel={() => setViewingCdkCode(null)} width={760}>
                 {viewingCdkCode ? (
                     <div className="space-y-3">
                         <div className="rounded-lg border border-stone-200 bg-stone-50/80 p-3 dark:border-stone-800 dark:bg-stone-900/60">
                             <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("dashboard.cdkCodeLabel")}</div>
+                                <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">兑换码</div>
                                 <Button size="small" icon={<Copy className="size-3.5" />} disabled={!viewingCdkCode.code} onClick={() => void copyCdkPlainCode(viewingCdkCode)}>
-                                    {t("dashboard.copyPlain")}
+                                    复制明文
                                 </Button>
                             </div>
                             <div className="break-all rounded-md border border-stone-200 bg-white px-3 py-2 font-mono text-sm font-semibold text-stone-950 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-100">
-                                {viewingCdkCode.code || t("dashboard.cdkPlainUnavailable")}
+                                {viewingCdkCode.code || "CDK 明文不可用"}
                             </div>
-                            {!viewingCdkCode.code ? <div className="mt-2 text-xs text-stone-500 dark:text-stone-400">{t("dashboard.cdkNoPlain")}</div> : null}
+                            {!viewingCdkCode.code ? <div className="mt-2 text-xs text-stone-500 dark:text-stone-400">这个 CDK 没有可复制的明文。</div> : null}
                         </div>
                         <CdkRedemptionDetail code={viewingCdkCode} />
                     </div>

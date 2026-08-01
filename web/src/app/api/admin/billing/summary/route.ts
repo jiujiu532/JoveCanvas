@@ -4,14 +4,13 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getAdminBillingSummary, isBillingInputError } from "@/lib/server/billing-service";
 
-import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
 
     try {
         const params = request.nextUrl.searchParams;
@@ -22,8 +21,8 @@ export async function GET(request: NextRequest) {
             }),
         });
     } catch (error) {
-        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
         console.error("Admin billing summary failed", error);
-        return NextResponse.json({ error: await serverMessage("billing.walletSummaryFailed") }, { status: 500 });
+        return NextResponse.json({ error: "获取财务钱包摘要失败" }, { status: 500 });
     }
 }

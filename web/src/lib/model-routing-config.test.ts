@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import type { LogicalModel, SystemModelChannel } from "@/lib/auth/store";
-import { isLogicalModelResolvable, modelRoutingValidationErrors, normalizeDefaultModelsConfig, normalizeLogicalModelsConfig, resolveLogicalModelConfig } from "./model-routing-config";
+import {
+    channelDetectedCapabilities,
+    channelModelCapability,
+    deriveLogicalModelsConfig,
+    isLogicalModelResolvable,
+    mergeChannelModelsIntoLogicalModels,
+    modelRoutingValidationErrors,
+    normalizeDefaultModelsConfig,
+    normalizeLogicalModelsConfig,
+    resolveLogicalModelConfig,
+} from "./model-routing-config";
 
 const channel = (id: string, models: string[], enabled = true): SystemModelChannel => ({ id, name: id, baseUrl: `https://${id}.example.com/v1`, apiKey: "test-secret", apiFormat: "openai", models, enabled });
 
@@ -32,20 +42,58 @@ describe("model routing config", () => {
         expect(normalizeLogicalModelsConfig(undefined, channels)).toHaveLength(1);
     });
 
-    it("classifies short Stable Diffusion channel models as image models", () => {
-        const models = normalizeLogicalModelsConfig(undefined, [channel("one", ["sd2", "sd3-medium", "video-v1"])]);
+    it("distinguishes SD2.0 video aliases from full Stable Diffusion image names", () => {
+        const models = normalizeLogicalModelsConfig(undefined, [channel("one", ["sd2.0", "sd_2.0_fast_discount_720p", "seedance-2.0", "stable-diffusion-2.0", "sdxl"])]);
 
-        expect(models.find((model) => model.id === "sd2")?.capability).toBe("image");
-        expect(models.find((model) => model.id === "sd3-medium")?.capability).toBe("image");
-        expect(models.find((model) => model.id === "video-v1")?.capability).toBe("video");
+        expect(models.find((model) => model.id === "sd2.0")?.capability).toBe("video");
+        expect(models.find((model) => model.id === "sd_2.0_fast_discount_720p")?.capability).toBe("video");
+        expect(models.find((model) => model.id === "seedance-2.0")?.capability).toBe("video");
+        expect(models.find((model) => model.id === "stable-diffusion-2.0")?.capability).toBe("image");
+        expect(models.find((model) => model.id === "sdxl")?.capability).toBe("image");
     });
 
-    it("normalizes an existing Stable Diffusion logical model away from video", () => {
-        const channels = [channel("one", ["sd2"])];
-        const models = normalizeLogicalModelsConfig([{ id: "sd2", name: "Stable Diffusion", capability: "video", enabled: true, bindings: [{ id: "one", channelId: "one", upstreamModel: "sd2", enabled: true, priority: 1 }] }], channels);
+    it("keeps an explicitly selected logical model capability", () => {
+        const channels = [channel("one", ["stable-diffusion-2.0"])];
+        const models = normalizeLogicalModelsConfig(
+            [{ id: "stable-diffusion-2.0", name: "自定义视频能力", capability: "video", enabled: true, bindings: [{ id: "one", channelId: "one", upstreamModel: "stable-diffusion-2.0", enabled: true, priority: 1 }] }],
+            channels,
+        );
 
-        expect(models[0]?.capability).toBe("image");
-        expect(normalizeDefaultModelsConfig({ textModel: "", imageModel: "", videoModel: "sd2", audioModel: "" }, models, channels).videoModel).toBe("");
+        expect(models[0]?.capability).toBe("video");
+        expect(normalizeDefaultModelsConfig({ textModel: "", imageModel: "", videoModel: "stable-diffusion-2.0", audioModel: "" }, models, channels).videoModel).toBe("stable-diffusion-2.0");
+    });
+
+    it("uses channel capability metadata before model-name inference", () => {
+        const source = channel("one", ["opaque-a", "stable-video-diffusion"]);
+        source.advancedConfig = { modelCapabilities: { "opaque-a": "image", "stable-video-diffusion": "video" } } as never;
+
+        const models = deriveLogicalModelsConfig([source]);
+
+        expect(models.find((model) => model.id === "opaque-a")?.capability).toBe("image");
+        expect(models.find((model) => model.id === "stable-video-diffusion")?.capability).toBe("video");
+    });
+
+    it("merges the same upstream model from multiple channels into one logical model", () => {
+        const channels = [channel("one", ["models/GPT-IMAGE-2"]), channel("two", ["gpt-image-2"])];
+        const existing: LogicalModel[] = [{ id: "gpt-image-2", name: "GPT Image 2", capability: "image", enabled: true, bindings: [{ id: "one:gpt-image-2", channelId: "one", upstreamModel: "gpt-image-2", enabled: true, priority: 1 }] }];
+
+        const models = mergeChannelModelsIntoLogicalModels(existing, channels);
+
+        expect(models).toHaveLength(1);
+        expect(models[0].bindings).toEqual([existing[0].bindings[0], expect.objectContaining({ channelId: "two", upstreamModel: "gpt-image-2" })]);
+    });
+
+    it("keeps the upstream auto model classified as text", () => {
+        const source = channel("one", ["auto"]);
+        source.advancedConfig = { modelCapabilities: { auto: "audio" }, modelConfigs: { auto: { capability: "audio", source: "health" } } } as never;
+
+        expect(channelModelCapability(source, "auto")).toBe("text");
+    });
+
+    it("only exposes capabilities represented by real channel models", () => {
+        const source = channel("one", ["auto", "gpt-5-3", "gpt-image-2"]);
+
+        expect(Array.from(channelDetectedCapabilities(source))).toEqual(["text", "image"]);
     });
 
     it("requires an enabled matching binding for defaults", () => {
@@ -56,6 +104,16 @@ describe("model routing config", () => {
         ];
         expect(isLogicalModelResolvable(models, channels, "text", "writer")).toBe(true);
         expect(normalizeDefaultModelsConfig({ textModel: "writer", imageModel: "writer", videoModel: "", audioModel: "voice" }, models, channels)).toEqual({ textModel: "writer", imageModel: "", videoModel: "", audioModel: "" });
+    });
+
+    it("switches a stale default to another resolvable model of the same capability", () => {
+        const channels = [channel("off", ["gpt-image-2"], false), channel("backup", ["flux-pro"])];
+        const models: LogicalModel[] = [
+            { id: "gpt-image-2", name: "GPT Image 2", capability: "image", enabled: true, bindings: [{ id: "off", channelId: "off", upstreamModel: "gpt-image-2", enabled: true, priority: 1 }] },
+            { id: "flux-pro", name: "Flux Pro", capability: "image", enabled: true, bindings: [{ id: "backup", channelId: "backup", upstreamModel: "flux-pro", enabled: true, priority: 1 }] },
+        ];
+
+        expect(normalizeDefaultModelsConfig({ textModel: "", imageModel: "gpt-image-2", videoModel: "", audioModel: "" }, models, channels).imageModel).toBe("flux-pro");
     });
 
     it("uses binding priority and falls back from a disabled channel", () => {
@@ -133,10 +191,10 @@ describe("model routing config", () => {
         expect(modelRoutingValidationErrors(models, channels, { textModel: "missing", imageModel: "", videoModel: "", audioModel: "" })).toEqual(expect.arrayContaining(["逻辑模型 writer 存在重复绑定", "默认文本模型不可解析：missing"]));
     });
 
-    it("reports Stable Diffusion models saved with the wrong capability", () => {
-        const channels = [channel("one", ["sd2"])];
-        const models: LogicalModel[] = [{ id: "sd2", name: "Stable Diffusion", capability: "video", enabled: true, bindings: [{ id: "one", channelId: "one", upstreamModel: "sd2", enabled: true, priority: 1 }] }];
+    it("does not reject an administrator capability override based only on its name", () => {
+        const channels = [channel("one", ["stable-diffusion-2.0"])];
+        const models: LogicalModel[] = [{ id: "stable-diffusion-2.0", name: "自定义视频能力", capability: "video", enabled: true, bindings: [{ id: "one", channelId: "one", upstreamModel: "stable-diffusion-2.0", enabled: true, priority: 1 }] }];
 
-        expect(modelRoutingValidationErrors(models, channels, { textModel: "", imageModel: "", videoModel: "sd2", audioModel: "" })).toEqual(expect.arrayContaining(["逻辑模型 sd2 更像图片模型，请调整能力类型"]));
+        expect(modelRoutingValidationErrors(models, channels, { textModel: "", imageModel: "", videoModel: "stable-diffusion-2.0", audioModel: "" })).not.toContain("逻辑模型 stable-diffusion-2.0 更像图片模型，请调整能力类型");
     });
 });

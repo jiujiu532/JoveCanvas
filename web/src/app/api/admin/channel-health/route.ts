@@ -2,22 +2,34 @@ import { NextResponse } from "next/server";
 
 import { readJsonBody } from "@/lib/auth/request";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getAuthSettings } from "@/lib/auth/store";
+import { getAuthSettings, setSystemChannelHealthResult } from "@/lib/auth/store";
+import { channelHealthSnapshot } from "@/lib/channel-health-result";
 import { isProviderTimeoutError, resolveAdminChannelCredentials, sanitizeProviderMessage } from "@/lib/server/admin-channel-config";
 import { isQingyanProvider } from "@/lib/provider-compatibility";
 import { configureServerProxyDispatcher } from "@/lib/server/proxy-dispatcher";
 import { isSafeOutboundUrl } from "@/lib/server/security";
-import { isProviderBusinessError } from "@/lib/server/provider-task-config";
+import { buildProviderRequest, isProviderBusinessError, readProviderString } from "@/lib/server/provider-task-config";
 import { buildGlobalAiOpcImageRequest, buildGlobalAiOpcVideoRequest, resolveGlobalAiOpcCatalogPresets, resolveGlobalAiOpcPreset, type GlobalAiOpcPreset } from "@/lib/globalaiopc-catalog";
+import { isAgnesApiBaseUrl } from "@/lib/agnes-model-catalog";
+import { isSeedanceVideoModelName } from "@/lib/model-capability";
+import { normalizeModelId } from "@/lib/model-capability";
+import type { SystemChannelAdvancedConfig, SystemChannelProtocol } from "@/lib/auth/store";
+import { channelProtocolDefinition, protocolAuthHeaders, protocolModelConfig, resolveChannelAuthMode, resolveChannelModelAdvancedConfig } from "@/lib/channel-protocol-registry";
+import { resolveTextProtocol, type ResolvedTextProtocol } from "@/lib/server/text-protocol-resolver";
+import {
+    applySelectedProtocolLabel,
+    channelHealthModelConfig,
+    isDeclarativeHealthProtocol,
+    literalChannelHealthUrl,
+    testDeclarativeChannelProtocol,
+    type ChannelHealthKind as HealthKind,
+    type ChannelHealthResult as HealthResult,
+} from "@/lib/server/channel-health-declarative";
 
-import { serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 configureServerProxyDispatcher();
-
-type HealthKind = "text" | "image" | "video" | "audio";
-type HealthProtocol = "auto" | "openai" | "sub2api" | "qingyan" | "globalaiopc" | "seedance" | "compatible";
 
 type HealthPayload = {
     channelId?: unknown;
@@ -30,31 +42,21 @@ type HealthPayload = {
     globalAiOpcPreset?: unknown;
     globalAiOpcPresets?: unknown;
     createPath?: unknown;
-};
-
-type HealthResult = {
-    ok: boolean;
-    kind: HealthKind;
-    model: string;
-    status: number;
-    protocolKey?: HealthProtocol;
-    protocol?: string;
-    referenceHint?: string;
-    createPath?: string;
-    queryPath?: string;
-    requestTemplate?: string;
-    resultField?: string;
-    statusField?: string;
-    durationRange?: string;
-    referenceRule?: string;
-    supportsReferenceImage?: boolean;
-    supportsReferenceVideo?: boolean;
-    supportsReferenceAudio?: boolean;
-    pointsCost?: number;
-    pointsRemaining?: number;
-    taskId?: string;
-    remoteUrl?: string;
-    error?: string;
+    editPath?: unknown;
+    imageToVideoPath?: unknown;
+    queryPath?: unknown;
+    requestTemplate?: unknown;
+    resultField?: unknown;
+    statusField?: unknown;
+    durationRange?: unknown;
+    referenceRule?: unknown;
+    supportsReferenceImage?: unknown;
+    supportsReferenceVideo?: unknown;
+    supportsReferenceAudio?: unknown;
+    authMode?: unknown;
+    authHeader?: unknown;
+    authPrefix?: unknown;
+    modelConfig?: unknown;
 };
 
 const HEALTH_COOLDOWN_MS = 20_000;
@@ -68,89 +70,173 @@ const healthCooldowns = (globalCooldownStore.__vozebProChannelHealthCooldowns ??
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
 
     const [body, settings] = await Promise.all([readJsonBody<HealthPayload>(request), getAuthSettings()]);
     const { baseUrl, apiKey, savedChannel } = resolveAdminChannelCredentials(settings, body);
     const model = typeof body.model === "string" ? body.model.trim() : "";
     const kind = body.kind === "image" || body.kind === "video" || body.kind === "audio" || body.kind === "text" ? body.kind : "";
-    if (!baseUrl || !apiKey || !model || !kind) return NextResponse.json({ error: await serverMessage("admin.fillChannelTestFields") }, { status: 400 });
-    const advancedConfig = {
+    if (!baseUrl || !model || !kind) return NextResponse.json({ error: "请填写 Base URL、API Key，并选择要测试的模型" }, { status: 400 });
+    const channelAdvanced = {
         ...(savedChannel?.advancedConfig || {}),
         ...(body.protocol !== undefined ? { protocol: body.protocol } : {}),
         ...(body.globalAiOpcPreset !== undefined ? { globalAiOpcPreset: body.globalAiOpcPreset } : {}),
         ...(body.globalAiOpcPresets !== undefined ? { globalAiOpcPresets: body.globalAiOpcPresets } : {}),
         ...(body.createPath !== undefined ? { createPath: body.createPath } : {}),
-    };
+        ...(body.editPath !== undefined ? { editPath: body.editPath } : {}),
+        ...(body.imageToVideoPath !== undefined ? { imageToVideoPath: body.imageToVideoPath } : {}),
+        ...(body.queryPath !== undefined ? { queryPath: body.queryPath } : {}),
+        ...(body.requestTemplate !== undefined ? { requestTemplate: body.requestTemplate } : {}),
+        ...(body.resultField !== undefined ? { resultField: body.resultField } : {}),
+        ...(body.statusField !== undefined ? { statusField: body.statusField } : {}),
+        ...(body.durationRange !== undefined ? { durationRange: body.durationRange } : {}),
+        ...(body.referenceRule !== undefined ? { referenceRule: body.referenceRule } : {}),
+        ...(body.supportsReferenceImage !== undefined ? { supportsReferenceImage: body.supportsReferenceImage } : {}),
+        ...(body.supportsReferenceVideo !== undefined ? { supportsReferenceVideo: body.supportsReferenceVideo } : {}),
+        ...(body.supportsReferenceAudio !== undefined ? { supportsReferenceAudio: body.supportsReferenceAudio } : {}),
+        ...(body.authMode !== undefined ? { authMode: body.authMode } : {}),
+        ...(body.authHeader !== undefined ? { authHeader: body.authHeader } : {}),
+        ...(body.authPrefix !== undefined ? { authPrefix: body.authPrefix } : {}),
+    } as SystemChannelAdvancedConfig;
+    const requestedModelConfig = channelHealthModelConfig(body.modelConfig) || savedChannel?.advancedConfig?.modelConfigs?.[normalizeModelId(model)] || savedChannel?.advancedConfig?.operationConfigs?.[kind];
+    const apiFormat = requestedModelConfig?.apiFormat || (body.apiFormat === "gemini" ? "gemini" : savedChannel?.apiFormat === "gemini" ? "gemini" : "openai");
+    const definition = channelProtocolDefinition((requestedModelConfig?.protocol || channelAdvanced.protocol || "auto") as SystemChannelProtocol);
+    const requestedProtocol = definition.id;
+    channelAdvanced.protocol = requestedProtocol;
+    const strictModelConfig = definition.strict ? protocolModelConfig(requestedProtocol, kind) : undefined;
+    const modelConfig = strictModelConfig || requestedModelConfig;
+    const advancedConfig = resolveChannelModelAdvancedConfig(
+        {
+            ...channelAdvanced,
+            ...(modelConfig
+                ? {
+                      modelConfigs: { ...(channelAdvanced.modelConfigs || {}), [normalizeModelId(model)]: modelConfig },
+                  }
+                : {}),
+        },
+        model,
+    )!;
+    const protocol = advancedConfig.protocol || requestedProtocol;
+    advancedConfig.authMode = resolveChannelAuthMode(advancedConfig);
+    if (!apiKey && advancedConfig.authMode !== "none") return NextResponse.json({ error: "请填写 Base URL、API Key，并选择要测试的模型" }, { status: 400 });
     const catalogPresets = resolveGlobalAiOpcCatalogPresets(baseUrl, advancedConfig);
     const globalPreset = resolveGlobalAiOpcPreset({ protocol: "globalaiopc", globalAiOpcPresets: catalogPresets.map((preset) => preset.id) }, model);
     const providerBaseUrl = globalPreset?.baseUrl || baseUrl;
-    if (!(await isSafeOutboundUrl(apiUrl(providerBaseUrl, "/models")))) return NextResponse.json({ result: { ok: false, kind, model, status: 0, error: await serverMessage("common.baseUrlPrivateBlocked") } satisfies HealthResult }, { status: 200 });
+    let textProtocol: ResolvedTextProtocol | undefined;
+    try {
+        textProtocol = kind === "text" ? resolveTextProtocol({ model, apiFormat, advancedConfig, throughSystemProxy: false }) : undefined;
+    } catch (error) {
+        const result = { ok: false, kind, model, status: 0, error: error instanceof Error ? error.message : "文本协议配置无效" } satisfies HealthResult;
+        await persistHealthResult(savedChannel?.id, result);
+        return NextResponse.json({ result });
+    }
+    const healthUrl = textProtocol
+        ? textProtocolUrl(providerBaseUrl, textProtocol, advancedConfig)
+        : isDeclarativeHealthProtocol(protocol) && advancedConfig.createPath
+          ? literalChannelHealthUrl(providerBaseUrl, advancedConfig.createPath)
+          : apiUrl(providerBaseUrl, "/models");
+    if (!(await isSafeOutboundUrl(healthUrl))) {
+        const result = { ok: false, kind, model, status: 0, error: "Base URL 不允许访问内网或保留地址" } satisfies HealthResult;
+        await persistHealthResult(savedChannel?.id, result);
+        return NextResponse.json({ result }, { status: 200 });
+    }
 
     const cooldownKey = `${currentUser.id}:${baseUrl.toLowerCase()}:${kind}`;
     const waitMs = (healthCooldowns.get(cooldownKey) || 0) - Date.now();
-    if (waitMs > 0) return NextResponse.json({ error: await serverMessage("common.rateLimitedWithSeconds", { feature: await serverMessage("features.apiTest"), seconds: Math.ceil(waitMs / 1000) }) }, { status: 429 });
+    if (waitMs > 0) return NextResponse.json({ error: `接口测试过于频繁，请 ${Math.ceil(waitMs / 1000)} 秒后再试` }, { status: 429 });
     healthCooldowns.set(cooldownKey, Date.now() + HEALTH_COOLDOWN_MS);
 
     try {
-        const result =
+        const result = applySelectedProtocolLabel(
             kind === "text"
-                ? await testText(providerBaseUrl, apiKey, model, globalPreset)
-                : kind === "image"
-                  ? await testImage(providerBaseUrl, apiKey, model, settings.site.title, globalPreset)
-                  : kind === "audio"
-                    ? await testAudio(providerBaseUrl, apiKey, model, settings.site.title)
-                    : await testVideo(providerBaseUrl, apiKey, model, settings.site.title, globalPreset);
+                ? await testText(providerBaseUrl, apiKey, model, protocol, advancedConfig, textProtocol!)
+                : isDeclarativeHealthProtocol(protocol)
+                  ? await testDeclarativeChannelProtocol(providerBaseUrl, apiKey, model, kind, protocol, advancedConfig)
+                  : kind === "image"
+                    ? await testImage(providerBaseUrl, apiKey, model, globalPreset, protocol, advancedConfig)
+                    : kind === "audio"
+                      ? await testAudio(providerBaseUrl, apiKey, model)
+                      : await testVideo(providerBaseUrl, apiKey, model, globalPreset),
+            protocol,
+        );
+        await persistHealthResult(savedChannel?.id, result);
         return NextResponse.json({ result });
     } catch (error) {
-        const message = isProviderTimeoutError(error) ? await serverMessage("admin.upstreamTimeout") : sanitizeProviderMessage(error instanceof Error ? error.message : await serverMessage("admin.imageTestFailed"), [apiKey]);
-        return NextResponse.json({ result: { ok: false, kind, model, status: 0, error: message } satisfies HealthResult }, { status: 200 });
+        const message = isProviderTimeoutError(error) ? "上游接口请求超时" : sanitizeProviderMessage(error instanceof Error ? error.message : "接口测试失败", [apiKey]);
+        const result = { ok: false, kind, model, status: 0, error: message } satisfies HealthResult;
+        await persistHealthResult(savedChannel?.id, result);
+        return NextResponse.json({ result }, { status: 200 });
     }
 }
 
-async function testText(baseUrl: string, apiKey: string, model: string, globalPreset?: GlobalAiOpcPreset): Promise<HealthResult> {
-    const nativeGemini = globalPreset?.id === "text-gemini-native";
-    const nativeClaude = globalPreset?.id === "text-claude-native";
-    const path = nativeGemini ? `/models/${encodeURIComponent(model)}:generateContent` : nativeClaude ? "/messages" : globalPreset?.createPath || "/chat/completions";
-    const body = nativeGemini
-        ? { contents: [{ role: "user", parts: [{ text: "Reply exactly OK." }] }], generationConfig: { maxOutputTokens: 8 } }
-        : nativeClaude
-          ? { model, max_tokens: 8, messages: [{ role: "user", content: "Reply exactly OK." }] }
-          : path === "/responses"
-            ? { model, input: "Reply exactly OK." }
-            : { model, messages: [{ role: "user", content: "Reply exactly OK." }], max_tokens: 8 };
-    const response = await fetch(apiUrl(baseUrl, path), {
+async function persistHealthResult(channelId: string | undefined, result: HealthResult) {
+    if (!channelId) return;
+    try {
+        await setSystemChannelHealthResult(channelId, channelHealthSnapshot(result));
+    } catch (error) {
+        console.error("Persisting channel health result failed", { channelId, kind: result.kind, error });
+    }
+}
+
+async function testText(baseUrl: string, apiKey: string, model: string, channelProtocol: SystemChannelProtocol, advanced: SystemChannelAdvancedConfig, protocol: ResolvedTextProtocol): Promise<HealthResult> {
+    const prompt = "Reply exactly OK.";
+    const messages = [{ role: "user", content: prompt }];
+    const values = { model, prompt, input: prompt, text: prompt, messages };
+    const body =
+        protocol.kind === "gemini"
+            ? { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 8 } }
+            : protocol.kind === "claude"
+              ? { model, max_tokens: 8, messages }
+              : protocol.kind === "responses"
+                ? { model, input: prompt }
+                : protocol.kind === "custom"
+                  ? buildProviderRequest(protocol.requestTemplate!, values, values)
+                  : { model, messages, max_tokens: 8 };
+    const response = await fetch(textProtocolUrl(baseUrl, protocol, advanced), {
         method: "POST",
-        headers: jsonHeaders(apiKey),
+        headers: { ...protocolAuthHeaders(apiKey, advanced, protocol.providerKind === "gemini" ? "gemini" : "openai"), "content-type": "application/json" },
         body: JSON.stringify(body),
         cache: "no-store",
         signal: AbortSignal.timeout(HEALTH_REQUEST_TIMEOUT_MS),
     });
     const payload = await readPayload(response);
     if (!response.ok || isProviderBusinessError(payload)) return failed("text", model, response.status, payload, apiKey);
+    const resultField =
+        protocol.kind === "gemini" ? "candidates[0].content.parts[0].text" : protocol.kind === "claude" ? "content[0].text" : protocol.kind === "responses" ? "output_text" : protocol.kind === "custom" ? protocol.resultField : "choices[0].message.content";
+    const content = readProviderString(payload, resultField, ["output_text", "text", "content", "response", "result"]);
+    const taskId = readProviderString(payload, undefined, ["task_id", "taskId", "id", "job_id", "jobId", "request_id", "requestId"]);
+    if (!content && !taskId) return { ok: false, kind: "text", model, status: response.status, protocolKey: channelProtocol, error: `文本接口成功，但没有按 ${resultField || "配置结果字段"} 返回内容或任务 ID` };
+    const definition = channelProtocolDefinition(channelProtocol);
     return {
         ok: true,
         kind: "text",
         model,
         status: response.status,
-        protocolKey: globalPreset ? "globalaiopc" : "openai",
-        protocol: globalPreset?.label || (await serverMessage("admin.openaiTextCompat")),
-        createPath: path,
-        requestTemplate: nativeGemini
-            ? '{"contents":[{"role":"user","parts":[{"text":"{{prompt}}"}]}]}'
-            : nativeClaude
-              ? '{"model":"{{model}}","max_tokens":1024,"messages":[{"role":"user","content":"{{prompt}}"}]}'
-              : path === "/responses"
-                ? '{"model":"{{model}}","input":"{{prompt}}"}'
-                : '{"model":"{{model}}","messages":[{"role":"user","content":"{{prompt}}"}]}',
-        resultField: nativeGemini ? "candidates[0].content.parts[0].text" : nativeClaude ? "content[0].text" : path === "/responses" ? "output_text" : "choices[0].message.content",
+        protocolKey: channelProtocol,
+        protocol: definition.label,
+        createPath: protocol.providerPath,
+        requestTemplate:
+            protocol.kind === "gemini"
+                ? '{"contents":[{"role":"user","parts":[{"text":"{{prompt}}"}]}]}'
+                : protocol.kind === "claude"
+                  ? '{"model":"{{model}}","max_tokens":1024,"messages":[{"role":"user","content":"{{prompt}}"}]}'
+                  : protocol.kind === "responses"
+                    ? '{"model":"{{model}}","input":"{{prompt}}"}'
+                    : protocol.kind === "custom"
+                      ? protocol.requestTemplate
+                      : '{"model":"{{model}}","messages":[{"role":"user","content":"{{prompt}}"}]}',
+        resultField,
+        taskId: taskId || undefined,
         ...pointsInfo(response.headers),
     };
 }
 
-async function testImage(baseUrl: string, apiKey: string, model: string, siteTitle: string, globalPreset?: GlobalAiOpcPreset): Promise<HealthResult> {
-    if (globalPreset?.capability === "image") return testGlobalAiOpcImage(baseUrl, apiKey, model, globalPreset);
+async function testImage(baseUrl: string, apiKey: string, model: string, globalPreset: GlobalAiOpcPreset | undefined, protocol: SystemChannelProtocol, advanced: SystemChannelAdvancedConfig): Promise<HealthResult> {
+    if (globalPreset?.capability === "image") {
+        const result = await testGlobalAiOpcImage(baseUrl, apiKey, model, globalPreset);
+        return withImageEditHealth(result, baseUrl, apiKey, protocol, advanced, globalPreset);
+    }
     for (const responseFormat of ["url", "b64_json"] as const) {
         const response = await fetch(apiUrl(baseUrl, "/images/generations"), {
             method: "POST",
@@ -168,7 +254,7 @@ async function testImage(baseUrl: string, apiKey: string, model: string, siteTit
         });
         const payload = await readPayload(response);
         if (response.ok && !isProviderBusinessError(payload)) {
-            return {
+            const result: HealthResult = {
                 ok: true,
                 kind: "image",
                 model,
@@ -176,9 +262,10 @@ async function testImage(baseUrl: string, apiKey: string, model: string, siteTit
                 protocolKey: "openai",
                 protocol: responseFormat === "url" ? "OpenAI 图片 URL" : "OpenAI 图片 Base64",
                 createPath: "/images/generations",
+                editPath: "/images/edits",
                 requestTemplate: '{"model":"{{model}}","prompt":"{{prompt}}","size":"{{size}}","response_format":"url"}',
                 resultField: "data[0].url / data[0].b64_json",
-                referenceRule: `图生图使用 /images/edits；${siteTitle} 会按 multipart、image、images、image_url、input_image 等常见字段自动兼容。`,
+                referenceRule: "图生图使用 /images/edits；VOZEB PRO 会按 multipart、image、images、image_url、input_image 等常见字段自动兼容。",
                 supportsReferenceImage: true,
                 ...imageHealthReferenceConfig(baseUrl),
                 remoteUrl: findStringByKeys(payload, [
@@ -202,19 +289,113 @@ async function testImage(baseUrl: string, apiKey: string, model: string, siteTit
                 ]),
                 ...pointsInfo(response.headers),
             };
+            return withImageEditHealth(result, baseUrl, apiKey, protocol, advanced, globalPreset, imageHealthReference(payload));
         }
         const message = errorMessage(payload, `图片测试失败，状态码 ${response.status}`);
         if (responseFormat === "url" && /response[_ -]?format|url|unsupported|not supported|invalid|not implemented/i.test(message)) continue;
         return failed("image", model, response.status, payload, apiKey);
     }
-    return { ok: false, kind: "image", model, status: 0, error: await serverMessage("admin.imageTestFailed") };
+    return { ok: false, kind: "image", model, status: 0, error: "图片测试失败" };
 }
 
-async function testAudio(baseUrl: string, apiKey: string, model: string, siteTitle: string): Promise<HealthResult> {
+async function withImageEditHealth(
+    result: HealthResult,
+    baseUrl: string,
+    apiKey: string,
+    protocol: SystemChannelProtocol,
+    advanced: SystemChannelAdvancedConfig,
+    globalPreset?: GlobalAiOpcPreset,
+    referenceImage = result.remoteUrl || VIDEO_HEALTH_REFERENCE_IMAGE,
+): Promise<HealthResult> {
+    if (!result.ok || !result.supportsReferenceImage) return result;
+    const referenceImageTest = await testImageEdit(baseUrl, apiKey, result.model, protocol, advanced, referenceImage, globalPreset);
+    return { ...result, referenceImageTest };
+}
+
+async function testImageEdit(
+    baseUrl: string,
+    apiKey: string,
+    model: string,
+    protocol: SystemChannelProtocol,
+    advanced: SystemChannelAdvancedConfig,
+    referenceImage: string,
+    globalPreset?: GlobalAiOpcPreset,
+): Promise<NonNullable<HealthResult["referenceImageTest"]>> {
+    if (globalPreset?.capability === "image") {
+        const response = await fetch(apiUrl(baseUrl, globalPreset.createPath), {
+            method: "POST",
+            headers: jsonHeaders(apiKey),
+            body: JSON.stringify(buildGlobalAiOpcImageRequest(globalPreset, { model, prompt: "Keep the reference image composition and make the circle slightly darker.", quality: "low", ratio: "1:1", resolution: "1k", imageUrls: [referenceImage] })),
+            cache: "no-store",
+            signal: AbortSignal.timeout(HEALTH_REQUEST_TIMEOUT_MS),
+        });
+        return imageEditHealthResult(response, await readPayload(response), apiKey);
+    }
+
+    if (protocol === "sub2api" || isSub2ApiHealthTarget(baseUrl) || isQingyanHealthTarget(baseUrl)) {
+        const path = advanced.editPath || advanced.createPath || "/images/generations";
+        const response = await fetch(apiUrl(baseUrl, path), {
+            method: "POST",
+            headers: jsonHeaders(apiKey),
+            body: JSON.stringify({
+                model,
+                prompt: "Keep the reference image composition and make the circle slightly darker.",
+                n: 1,
+                size: "1024x1024",
+                response_format: "url",
+                image: referenceImage,
+                images: [referenceImage],
+                image_urls: [referenceImage],
+            }),
+            cache: "no-store",
+            signal: AbortSignal.timeout(HEALTH_REQUEST_TIMEOUT_MS),
+        });
+        return imageEditHealthResult(response, await readPayload(response), apiKey);
+    }
+
+    const formData = new FormData();
+    formData.set("model", model);
+    formData.set("prompt", "Keep the reference image composition and make the circle slightly darker.");
+    formData.set("n", "1");
+    formData.set("size", "1024x1024");
+    formData.set("response_format", "url");
+    formData.set("image", healthReferenceImageFile());
+    const response = await fetch(apiUrl(baseUrl, advanced.editPath || "/images/edits"), {
+        method: "POST",
+        headers: { authorization: `Bearer ${apiKey}` },
+        body: formData,
+        cache: "no-store",
+        signal: AbortSignal.timeout(HEALTH_REQUEST_TIMEOUT_MS),
+    });
+    return imageEditHealthResult(response, await readPayload(response), apiKey);
+}
+
+function imageEditHealthResult(response: Response, payload: unknown, apiKey: string): NonNullable<HealthResult["referenceImageTest"]> {
+    if (!response.ok || isProviderBusinessError(payload)) return { ok: false, status: response.status, error: sanitizeProviderMessage(errorMessage(payload, `图生图测试失败，状态码 ${response.status}`), [apiKey]) };
+    const taskId = findStringByKeys(payload, ["task_id", "taskId", "id", "job_id", "jobId", "request_id", "requestId"]);
+    const remoteUrl = findStringByKeys(payload, ["url", "image_url", "imageUrl", "result_url", "resultUrl"]);
+    const inlineImage = findStringByKeys(payload, ["b64_json", "base64"]);
+    if (!taskId && !remoteUrl && !inlineImage) return { ok: false, status: response.status, error: "图生图接口成功，但没有返回图片或任务 ID" };
+    return { ok: true, status: response.status, taskId: taskId || undefined, remoteUrl: remoteUrl || undefined };
+}
+
+function imageHealthReference(payload: unknown) {
+    const remoteUrl = findStringByKeys(payload, ["url", "image_url", "imageUrl", "result_url", "resultUrl"]);
+    if (remoteUrl) return remoteUrl;
+    const base64 = findStringByKeys(payload, ["b64_json", "base64"]);
+    return base64 ? `data:image/png;base64,${base64}` : VIDEO_HEALTH_REFERENCE_IMAGE;
+}
+
+function healthReferenceImageFile() {
+    const base64 = VIDEO_HEALTH_REFERENCE_IMAGE.slice(VIDEO_HEALTH_REFERENCE_IMAGE.indexOf(",") + 1);
+    return new File([Buffer.from(base64, "base64")], "health-reference.png", { type: "image/png" });
+}
+
+async function testAudio(baseUrl: string, apiKey: string, model: string): Promise<HealthResult> {
     const response = await fetch(apiUrl(baseUrl, "/audio/speech"), {
         method: "POST",
         headers: jsonHeaders(apiKey),
-        body: JSON.stringify({ model, input: `${siteTitle} audio health check.`, voice: "alloy", response_format: "mp3" }),
+        body: JSON.stringify({ model, input: "VOZEB PRO audio health check.", voice: "alloy", response_format: "mp3" }),
         cache: "no-store",
         signal: AbortSignal.timeout(HEALTH_REQUEST_TIMEOUT_MS),
     });
@@ -268,7 +449,7 @@ function imageHealthReferenceConfig(baseUrl: string): Partial<HealthResult> {
     return {};
 }
 
-async function testVideo(baseUrl: string, apiKey: string, model: string, siteTitle: string, globalPreset?: GlobalAiOpcPreset): Promise<HealthResult> {
+async function testVideo(baseUrl: string, apiKey: string, model: string, globalPreset?: GlobalAiOpcPreset): Promise<HealthResult> {
     if (globalPreset?.capability === "video") return testGlobalAiOpcVideo(baseUrl, apiKey, model, globalPreset);
     const basePayload = {
         model,
@@ -286,7 +467,7 @@ async function testVideo(baseUrl: string, apiKey: string, model: string, siteTit
         generate_audio: false,
         watermark: false,
     };
-    return testVideoPayloads(baseUrl, apiKey, model, siteTitle, buildVideoHealthPayloads(basePayload), false);
+    return testVideoPayloads(baseUrl, apiKey, model, buildVideoHealthPayloads(basePayload), false);
 }
 
 async function testGlobalAiOpcImage(baseUrl: string, apiKey: string, model: string, preset: GlobalAiOpcPreset): Promise<HealthResult> {
@@ -356,7 +537,7 @@ async function testGlobalAiOpcVideo(baseUrl: string, apiKey: string, model: stri
     };
 }
 
-async function testVideoPayloads(baseUrl: string, apiKey: string, model: string, siteTitle: string, payloads: Array<Record<string, unknown>>, allowReferenceRetry: boolean): Promise<HealthResult> {
+async function testVideoPayloads(baseUrl: string, apiKey: string, model: string, payloads: Array<Record<string, unknown>>, allowReferenceRetry: boolean): Promise<HealthResult> {
     for (const path of videoHealthPaths(baseUrl, model)) {
         for (const payload of videoHealthPayloadsForPath(path, payloads)) {
             const response = await fetch(apiUrl(baseUrl, path), {
@@ -368,7 +549,7 @@ async function testVideoPayloads(baseUrl: string, apiKey: string, model: string,
             });
             const data = await readPayload(response);
             if (response.ok && !isProviderBusinessError(data)) {
-                const config = videoHealthConfig(baseUrl, model, path, siteTitle);
+                const config = videoHealthConfig(baseUrl, model, path);
                 return {
                     ok: true,
                     kind: "video",
@@ -409,12 +590,12 @@ async function testVideoPayloads(baseUrl: string, apiKey: string, model: string,
             if (/not found|not implemented|route|endpoint|unsupported|no such|cannot post|invalid url|404/i.test(message)) break;
             if (shouldRetryVideoHealthPayload(response.status, message)) continue;
             if (path !== GLOBAL_AIOPC_VIDEO_CREATE_PATH && path !== SEEDANCE_VIDEO_CREATE_PATH && !allowReferenceRetry && shouldRetryVideoHealthWithReference(message)) {
-                return testVideoPayloads(baseUrl, apiKey, model, siteTitle, buildVideoHealthPayloads(payload, true), true);
+                return testVideoPayloads(baseUrl, apiKey, model, buildVideoHealthPayloads(payload, true), true);
             }
             return failed("video", model, response.status, data, apiKey);
         }
     }
-    return { ok: false, kind: "video", model, status: 0, error: await serverMessage("admin.videoTestAllPathsFailed") };
+    return { ok: false, kind: "video", model, status: 0, error: "视频测试失败：所有兼容路径都不可用" };
 }
 
 function videoHealthPaths(baseUrl: string, model: string) {
@@ -449,7 +630,7 @@ function videoHealthPayloadsForPath(path: string, payloads: Array<Record<string,
     return payloads;
 }
 
-function videoHealthConfig(baseUrl: string, model: string, path: string, siteTitle: string): Partial<HealthResult> {
+function videoHealthConfig(baseUrl: string, model: string, path: string): Partial<HealthResult> {
     if (path === GLOBAL_AIOPC_VIDEO_CREATE_PATH) {
         return {
             protocolKey: "globalaiopc",
@@ -487,12 +668,12 @@ function videoHealthConfig(baseUrl: string, model: string, path: string, siteTit
             protocolKey: "openai",
             protocol: "OpenAI Videos",
             createPath: "/videos",
-            queryPath: "/videos/:task_id",
-            requestTemplate: "multipart/form-data: model、prompt、seconds、size、input_reference[]",
+            queryPath: isAgnesApiBaseUrl(baseUrl) ? "/agnesapi?video_id=:task_id" : "/videos/:task_id",
+            requestTemplate: "multipart/form-data: model、prompt、seconds、size、input_reference",
             resultField: "/videos/:task_id/content",
             statusField: "status",
             durationRange: "按上游模型限制",
-            referenceRule: `参考图使用 multipart 文件上传，由 ${siteTitle} 自动组装。`,
+            referenceRule: "参考图使用 multipart 文件上传，由 VOZEB PRO 自动组装。",
             supportsReferenceImage: true,
             supportsReferenceVideo: false,
             supportsReferenceAudio: false,
@@ -538,8 +719,7 @@ function isGlobalAiOpcVideoHealthTarget(baseUrl: string, model: string) {
 
 function isSeedanceVideoHealthTarget(baseUrl: string, model: string) {
     const url = baseUrl.toLowerCase();
-    const modelName = model.trim().toLowerCase();
-    return url.includes("volces.com") || url.includes("/api/plan/v3") || modelName.includes("seedance") || modelName.includes("doubao-seedance");
+    return url.includes("volces.com") || url.includes("/api/plan/v3") || isSeedanceVideoModelName(model);
 }
 
 function isQingyanVideoHealthTarget(baseUrl: string, model: string) {
@@ -630,6 +810,12 @@ function apiUrl(baseUrl: string, path: string) {
     const lower = normalized.toLowerCase();
     const apiBase = lower.endsWith("/v1") || lower.endsWith("/api/v3") || lower.endsWith("/api/plan/v3") ? normalized : `${normalized}/v1`;
     return `${apiBase}${path}`;
+}
+
+function textProtocolUrl(baseUrl: string, protocol: ResolvedTextProtocol, advanced: SystemChannelAdvancedConfig) {
+    const literal = advanced.protocol === "custom" || protocol.kind === "custom" || advanced.protocol === "stable-diffusion" || advanced.protocol === "seedance-special";
+    if (literal) return literalChannelHealthUrl(baseUrl, protocol.path);
+    return apiUrl(baseUrl, protocol.path);
 }
 
 function normalizeHealthBaseUrl(baseUrl: string) {

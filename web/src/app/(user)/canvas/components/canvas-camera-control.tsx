@@ -2,7 +2,6 @@
 
 import { Camera } from "lucide-react";
 import { ConfigProvider, Select, Switch } from "antd";
-import { useTranslations } from "next-intl";
 
 import type { CanvasTheme } from "@/lib/canvas-theme";
 import type { CameraControlOptions } from "../types";
@@ -17,12 +16,11 @@ type CanvasCameraControlProps = {
 };
 
 export function CanvasCameraControl({ value, onChange, buttonClassName, placement = "topLeft" }: CanvasCameraControlProps) {
-    const t = useTranslations("canvas");
     const control = normalizeCameraControl(value || DEFAULT_CAMERA_CONTROL);
     const update = (patch: Partial<CameraControlOptions>) => onChange({ ...control, ...patch });
 
     return (
-        <CanvasSettingsPopoverShell label={cameraControlLabel(control, t)} icon={<Camera className="size-3.5" />} buttonClassName={buttonClassName} defaultButtonClassName="!h-8 !max-w-[170px] !justify-start !rounded-full !px-2.5" placement={placement}>
+        <CanvasSettingsPopoverShell label={cameraControlLabel(control)} icon={<Camera className="size-3.5" />} buttonClassName={buttonClassName} defaultButtonClassName="!h-8 !max-w-[170px] !justify-start !rounded-full !px-2.5" placement={placement}>
             {(theme) => (
                 <CameraPanel
                     control={control}
@@ -55,7 +53,6 @@ function CameraPanel({
     onFocalLengthChange: (value: number) => void;
     onApertureChange: (value: number) => void;
 }) {
-    const t = useTranslations("canvas");
     const selectTheme = {
         token: { colorBgContainer: theme.node.fill, colorBgElevated: theme.toolbar.panel, colorBorder: theme.node.stroke, colorPrimary: theme.node.activeStroke, colorText: theme.node.text, colorTextPlaceholder: theme.node.muted },
     };
@@ -64,22 +61,22 @@ function CameraPanel({
         <ConfigProvider theme={selectTheme}>
             <div className="space-y-3" style={{ color: theme.node.text }}>
                 <div className="flex items-center justify-between gap-4">
-                    <div className="text-base font-semibold">{t("camera.title")}</div>
+                    <div className="text-base font-semibold">镜头控制</div>
                     <div className="flex items-center gap-2">
                         <span className="text-xs" style={{ color: control.enabled ? theme.node.text : theme.node.muted }}>
-                            {control.enabled ? t("camera.on") : t("camera.off")}
+                            {control.enabled ? "开启" : "关闭"}
                         </span>
-                        <Switch size="small" checked={control.enabled} onChange={onEnabledChange} aria-label={t("camera.title")} />
+                        <Switch size="small" checked={control.enabled} onChange={onEnabledChange} aria-label="镜头控制" />
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2.5" style={{ opacity: control.enabled ? 1 : 0.52 }}>
-                    <CameraField label={t("camera.camera")} theme={theme}>
+                    <CameraField label="摄影机" theme={theme}>
                         <Select value={control.camera} options={CAMERA_OPTIONS} disabled={!control.enabled} listHeight={176} styles={{ popup: { root: { zIndex: 1305 } } }} onChange={onCameraChange} />
                     </CameraField>
-                    <CameraField label={t("camera.lens")} theme={theme}>
+                    <CameraField label="镜头" theme={theme}>
                         <Select value={control.lens} options={LENS_OPTIONS} disabled={!control.enabled} listHeight={176} styles={{ popup: { root: { zIndex: 1305 } } }} onChange={onLensChange} />
                     </CameraField>
-                    <CameraField label={t("camera.focalLength")} theme={theme}>
+                    <CameraField label="焦距" theme={theme}>
                         <Select
                             value={control.focalLength}
                             options={FOCAL_LENGTH_OPTIONS.map((value) => ({ value, label: `${value} mm` }))}
@@ -89,12 +86,12 @@ function CameraPanel({
                             onChange={onFocalLengthChange}
                         />
                     </CameraField>
-                    <CameraField label={t("camera.aperture")} theme={theme}>
+                    <CameraField label="光圈" theme={theme}>
                         <Select value={control.aperture} options={APERTURE_OPTIONS.map((value) => ({ value, label: `f/${value}` }))} disabled={!control.enabled} listHeight={176} styles={{ popup: { root: { zIndex: 1305 } } }} onChange={onApertureChange} />
                     </CameraField>
                 </div>
                 <div className="border-t pt-2.5 text-xs leading-5" style={{ borderColor: theme.node.stroke, color: theme.node.muted }}>
-                    {cameraControlSummary(control, t)}
+                    {cameraControlSummary(control)}
                 </div>
             </div>
         </ConfigProvider>

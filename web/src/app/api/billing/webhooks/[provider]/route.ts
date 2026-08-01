@@ -4,7 +4,6 @@ import { BillingInputError, isBillingInputError } from "@/lib/server/billing-ser
 import { processPaymentWebhook } from "@/lib/server/payment-webhook-service";
 import { readRequestBodyText, RequestBodyTooLargeError } from "@/lib/server/request-body-limit";
 
-import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -24,9 +23,9 @@ export async function POST(request: Request, context: RouteContext) {
         return NextResponse.json(result);
     } catch (error) {
         if (error instanceof RequestBodyTooLargeError) return NextResponse.json({ error: error.message }, { status: error.status });
-        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
         if (error instanceof BillingInputError) return NextResponse.json({ error: error.message }, { status: error.status });
         console.error("Payment webhook failed", error);
-        return NextResponse.json({ error: await serverMessage("billing.paymentCallbackFailed") }, { status: 500 });
+        return NextResponse.json({ error: "支付回调处理失败" }, { status: 500 });
     }
 }

@@ -1,23 +1,23 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useLayoutEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useLayoutEffect } from "react";
 
+import { isGenerationTaskNeedsReviewError } from "@/services/api/generation-task-state";
 import { CanvasNodeType, isCanvasImageNodeType } from "../types";
+import { classifyCanvasVideoTaskFailure } from "./canvas-video-task-recovery";
 
 const CanvasAssistantPanel = dynamic(() => import("../components/canvas-assistant-panel").then((mod) => mod.CanvasAssistantPanel), { ssr: false });
 const loadAssetPickerModal = () => import("../components/asset-picker-modal").then((mod) => mod.AssetPickerModal);
 const AssetPickerModal = dynamic(loadAssetPickerModal, { ssr: false, loading: () => null });
 
 import { NODE_STATUS_ERROR, NODE_STATUS_LOADING } from "./canvas-page-elements";
-import { buildGenerationConfig, hydrateAssistantImages, hydrateCanvasImages, isGenerationCanceled, resetInterruptedGeneration } from "./canvas-page-utils";
+import { buildGenerationConfig, hydrateAssistantImages, hydrateCanvasImages, isGenerationCanceled } from "./canvas-page-utils";
 
 import type { CanvasPageState } from "./use-canvas-page-state";
 import type { CanvasTaskRuntime } from "./use-canvas-task-runtime";
 
 export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPageState; tasks: CanvasTaskRuntime }) {
-    const t = useTranslations("canvas");
     const {
         message,
         modal,
@@ -47,8 +47,8 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
         hydrated,
         hydratedUserId,
         hydrate,
+        loadProject,
         createProject,
-        openProject,
         updateProject,
         renameProject,
         deleteProjects,
@@ -155,8 +155,24 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
         resumingImageTaskIdsRef,
         resumingVideoTaskIdsRef,
         resumingTextTaskIdsRef,
+        resumingAudioTaskIdsRef,
     } = state;
-    const { createHistoryEntry, startGenerationRequest, finishGenerationRequest, stopGenerationByRunningId, confirmStopGeneration, completeVideoTask, completeImageTask, startAndCompleteImageTask, completeTextTask } = tasks;
+    const { createHistoryEntry, startGenerationRequest, finishGenerationRequest, stopGenerationByRunningId, confirmStopGeneration, completeVideoTask, completeImageTask, startAndCompleteImageTask, completeTextTask, completeAudioTask } = tasks;
+    const deferReviewedTask = (nodeId: string, taskField: "imageTask" | "videoTask" | "textTask" | "audioTask", errorDetails: string) => {
+        setNodes((prev) => prev.map((item) => (item.id === nodeId ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_ERROR, errorDetails } } : item)));
+        window.setTimeout(() => {
+            setNodes((prev) => prev.map((item) => (item.id === nodeId && item.metadata?.[taskField] && item.metadata.errorDetails === errorDetails ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_LOADING } } : item)));
+        }, 30_000);
+    };
+    const deferVideoTask = useCallback(
+        (nodeId: string) => {
+            setNodes((prev) => prev.map((item) => (item.id === nodeId && item.metadata?.videoTask ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_LOADING, errorDetails: undefined } } : item)));
+            window.setTimeout(() => {
+                setNodes((prev) => prev.map((item) => (item.id === nodeId && item.metadata?.videoTask && item.metadata.status === NODE_STATUS_LOADING ? { ...item, metadata: { ...item.metadata } } : item)));
+            }, 15_000);
+        },
+        [setNodes],
+    );
 
     useEffect(() => {
         if (userId) void hydrate();
@@ -164,41 +180,46 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
 
     useEffect(() => {
         if (!userId || !hydrated || hydratedUserId !== userId) return;
+        let cancelled = false;
         setProjectLoaded(false);
-        const project = openProject(projectId);
-        if (!project) {
-            router.replace("/canvas");
-            return;
-        }
-
-        const restore = async () => {
-            const restoredNodes = await hydrateCanvasImages(resetInterruptedGeneration(project.nodes, t));
-            const restoredSessions = await hydrateAssistantImages(project.chatSessions || []);
-            setNodes(restoredNodes);
-            setConnections(project.connections);
-            setChatSessions(restoredSessions);
-            setActiveChatId(project.activeChatId || null);
-            setBackgroundMode(project.backgroundMode);
-            setShowImageInfo(project.showImageInfo || false);
-            setViewport(project.viewport);
-            historyRef.current = { past: [], future: [] };
-            if (historyCommitTimerRef.current) {
-                clearTimeout(historyCommitTimerRef.current);
-                historyCommitTimerRef.current = null;
-            }
-            lastHistoryRef.current = {
-                nodes: restoredNodes,
-                connections: project.connections,
-                chatSessions: restoredSessions,
-                activeChatId: project.activeChatId || null,
-                backgroundMode: project.backgroundMode,
-                showImageInfo: project.showImageInfo || false,
-            };
-            setHistoryState({ canUndo: false, canRedo: false });
-            setProjectLoaded(true);
+        void loadProject(projectId)
+            .then(async (project) => {
+                const restoredNodes = await hydrateCanvasImages(project.nodes);
+                const restoredSessions = await hydrateAssistantImages(project.chatSessions || []);
+                if (cancelled) return;
+                setNodes(restoredNodes);
+                setConnections(project.connections);
+                setChatSessions(restoredSessions);
+                setActiveChatId(project.activeChatId || null);
+                setBackgroundMode(project.backgroundMode);
+                setShowImageInfo(project.showImageInfo || false);
+                setViewport(project.viewport);
+                historyRef.current = { past: [], future: [] };
+                if (historyCommitTimerRef.current) {
+                    clearTimeout(historyCommitTimerRef.current);
+                    historyCommitTimerRef.current = null;
+                }
+                lastHistoryRef.current = {
+                    nodes: restoredNodes,
+                    connections: project.connections,
+                    chatSessions: restoredSessions,
+                    activeChatId: project.activeChatId || null,
+                    backgroundMode: project.backgroundMode,
+                    showImageInfo: project.showImageInfo || false,
+                };
+                setHistoryState({ canUndo: false, canRedo: false });
+                setProjectLoaded(true);
+            })
+            .catch((error) => {
+                if (cancelled) return;
+                const text = error instanceof Error ? error.message : "画布项目加载失败";
+                if (text.includes("不存在")) router.replace("/canvas");
+                else message.error(text);
+            });
+        return () => {
+            cancelled = true;
         };
-        void restore();
-    }, [hydrated, hydratedUserId, openProject, projectId, router, t, userId]);
+    }, [hydrated, hydratedUserId, loadProject, message, projectId, router, userId]);
 
     useEffect(() => {
         if (!projectLoaded) return;
@@ -213,8 +234,12 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
             void completeImageTask(node.id, generationConfig, task, controller, node.metadata?.prompt)
                 .catch((error) => {
                     if (isGenerationCanceled(error)) return;
-                    const errorDetails = error instanceof Error ? error.message : t("node.errors.imageGenerationFailed");
+                    const errorDetails = error instanceof Error ? error.message : "图片生成失败";
                     message.error(errorDetails);
+                    if (isGenerationTaskNeedsReviewError(error)) {
+                        deferReviewedTask(node.id, "imageTask", errorDetails);
+                        return;
+                    }
                     setNodes((prev) => prev.map((item) => (item.id === node.id ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_ERROR, errorDetails, imageTask: undefined } } : item)));
                 })
                 .finally(() => {
@@ -223,7 +248,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
                     setRunningNodeId((current) => (current === node.id ? null : current));
                 });
         });
-    }, [completeImageTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest, t]);
+    }, [completeImageTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest]);
 
     useEffect(() => {
         if (!projectLoaded) return;
@@ -238,7 +263,18 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
             void completeVideoTask(node.id, generationConfig, task, controller, node.metadata?.prompt)
                 .catch((error) => {
                     if (isGenerationCanceled(error)) return;
-                    const errorDetails = error instanceof Error ? error.message : t("node.errors.videoGenerationFailed");
+                    const errorDetails = error instanceof Error ? error.message : "视频生成失败";
+                    const failureKind = classifyCanvasVideoTaskFailure(error);
+                    if (failureKind === "needs_review") {
+                        message.error(errorDetails);
+                        deferReviewedTask(node.id, "videoTask", errorDetails);
+                        return;
+                    }
+                    if (failureKind === "query_pending") {
+                        message.info("视频仍在后台生成，系统会继续查询原任务");
+                        deferVideoTask(node.id);
+                        return;
+                    }
                     message.error(errorDetails);
                     setNodes((prev) => prev.map((item) => (item.id === node.id ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_ERROR, errorDetails, videoTask: undefined } } : item)));
                 })
@@ -248,7 +284,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
                     setRunningNodeId((current) => (current === node.id ? null : current));
                 });
         });
-    }, [completeVideoTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest, t]);
+    }, [completeVideoTask, deferVideoTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest]);
 
     useEffect(() => {
         if (!projectLoaded) return;
@@ -263,8 +299,12 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
             void completeTextTask(node.id, generationConfig, task, controller, node.metadata?.prompt)
                 .catch((error) => {
                     if (isGenerationCanceled(error)) return;
-                    const errorDetails = error instanceof Error ? error.message : t("node.errors.textGenerationFailed");
+                    const errorDetails = error instanceof Error ? error.message : "文本生成失败";
                     message.error(errorDetails);
+                    if (isGenerationTaskNeedsReviewError(error)) {
+                        deferReviewedTask(node.id, "textTask", errorDetails);
+                        return;
+                    }
                     setNodes((prev) => prev.map((item) => (item.id === node.id ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_ERROR, errorDetails, textTask: undefined } } : item)));
                 })
                 .finally(() => {
@@ -273,7 +313,36 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
                     setRunningNodeId((current) => (current === node.id ? null : current));
                 });
         });
-    }, [completeTextTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest, t]);
+    }, [completeTextTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest]);
+
+    useEffect(() => {
+        if (!projectLoaded) return;
+        const resumable = nodes.filter((node) => node.type === CanvasNodeType.Audio && node.metadata?.status === NODE_STATUS_LOADING && node.metadata.audioTask && !generationRequestsRef.current.has(node.id));
+        resumable.forEach((node) => {
+            const task = node.metadata?.audioTask;
+            if (!task || resumingAudioTaskIdsRef.current.has(node.id)) return;
+            resumingAudioTaskIdsRef.current.add(node.id);
+            const controller = startGenerationRequest(node.id, node.id, node.id);
+            const generationConfig = buildGenerationConfig(effectiveConfig, node, "audio");
+            setRunningNodeId((current) => current || node.id);
+            void completeAudioTask(node.id, generationConfig, task, controller, node.metadata?.prompt)
+                .catch((error) => {
+                    if (isGenerationCanceled(error)) return;
+                    const errorDetails = error instanceof Error ? error.message : "音频生成失败";
+                    message.error(errorDetails);
+                    if (isGenerationTaskNeedsReviewError(error)) {
+                        deferReviewedTask(node.id, "audioTask", errorDetails);
+                        return;
+                    }
+                    setNodes((prev) => prev.map((item) => (item.id === node.id ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_ERROR, errorDetails, audioTask: undefined } } : item)));
+                })
+                .finally(() => {
+                    resumingAudioTaskIdsRef.current.delete(node.id);
+                    finishGenerationRequest(node.id, controller);
+                    setRunningNodeId((current) => (current === node.id ? null : current));
+                });
+        });
+    }, [completeAudioTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest]);
 
     useEffect(() => {
         if (!projectLoaded || applyingHistoryRef.current || historyPausedRef.current) return;

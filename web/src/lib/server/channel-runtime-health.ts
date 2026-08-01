@@ -64,6 +64,5 @@ function isCancellation(error?: string) {
 }
 
 function safeError(error?: string) {
-    // Default stays Chinese for internal runtime logs; UI surfaces should map via localizeErrorMessage when needed.
     return (error || "渠道请求失败").slice(0, 500);
 }

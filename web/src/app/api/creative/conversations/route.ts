@@ -4,10 +4,9 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { readJsonBody } from "@/lib/auth/request";
 import { createConversationForUser, CreativeRuntimeServiceError, listConversationsForUser, listWorkbenchSessionsForUser } from "@/lib/server/creative-runtime-service";
 
-import { serverMessage } from "@/lib/server/server-messages";
 export async function GET(request: Request) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
     try {
         const url = new URL(request.url);
         const limit = Math.max(1, Math.min(100, Number(url.searchParams.get("limit")) || 50));
@@ -30,10 +29,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
     try {
         const conversation = await createConversationForUser(user.id, await readJsonBody<unknown>(request));
-        return NextResponse.json({ code: 0, data: { conversation }, msg: await serverMessage("creative.sessionCreated") });
+        return NextResponse.json({ code: 0, data: { conversation }, msg: "创作会话已创建" });
     } catch (error) {
         return serviceError(error);
     }

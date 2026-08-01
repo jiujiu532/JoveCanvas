@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useMemo } from "react";
-import { useTranslations } from "next-intl";
 
 import { nanoid } from "nanoid";
 import { buildNodeGenerationInputs, type NodeGenerationInput } from "../components/canvas-node-generation";
@@ -21,7 +20,6 @@ import { getConnectionTargetAnchor, getGenerationCount, isHiddenBatchChild, norm
 import type { CanvasPageState } from "./use-canvas-page-state";
 
 export function useCanvasInteractionCore({ state }: { state: CanvasPageState }) {
-    const t = useTranslations("canvas");
     const {
         message,
         projectId,
@@ -119,7 +117,7 @@ export function useCanvasInteractionCore({ state }: { state: CanvasPageState }) 
 
             const connection = normalizeConnection(current.nodeId, targetNodeId, nodesRef.current, current.handleType);
             if (!connection) {
-                message.warning(t("node.connection.configCannotConnect"));
+                message.warning("配置节点之间不能连接");
                 return;
             }
             const { fromNodeId, toNodeId } = connection;
@@ -129,7 +127,7 @@ export function useCanvasInteractionCore({ state }: { state: CanvasPageState }) 
             }
             setContextMenu(null);
         },
-        [message, t],
+        [message],
     );
 
     const createConnectedNode = useCallback(
@@ -138,7 +136,7 @@ export function useCanvasInteractionCore({ state }: { state: CanvasPageState }) 
             const newNode = createCanvasNode(type, pending.position, metadata);
             const connection = normalizeConnection(pending.connection.nodeId, newNode.id, [...nodesRef.current, newNode], pending.connection.handleType);
             if (!connection) {
-                message.warning(t("node.connection.configCannotConnect"));
+                message.warning("配置节点之间不能连接");
                 return;
             }
             setNodes((prev) => [...prev, newNode]);
@@ -149,7 +147,7 @@ export function useCanvasInteractionCore({ state }: { state: CanvasPageState }) 
             setPendingConnectionCreate(null);
             setConnecting(null);
         },
-        [effectiveConfig.canvasImageCount, effectiveConfig.count, effectiveConfig.imageModel, effectiveConfig.model, effectiveConfig.size, message, setConnecting, t],
+        [effectiveConfig.canvasImageCount, effectiveConfig.count, effectiveConfig.imageModel, effectiveConfig.model, effectiveConfig.size, message, setConnecting],
     );
 
     const cancelPendingConnectionCreate = useCallback(() => {
@@ -272,13 +270,21 @@ export function useCanvasInteractionCore({ state }: { state: CanvasPageState }) 
         return map;
     }, [connections, nodes]);
     const agentSnapshot = useMemo<CanvasAgentSnapshot>(
-        () => ({ projectId, title: currentProject?.title || t("editor.untitled"), nodes, connections, selectedNodeIds: Array.from(selectedNodeIds), viewport }),
-        [connections, currentProject?.title, nodes, projectId, selectedNodeIds, t, viewport],
+        () => ({ projectId, title: currentProject?.title || "未命名画布", imageSize: effectiveConfig.size, nodes, connections, selectedNodeIds: Array.from(selectedNodeIds), viewport }),
+        [connections, currentProject?.title, effectiveConfig.size, nodes, projectId, selectedNodeIds, viewport],
     );
     const applyAgentOps = useCallback(
         (ops?: CanvasAgentOp[]) => {
             const safeOps = Array.isArray(ops) ? ops.filter((op) => op?.type) : [];
-            const before = { projectId, title: currentProject?.title || t("editor.untitled"), nodes: nodesRef.current, connections: connectionsRef.current, selectedNodeIds: Array.from(selectedNodeIdsRef.current), viewport: viewportRef.current };
+            const before = {
+                projectId,
+                title: currentProject?.title || "未命名画布",
+                imageSize: effectiveConfig.size,
+                nodes: nodesRef.current,
+                connections: connectionsRef.current,
+                selectedNodeIds: Array.from(selectedNodeIdsRef.current),
+                viewport: viewportRef.current,
+            };
             const generationOps = safeOps.filter((op): op is Extract<CanvasAgentOp, { type: "run_generation" }> => op.type === "run_generation" && Boolean(op.nodeId));
             const next = applyCanvasAgentOps(
                 before,
@@ -303,9 +309,9 @@ export function useCanvasInteractionCore({ state }: { state: CanvasPageState }) 
                     }),
                 );
             }
-            return { ...next, projectId, title: currentProject?.title || t("editor.untitled") };
+            return { ...next, projectId, title: currentProject?.title || "未命名画布" };
         },
-        [currentProject?.title, projectId, t],
+        [currentProject?.title, effectiveConfig.size, projectId],
     );
     useCanvasLocalAgentBridge({ snapshot: agentSnapshot, onApplyOps: applyAgentOps });
     return {

@@ -3,7 +3,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Button, Checkbox, Input, Tag } from "antd";
 import { CheckSquare, PenLine, Plus, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
 
 type WorkbenchHistoryItem = { id: string; title: string };
 
@@ -34,7 +33,6 @@ export function WorkbenchHistoryPanel<T extends WorkbenchHistoryItem>({
     renderPreview,
     compact = false,
 }: WorkbenchHistoryPanelProps<T>) {
-    const t = useTranslations("layout");
     const allSelected = Boolean(logs.length) && selectedLogIds.length === logs.length;
     const toggleAll = () => onSelectedLogIdsChange(allSelected ? [] : logs.map((log) => log.id));
 
@@ -42,21 +40,21 @@ export function WorkbenchHistoryPanel<T extends WorkbenchHistoryItem>({
         <>
             {!compact ? (
                 <div className="mb-3 flex items-center justify-between gap-3">
-                    <h2 className="text-base font-semibold">{t("agent.history.title")}</h2>
+                    <h2 className="text-base font-semibold">生成记录</h2>
                     <Tag className="m-0">{logs.length}</Tag>
                 </div>
             ) : null}
             <div className="mb-4 flex flex-wrap gap-2">
                 {!compact ? (
                     <Button size="small" icon={<Plus className="size-3.5" />} onClick={onCreateSession}>
-                        {t("agent.history.create")}
+                        新建
                     </Button>
                 ) : null}
                 <Button size="small" icon={<CheckSquare className="size-3.5" />} disabled={!logs.length} onClick={toggleAll}>
-                    {allSelected ? t("agent.history.cancelSelect") : t("agent.history.selectAll")}
+                    {allSelected ? "取消" : "全选"}
                 </Button>
                 <Button size="small" danger icon={<Trash2 className="size-3.5" />} disabled={!selectedLogIds.length} onClick={onDeleteSelected}>
-                    {t("agent.history.delete")}
+                    删除
                 </Button>
             </div>
             <div className="space-y-3">
@@ -71,10 +69,9 @@ export function WorkbenchHistoryPanel<T extends WorkbenchHistoryItem>({
                         onRename={(title) => onRenameLog(log, title)}
                         details={renderDetails(log)}
                         preview={renderPreview?.(log)}
-                        editTitleAria={t("agent.history.editTitleAria")}
                     />
                 ))}
-                {!logs.length ? <div className="flex min-h-16 items-center justify-center rounded-lg border border-dashed border-stone-300 text-center text-sm text-stone-500 sm:min-h-36 dark:border-stone-700">{t("agent.history.empty")}</div> : null}
+                {!logs.length ? <div className="flex min-h-16 items-center justify-center rounded-lg border border-dashed border-stone-300 text-center text-sm text-stone-500 sm:min-h-36 dark:border-stone-700">暂无生成记录</div> : null}
             </div>
         </>
     );
@@ -89,7 +86,6 @@ function WorkbenchHistoryCard<T extends WorkbenchHistoryItem>({
     onRename,
     details,
     preview,
-    editTitleAria,
 }: {
     log: T;
     selected: boolean;
@@ -99,7 +95,6 @@ function WorkbenchHistoryCard<T extends WorkbenchHistoryItem>({
     onRename: (title: string) => void;
     details: ReactNode;
     preview?: ReactNode;
-    editTitleAria: string;
 }) {
     const [editingTitle, setEditingTitle] = useState(false);
     const [draftTitle, setDraftTitle] = useState(log.title);
@@ -157,7 +152,7 @@ function WorkbenchHistoryCard<T extends WorkbenchHistoryItem>({
                                     {log.title}
                                 </div>
                                 <Button
-                                    aria-label={editTitleAria}
+                                    aria-label="编辑记录标题"
                                     type="text"
                                     size="small"
                                     className="!h-6 !w-6 !min-w-6 shrink-0 !p-0"

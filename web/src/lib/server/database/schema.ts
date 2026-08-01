@@ -1,3 +1,5 @@
+import { POSTGRESQL_COMMERCIAL_FEATURES_SCHEMA_SQL } from "./schema-commercial-features";
+
 export const POSTGRESQL_SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS schema_migrations (
     version text PRIMARY KEY,
@@ -100,17 +102,24 @@ CREATE TABLE IF NOT EXISTS system_model_channels (
     models jsonb NOT NULL DEFAULT '[]'::jsonb,
     enabled boolean NOT NULL DEFAULT true,
     advanced_config jsonb,
+    health_results jsonb NOT NULL DEFAULT '{}'::jsonb,
     sort_order integer NOT NULL DEFAULT 0,
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT system_model_channels_api_format CHECK (api_format IN ('openai', 'gemini'))
 );
+ALTER TABLE system_model_channels ADD COLUMN IF NOT EXISTS health_results jsonb NOT NULL DEFAULT '{}'::jsonb;
+
+CREATE SEQUENCE IF NOT EXISTS user_account_id_seq START WITH 1;
 
 CREATE TABLE IF NOT EXISTS users (
     id text PRIMARY KEY,
+    account_id bigint NOT NULL DEFAULT nextval('user_account_id_seq'),
     username text NOT NULL,
     email text,
     display_name text NOT NULL,
+    bio text NOT NULL DEFAULT '',
+    avatar_storage_key text,
     role text NOT NULL DEFAULT 'user',
     status text NOT NULL DEFAULT 'active',
     plan_id text NOT NULL DEFAULT 'free' REFERENCES entitlement_plans(id),
@@ -120,11 +129,48 @@ CREATE TABLE IF NOT EXISTS users (
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT users_role CHECK (role IN ('admin', 'user')),
-    CONSTRAINT users_status CHECK (status IN ('active', 'disabled'))
+    CONSTRAINT users_status CHECK (status IN ('active', 'disabled')),
+    CONSTRAINT users_bio_length CHECK (char_length(bio) <= 160)
 );
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bio text NOT NULL DEFAULT '';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_storage_key text;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS account_id bigint;
+
+WITH sequence_state AS (
+    SELECT CASE WHEN is_called THEN last_value ELSE 0 END AS reserved_max FROM user_account_id_seq
+), current_state AS (
+    SELECT greatest(coalesce(max(account_id), 0), (SELECT reserved_max FROM sequence_state)) AS assigned_max FROM users
+), missing_accounts AS (
+    SELECT id, (SELECT assigned_max FROM current_state) + row_number() OVER (ORDER BY created_at ASC, id ASC) AS next_account_id
+    FROM users
+    WHERE account_id IS NULL
+)
+UPDATE users
+SET account_id = missing_accounts.next_account_id
+FROM missing_accounts
+WHERE users.id = missing_accounts.id;
+
+ALTER TABLE users ALTER COLUMN account_id SET DEFAULT nextval('user_account_id_seq');
+ALTER TABLE users ALTER COLUMN account_id SET NOT NULL;
+
+SELECT setval(
+    'user_account_id_seq',
+    greatest((SELECT last_value FROM user_account_id_seq), coalesce((SELECT max(account_id) FROM users), 1)),
+    (SELECT is_called FROM user_account_id_seq) OR EXISTS (SELECT 1 FROM users)
+);
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_bio_length') THEN
+        ALTER TABLE users ADD CONSTRAINT users_bio_length CHECK (char_length(bio) <= 160);
+    END IF;
+END;
+$$;
 
 CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx ON users (lower(username));
 CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_idx ON users (lower(email)) WHERE email IS NOT NULL AND email <> '';
+CREATE UNIQUE INDEX IF NOT EXISTS users_account_id_idx ON users (account_id);
 CREATE INDEX IF NOT EXISTS users_plan_id_idx ON users (plan_id);
 
 CREATE TABLE IF NOT EXISTS sessions (
@@ -194,10 +240,50 @@ ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS project_id text;
 ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS parent_task_id text;
 ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS attempt_no integer;
 ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS client_request_id text;
+ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS execution_phase text NOT NULL DEFAULT 'created';
+ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS upstream_task_id text;
+ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS channel_id text;
+ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS provider text;
+ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS query_path text;
+ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS submitted_at timestamptz;
+ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS next_poll_at timestamptz;
+ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS last_poll_at timestamptz;
+ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS last_upstream_status text;
+ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS result_payload jsonb;
+ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS worker_id text;
+ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS lease_until timestamptz;
+ALTER TABLE generation_tasks ADD COLUMN IF NOT EXISTS last_heartbeat_at timestamptz;
+ALTER TABLE generation_tasks DROP CONSTRAINT IF EXISTS generation_tasks_execution_phase;
+ALTER TABLE generation_tasks ADD CONSTRAINT generation_tasks_execution_phase CHECK (execution_phase IN ('created', 'submitting', 'submitted', 'polling', 'result_ready', 'persisting', 'needs_review', 'review_pending', 'reviewing', 'review_unavailable', 'completed'));
+
 DROP INDEX IF EXISTS generation_tasks_user_client_request_idx;
 CREATE UNIQUE INDEX generation_tasks_user_client_request_idx ON generation_tasks (user_id, task_type, client_request_id, COALESCE(attempt_no, 0)) WHERE client_request_id IS NOT NULL AND client_request_id <> '';
 CREATE INDEX IF NOT EXISTS generation_tasks_conversation_idx ON generation_tasks (conversation_id, updated_at DESC) WHERE conversation_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS generation_tasks_run_idx ON generation_tasks (run_id, updated_at DESC) WHERE run_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS generation_tasks_user_project_idx ON generation_tasks (user_id, project_id, task_type, status) WHERE project_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS generation_tasks_recovery_due_idx ON generation_tasks (next_poll_at, lease_until, id) WHERE (status IN ('pending', 'running') AND execution_phase IN ('created', 'submitting', 'submitted', 'polling', 'result_ready', 'persisting')) OR (task_type = 'agent' AND status = 'success' AND execution_phase IN ('review_pending', 'reviewing'));
+
+CREATE TABLE IF NOT EXISTS generation_worker_heartbeats (
+    worker_id text PRIMARY KEY,
+    last_seen_at timestamptz NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS generation_worker_heartbeats_seen_idx ON generation_worker_heartbeats (last_seen_at DESC);
+
+CREATE TABLE IF NOT EXISTS generation_webhook_events (
+    channel_id text NOT NULL,
+    event_id text NOT NULL,
+    upstream_task_id text NOT NULL,
+    task_id text,
+    task_type text,
+    payload_hash text NOT NULL,
+    status text NOT NULL DEFAULT 'received',
+    received_at timestamptz NOT NULL DEFAULT now(),
+    processed_at timestamptz,
+    PRIMARY KEY (channel_id, event_id)
+);
+
+CREATE INDEX IF NOT EXISTS generation_webhook_events_received_idx ON generation_webhook_events (received_at DESC);
 
 CREATE TABLE IF NOT EXISTS creative_conversations (
     id text PRIMARY KEY,
@@ -566,81 +652,7 @@ VALUES
 )
 ON CONFLICT (id) DO NOTHING;
 
-CREATE TABLE IF NOT EXISTS billing_orders (
-    id text PRIMARY KEY,
-    order_no text NOT NULL UNIQUE,
-    product_id text REFERENCES billing_products(id),
-    user_id text REFERENCES users(id) ON DELETE SET NULL,
-    product_kind text NOT NULL DEFAULT 'plan',
-    plan_id text REFERENCES entitlement_plans(id),
-    status text NOT NULL DEFAULT 'pending',
-    subject text NOT NULL,
-    amount_cents bigint NOT NULL DEFAULT 0,
-    currency text NOT NULL DEFAULT 'CNY',
-    points_amount numeric(18, 2) NOT NULL DEFAULT 0,
-    daily_points numeric(18, 2) NOT NULL DEFAULT 0,
-    period_days integer NOT NULL DEFAULT 0,
-    quantity integer NOT NULL DEFAULT 1,
-    provider text NOT NULL DEFAULT '',
-    provider_order_id text,
-    provider_payment_id text,
-    expires_at timestamptz,
-    paid_at timestamptz,
-    closed_at timestamptz,
-    metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
-    created_at timestamptz NOT NULL DEFAULT now(),
-    updated_at timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT billing_orders_status CHECK (status IN ('pending', 'paid', 'closed', 'canceled', 'refunding', 'refunded')),
-    CONSTRAINT billing_orders_amount CHECK (amount_cents >= 0),
-    CONSTRAINT billing_orders_daily_points CHECK (daily_points >= 0),
-    CONSTRAINT billing_orders_kind CHECK (product_kind IN ('plan', 'points')),
-    CONSTRAINT billing_orders_period_days CHECK (period_days >= 0),
-    CONSTRAINT billing_orders_quantity CHECK (quantity >= 1)
-);
-
-CREATE INDEX IF NOT EXISTS billing_orders_user_created_idx ON billing_orders (user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS billing_orders_status_created_idx ON billing_orders (status, created_at DESC);
-CREATE INDEX IF NOT EXISTS billing_orders_created_idx ON billing_orders (created_at DESC);
-CREATE INDEX IF NOT EXISTS billing_orders_pending_expires_idx ON billing_orders (expires_at, id) WHERE status = 'pending' AND expires_at IS NOT NULL;
-CREATE INDEX IF NOT EXISTS billing_orders_provider_idx ON billing_orders (provider, provider_order_id);
-
-ALTER TABLE billing_orders ADD COLUMN IF NOT EXISTS product_id text REFERENCES billing_products(id);
-ALTER TABLE billing_orders ADD COLUMN IF NOT EXISTS product_kind text NOT NULL DEFAULT 'plan';
-ALTER TABLE billing_orders ADD COLUMN IF NOT EXISTS daily_points numeric(18, 2) NOT NULL DEFAULT 0;
-ALTER TABLE billing_orders ALTER COLUMN plan_id DROP NOT NULL;
-ALTER TABLE billing_orders DROP CONSTRAINT IF EXISTS billing_orders_status;
-ALTER TABLE billing_orders ADD CONSTRAINT billing_orders_status CHECK (status IN ('pending', 'paid', 'closed', 'canceled', 'refunding', 'refunded'));
-ALTER TABLE billing_orders DROP CONSTRAINT IF EXISTS billing_orders_kind;
-ALTER TABLE billing_orders ADD CONSTRAINT billing_orders_kind CHECK (product_kind IN ('plan', 'points'));
-ALTER TABLE billing_orders DROP CONSTRAINT IF EXISTS billing_orders_daily_points;
-ALTER TABLE billing_orders ADD CONSTRAINT billing_orders_daily_points CHECK (daily_points >= 0);
-CREATE INDEX IF NOT EXISTS billing_orders_product_idx ON billing_orders (product_id, created_at DESC);
-
-CREATE TABLE IF NOT EXISTS payment_transactions (
-    id text PRIMARY KEY,
-    order_id text NOT NULL REFERENCES billing_orders(id),
-    user_id text REFERENCES users(id) ON DELETE SET NULL,
-    provider text NOT NULL,
-    channel text NOT NULL DEFAULT '',
-    status text NOT NULL DEFAULT 'pending',
-    amount_cents bigint NOT NULL DEFAULT 0,
-    currency text NOT NULL DEFAULT 'CNY',
-    provider_trade_id text,
-    provider_payment_id text,
-    raw_payload jsonb NOT NULL DEFAULT '{}'::jsonb,
-    paid_at timestamptz,
-    refunded_at timestamptz,
-    failed_at timestamptz,
-    created_at timestamptz NOT NULL DEFAULT now(),
-    updated_at timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT payment_transactions_status CHECK (status IN ('pending', 'succeeded', 'failed', 'refunded')),
-    CONSTRAINT payment_transactions_amount CHECK (amount_cents >= 0)
-);
-
-CREATE INDEX IF NOT EXISTS payment_transactions_order_idx ON payment_transactions (order_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS payment_transactions_user_idx ON payment_transactions (user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS payment_transactions_created_idx ON payment_transactions (created_at DESC);
-CREATE UNIQUE INDEX IF NOT EXISTS payment_transactions_provider_trade_idx ON payment_transactions (provider, provider_trade_id) WHERE provider_trade_id IS NOT NULL AND provider_trade_id <> '';
+${POSTGRESQL_COMMERCIAL_FEATURES_SCHEMA_SQL}
 
 CREATE TABLE IF NOT EXISTS billing_reconciliation_runs (
     id text PRIMARY KEY,
@@ -799,12 +811,10 @@ CREATE TABLE IF NOT EXISTS prompts (
     updated_at timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT prompts_scope CHECK (scope IN ('library', 'user'))
 );
-ALTER TABLE prompts ADD COLUMN IF NOT EXISTS locale text;
 
 CREATE INDEX IF NOT EXISTS prompts_scope_updated_idx ON prompts (scope, updated_at DESC);
 CREATE INDEX IF NOT EXISTS prompts_owner_updated_idx ON prompts (owner_user_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS prompts_tags_gin_idx ON prompts USING gin (tags);
-CREATE INDEX IF NOT EXISTS prompts_scope_locale_updated_idx ON prompts (scope, locale, updated_at DESC);
 
 CREATE TABLE IF NOT EXISTS prompt_seed_sources (
     source text PRIMARY KEY,
@@ -828,6 +838,7 @@ CREATE TABLE IF NOT EXISTS generation_logs (
     count integer NOT NULL DEFAULT 1,
     success_count integer NOT NULL DEFAULT 0,
     fail_count integer NOT NULL DEFAULT 0,
+    request_snapshot jsonb NOT NULL DEFAULT '{}'::jsonb,
     task_id text,
     error text,
     created_at timestamptz NOT NULL DEFAULT now(),
@@ -837,6 +848,7 @@ CREATE TABLE IF NOT EXISTS generation_logs (
     CONSTRAINT generation_logs_status CHECK (status IN ('pending', 'success', 'failed'))
 );
 ALTER TABLE generation_logs ADD COLUMN IF NOT EXISTS conversation_id text REFERENCES creative_conversations(id) ON DELETE SET NULL;
+ALTER TABLE generation_logs ADD COLUMN IF NOT EXISTS request_snapshot jsonb NOT NULL DEFAULT '{}'::jsonb;
 UPDATE creative_conversations AS conversation
 SET source = CASE WHEN log.source = 'video-workbench' THEN 'video-workbench' ELSE 'image-workbench' END
 FROM generation_logs AS log
@@ -908,12 +920,37 @@ CREATE TRIGGER daily_plan_point_wallets_set_updated_at BEFORE UPDATE ON daily_pl
 DROP TRIGGER IF EXISTS billing_products_set_updated_at ON billing_products;
 CREATE TRIGGER billing_products_set_updated_at BEFORE UPDATE ON billing_products FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
 
+DROP TRIGGER IF EXISTS promotion_campaigns_set_updated_at ON promotion_campaigns;
+CREATE TRIGGER promotion_campaigns_set_updated_at BEFORE UPDATE ON promotion_campaigns FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
+
+DROP TRIGGER IF EXISTS coupon_templates_set_updated_at ON coupon_templates;
+CREATE TRIGGER coupon_templates_set_updated_at BEFORE UPDATE ON coupon_templates FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
+
 DROP TRIGGER IF EXISTS billing_orders_set_updated_at ON billing_orders;
 CREATE TRIGGER billing_orders_set_updated_at BEFORE UPDATE ON billing_orders FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
 
+DROP TRIGGER IF EXISTS user_coupons_set_updated_at ON user_coupons;
+CREATE TRIGGER user_coupons_set_updated_at BEFORE UPDATE ON user_coupons FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
+
+DROP TRIGGER IF EXISTS coupon_redemptions_set_updated_at ON coupon_redemptions;
+CREATE TRIGGER coupon_redemptions_set_updated_at BEFORE UPDATE ON coupon_redemptions FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
+
 DROP TRIGGER IF EXISTS payment_transactions_set_updated_at ON payment_transactions;
 CREATE TRIGGER payment_transactions_set_updated_at BEFORE UPDATE ON payment_transactions FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
-
+DROP TRIGGER IF EXISTS referral_programs_set_updated_at ON referral_programs;
+CREATE TRIGGER referral_programs_set_updated_at BEFORE UPDATE ON referral_programs FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
+DROP TRIGGER IF EXISTS referral_codes_set_updated_at ON referral_codes;
+CREATE TRIGGER referral_codes_set_updated_at BEFORE UPDATE ON referral_codes FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
+DROP TRIGGER IF EXISTS referral_relationships_set_updated_at ON referral_relationships;
+CREATE TRIGGER referral_relationships_set_updated_at BEFORE UPDATE ON referral_relationships FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
+DROP TRIGGER IF EXISTS referral_rewards_set_updated_at ON referral_rewards;
+CREATE TRIGGER referral_rewards_set_updated_at BEFORE UPDATE ON referral_rewards FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
+DROP TRIGGER IF EXISTS published_works_set_updated_at ON published_works;
+CREATE TRIGGER published_works_set_updated_at BEFORE UPDATE ON published_works FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
+DROP TRIGGER IF EXISTS published_work_versions_set_updated_at ON published_work_versions;
+CREATE TRIGGER published_work_versions_set_updated_at BEFORE UPDATE ON published_work_versions FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
+DROP TRIGGER IF EXISTS published_work_cases_set_updated_at ON published_work_cases;
+CREATE TRIGGER published_work_cases_set_updated_at BEFORE UPDATE ON published_work_cases FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
 DROP TRIGGER IF EXISTS billing_reconciliation_runs_set_updated_at ON billing_reconciliation_runs;
 CREATE TRIGGER billing_reconciliation_runs_set_updated_at BEFORE UPDATE ON billing_reconciliation_runs FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
 
@@ -945,6 +982,6 @@ DROP TRIGGER IF EXISTS object_storage_settings_set_updated_at ON object_storage_
 CREATE TRIGGER object_storage_settings_set_updated_at BEFORE UPDATE ON object_storage_settings FOR EACH ROW EXECUTE FUNCTION vozeb_pro_set_updated_at();
 
 INSERT INTO schema_migrations (version)
-VALUES ('20260709_postgresql_commercial_base'), ('20260709_billing_foundation'), ('20260709_billing_checkout'), ('20260709_commercial_seed_products'), ('20260709_vozeb_pro_table_prefix'), ('20260711_generation_tasks'), ('20260716_billing_reconciliation'), ('20260725_account_deletion_requests')
+VALUES ('20260709_postgresql_commercial_base'), ('20260709_billing_foundation'), ('20260709_billing_checkout'), ('20260709_commercial_seed_products'), ('20260709_vozeb_pro_table_prefix'), ('20260711_generation_tasks'), ('20260716_billing_reconciliation'), ('20260725_account_deletion_requests'), ('20260726_promotion_coupon_commerce'), ('20260727_referral_growth_rewards'), ('20260727_work_publications'), ('20260727_work_community'), ('20260728_user_blocks')
 ON CONFLICT (version) DO NOTHING;
 `;

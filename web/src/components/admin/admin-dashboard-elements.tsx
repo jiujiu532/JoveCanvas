@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useTranslations } from "next-intl";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { App, Button, Checkbox, DatePicker, Form, Input, InputNumber, Modal, Pagination, Popconfirm, Segmented, Select, Space, Switch, Table, Tag } from "antd";
 import type { TableColumnsType } from "antd";
 import Link from "next/link";
@@ -67,11 +67,29 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 import { nanoid } from "nanoid";
+import { applyChannelProtocol, channelProtocolDefinition, normalizeStrictProtocolModelConfig } from "@/lib/channel-protocol-registry";
 
 import { formatCreditAmount } from "@/constant/credits";
-import { normalizeDefaultModelsConfig } from "@/lib/model-routing-config";
+import { AdminAccountId } from "@/components/admin/admin-user-identity";
+import { channelModelCapability, normalizeDefaultModelsConfig } from "@/lib/model-routing-config";
+import { normalizeModelId } from "@/lib/model-capability";
 import { resolveGlobalAiOpcPreset } from "@/lib/globalaiopc-catalog";
-import type { AgentSkill, AuthSettings, CreatedCdkCode, PublicAnnouncement, PublicCdkCode, PublicUser, SiteFriendLink, SiteShowcaseItem, SiteSocialKey, SystemChannelAdvancedConfig, SystemModelChannel, UserRole, UserStatus } from "@/lib/auth/store";
+import type {
+    AgentSkill,
+    AuthSettings,
+    CreatedCdkCode,
+    PublicAnnouncement,
+    PublicCdkCode,
+    PublicUser,
+    SiteFriendLink,
+    SiteShowcaseItem,
+    SiteSocialKey,
+    SystemChannelAdvancedConfig,
+    SystemChannelModelConfig,
+    SystemModelChannel,
+    UserRole,
+    UserStatus,
+} from "@/lib/auth/store";
 import type { GenerationAssetStats, StoredGenerationLog } from "@/lib/server/generation-log-store";
 import type { AdminSetupSummary } from "@/lib/server/admin-setup-status";
 import type { PaymentConfigSummary } from "@/lib/payment-config-types";
@@ -139,9 +157,8 @@ export function FinanceMiniRow({ label, value }: { label: string; value: string 
     );
 }
 
-// 纯 helper 默认中文：调用方可传入 name 覆盖；避免非 React 调用点依赖 next-intl
-export function createSystemChannel(name = "自定义接口"): SystemModelChannel {
-    return { id: nanoid(), name, baseUrl: "", apiKey: "", apiFormat: "openai", models: [], enabled: false, advancedConfig: createDefaultChannelAdvancedConfig() };
+export function createSystemChannel(): SystemModelChannel {
+    return applyChannelProtocol({ id: nanoid(), name: "新接口", baseUrl: "", apiKey: "", apiFormat: "openai", models: [], enabled: false, advancedConfig: createDefaultChannelAdvancedConfig() }, "openai");
 }
 
 export function suggestedChannelModels(channel: Pick<SystemModelChannel, "baseUrl" | "name">) {
@@ -157,6 +174,14 @@ export function buildAdvancedConfigFromHealth(channel: SystemModelChannel, resul
     const image = firstOkResult(results, "image");
     const video = firstOkResult(results, "video");
     const protocol = video?.protocolKey || image?.protocolKey || text?.protocolKey || current.protocol || "auto";
+    const modelCapabilities = { ...(current.modelCapabilities || {}) };
+    const modelConfigs = { ...(current.modelConfigs || {}) };
+    results.forEach((result) => {
+        if (!result.ok || !result.model) return;
+        const key = normalizeModelId(result.model);
+        modelCapabilities[key] = result.kind;
+        modelConfigs[key] = normalizeStrictProtocolModelConfig(healthModelConfig(result, modelConfigs[key]), protocol);
+    });
     return {
         ...current,
         protocol,
@@ -164,7 +189,11 @@ export function buildAdvancedConfigFromHealth(channel: SystemModelChannel, resul
         imageModel: image?.model || current.imageModel,
         videoModel: video?.model || current.videoModel,
         createPath: video?.createPath || image?.createPath || text?.createPath || current.createPath,
+        editPath: image?.editPath || current.editPath,
+        imageToVideoPath: video?.imageToVideoPath || current.imageToVideoPath,
         queryPath: video?.queryPath || current.queryPath,
+        cancelPath: video?.cancelPath || current.cancelPath,
+        cancelMethod: video?.cancelMethod || current.cancelMethod,
         requestTemplate: video?.requestTemplate || image?.requestTemplate || text?.requestTemplate || current.requestTemplate,
         resultField: video?.resultField || image?.resultField || text?.resultField || current.resultField,
         statusField: video?.statusField || current.statusField,
@@ -173,6 +202,31 @@ export function buildAdvancedConfigFromHealth(channel: SystemModelChannel, resul
         supportsReferenceImage: Boolean(video?.supportsReferenceImage || image?.supportsReferenceImage || current.supportsReferenceImage),
         supportsReferenceVideo: Boolean(video?.supportsReferenceVideo || current.supportsReferenceVideo),
         supportsReferenceAudio: Boolean(video?.supportsReferenceAudio || current.supportsReferenceAudio),
+        modelCapabilities,
+        modelConfigs,
+    };
+}
+
+function healthModelConfig(result: ChannelHealthResult, current?: SystemChannelModelConfig): SystemChannelModelConfig {
+    return {
+        ...(current || {}),
+        capability: result.kind,
+        source: "health",
+        ...(result.protocolKey ? { protocol: result.protocolKey } : {}),
+        ...(result.createPath ? { createPath: result.createPath } : {}),
+        ...(result.editPath ? { editPath: result.editPath } : {}),
+        ...(result.imageToVideoPath ? { imageToVideoPath: result.imageToVideoPath } : {}),
+        ...(result.queryPath ? { queryPath: result.queryPath } : {}),
+        ...(result.cancelPath ? { cancelPath: result.cancelPath } : {}),
+        ...(result.cancelMethod ? { cancelMethod: result.cancelMethod } : {}),
+        ...(result.requestTemplate ? { requestTemplate: result.requestTemplate } : {}),
+        ...(result.resultField ? { resultField: result.resultField } : {}),
+        ...(result.statusField ? { statusField: result.statusField } : {}),
+        ...(result.durationRange ? { durationRange: result.durationRange } : {}),
+        ...(result.referenceRule || result.referenceHint ? { referenceRule: result.referenceRule || result.referenceHint } : {}),
+        ...(typeof result.supportsReferenceImage === "boolean" ? { supportsReferenceImage: result.supportsReferenceImage } : {}),
+        ...(typeof result.supportsReferenceVideo === "boolean" ? { supportsReferenceVideo: result.supportsReferenceVideo } : {}),
+        ...(typeof result.supportsReferenceAudio === "boolean" ? { supportsReferenceAudio: result.supportsReferenceAudio } : {}),
     };
 }
 
@@ -180,10 +234,18 @@ export function firstOkResult(results: ChannelHealthResult[], kind: ChannelHealt
     return results.find((result) => result.kind === kind && result.ok);
 }
 
-export type AdminModelsResult = { models: string[]; globalAiOpcPresets?: SystemChannelAdvancedConfig["globalAiOpcPresets"] };
+export type AdminModelsResult = {
+    models: string[];
+    modelCapabilities?: SystemChannelAdvancedConfig["modelCapabilities"];
+    modelConfigs?: SystemChannelAdvancedConfig["modelConfigs"];
+    recommendedConfig?: Partial<SystemChannelAdvancedConfig>;
+    discoveredCount?: number;
+    totalCount?: number;
+    warning?: string;
+    globalAiOpcPresets?: SystemChannelAdvancedConfig["globalAiOpcPresets"];
+};
 
-// 纯 helper 默认中文错误兜底；调用方可传入 fallbackError 覆盖
-export async function requestAdminModels(channel: SystemModelChannel, fallbackError = "拉取模型失败"): Promise<AdminModelsResult> {
+export async function requestAdminModels(channel: SystemModelChannel): Promise<AdminModelsResult> {
     const advanced = channel.advancedConfig;
     const response = await fetch("/api/admin/models", {
         method: "POST",
@@ -194,21 +256,36 @@ export async function requestAdminModels(channel: SystemModelChannel, fallbackEr
             apiKey: channel.apiKey,
             apiFormat: channel.apiFormat,
             protocol: advanced?.protocol,
+            authMode: advanced?.authMode,
+            authHeader: advanced?.authHeader,
+            authPrefix: advanced?.authPrefix,
             globalAiOpcPreset: advanced?.globalAiOpcPreset,
             globalAiOpcPresets: advanced?.globalAiOpcPresets,
             createPath: advanced?.createPath,
+            modelCatalogPaths: advanced?.modelCatalogPaths,
+            configuredModels: channel.models,
+            modelCapabilities: advanced?.modelCapabilities,
+            modelConfigs: advanced?.modelConfigs,
+            operationConfigs: advanced?.operationConfigs,
         }),
     });
-    const payload = (await response.json()) as { models?: string[]; globalAiOpcPresets?: SystemChannelAdvancedConfig["globalAiOpcPresets"]; error?: string };
-    if (!response.ok || !payload.models) throw new Error(payload.error || fallbackError);
-    return { models: payload.models, globalAiOpcPresets: payload.globalAiOpcPresets };
+    const payload = (await response.json()) as AdminModelsResult & { error?: string };
+    if (!response.ok || !payload.models) throw new Error(payload.error || "拉取模型失败");
+    return payload;
 }
 
 export function selectChannelHealthModel(channel: SystemModelChannel, defaults: AuthSettings["defaultModels"], kind: ChannelHealthKind) {
+    if (!channelProtocolDefinition(channel.advancedConfig?.protocol || "auto").capabilities.includes(kind)) return undefined;
+    const models = channel.models;
+    const configured = kind === "image" ? channel.advancedConfig?.imageModel : kind === "video" ? channel.advancedConfig?.videoModel : kind === "text" ? channel.advancedConfig?.textModel : "";
+    const configuredModel = models.find((model) => normalizeModelId(model) === normalizeModelId(configured || ""));
+    if (configuredModel && channelModelCapability(channel, configuredModel) === kind) return configuredModel;
+    const catalogModel = models.find((model) => channelModelCapability(channel, model) === kind);
+    if (catalogModel) return catalogModel;
     const defaultValue = kind === "image" ? defaults.imageModel : kind === "video" ? defaults.videoModel : kind === "audio" ? defaults.audioModel : defaults.textModel;
     const normalizedDefault = modelNameFromOption(defaultValue || "");
-    if (normalizedDefault && (!channel.models.length || channel.models.includes(normalizedDefault))) return normalizedDefault;
-    if (channel.advancedConfig?.protocol === "globalaiopc") return channel.models.find((model) => resolveGlobalAiOpcPreset(channel.advancedConfig, model)?.capability === kind);
+    if (normalizedDefault && models.includes(normalizedDefault) && channelModelCapability(channel, normalizedDefault) === kind) return normalizedDefault;
+    if (channel.advancedConfig?.protocol === "globalaiopc") return models.find((model) => resolveGlobalAiOpcPreset(channel.advancedConfig, model)?.capability === kind);
     const matcher =
         kind === "image"
             ? /image|img|gpt-image|dall|flux|sd|midjourney/i
@@ -217,7 +294,7 @@ export function selectChannelHealthModel(channel: SystemModelChannel, defaults: 
               : kind === "audio"
                 ? /audio|speech|voice|tts|music|whisper|sensevoice/i
                 : /gpt|chat|claude|deepseek|qwen|grok|text|gemini|glm/i;
-    return channel.models.find((model) => matcher.test(model)) || normalizedDefault;
+    return models.find((model) => matcher.test(model) && channelModelCapability(channel, model) === kind);
 }
 
 export function modelNameFromOption(value: string) {
@@ -231,31 +308,12 @@ export function isCdkExpired(code: PublicCdkCode) {
     return Boolean(code.expiresAt && Date.parse(code.expiresAt) <= Date.now());
 }
 
-export type CdkStatusLabels = {
-    plainMissing: string;
-    expired: string;
-    unavailable: string;
-    exhausted: string;
-    partial: string;
-    unused: string;
-};
-
-// 默认中文兜底：表格/列表调用方可注入 t() 结果，避免纯 helper 直接依赖 hook
-const DEFAULT_CDK_STATUS_LABELS: CdkStatusLabels = {
-    plainMissing: "明文缺失",
-    expired: "已过期",
-    unavailable: "不可用",
-    exhausted: "已兑完",
-    partial: "部分兑换",
-    unused: "未兑换",
-};
-
-export function cdkStatusLabel(code: PublicCdkCode, labels: CdkStatusLabels = DEFAULT_CDK_STATUS_LABELS) {
-    if (!code.code) return labels.plainMissing;
-    if (isCdkExpired(code)) return labels.expired;
-    if (code.status !== "active") return labels.unavailable;
-    if (code.redeemedCount >= code.maxRedemptions) return labels.exhausted;
-    return code.redeemedCount > 0 ? labels.partial : labels.unused;
+export function cdkStatusLabel(code: PublicCdkCode) {
+    if (!code.code) return "明文缺失";
+    if (isCdkExpired(code)) return "已过期";
+    if (code.status !== "active") return "不可用";
+    if (code.redeemedCount >= code.maxRedemptions) return "已兑完";
+    return code.redeemedCount > 0 ? "部分兑换" : "未兑换";
 }
 
 export function cdkStatusTone(code: PublicCdkCode) {
@@ -264,57 +322,25 @@ export function cdkStatusTone(code: PublicCdkCode) {
     return code.redeemedCount > 0 ? "blue" : "gold";
 }
 
-export type CdkExportLabels = {
-    title: string;
-    exportedAt: string;
-    count: string;
-    points: string;
-    maxRedemptions: string;
-    expiry: string;
-    longTerm: string;
-    note: string;
-    footer: string;
-};
-
-// 纯导出文本构建：优先由调用方注入翻译后的 labels，未传时回落中文
-const DEFAULT_CDK_EXPORT_LABELS: CdkExportLabels = {
-    title: "{site} CDK 导出",
-    exportedAt: "导出时间：{time}",
-    count: "数量：{count}",
-    points: "积分：{points}",
-    maxRedemptions: "可兑换次数：{count}",
-    expiry: "有效期：{value}",
-    longTerm: "长期有效",
-    note: "备注：{note}",
-    footer: "说明：仅导出本次生成且可复制的明文 CDK。",
-};
-
-function fillTemplate(template: string, params: Record<string, string | number>) {
-    return template.replace(/\{(\w+)\}/g, (matched, name: string) => (name in params ? String(params[name]) : matched));
-}
-
-export function formatCreatedCdkExport(codes: CreatedCdkCode[], siteTitle = "JoveCanvas", labels: CdkExportLabels = DEFAULT_CDK_EXPORT_LABELS) {
-    const locale = labels.longTerm === DEFAULT_CDK_EXPORT_LABELS.longTerm ? "zh-CN" : undefined;
+export function formatCreatedCdkExport(codes: CreatedCdkCode[]) {
     const lines = [
-        fillTemplate(labels.title, { site: siteTitle }),
-        fillTemplate(labels.exportedAt, { time: new Date().toLocaleString(locale, { hour12: false }) }),
-        fillTemplate(labels.count, { count: codes.length }),
+        "VOZEB PRO CDK 导出",
+        `导出时间：${new Date().toLocaleString("zh-CN", { hour12: false })}`,
+        `数量：${codes.length}`,
         "",
         ...codes.map((code, index) =>
             [
                 `${index + 1}. ${code.code}`,
-                fillTemplate(labels.points, { points: formatCreditAmount(code.points) }),
-                fillTemplate(labels.maxRedemptions, { count: code.maxRedemptions }),
-                fillTemplate(labels.expiry, {
-                    value: code.expiresAt ? new Date(code.expiresAt).toLocaleString(locale, { hour12: false }) : labels.longTerm,
-                }),
-                code.note ? fillTemplate(labels.note, { note: code.note }) : "",
+                `积分：${formatCreditAmount(code.points)}`,
+                `可兑换次数：${code.maxRedemptions}`,
+                `有效期：${code.expiresAt ? new Date(code.expiresAt).toLocaleString("zh-CN", { hour12: false }) : "长期有效"}`,
+                code.note ? `备注：${code.note}` : "",
             ]
                 .filter(Boolean)
                 .join(" | "),
         ),
         "",
-        labels.footer,
+        "说明：仅导出本次生成且可复制的明文 CDK。",
     ];
     return lines.join("\n");
 }
@@ -332,16 +358,15 @@ export function downloadTextFile(filename: string, text: string) {
 }
 
 export function CdkRedemptionDetail({ code }: { code: PublicCdkCode }) {
-    const t = useTranslations("admin");
     const redemptions = [...code.redemptions].sort((a, b) => Date.parse(b.redeemedAt) - Date.parse(a.redeemedAt));
     const visibleRedemptions = redemptions.slice(0, 20);
 
     return (
         <div className="rounded-lg border border-stone-200 bg-stone-50/80 p-3 dark:border-stone-800 dark:bg-stone-900/60">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("dashboardElements.redemption.title")}</div>
+                <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">兑换明细</div>
                 <div className="text-xs text-stone-500 dark:text-stone-400">
-                    {redemptions.length > visibleRedemptions.length ? t("dashboardElements.redemption.totalCountTruncated", { count: redemptions.length }) : t("dashboardElements.redemption.totalCount", { count: redemptions.length })}
+                    共 {redemptions.length} 条{redemptions.length > visibleRedemptions.length ? "，展示最近 20 条" : ""}
                 </div>
             </div>
             <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
@@ -351,7 +376,8 @@ export function CdkRedemptionDetail({ code }: { code: PublicCdkCode }) {
                             {item.displayName}
                             <span className="ml-1 font-normal text-stone-500 dark:text-stone-400">@{item.username}</span>
                         </div>
-                        <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{new Date(item.redeemedAt).toLocaleString()}</div>
+                        <AdminAccountId accountId={item.accountId} className="mt-0.5" />
+                        <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{new Date(item.redeemedAt).toLocaleString("zh-CN")}</div>
                     </div>
                 ))}
             </div>

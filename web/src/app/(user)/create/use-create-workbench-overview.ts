@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
 
 import type { CreateWorkbenchOverviewPayload } from "@/lib/create-workbench-overview";
 import { getCreateWorkbenchOverview } from "@/services/api/create-workbench-overview";
@@ -9,7 +8,6 @@ import { getCreateWorkbenchOverview } from "@/services/api/create-workbench-over
 const EMPTY_OVERVIEW: CreateWorkbenchOverviewPayload = { runningTasks: [], recentAssets: [] };
 
 export function useCreateWorkbenchOverview() {
-    const t = useTranslations("workspace.create");
     const [overview, setOverview] = useState<CreateWorkbenchOverviewPayload>(EMPTY_OVERVIEW);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>();
@@ -26,7 +24,7 @@ export function useCreateWorkbenchOverview() {
                 if (active) setOverview(payload);
             })
             .catch((error) => {
-                if (active) setError(error instanceof Error ? error.message : t("overviewLoadFailed"));
+                if (active) setError(error instanceof Error ? error.message : "工作台概览加载失败");
             })
             .finally(() => {
                 if (active) setLoading(false);
@@ -35,7 +33,7 @@ export function useCreateWorkbenchOverview() {
         return () => {
             active = false;
         };
-    }, [reloadToken, t]);
+    }, [reloadToken]);
 
     return {
         ...overview,

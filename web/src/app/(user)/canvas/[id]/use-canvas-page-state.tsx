@@ -69,8 +69,8 @@ export function useCanvasPageState() {
     const hydrated = useCanvasStore((state) => state.hydrated);
     const hydratedUserId = useCanvasStore((state) => state.hydratedUserId);
     const hydrate = useCanvasStore((state) => state.hydrate);
+    const loadProject = useCanvasStore((state) => state.loadProject);
     const createProject = useCanvasStore((state) => state.createProject);
-    const openProject = useCanvasStore((state) => state.openProject);
     const updateProject = useCanvasStore((state) => state.updateProject);
     const renameProject = useCanvasStore((state) => state.renameProject);
     const deleteProjects = useCanvasStore((state) => state.deleteProjects);
@@ -135,6 +135,7 @@ export function useCanvasPageState() {
     const resumingImageTaskIdsRef = useRef(new Set<string>());
     const resumingVideoTaskIdsRef = useRef(new Set<string>());
     const resumingTextTaskIdsRef = useRef(new Set<string>());
+    const resumingAudioTaskIdsRef = useRef(new Set<string>());
     return {
         message,
         modal,
@@ -164,8 +165,8 @@ export function useCanvasPageState() {
         hydrated,
         hydratedUserId,
         hydrate,
+        loadProject,
         createProject,
-        openProject,
         updateProject,
         renameProject,
         deleteProjects,
@@ -272,6 +273,7 @@ export function useCanvasPageState() {
         resumingImageTaskIdsRef,
         resumingVideoTaskIdsRef,
         resumingTextTaskIdsRef,
+        resumingAudioTaskIdsRef,
     };
 }
 

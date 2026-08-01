@@ -3,6 +3,7 @@ import { normalizeCreativeReview, unavailableCreativeReview, type CreativeFounda
 import { fetchInternalApi } from "@/lib/server/internal-origin";
 import { resolveLogicalModel } from "@/lib/server/logical-model-router";
 import { fetchOptionalResponses } from "@/lib/server/responses-request";
+import { TEXT_MODEL_REQUEST_TIMEOUT_MS } from "@/lib/server/model-request-policy";
 import { strictJsonObjectText } from "@/lib/server/structured-model-output";
 import { hasSystemAiCharge, readSystemAiBilling, systemAiBillingHeaders, systemAiIdempotencyKey, type SystemAiBilling } from "@/lib/server/system-ai-billing";
 
@@ -29,7 +30,7 @@ export async function reviewCreativeOutputs(input: { origin: string; cookie: str
     if (!model || !resolved?.channel) return unavailableCreativeReview("后台没有可用的默认文本模型，生成结果已保留，但本轮未执行自动复盘。");
 
     const mode = imageInputs.length ? "visual" : "text";
-    const system = `你是 ${settings.site.title} 创作质检 Agent。${mode === "visual" ? "你必须结合实际图片检查主体、构图、色彩、光线、文字可读性、参考一致性和整套视觉一致性。" : "当前只有文本结果，只能进行文本一致性检查，禁止声称看过图片或视频画面。"}只有存在明确影响使用的问题才返回 needs_revision；一般审美偏好不应触发自动重做。retryTaskIds 只能选择确实需要重做的任务，最多 10 个。必须调用 review_creative_outputs，不得暴露隐藏思维链。`;
+    const system = `你是 VOZEB PRO 创作质检 Agent。${mode === "visual" ? "你必须结合实际图片检查主体、构图、色彩、光线、文字可读性、参考一致性和整套视觉一致性。" : "当前只有文本结果，只能进行文本一致性检查，禁止声称看过图片或视频画面。"}只有存在明确影响使用的问题才返回 needs_revision；一般审美偏好不应触发自动重做。retryTaskIds 只能选择确实需要重做的任务，最多 10 个。必须调用 review_creative_outputs，不得暴露隐藏思维链。`;
     const reviewContext = JSON.stringify({ foundation: input.foundation, tasks: input.tasks.map(({ imageUrls: _imageUrls, ...task }) => task), mode });
     const responsesInput = [
         { role: "system", content: system },
@@ -80,6 +81,7 @@ async function callChat(origin: string, channelId: string, upstreamModel: string
         method: "POST",
         headers,
         cache: "no-store",
+        signal: AbortSignal.timeout(TEXT_MODEL_REQUEST_TIMEOUT_MS),
         body: JSON.stringify({
             model: upstreamModel,
             messages,

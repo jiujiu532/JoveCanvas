@@ -1,25 +1,9 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import layoutMessages from "../../../messages/zh/layout.json";
-import { WorkbenchGenerationActivity, WorkbenchGenerationPlaceholder } from "./workbench-generation-placeholder";
-
-function readNested(dict: unknown, key: string): string | undefined {
-    let current: unknown = dict;
-    for (const part of key.split(".")) {
-        if (typeof current !== "object" || current === null) return undefined;
-        current = (current as Record<string, unknown>)[part];
-    }
-    return typeof current === "string" ? current : undefined;
-}
-
-vi.mock("next-intl", () => ({
-    useTranslations: () => (key: string, params?: Record<string, string | number>) => {
-        const template = readNested(layoutMessages, key) ?? key;
-        if (!params) return template;
-        return template.replace(/\{(\w+)\}/g, (matched, name: string) => (name in params ? String(params[name]) : matched));
-    },
-}));
+import { GENERATION_PLACEHOLDER_TILE_COUNT, WorkbenchGenerationActivity, WorkbenchGenerationPlaceholder } from "./workbench-generation-placeholder";
 
 describe("workbench generation placeholders", () => {
     it("keeps generation status accessible without visible status copy", () => {
@@ -27,9 +11,30 @@ describe("workbench generation placeholders", () => {
         const activity = renderToStaticMarkup(<WorkbenchGenerationActivity kind="video" count={2} />);
 
         expect(placeholder).toContain('aria-label="图片正在生成"');
-        expect(placeholder).toContain('class="sr-only">图片正在生成</span>');
+        expect(placeholder).toContain('aria-busy="true"');
+        expect(placeholder).not.toContain("animate-spin");
+        expect(placeholder).not.toContain("bg-background/80");
+        expect(placeholder).not.toContain(">图片正在生成<");
         expect(activity).toContain('aria-label="2 个视频任务正在生成"');
         expect(activity).toContain('class="sr-only">2 个视频任务正在生成</span>');
         expect(activity).not.toContain(">生成中<");
+    });
+
+    it("fills the card with a 12 by 8 animated GPT-style tile field and no logo", () => {
+        const placeholder = renderToStaticMarkup(<WorkbenchGenerationPlaceholder kind="image" />);
+        const stylesheet = readFileSync(resolve(process.cwd(), "src/components/agent/workbench-generation-placeholder.module.css"), "utf8");
+
+        expect(placeholder).toContain("bg-muted");
+        expect(placeholder.match(/--cube-index:/g)).toHaveLength(GENERATION_PLACEHOLDER_TILE_COUNT);
+        expect(placeholder.match(/--cube-base:/g)).toHaveLength(GENERATION_PLACEHOLDER_TILE_COUNT);
+        expect(placeholder).toContain("#d9f4ee");
+        expect(placeholder).toContain("#5b9cf5");
+        expect(placeholder).not.toContain("/logo.svg");
+        expect(stylesheet).toContain("grid-template-columns: repeat(12, minmax(0, 1fr))");
+        expect(stylesheet).toContain("grid-template-rows: repeat(8, minmax(0, 1fr))");
+        expect(stylesheet).toContain("@keyframes cube-rise");
+        expect(stylesheet).toContain("translateY(-4px)");
+        expect(stylesheet).toContain("cube-rise-dark");
+        expect(stylesheet).toContain("prefers-reduced-motion");
     });
 });

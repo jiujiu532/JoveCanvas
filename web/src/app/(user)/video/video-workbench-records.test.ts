@@ -1,13 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { AiConfig } from "@/stores/use-config-store";
-import { buildLogFromVideoResults, buildVideoConfig, filterAudioReferencesByDuration, generatedVideoFallback, normalizeVideoSeconds, resultsFromLog } from "./video-workbench-records";
+import { generationLogPublicPrompt } from "@/lib/generation-log-snapshot";
+import { buildLogFromVideoResults, buildVideoConfig, filterAudioReferencesByDuration, generatedVideoFallback, normalizeVideoSeconds, resultsFromLog, snapshotFromLog } from "./video-workbench-records";
 
 describe("video workbench records", () => {
     it("restores success, failure, and pending results from a log", () => {
         const log = {
             id: "log-1",
-            status: "pending" as const,
+            status: "生成中" as const,
             task: { id: "task-1" },
             taskResultId: "pending-1",
             videos: [video("ok-1")],
@@ -21,16 +22,36 @@ describe("video workbench records", () => {
         ]);
     });
 
+    it("only restores retry permission for an explicitly retryable upstream failure", () => {
+        expect(
+            resultsFromLog({
+                id: "retryable",
+                status: "失败",
+                failures: [{ resultId: "failed-slot", error: "上游明确失败", canRetry: true }],
+            } as never),
+        ).toEqual([{ id: "failed-slot", status: "failed", error: "上游明确失败", canRetry: true }]);
+    });
+
     it("builds a failed log from failed generation results", () => {
         const log = buildLogFromVideoResults(null, { text: "生成视频", config: baseConfig(), references: [], videoReferences: [], audioReferences: [] }, [{ id: "result-1", status: "failed", error: "生成失败" }], 1200);
 
         expect(log).toMatchObject({
             prompt: "生成视频",
-            status: "failed",
+            status: "失败",
             error: "生成失败",
             failures: [{ resultId: "result-1", error: "生成失败" }],
             resultDeleted: false,
         });
+    });
+
+    it("keeps the user request separate from the internal video prompt", () => {
+        const log = buildLogFromVideoResults(null, { text: "内部视频执行提示词", userText: "让产品自然旋转五秒", config: baseConfig(), references: [], videoReferences: [], audioReferences: [] }, [{ id: "result-1", status: "pending" }], 0);
+
+        expect(log.prompt).toBe("内部视频执行提示词");
+        expect(log.title).toBe("让产品自然旋转五秒".slice(0, 12));
+        expect(log.requestSnapshot?.userPrompt).toBe("让产品自然旋转五秒");
+        expect(generationLogPublicPrompt(log)).toBe("让产品自然旋转五秒");
+        expect(snapshotFromLog(log, baseConfig())).toMatchObject({ text: "内部视频执行提示词", userText: "让产品自然旋转五秒" });
     });
 
     it("keeps audio references within duration limits and warns once", () => {

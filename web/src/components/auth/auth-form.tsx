@@ -4,9 +4,8 @@ import type { FormEvent, ReactNode } from "react";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, LockKeyhole, Mail, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, Gift, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { App, Button, Input } from "antd";
-import { useTranslations } from "next-intl";
 
 import { SiteLogo } from "@/components/layout/site-logo";
 import { usePublicSessionStore } from "@/stores/use-public-session-store";
@@ -23,19 +22,35 @@ type AuthFormProps = {
     className?: string;
     headerSlot?: ReactNode;
     authError?: string;
+    initialReferralCode?: string;
+    referralSource?: string;
+    inviteError?: string;
 };
 
-export function AuthForm({ mode, nextPath = "/create", registrationEnabled = true, emailRegistrationEnabled = false, firstUser = false, variant = "page", className, headerSlot, authError }: AuthFormProps) {
-    const t = useTranslations("layout");
+export function AuthForm({
+    mode,
+    nextPath = "/create",
+    registrationEnabled = true,
+    emailRegistrationEnabled = false,
+    firstUser = false,
+    variant = "page",
+    className,
+    headerSlot,
+    authError,
+    initialReferralCode = "",
+    referralSource = "registration-form",
+    inviteError,
+}: AuthFormProps) {
     const router = useRouter();
     const { message } = App.useApp();
-    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", logoUrl: "/logo.svg" };
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", logoUrl: "/logo.svg" };
     const setUser = useUserStore((state) => state.setUser);
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [emailCode, setEmailCode] = useState("");
     const [displayName, setDisplayName] = useState("");
     const [password, setPassword] = useState("");
+    const [referralCode, setReferralCode] = useState(initialReferralCode);
     const [submitting, setSubmitting] = useState(false);
     const [sendingCode, setSendingCode] = useState(false);
     const isRegister = mode === "register";
@@ -49,16 +64,16 @@ export function AuthForm({ mode, nextPath = "/create", registrationEnabled = tru
             const response = await fetch(isRegister ? "/api/auth/register" : "/api/auth/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, email, emailCode, displayName, password }),
+                body: JSON.stringify({ username, email, emailCode, displayName, password, referralCode: isRegister && !firstUser ? referralCode : undefined, referralSource }),
             });
             const payload = (await response.json()) as { user?: LocalUser; error?: string };
-            if (!response.ok || !payload.user) throw new Error(payload.error || (isRegister ? t("auth.registerFailed") : t("auth.loginFailed")));
+            if (!response.ok || !payload.user) throw new Error(payload.error || (isRegister ? "注册失败" : "登录失败"));
             setUser(payload.user);
-            message.success(isRegister ? t("auth.registerSuccess") : t("auth.loginSuccess"));
+            message.success(isRegister ? "注册成功" : "登录成功");
             router.replace(nextPath);
             router.refresh();
         } catch (error) {
-            message.error(error instanceof Error ? error.message : isRegister ? t("auth.registerFailed") : t("auth.loginFailed"));
+            message.error(error instanceof Error ? error.message : isRegister ? "注册失败" : "登录失败");
         } finally {
             setSubmitting(false);
         }
@@ -73,52 +88,50 @@ export function AuthForm({ mode, nextPath = "/create", registrationEnabled = tru
                 body: JSON.stringify({ purpose: "register", email }),
             });
             const payload = (await response.json()) as { error?: string };
-            if (!response.ok) throw new Error(payload.error || t("auth.codeSendFailed"));
-            message.success(t("auth.codeSent"));
+            if (!response.ok) throw new Error(payload.error || "验证码发送失败");
+            message.success("验证码已发送，请查看邮箱");
         } catch (error) {
-            message.error(error instanceof Error ? error.message : t("auth.codeSendFailed"));
+            message.error(error instanceof Error ? error.message : "验证码发送失败");
         } finally {
             setSendingCode(false);
         }
     };
-
-    const featureList = [t("auth.featureCommerce"), t("auth.featureCanvas"), t("auth.featureWorkbench")];
 
     const form = (
         <section className={cn("auth-panel flex min-h-full items-center", variant === "embedded" ? "p-6 sm:p-7" : "p-8 sm:p-10", className)}>
             <form onSubmit={submit} className={cn("auth-form-body w-full", variant === "embedded" ? "space-y-4" : "space-y-6")}>
                 {headerSlot}
                 <div className="auth-form-header">
-                    <p className="auth-form-kicker text-sm font-medium text-cyan-600 dark:text-cyan-300">{firstUser ? t("auth.firstSetup") : isRegister ? t("auth.createAccount") : t("auth.welcomeBack")}</p>
-                    <h2 className={cn("mt-2 font-semibold tracking-normal text-stone-950 dark:text-white", variant === "embedded" ? "text-2xl" : "text-3xl")}>
-                        {firstUser ? t("auth.createFirstAdmin") : isRegister ? t("auth.registerTitle", { site: site.title }) : t("auth.loginTitle", { site: site.title })}
-                    </h2>
-                    <p className="auth-form-description mt-3 text-sm leading-6 text-stone-500 dark:text-stone-400">{isRegister ? t("auth.registerDesc") : t("auth.loginDesc")}</p>
+                    <p className="auth-form-kicker text-sm font-medium text-cyan-600 dark:text-cyan-300">{firstUser ? "首次初始化" : isRegister ? "创建创作账号" : "欢迎回来"}</p>
+                    <h2 className={cn("mt-2 font-semibold tracking-normal text-stone-950 dark:text-white", variant === "embedded" ? "text-2xl" : "text-3xl")}>{firstUser ? "创建首个管理员" : isRegister ? "注册 VOZEB PRO" : "登录 VOZEB PRO"}</h2>
+                    <p className="auth-form-description mt-3 text-sm leading-6 text-stone-500 dark:text-stone-400">{isRegister ? "保存创作项目、提示词和常用风格，从同一个入口继续。" : "继续你的电商、短剧、美颜与画布创作。"}</p>
                 </div>
 
                 {authError ? <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-100">{authError}</div> : null}
 
-                {disabled ? <div className="rounded-md border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900 dark:border-cyan-300/20 dark:bg-cyan-300/8 dark:text-cyan-50">{t("auth.registrationDisabled")}</div> : null}
+                {isRegister && inviteError ? <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">{inviteError}</div> : null}
+
+                {disabled ? <div className="rounded-md border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900 dark:border-cyan-300/20 dark:bg-cyan-300/8 dark:text-cyan-50">当前站点已关闭注册，请联系管理员开通账号。</div> : null}
 
                 <label className="block space-y-3">
-                    <span className="text-sm font-medium text-stone-700 dark:text-stone-200">{isRegister ? t("auth.usernameLabel") : t("auth.usernameOrEmailLabel")}</span>
+                    <span className="text-sm font-medium text-stone-700 dark:text-stone-200">{isRegister ? "用户名" : "用户名或邮箱"}</span>
                     <Input
                         size="large"
                         prefix={<UserRound className="size-4 text-stone-500" />}
                         value={username}
                         onChange={(event) => setUsername(event.target.value)}
-                        placeholder={isRegister ? t("auth.usernamePlaceholderRegister") : t("auth.usernamePlaceholderLogin")}
+                        placeholder={isRegister ? "设置登录用户名" : "输入用户名或已绑定邮箱"}
                         autoComplete="username"
                         disabled={submitting || disabled}
                         required
                     />
-                    {isRegister ? <span className="block text-xs leading-5 text-stone-500 dark:text-stone-400">{t("auth.usernameHint")}</span> : null}
+                    {isRegister ? <span className="block text-xs leading-5 text-stone-500 dark:text-stone-400">用于登录，注册后不可修改；创作昵称可随时调整。</span> : null}
                 </label>
 
                 {isRegister && emailRegistrationEnabled ? (
                     <div className="space-y-3">
                         <label className="block space-y-3">
-                            <span className="text-sm font-medium text-stone-700 dark:text-stone-200">{t("auth.emailLabel")}</span>
+                            <span className="text-sm font-medium text-stone-700 dark:text-stone-200">邮箱</span>
                             <Input
                                 size="large"
                                 prefix={<Mail className="size-4 text-stone-500" />}
@@ -132,13 +145,13 @@ export function AuthForm({ mode, nextPath = "/create", registrationEnabled = tru
                             />
                         </label>
                         <label className="block space-y-3">
-                            <span className="text-sm font-medium text-stone-700 dark:text-stone-200">{t("auth.emailCodeLabel")}</span>
+                            <span className="text-sm font-medium text-stone-700 dark:text-stone-200">邮箱验证码</span>
                             <Input.Search
                                 size="large"
                                 value={emailCode}
                                 onChange={(event) => setEmailCode(event.target.value)}
-                                placeholder={t("auth.emailCodePlaceholder")}
-                                enterButton={sendingCode ? t("auth.sendingCode") : t("auth.getCode")}
+                                placeholder="6 位验证码"
+                                enterButton={sendingCode ? "发送中" : "获取验证码"}
                                 loading={sendingCode}
                                 disabled={submitting || disabled}
                                 onSearch={() => void sendEmailCode()}
@@ -150,19 +163,35 @@ export function AuthForm({ mode, nextPath = "/create", registrationEnabled = tru
 
                 {isRegister ? (
                     <label className="block space-y-3">
-                        <span className="text-sm font-medium text-stone-700 dark:text-stone-200">{t("auth.nicknameLabel")}</span>
-                        <Input size="large" value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder={t("auth.nicknamePlaceholder")} autoComplete="name" disabled={submitting || disabled} />
+                        <span className="text-sm font-medium text-stone-700 dark:text-stone-200">创作昵称</span>
+                        <Input size="large" value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="显示在账号菜单，可留空" autoComplete="name" disabled={submitting || disabled} />
+                    </label>
+                ) : null}
+
+                {isRegister && !firstUser ? (
+                    <label className="block space-y-3">
+                        <span className="text-sm font-medium text-stone-700 dark:text-stone-200">邀请码（选填）</span>
+                        <Input
+                            size="large"
+                            prefix={<Gift className="size-4 text-stone-500" />}
+                            value={referralCode}
+                            onChange={(event) => setReferralCode(event.target.value.toUpperCase())}
+                            placeholder="通过邀请链接进入时会自动填写"
+                            autoComplete="off"
+                            maxLength={24}
+                            disabled={submitting || disabled}
+                        />
                     </label>
                 ) : null}
 
                 <label className="block space-y-3">
-                    <span className="text-sm font-medium text-stone-700 dark:text-stone-200">{t("auth.passwordLabel")}</span>
+                    <span className="text-sm font-medium text-stone-700 dark:text-stone-200">密码</span>
                     <Input.Password
                         size="large"
                         prefix={<LockKeyhole className="size-4 text-stone-500" />}
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
-                        placeholder={isRegister ? t("auth.passwordPlaceholderRegister") : t("auth.passwordPlaceholderLogin")}
+                        placeholder={isRegister ? "至少 8 位" : "请输入密码"}
                         autoComplete={isRegister ? "new-password" : "current-password"}
                         disabled={submitting || disabled}
                         required
@@ -170,26 +199,26 @@ export function AuthForm({ mode, nextPath = "/create", registrationEnabled = tru
                 </label>
 
                 <Button className="auth-submit-button" type="primary" htmlType="submit" size="large" block loading={submitting} disabled={disabled} icon={<ArrowRight className="size-4" />} iconPlacement="end">
-                    {isRegister ? t("auth.submitRegister") : t("auth.submitLogin")}
+                    {isRegister ? "注册并开始创作" : "登录并继续"}
                 </Button>
 
                 <div className="auth-switch-link pt-2 text-center text-sm text-stone-500 dark:text-stone-400">
                     {isRegister ? (
                         <>
-                            {t("auth.hasAccount")}{" "}
+                            已有账号？{" "}
                             <Link href="/login" className="font-medium text-stone-950 hover:underline dark:text-white">
-                                {t("auth.loginNow")}
+                                直接登录
                             </Link>
                         </>
                     ) : (
                         <>
-                            {t("auth.noAccount")}{" "}
+                            还没有账号？{" "}
                             <Link href="/register" className="font-medium text-stone-950 hover:underline dark:text-white">
-                                {t("auth.registerNow")}
+                                立即注册
                             </Link>
                             <span className="mx-2 text-stone-300 dark:text-stone-700">/</span>
                             <Link href="/forgot-password" className="font-medium text-stone-950 hover:underline dark:text-white">
-                                {t("auth.forgotPassword")}
+                                忘记密码
                             </Link>
                         </>
                     )}
@@ -214,21 +243,21 @@ export function AuthForm({ mode, nextPath = "/create", registrationEnabled = tru
                             className="auth-back-home inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-stone-200 bg-white/70 px-3 text-sm font-medium text-stone-700 transition hover:border-stone-300 hover:text-stone-950 dark:border-white/10 dark:bg-white/5 dark:text-stone-200 dark:hover:border-white/20 dark:hover:text-white"
                         >
                             <ArrowLeft className="size-4" />
-                            <span>{t("auth.backHome")}</span>
+                            <span>返回首页</span>
                         </Link>
                     </div>
                     <div className="auth-page-brand-copy">
-                        <h1 className="text-balance text-2xl font-semibold tracking-normal sm:text-3xl">{firstUser ? t("auth.brandTitleFirstUser") : isRegister ? t("auth.brandTitleRegister") : t("auth.brandTitleLogin")}</h1>
+                        <h1 className="text-balance text-2xl font-semibold tracking-normal sm:text-3xl">{firstUser ? "创建首个管理员" : isRegister ? "从一个入口开始视觉创作" : "回到你的视觉创作台"}</h1>
                     </div>
                     <div className="auth-page-feature-list grid gap-2 text-sm text-stone-600 dark:text-stone-300">
-                        {featureList.map((item) => (
+                        {["电商、短剧与美颜创作", "画布项目与提示词复用", "图片、视频工作台自由切换"].map((item) => (
                             <div key={item} className="flex items-center gap-2">
                                 <span className="size-1.5 rounded-full bg-cyan-400" />
                                 <span>{item}</span>
                             </div>
                         ))}
                     </div>
-                    <p className="auth-page-brand-description max-w-sm text-sm leading-6 text-stone-500 dark:text-stone-400">{t("auth.brandDescription")}</p>
+                    <p className="auth-page-brand-description max-w-sm text-sm leading-6 text-stone-500 dark:text-stone-400">登录后从首页场景入口继续创作，项目、提示词和常用风格都能随时接着使用。</p>
                 </section>
                 {form}
             </div>

@@ -2,10 +2,10 @@
 
 import { useRef, useState, type DragEvent as ReactDragEvent, type ReactNode } from "react";
 import { Button, Tooltip } from "antd";
-import { useTranslations } from "next-intl";
 import { ArrowUp, Check, CheckCircle2, Circle, CircleAlert, Crosshair, ImagePlus, LoaderCircle, Pause, RotateCcw, Wrench, X, XCircle } from "lucide-react";
 
 import { AgentMessageActions } from "@/components/agent/agent-message-actions";
+import { AgentMarkdown } from "@/components/agent/agent-markdown";
 import { AgentMediaPreview } from "@/components/agent/agent-media-preview";
 import { SiteLogo } from "@/components/layout/site-logo";
 import { canvasThemes } from "@/lib/canvas-theme";
@@ -17,7 +17,14 @@ import { usePublicSessionStore } from "@/stores/use-public-session-store";
 import type { LocalUser } from "@/stores/use-user-store";
 import { canvasAgentProgressSteps, type CanvasAgentRunStage } from "./canvas-agent-progress";
 
-type CanvasAgentChatAttachment = { id: string; name: string; url: string };
+export type CanvasAgentChatAttachment = {
+    id: string;
+    name: string;
+    url: string;
+    label?: string;
+    status?: "uploading" | "ready" | "failed";
+    error?: string;
+};
 export type CanvasAgentChatMessage = {
     id: string;
     role: "user" | "assistant" | "system" | "tool" | "error";
@@ -44,10 +51,9 @@ export function AgentChatMessage({
     onRejectTool?: (id: string) => void;
     onApproveTool?: (id: string) => void;
     onLocateNode?: (nodeId: string) => void;
-    onRetryTask?: (runId: string, taskId: string) => void;
+    onRetryTask?: (runId: string, taskId?: string) => void;
     onEditMessage?: (text: string) => void;
 }) {
-    const t = useTranslations("canvas");
     const isUser = item.role === "user";
     const isSystem = item.role === "system";
     const color = item.role === "error" ? "#dc2626" : item.role === "tool" ? "#2563eb" : theme.node.text;
@@ -66,53 +72,72 @@ export function AgentChatMessage({
         return (
             <div className="flex items-start gap-3">
                 <AgentAvatar theme={theme} />
-                <AgentToolCard title={item.title || t("chat.toolCall")} text={item.text} detail={item.detail} theme={theme} />
+                <AgentToolCard title={item.title || "工具调用"} text={item.text} detail={item.detail} theme={theme} />
             </div>
         );
     }
-    return (
-        <div className={`canvas-agent-message group/message flex min-w-0 items-start gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
-            {!isUser ? <AgentAvatar theme={theme} /> : null}
-            <div className={`min-w-0 max-w-[82%] text-sm leading-6 ${isUser ? "text-right" : "text-left"}`} style={{ color }}>
-                <div className="whitespace-pre-wrap break-words text-left">{item.text}</div>
-                {!isUser && objectStringArray(item.detail, "nodeIds").length && objectField(item.detail, "taskType") !== "text" ? (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                        {objectStringArray(item.detail, "nodeIds").map((nodeId, index, nodeIds) => (
-                            <button key={nodeId} type="button" className="inline-flex items-center gap-1.5 text-xs font-medium opacity-65 transition hover:opacity-100" onClick={() => onLocateNode?.(nodeId)}>
-                                <Crosshair className="size-3.5" />
-                                {nodeIds.length > 1 ? t("chat.locateResult", { index: index + 1 }) : t("chat.locateCanvasResult")}
-                            </button>
-                        ))}
+    if (isUser) {
+        return (
+            <div className="canvas-agent-message group/message flex min-w-0 justify-end">
+                <div className="grid min-w-0 max-w-[82%] grid-cols-[minmax(0,1fr)_auto] gap-x-3" style={{ color }}>
+                    {item.attachments?.length ? (
+                        <div className="col-start-1 row-start-1">
+                            <AgentMessageAttachments attachments={item.attachments} align="end" />
+                        </div>
+                    ) : null}
+                    <div className="col-start-1 row-start-2 min-w-0 text-right text-sm leading-6">
+                        <div className="whitespace-pre-wrap break-words text-left">{item.text}</div>
+                        {item.meta ? <div className="mt-1 text-[11px] opacity-45">{item.meta}</div> : null}
+                        <AgentMessageActions text={item.text} onEdit={onEditMessage} align="end" className="text-current" style={{ color: theme.node.muted }} />
                     </div>
-                ) : null}
-                {!isUser && objectField(item.detail, "runId") && objectField(item.detail, "taskId") ? (
+                    <div className="col-start-2 row-start-2">
+                        <AgentUserAvatar user={user} theme={theme} />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    const resultNodeIds = objectField(item.detail, "taskType") === "text" ? [] : objectStringArray(item.detail, "nodeIds");
+    return (
+        <div className="canvas-agent-message group/message flex min-w-0 items-start justify-start gap-3">
+            <AgentAvatar theme={theme} />
+            <div className="min-w-0 max-w-[82%] text-left text-sm leading-6" style={{ color }}>
+                <div className="flex min-w-0 items-center gap-1">
+                    <AgentMarkdown className="min-w-0 flex-1 text-left">{item.text}</AgentMarkdown>
+                    {resultNodeIds.length ? (
+                        <div className="flex shrink-0 items-center gap-0.5">
+                            {resultNodeIds.map((nodeId, index, nodeIds) => {
+                                const locateLabel = nodeIds.length > 1 ? `定位结果 ${index + 1}` : "定位到画布结果";
+                                return (
+                                    <Tooltip key={nodeId} title={locateLabel} placement="top" mouseEnterDelay={0.2}>
+                                        <button type="button" className="grid size-7 place-items-center opacity-55 transition hover:opacity-100 focus-visible:opacity-100" onClick={() => onLocateNode?.(nodeId)} aria-label={locateLabel}>
+                                            <Crosshair className="size-4" />
+                                        </button>
+                                    </Tooltip>
+                                );
+                            })}
+                        </div>
+                    ) : null}
+                </div>
+                {objectField(item.detail, "runId") ? (
                     <button
                         type="button"
                         className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-red-600 transition hover:opacity-70"
-                        onClick={() => onRetryTask?.(String(objectField(item.detail, "runId")), String(objectField(item.detail, "taskId")))}
+                        onClick={() => onRetryTask?.(String(objectField(item.detail, "runId")), objectField(item.detail, "taskId") ? String(objectField(item.detail, "taskId")) : undefined)}
                     >
                         <RotateCcw className="size-3.5" />
-                        {t("chat.retryThisTask")}
+                        {objectField(item.detail, "taskId") ? "只重试此任务" : "重试"}
                     </button>
                 ) : null}
                 {item.attachments?.length ? <AgentMessageAttachments attachments={item.attachments} /> : null}
                 {item.meta ? <div className="mt-1 text-[11px] opacity-45">{item.meta}</div> : null}
-                <AgentMessageActions
-                    text={item.text}
-                    downloads={item.attachments?.map((attachment) => ({ type: "image", url: attachment.url, title: attachment.name }))}
-                    onEdit={isUser && onEditMessage ? onEditMessage : undefined}
-                    align={isUser ? "end" : "start"}
-                    className="text-current"
-                    style={{ color: theme.node.muted }}
-                />
+                <AgentMessageActions text={item.text} downloads={item.attachments?.map((attachment) => ({ type: "image", url: attachment.url, title: attachment.name }))} align="start" className="text-current" style={{ color: theme.node.muted }} />
             </div>
-            {isUser ? <AgentUserAvatar user={user} theme={theme} /> : null}
         </div>
     );
 }
 
 function AgentPendingToolCard({ summary, detail, theme, onReject, onApprove }: { summary: string; detail?: unknown; theme: (typeof canvasThemes)[keyof typeof canvasThemes]; onReject?: () => void; onApprove?: () => void }) {
-    const t = useTranslations("canvas");
     return (
         <div className="flex items-start gap-3">
             <AgentAvatar theme={theme} />
@@ -125,13 +150,13 @@ function AgentPendingToolCard({ summary, detail, theme, onReject, onApprove }: {
                             </span>
                             <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-2 text-sm font-semibold leading-5">
-                                    <span>{t("chat.confirmToolCall")}</span>
+                                    <span>确认工具调用</span>
                                     <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium" style={{ borderColor: "rgba(217,119,6,.22)", color: "#d97706", background: "rgba(217,119,6,.04)" }}>
-                                        {t("chat.waitingConfirm")}
+                                        等待确认
                                     </span>
                                     {detail ? (
                                         <span className="ml-auto text-xs font-normal" style={{ color: theme.node.muted }}>
-                                            {t("chat.details")}
+                                            详情
                                         </span>
                                     ) : null}
                                 </div>
@@ -146,10 +171,10 @@ function AgentPendingToolCard({ summary, detail, theme, onReject, onApprove }: {
                 {onReject || onApprove ? (
                     <div className="mt-4 grid grid-cols-2 gap-2">
                         <Button danger className="!h-9" icon={<XCircle className="size-4" />} onClick={() => onReject?.()}>
-                            {t("chat.rejectExecution")}
+                            拒绝执行
                         </Button>
                         <Button className="!h-9" icon={<CheckCircle2 className="size-4" />} style={{ borderColor: "rgba(22,163,74,.42)", color: "#16a34a", background: "transparent" }} onClick={() => onApprove?.()}>
-                            {t("chat.approveExecution")}
+                            批准执行
                         </Button>
                     </div>
                 ) : null}
@@ -159,8 +184,7 @@ function AgentPendingToolCard({ summary, detail, theme, onReject, onApprove }: {
 }
 
 function AgentToolCard({ title, text, detail, theme }: { title: string; text: string; detail?: unknown; theme: (typeof canvasThemes)[keyof typeof canvasThemes] }) {
-    const t = useTranslations("canvas");
-    const state = toolCardState(title, text, detail, t);
+    const state = toolCardState(title, text, detail);
     return (
         <details className="min-w-0 flex-1 rounded-xl border px-4 py-3.5 text-left" style={{ borderColor: theme.node.stroke, background: "transparent", color: theme.node.text }}>
             <summary className="cursor-pointer list-none">
@@ -176,7 +200,7 @@ function AgentToolCard({ title, text, detail, theme }: { title: string; text: st
                             </span>
                             {detail ? (
                                 <span className="ml-auto text-xs font-normal" style={{ color: theme.node.muted }}>
-                                    {t("chat.details")}
+                                    详情
                                 </span>
                             ) : null}
                         </div>
@@ -192,8 +216,7 @@ function AgentToolCard({ title, text, detail, theme }: { title: string; text: st
 }
 
 export function AgentWorkingMessage({ theme, stage }: { theme: (typeof canvasThemes)[keyof typeof canvasThemes]; stage: CanvasAgentRunStage }) {
-    const t = useTranslations("canvas");
-    const steps = canvasAgentProgressSteps(stage, t);
+    const steps = canvasAgentProgressSteps(stage);
     return (
         <div className="flex items-start gap-3" aria-live="polite">
             <AgentAvatar theme={theme} />
@@ -226,6 +249,7 @@ export function AgentChatComposer({
     onSubmit,
     onAddFiles,
     onRemoveAttachment,
+    onRetryAttachment,
     beforeInput,
     left,
 }: {
@@ -239,13 +263,15 @@ export function AgentChatComposer({
     onSubmit: () => void;
     onAddFiles?: (files: FileList | File[] | null) => void | Promise<void>;
     onRemoveAttachment?: (id: string) => void;
+    onRetryAttachment?: (id: string) => void;
     beforeInput?: ReactNode;
     left?: ReactNode;
 }) {
-    const t = useTranslations("canvas");
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDragActive, setIsDragActive] = useState(false);
-    const canSubmit = !disabled && !sending && Boolean(prompt.trim() || attachments.length);
+    const uploading = attachments.some((item) => item.status === "uploading");
+    const hasFailedUpload = attachments.some((item) => item.status === "failed");
+    const canSubmit = !disabled && !sending && !uploading && !hasFailedUpload && Boolean(prompt.trim() || attachments.length);
     const handleDragOver = (event: ReactDragEvent<HTMLDivElement>) => {
         if (!onAddFiles || sending || !preventFileDragEvent(event)) return;
         setIsDragActive(true);
@@ -272,17 +298,28 @@ export function AgentChatComposer({
                 onDrop={handleDrop}
             >
                 {attachments.length ? (
-                    <div className="thin-scrollbar mb-2 flex gap-2 overflow-x-auto pb-1">
+                    <div className="thin-scrollbar mb-2 flex gap-2 overflow-x-auto pb-1" aria-label="本轮参考图片" aria-live="polite">
                         {attachments.map((item) => (
-                            <div key={item.id} className="group relative size-14 shrink-0 overflow-hidden rounded-xl border" style={{ borderColor: theme.node.stroke }} title={item.name}>
+                            <div key={item.id} className="group relative size-14 shrink-0 overflow-hidden rounded-xl border" style={{ borderColor: item.status === "failed" ? "#ef4444" : theme.node.stroke }} title={item.error || item.name}>
                                 <img src={imagePreviewUrl(item.url, 256)} alt={item.name} className="size-full object-cover" />
-                                {onRemoveAttachment ? (
+                                {item.label ? <span className="absolute left-1 top-1 rounded bg-black/65 px-1 py-0.5 text-[9px] font-medium leading-none text-white">{item.label}</span> : null}
+                                {item.status === "uploading" ? (
+                                    <span className="absolute inset-0 grid place-items-center bg-black/50 text-white" role="status" aria-label={`${item.name} 上传中`}>
+                                        <LoaderCircle className="size-5 animate-spin" />
+                                    </span>
+                                ) : null}
+                                {item.status === "failed" && onRetryAttachment ? (
+                                    <button type="button" className="absolute inset-0 grid place-items-center bg-red-950/55 text-white transition hover:bg-red-950/65" onClick={() => onRetryAttachment(item.id)} aria-label={`重试上传图片：${item.name}`}>
+                                        <RotateCcw className="size-5" />
+                                    </button>
+                                ) : null}
+                                {onRemoveAttachment && item.status !== "uploading" ? (
                                     <button
                                         type="button"
-                                        className="absolute right-1 top-1 grid size-5 place-items-center rounded-full border opacity-0 shadow-sm transition group-hover:opacity-100"
+                                        className="absolute right-1 top-1 z-10 grid size-5 place-items-center rounded-full border opacity-100 shadow-sm transition sm:opacity-0 sm:group-hover:opacity-100"
                                         style={{ background: theme.toolbar.panel, borderColor: theme.node.stroke, color: theme.node.text }}
                                         onClick={() => onRemoveAttachment(item.id)}
-                                        aria-label={t("chat.removeImage")}
+                                        aria-label="移除图片"
                                     >
                                         <X className="size-3" />
                                     </button>
@@ -326,8 +363,17 @@ export function AgentChatComposer({
                                         event.target.value = "";
                                     }}
                                 />
-                                <Tooltip title={t("chat.uploadImage")}>
-                                    <Button type="text" shape="circle" className="!h-9 !w-9 !min-w-9" disabled={sending} style={{ color: theme.node.muted }} icon={<ImagePlus className="size-4" />} onClick={() => fileInputRef.current?.click()} />
+                                <Tooltip title={uploading ? "正在上传图片" : "上传图片"}>
+                                    <Button
+                                        type="text"
+                                        shape="circle"
+                                        className="!h-9 !w-9 !min-w-9"
+                                        disabled={sending}
+                                        style={{ color: theme.node.muted }}
+                                        icon={uploading ? <LoaderCircle className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
+                                        onClick={() => fileInputRef.current?.click()}
+                                        aria-label={uploading ? "正在上传图片" : "上传图片"}
+                                    />
                                 </Tooltip>
                             </>
                         ) : null}
@@ -340,7 +386,7 @@ export function AgentChatComposer({
                         disabled={!canSubmit}
                         icon={sending ? <LoaderCircle className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}
                         onClick={() => void onSubmit()}
-                        aria-label={t("chat.send")}
+                        aria-label="发送"
                     />
                 </div>
             </div>
@@ -361,11 +407,10 @@ export function AgentPanelTabs<T extends string>({
     right?: ReactNode;
     onChange: (value: T) => void;
 }) {
-    const t = useTranslations("canvas");
     return (
         <div className="border-b px-3" style={{ borderColor: theme.node.stroke }}>
             <div className="flex min-h-11 items-center justify-between gap-3">
-                <nav className="thin-scrollbar flex min-w-0 flex-1 items-center gap-3 overflow-x-auto text-sm" role="tablist" aria-label={t("chat.panelAria")}>
+                <nav className="thin-scrollbar flex min-w-0 flex-1 items-center gap-3 overflow-x-auto text-sm" role="tablist" aria-label="Agent 面板">
                     {items.map((item) => (
                         <button
                             key={item.value}
@@ -397,18 +442,17 @@ function AgentDetailBlock({ detail, theme }: { detail: unknown; theme: (typeof c
 }
 
 function AgentAvatar({ theme }: { theme: (typeof canvasThemes)[keyof typeof canvasThemes] }) {
-    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", logoUrl: "/logo.svg" };
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "VOZEB PRO", logoUrl: "/logo.svg" };
     return (
-        <span className="grid size-8 shrink-0 place-items-center" role="img" aria-label={`${site.title || "JoveCanvas"} Agent`} style={{ color: theme.node.text }}>
+        <span className="grid size-8 shrink-0 place-items-center" role="img" aria-label={`${site.title || "VOZEB PRO"} Agent`} style={{ color: theme.node.text }}>
             <SiteLogo logoUrl={site.logoUrl} className="size-5" />
         </span>
     );
 }
 
 function AgentUserAvatar({ user, theme }: { user: LocalUser | null; theme: (typeof canvasThemes)[keyof typeof canvasThemes] }) {
-    const t = useTranslations("canvas");
     const avatarUrl = user?.avatarUrl?.trim();
-    const label = user?.displayName || user?.username || t("chat.userFallback");
+    const label = user?.displayName || user?.username || "用户";
     return (
         <span className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-full" role="img" aria-label={label} style={{ color: theme.node.text }}>
             {avatarUrl ? (
@@ -422,35 +466,27 @@ function AgentUserAvatar({ user, theme }: { user: LocalUser | null; theme: (type
     );
 }
 
-function AgentMessageAttachments({ attachments }: { attachments: CanvasAgentChatAttachment[] }) {
+function AgentMessageAttachments({ attachments, align = "start" }: { attachments: CanvasAgentChatAttachment[]; align?: "start" | "end" }) {
     return (
-        <div className="mt-2 grid grid-cols-3 gap-1.5">
+        <div className={`mb-2 flex flex-wrap gap-1.5 ${align === "end" ? "justify-end" : "justify-start"}`}>
             {attachments.map((item) => (
-                <AgentMediaPreview key={item.id} type="image" url={item.url} title={item.name} className="aspect-square rounded-lg" />
+                <AgentMediaPreview key={item.id} type="image" url={item.url} title={item.name} className="size-12 rounded-lg" />
             ))}
         </div>
     );
 }
 
-function toolCardState(title: string, text: string, detail: unknown | undefined, t: (key: string) => string) {
+function toolCardState(title: string, text: string, detail?: unknown) {
     const raw = `${title} ${text} ${normalizeText(objectField(detail, "error"))}`;
     const lower = raw.toLowerCase();
     const tool = String(objectField(detail, "name") || objectField(detail, "tool") || "");
     if (objectField(detail, "status") === "noop" || /未生效|无需|没有找到|没有.*可|已存在/.test(raw))
-        return { label: t("chat.statusNoop"), color: "#d97706", softBorder: "rgba(217,119,6,.22)", softBg: "rgba(217,119,6,.04)", icon: <CircleAlert className="size-4" />, isError: false };
-    if (/拒绝|取消/.test(raw) || lower.includes("rejected")) return { label: t("chat.statusRejected"), color: "#dc2626", softBorder: "rgba(220,38,38,.20)", softBg: "rgba(220,38,38,.04)", icon: <XCircle className="size-4" />, isError: true };
-    if (/失败|错误/.test(raw) || lower.includes("failed") || lower.includes("error"))
-        return { label: t("chat.statusFailed"), color: "#dc2626", softBorder: "rgba(220,38,38,.20)", softBg: "rgba(220,38,38,.04)", icon: <XCircle className="size-4" />, isError: true };
+        return { label: "未生效", color: "#d97706", softBorder: "rgba(217,119,6,.22)", softBg: "rgba(217,119,6,.04)", icon: <CircleAlert className="size-4" />, isError: false };
+    if (/拒绝|取消/.test(raw) || lower.includes("rejected")) return { label: "拒绝执行", color: "#dc2626", softBorder: "rgba(220,38,38,.20)", softBg: "rgba(220,38,38,.04)", icon: <XCircle className="size-4" />, isError: true };
+    if (/失败|错误/.test(raw) || lower.includes("failed") || lower.includes("error")) return { label: "执行失败", color: "#dc2626", softBorder: "rgba(220,38,38,.20)", softBg: "rgba(220,38,38,.04)", icon: <XCircle className="size-4" />, isError: true };
     if (/完成|成功/.test(raw) || lower.includes("completed") || lower.includes("succeeded"))
-        return {
-            label: tool === "canvas_apply_ops" || /画布操作/.test(title) ? t("chat.statusApproved") : t("chat.statusCompleted"),
-            color: "#16a34a",
-            softBorder: "rgba(22,163,74,.20)",
-            softBg: "rgba(22,163,74,.04)",
-            icon: <CheckCircle2 className="size-4" />,
-            isError: false,
-        };
-    return { label: t("chat.toolCall"), color: "#2563eb", softBorder: "rgba(37,99,235,.20)", softBg: "rgba(37,99,235,.04)", icon: <Wrench className="size-4" />, isError: false };
+        return { label: tool === "canvas_apply_ops" || /画布操作/.test(title) ? "已批准执行" : "执行完成", color: "#16a34a", softBorder: "rgba(22,163,74,.20)", softBg: "rgba(22,163,74,.04)", icon: <CheckCircle2 className="size-4" />, isError: false };
+    return { label: "工具调用", color: "#2563eb", softBorder: "rgba(37,99,235,.20)", softBg: "rgba(37,99,235,.04)", icon: <Wrench className="size-4" />, isError: false };
 }
 
 function normalizeText(value: unknown) {

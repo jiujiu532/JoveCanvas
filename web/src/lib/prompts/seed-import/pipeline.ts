@@ -49,10 +49,7 @@ export async function runSeedImport(options: RunImportOptions): Promise<ImportRe
     const skipRehost = options.skipRehost ?? isDryRun;
 
     if (options.skipIfSourceRegistered) {
-        const registered =
-            options.registeredSeedSources !== undefined
-                ? options.registeredSeedSources.includes(meta.source)
-                : await isLibrarySeedSourceRegistered(meta.source);
+        const registered = options.registeredSeedSources !== undefined ? options.registeredSeedSources.includes(meta.source) : await isLibrarySeedSourceRegistered(meta.source);
         if (registered) {
             return {
                 sourceKey: options.sourceKey,
@@ -128,7 +125,7 @@ export async function runSeedImport(options: RunImportOptions): Promise<ImportRe
             preview: item.preview || item.title,
             githubUrl: item.githubUrl,
             source: meta.source,
-            locale: item.locale,
+
             createdAt: now,
             updatedAt: now,
         };
@@ -137,8 +134,12 @@ export async function runSeedImport(options: RunImportOptions): Promise<ImportRe
     }
 
     const sceneCounts = countByScene(prompts.map((item) => ({ category: item.category as CuratedSeed["category"] })));
+    // locale tracked from source drafts, not StoredPrompt
     const localeCounts: Record<string, number> = {};
-    for (const item of prompts) bump(localeCounts, item.locale || "unknown");
+    for (const item of drafts) {
+        const loc = (item as Record<string, unknown>).locale as string | undefined;
+        if (loc) localeCounts[loc] = (localeCounts[loc] || 0) + 1;
+    }
 
     return {
         sourceKey: options.sourceKey,

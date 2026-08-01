@@ -1,9 +1,11 @@
 import type { GenerationTaskType } from "@/lib/server/generation-task-store";
 import type { GenerationAttempt } from "@/lib/server/generation-attempt";
+import type { GenerationTaskExecutionPhase } from "@/lib/server/generation-task-scheduler";
 
 export type AdminGenerationTask = {
     id: string;
     userId: string;
+    accountId?: string;
     username: string;
     displayName: string;
     type: GenerationTaskType;
@@ -16,6 +18,9 @@ export type AdminGenerationTask = {
     attemptNo?: number;
     model: string;
     channelId?: string;
+    executionPhase?: GenerationTaskExecutionPhase;
+    upstreamTaskId?: string;
+    lastUpstreamStatus?: string;
     attempts?: GenerationAttempt[];
     prompt: string;
     error?: string;
@@ -25,6 +30,7 @@ export type AdminGenerationTask = {
     updatedAt: number;
     canCancel: boolean;
     retryTaskId?: string;
+    canReview: boolean;
 };
 
 export type AdminGenerationChannel = {
@@ -41,6 +47,23 @@ export type AdminGenerationChannel = {
         cooldownUntil?: number;
         lastError?: string;
     };
+    planningRuntime?: {
+        protocol?: "responses" | "chat" | "gemini" | "custom";
+        successCount: number;
+        failureCount: number;
+        averageLatencyMs?: number;
+    };
+};
+
+export type AdminAgentPerformance = {
+    sampleSize: number;
+    planningP50Ms: number;
+    planningP95Ms: number;
+    firstResultP50Ms: number;
+    firstResultP95Ms: number;
+    queueAverageMs: number;
+    upstreamAverageMs: number;
+    reviewAverageMs: number;
 };
 
 export type AdminGenerationOperationsPayload = {
@@ -59,4 +82,5 @@ export type AdminGenerationOperationsPayload = {
         byStatus: Record<string, number>;
     };
     channels: AdminGenerationChannel[];
+    agentPerformance: AdminAgentPerformance;
 };

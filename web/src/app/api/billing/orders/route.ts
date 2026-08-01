@@ -7,13 +7,12 @@ import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-lo
 import { createBillingOrder, isBillingInputError, listUserBillingOrders } from "@/lib/server/billing-service";
 import type { BillingOrderStatus } from "@/lib/server/database";
 
-import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
 
     try {
         const params = request.nextUrl.searchParams;
@@ -24,24 +23,24 @@ export async function GET(request: NextRequest) {
         });
         return NextResponse.json({ orders: result.items, total: result.total, page: result.page, pageSize: result.pageSize });
     } catch (error) {
-        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
         console.error("List billing orders failed", error);
-        return NextResponse.json({ error: await serverMessage("billing.getOrderFailed") }, { status: 500 });
+        return NextResponse.json({ error: "获取订单失败" }, { status: 500 });
     }
 }
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
 
     try {
-        const body = await readJsonBody<{ productId?: unknown; quantity?: unknown; provider?: unknown }>(request);
+        const body = await readJsonBody<{ productId?: unknown; quantity?: unknown; provider?: unknown; userCouponId?: unknown }>(request);
         const order = await createBillingOrder({ ...body, userId: currentUser.id });
         await safeRecordAuditLog({
             action: "billing.order.create",
             actor: auditActorFromRequest(request, currentUser),
             target: { type: "billing_order", id: order.id, label: order.orderNo },
-            metadata: { productId: order.productId, amountCents: order.amountCents, currency: order.currency, provider: order.provider },
+            metadata: { productId: order.productId, amountCents: order.amountCents, currency: order.currency, provider: order.provider, userCouponId: order.userCouponId },
         });
         return NextResponse.json({ order });
     } catch (error) {
@@ -52,9 +51,9 @@ export async function POST(request: Request) {
             target: { type: "billing_order" },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
         console.error("Create billing order failed", error);
-        return NextResponse.json({ error: await serverMessage("billing.createOrderFailed") }, { status: 500 });
+        return NextResponse.json({ error: "创建订单失败" }, { status: 500 });
     }
 }
 

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Button, Input, InputNumber, Segmented, Switch, Tag } from "antd";
 import { Plus, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
 
 import { DEFAULT_MODEL_POINT_COST_KEY } from "@/constant/credits";
 import type { AuthSettings } from "@/lib/auth/store";
@@ -12,38 +11,30 @@ import { configuredModelPointCostKeys, resolveConfiguredModelPointCost } from "@
 import { LabeledControl } from "@/components/admin/admin-settings-controls";
 import { toNumberOrOne, toNumberOrZero, uniqueList } from "@/components/admin/admin-values";
 
-type AdminTranslator = ReturnType<typeof useTranslations<"admin">>;
-
-function imageQualityMultiplierOptions(t: AdminTranslator) {
-    return [
-        { key: "auto", label: t("points.quota.imageQuality.auto") },
-        { key: "low", label: t("points.quota.imageQuality.low") },
-        { key: "medium", label: t("points.quota.imageQuality.medium") },
-        { key: "high", label: t("points.quota.imageQuality.high") },
-    ];
-}
+const imageQualityMultiplierOptions = [
+    { key: "auto", label: "自动" },
+    { key: "low", label: "低清" },
+    { key: "medium", label: "中等" },
+    { key: "high", label: "高清" },
+];
 const videoQualityMultiplierOptions = [
     { key: "480", label: "480p" },
     { key: "720", label: "720p" },
     { key: "1080", label: "1080p" },
 ];
-function videoSecondsMultiplierOptions(t: AdminTranslator) {
-    return [
-        { key: "-1", label: t("points.quota.multiplier.smart") },
-        { key: "5", label: "5s" },
-        { key: "10", label: "10s" },
-    ];
-}
+const videoSecondsMultiplierOptions = [
+    { key: "-1", label: "智能" },
+    { key: "5", label: "5s" },
+    { key: "10", label: "10s" },
+];
 const suggestedVideoSecondOptions = [6, 8, 20];
 const legacyDefaultVideoSecondKeys = new Set(["12", "16"]);
-function modelCapabilityOptions(t: AdminTranslator): Array<{ value: LogicalModelCapability; label: string }> {
-    return [
-        { value: "text", label: t("points.quota.capability.text") },
-        { value: "image", label: t("points.quota.capability.image") },
-        { value: "video", label: t("points.quota.capability.video") },
-        { value: "audio", label: t("points.quota.capability.audio") },
-    ];
-}
+const modelCapabilityOptions: Array<{ value: LogicalModelCapability; label: string }> = [
+    { value: "text", label: "文本" },
+    { value: "image", label: "图片" },
+    { value: "video", label: "视频" },
+    { value: "audio", label: "音频" },
+];
 export function QuotaRuleTable({
     settings,
     customModel,
@@ -67,43 +58,40 @@ export function QuotaRuleTable({
     onGenerationPointMultiplierChange: (group: keyof AuthSettings["generationPointMultipliers"], key: string, value: number | null) => void;
     onGenerationPointMultiplierDelete: (group: keyof AuthSettings["generationPointMultipliers"], key: string) => void;
 }) {
-    const t = useTranslations("admin");
     const [activeCapability, setActiveCapability] = useState<LogicalModelCapability>("text");
-    const capabilityOptions = modelCapabilityOptions(t);
     const models = listPointCostModels(settings);
     const managedModelSet = new Set(settings.logicalModels.length ? settings.logicalModels.map((model) => model.id) : settings.systemChannels.flatMap((channel) => channel.models));
-    const groupedModels = capabilityOptions.map((option) => ({ ...option, models: models.filter((model) => resolvePointCostModelCapability(settings, model) === option.value) }));
+    const groupedModels = modelCapabilityOptions.map((option) => ({ ...option, models: models.filter((model) => resolvePointCostModelCapability(settings, model) === option.value) }));
     const visibleModels = groupedModels.find((group) => group.value === activeCapability)?.models || [];
-    const activeCapabilityLabel = capabilityOptions.find((item) => item.value === activeCapability)?.label;
     return (
         <div className="min-w-0">
             <section className="grid gap-3 border-b border-zinc-200 pb-4 sm:grid-cols-[minmax(0,1fr)_minmax(220px,320px)] sm:items-end sm:gap-6 sm:pb-5 dark:border-zinc-800">
                 <div className="min-w-0">
-                    <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("points.quota.freeDailyPoints.title")}</div>
-                    <p className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">{t("points.quota.freeDailyPoints.description")}</p>
+                    <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">免费用户每日积分</div>
+                    <p className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">未购买套餐的用户每天自动获得，仅当日有效；套餐每日赠送由商品配置决定，不受此开关影响。</p>
                 </div>
                 <div className="grid grid-cols-[auto_minmax(0,1fr)] items-end gap-3">
                     <div className="pb-1">
-                        <div className="mb-1.5 text-xs font-medium text-stone-600 dark:text-stone-300">{t("points.quota.freeDailyPoints.statusLabel")}</div>
-                        <Switch size="small" checked={settings.freeDailyPointsEnabled} checkedChildren={t("points.quota.freeDailyPoints.on")} unCheckedChildren={t("points.quota.freeDailyPoints.off")} onChange={onFreeDailyPointsEnabledChange} />
+                        <div className="mb-1.5 text-xs font-medium text-stone-600 dark:text-stone-300">发放状态</div>
+                        <Switch size="small" checked={settings.freeDailyPointsEnabled} checkedChildren="开启" unCheckedChildren="关闭" onChange={onFreeDailyPointsEnabledChange} />
                     </div>
-                    <LabeledControl label={t("points.quota.freeDailyPoints.dailyQuota")}>
+                    <LabeledControl label="每日额度">
                         <InputNumber className="w-full" min={0} precision={0} value={settings.freeDailyPoints} onChange={(value) => onFreeDailyPointsChange(toNumberOrZero(value))} />
                     </LabeledControl>
                 </div>
             </section>
             <section className="border-b border-zinc-200 py-4 sm:py-5 dark:border-zinc-800">
-                <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("points.quota.modelCost.title")}</div>
-                <div className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">{t("points.quota.modelCost.description")}</div>
+                <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">模型基础扣费</div>
+                <div className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">每次生成先扣除模型基础积分；单独配置的模型使用自己的数值，其他模型使用统一默认值。</div>
                 <div className="mt-3 grid gap-3 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-end">
-                    <LabeledControl label={t("points.quota.modelCost.defaultLabel")}>
+                    <LabeledControl label="其他模型每次默认扣除积分">
                         <InputNumber className="w-full" min={0} precision={2} value={settings.modelPointCosts[DEFAULT_MODEL_POINT_COST_KEY] ?? 1} onChange={(value) => onModelPointCostChange(DEFAULT_MODEL_POINT_COST_KEY, toNumberOrOne(value))} />
                     </LabeledControl>
-                    <LabeledControl label={t("points.quota.modelCost.addLabel")}>
+                    <LabeledControl label="添加模型单独扣费">
                         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-                            <Input value={customModel} placeholder={t("points.quota.modelCost.addPlaceholder")} onChange={(event) => onCustomModelChange(event.target.value)} onPressEnter={onAddCustomModel} />
-                            <Button icon={<Plus className="size-4" />} aria-label={t("points.quota.modelCost.addButton")} title={t("points.quota.modelCost.addButton")} onClick={onAddCustomModel}>
-                                <span className="hidden sm:inline">{t("points.quota.modelCost.addButton")}</span>
+                            <Input value={customModel} placeholder="输入任意模型名，例如 grok-imagine-video" onChange={(event) => onCustomModelChange(event.target.value)} onPressEnter={onAddCustomModel} />
+                            <Button icon={<Plus className="size-4" />} aria-label="添加模型" title="添加模型" onClick={onAddCustomModel}>
+                                <span className="hidden sm:inline">添加模型</span>
                             </Button>
                         </div>
                     </LabeledControl>
@@ -117,7 +105,7 @@ export function QuotaRuleTable({
                         onChange={(value) => setActiveCapability(value as LogicalModelCapability)}
                     />
                 </div>
-                <div className="mt-3 text-[11px] text-stone-400 dark:text-stone-500">{t("points.quota.modelCost.currentShowing", { capability: activeCapabilityLabel || "" })}</div>
+                <div className="mt-3 text-[11px] text-stone-400 dark:text-stone-500">当前显示{modelCapabilityOptions.find((item) => item.value === activeCapability)?.label}模型；每个数值均表示该模型每次调用扣除的基础积分。</div>
                 <div className="mt-3 grid gap-x-5 gap-y-2 md:grid-cols-2">
                     {visibleModels.length ? (
                         visibleModels.map((model) => {
@@ -137,7 +125,7 @@ export function QuotaRuleTable({
                                         {logical && logical.name !== logical.id ? (
                                             <span className="mt-0.5 block truncate text-xs text-stone-400">ID: {logical.id}</span>
                                         ) : !managedModelSet.has(model) ? (
-                                            <span className="mt-0.5 block text-xs text-stone-400">{t("points.quota.modelCost.manuallyAdded")}</span>
+                                            <span className="mt-0.5 block text-xs text-stone-400">手动添加</span>
                                         ) : null}
                                     </div>
                                     <InputNumber
@@ -152,8 +140,8 @@ export function QuotaRuleTable({
                                         size="small"
                                         danger
                                         icon={<Trash2 className="size-3.5" />}
-                                        aria-label={t("points.quota.modelCost.deleteConfig")}
-                                        title={t("points.quota.modelCost.deleteConfig")}
+                                        aria-label="删除消耗配置"
+                                        title="删除消耗配置"
                                         onClick={() => {
                                             const keys = configuredModelPointCostKeys(settings.modelPointCosts, model, settings.logicalModels);
                                             (keys.length ? keys : [model]).forEach(onModelPointCostDelete);
@@ -164,23 +152,17 @@ export function QuotaRuleTable({
                         })
                     ) : (
                         <div className="rounded-md border border-dashed border-stone-200 px-3 py-6 text-center text-sm text-stone-500 md:col-span-2 dark:border-stone-800">
-                            {t("points.quota.modelCost.emptyState", { capability: activeCapabilityLabel || "" })}
+                            当前没有{modelCapabilityOptions.find((item) => item.value === activeCapability)?.label}模型，请先在模型渠道中配置对应能力。
                         </div>
                     )}
                 </div>
             </section>
             <section className="pt-4 sm:pt-5">
-                <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("points.quota.multiplier.title")}</div>
-                <div className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">{t("points.quota.multiplier.description")}</div>
+                <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">生成参数倍率</div>
+                <div className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">最终扣费 = 模型消耗 × 图片张数/视频任务 × 对应参数倍率。未命中的自定义参数按 1 倍计算。</div>
                 <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(220px,0.8fr)_minmax(220px,0.8fr)_minmax(360px,1.4fr)]">
-                    <MultiplierGroup
-                        title={t("points.quota.multiplier.imageQuality")}
-                        values={imageQualityMultiplierOptions(t)}
-                        group="imageQuality"
-                        settings={settings.generationPointMultipliers.imageQuality}
-                        onChange={onGenerationPointMultiplierChange}
-                    />
-                    <MultiplierGroup title={t("points.quota.multiplier.videoQuality")} values={videoQualityMultiplierOptions} group="videoQuality" settings={settings.generationPointMultipliers.videoQuality} onChange={onGenerationPointMultiplierChange} />
+                    <MultiplierGroup title="图片清晰度" values={imageQualityMultiplierOptions} group="imageQuality" settings={settings.generationPointMultipliers.imageQuality} onChange={onGenerationPointMultiplierChange} />
+                    <MultiplierGroup title="视频清晰度" values={videoQualityMultiplierOptions} group="videoQuality" settings={settings.generationPointMultipliers.videoQuality} onChange={onGenerationPointMultiplierChange} />
                     <VideoSecondsMultiplierGroup settings={settings.generationPointMultipliers.videoSeconds} onChange={onGenerationPointMultiplierChange} onDelete={onGenerationPointMultiplierDelete} />
                 </div>
             </section>
@@ -207,8 +189,7 @@ export function resolvePointCostModelCapability(settings: Pick<AuthSettings, "lo
 }
 
 function ModelCapabilityTag({ capability }: { capability: LogicalModelCapability }) {
-    const t = useTranslations("admin");
-    const labels: Record<LogicalModelCapability, string> = { text: t("points.quota.capability.text"), image: t("points.quota.capability.image"), video: t("points.quota.capability.video"), audio: t("points.quota.capability.audio") };
+    const labels: Record<LogicalModelCapability, string> = { text: "文本", image: "图片", video: "视频", audio: "音频" };
     const colors: Record<LogicalModelCapability, string> = { text: "default", image: "blue", video: "green", audio: "gold" };
     return (
         <Tag className="!m-0 shrink-0" color={colors[capability]}>
@@ -254,10 +235,8 @@ function VideoSecondsMultiplierGroup({
     onChange: (group: keyof AuthSettings["generationPointMultipliers"], key: string, value: number | null) => void;
     onDelete: (group: keyof AuthSettings["generationPointMultipliers"], key: string) => void;
 }) {
-    const t = useTranslations("admin");
     const [customSeconds, setCustomSeconds] = useState<number | null>(null);
-    const secondsOptions = videoSecondsMultiplierOptions(t);
-    const standardKeys = new Set(secondsOptions.map((item) => item.key));
+    const standardKeys = new Set(videoSecondsMultiplierOptions.map((item) => item.key));
     const customRows = Object.keys(settings || {})
         .filter((key) => !standardKeys.has(key))
         .filter((key) => !legacyDefaultVideoSecondKeys.has(key) || settings[key] !== 1)
@@ -276,9 +255,9 @@ function VideoSecondsMultiplierGroup({
 
     return (
         <div className="min-w-0 rounded-md border border-stone-200 bg-stone-50/70 p-3 dark:border-stone-800 dark:bg-stone-900/50">
-            <div className="mb-3 text-xs font-semibold text-stone-600 dark:text-stone-300">{t("points.quota.multiplier.videoSeconds")}</div>
+            <div className="mb-3 text-xs font-semibold text-stone-600 dark:text-stone-300">视频秒数</div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fit,minmax(96px,1fr))]">
-                {secondsOptions.map((item) => (
+                {videoSecondsMultiplierOptions.map((item) => (
                     <VideoSecondMultiplierCell key={item.key} label={item.label} value={settings[item.key] ?? 1} onChange={(value) => onChange("videoSeconds", item.key, value)} />
                 ))}
                 {customRows.map((item) => (
@@ -292,9 +271,9 @@ function VideoSecondsMultiplierGroup({
                     ))}
                 </div>
                 <div className="col-span-full mt-1 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-                    <InputNumber className="w-full" min={1} max={20} precision={0} placeholder={t("points.quota.multiplier.customSecondsPlaceholder")} value={customSeconds} onChange={setCustomSeconds} />
+                    <InputNumber className="w-full" min={1} max={20} precision={0} placeholder="自定义秒数" value={customSeconds} onChange={setCustomSeconds} />
                     <Button size="small" icon={<Plus className="size-3.5" />} onClick={addCustomSeconds}>
-                        {t("points.quota.multiplier.add")}
+                        添加
                     </Button>
                 </div>
             </div>
@@ -303,21 +282,10 @@ function VideoSecondsMultiplierGroup({
 }
 
 function VideoSecondMultiplierCell({ label, value, onChange, onDelete }: { label: string; value: number; onChange: (value: number | null) => void; onDelete?: () => void }) {
-    const t = useTranslations("admin");
     return (
         <div className="relative min-w-0 rounded-md border border-stone-200 bg-white px-2 py-2 dark:border-stone-800 dark:bg-stone-950/70">
             <div className="mb-1 truncate pr-6 text-xs font-medium text-stone-600 dark:text-stone-300">{label}</div>
-            {onDelete ? (
-                <Button
-                    className="!absolute right-1 top-1 !h-5 !w-5 !min-w-5 !p-0"
-                    size="small"
-                    danger
-                    icon={<Trash2 className="size-3" />}
-                    aria-label={t("points.quota.multiplier.deleteCustomSeconds")}
-                    title={t("points.quota.multiplier.deleteCustomSeconds")}
-                    onClick={onDelete}
-                />
-            ) : null}
+            {onDelete ? <Button className="!absolute right-1 top-1 !h-5 !w-5 !min-w-5 !p-0" size="small" danger icon={<Trash2 className="size-3" />} aria-label="删除自定义秒数" title="删除自定义秒数" onClick={onDelete} /> : null}
             <InputNumber className="w-full" size="small" min={0} precision={2} value={value} onChange={(nextValue) => onChange(toNumberOrOne(nextValue))} />
         </div>
     );

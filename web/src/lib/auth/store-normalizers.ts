@@ -1,23 +1,20 @@
-import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 
+import { formatAccountId, parseAccountId } from "@/lib/account-id";
 import { decryptSecretValue, encryptSecretValue, isEncryptedSecretValue } from "@/lib/server/secret-crypto";
 import { ECOMMERCE_IMAGE_SKILL } from "@/lib/server/agent-skills/ecommerce-image";
 import { YANAI_BEAUTY_SKILL } from "@/lib/server/agent-skills/yanai-beauty";
 import { DEFAULT_CREATIVE_SHORTCUT_SKILLS } from "@/lib/server/agent-skills/creative-shortcuts";
 import { deriveLogicalModelsConfig, normalizeDefaultModelsConfig, normalizeLogicalModelsConfig } from "@/lib/model-routing-config";
-import { isGlobalAiOpcPreset } from "@/lib/globalaiopc-catalog";
 import { resolveConfiguredModelPointCost } from "@/lib/model-point-cost";
+import { normalizeSystemChannelAdvancedConfig, normalizeSystemChannelHealthResults } from "./store-normalizers-channel";
 import {
     type UserRole,
     type UserStatus,
-    type ApiCallFormat,
-    type SystemChannelProtocol,
-    type SystemChannelAdvancedConfig,
     type LegacyUserQuota,
     type ModelPointCosts,
     type PointUsageKind,
     type SystemModelChannel,
-    type LogicalModelCapability,
     type LogicalModelCapabilityProfile,
     type LogicalModelBinding,
     type LogicalModel,
@@ -75,23 +72,39 @@ import {
     DEFAULT_ENTITLEMENT_SETTINGS,
     DEFAULT_SETTINGS,
     AUTH_DATA_FILE,
-    USERNAME_PATTERN,
 } from "./store-foundation";
+
+export { normalizeApiPath, normalizeSystemChannelAdvancedConfig, normalizeSystemChannelHealthResults, textOrEmpty } from "./store-normalizers-channel";
+import { currentQuotaDate, hashToken, normalizeEmail, normalizeUserBio } from "./store-auth-utils";
+
+export { currentQuotaDate, hashToken, normalizeDisplayName, normalizeEmail, normalizeUserBio, normalizeUsername, parseSessionCookie, randomNumericCode, validateEmail, validatePassword, validateUsername } from "./store-auth-utils";
 
 export function normalizeDb(db: Partial<AuthDatabase>): AuthDatabase {
     const settings = normalizeSettings(decryptAuthSettingsSecrets({ ...DEFAULT_SETTINGS, ...(db.settings || {}) } as AuthSettings));
+    const usedAccountIds = new Set<number>();
+    let nextGeneratedAccountId = 1;
+    const users = Array.isArray(db.users)
+        ? db.users.map((user) => {
+              const legacyUser = user as Partial<StoredUser> & { quota?: Partial<LegacyUserQuota> };
+              const requestedAccountId = parseAccountId(legacyUser.accountId);
+              while (usedAccountIds.has(nextGeneratedAccountId)) nextGeneratedAccountId += 1;
+              const accountId = requestedAccountId && !usedAccountIds.has(requestedAccountId) ? requestedAccountId : nextGeneratedAccountId;
+              usedAccountIds.add(accountId);
+              nextGeneratedAccountId = Math.max(nextGeneratedAccountId, accountId + 1);
+              return {
+                  ...user,
+                  accountId: formatAccountId(accountId),
+                  bio: normalizeUserBio(legacyUser.bio),
+                  planId: resolvePlanById(settings.entitlements, user.planId).id,
+                  pointsBalance: normalizePoints(legacyUser.pointsBalance, legacyQuotaToPoints(legacyUser.quota, resolveInitialUserPoints({ settings } as AuthDatabase, resolvePlanById(settings.entitlements, user.planId)))),
+              } as StoredUser;
+          })
+        : [];
+    const configuredNextAccountId = parseAccountId(db.nextUserAccountId) || 1;
     return pruneExpiredSessions({
         version: 1,
-        users: Array.isArray(db.users)
-            ? db.users.map((user) => {
-                  const legacyUser = user as Partial<StoredUser> & { quota?: Partial<LegacyUserQuota> };
-                  return {
-                      ...user,
-                      planId: resolvePlanById(settings.entitlements, user.planId).id,
-                      pointsBalance: normalizePoints(legacyUser.pointsBalance, legacyQuotaToPoints(legacyUser.quota, resolveInitialUserPoints({ settings } as AuthDatabase, resolvePlanById(settings.entitlements, user.planId)))),
-                  } as StoredUser;
-              })
-            : [],
+        nextUserAccountId: Math.max(configuredNextAccountId, nextGeneratedAccountId),
+        users,
         sessions: Array.isArray(db.sessions) ? db.sessions : [],
         quotaUsage: Array.isArray(db.quotaUsage) ? db.quotaUsage.map(normalizeQuotaUsage).filter((usage) => usage.userId) : [],
         pointRecords: Array.isArray((db as Partial<AuthDatabase>).pointRecords) ? ((db as Partial<AuthDatabase>).pointRecords || []).map(normalizePointRecord).filter((item) => item.userId) : [],
@@ -109,7 +122,7 @@ export function normalizeDb(db: Partial<AuthDatabase>): AuthDatabase {
 }
 
 export function emptyDb(): AuthDatabase {
-    return { version: 1, users: [], sessions: [], quotaUsage: [], pointRecords: [], dailyPlanPointWallets: [], emailCodes: [], cdkCodes: [], announcements: [], settings: DEFAULT_SETTINGS };
+    return { version: 1, nextUserAccountId: 1, users: [], sessions: [], quotaUsage: [], pointRecords: [], dailyPlanPointWallets: [], emailCodes: [], cdkCodes: [], announcements: [], settings: DEFAULT_SETTINGS };
 }
 
 export function encryptAuthDbSecretsForStorage(db: AuthDatabase): AuthDatabase {
@@ -221,18 +234,6 @@ export function countActiveAdmins(db: AuthDatabase, excludingUserId?: string) {
     return db.users.filter((user) => user.id !== excludingUserId && user.role === "admin" && user.status === "active").length;
 }
 
-export function normalizeUsername(value: string) {
-    return value.trim();
-}
-
-export function normalizeEmail(value: unknown) {
-    return typeof value === "string" ? value.trim().toLowerCase() : "";
-}
-
-export function normalizeDisplayName(value: string) {
-    return value.trim().slice(0, 40);
-}
-
 export function normalizeSettings(settings: AuthSettings): AuthSettings {
     const systemChannels = Array.isArray(settings.systemChannels) ? settings.systemChannels.map(normalizeSystemChannel).filter((channel) => channel.name || channel.baseUrl || channel.models.length) : [];
     const logicalModels = normalizeLogicalModels(settings.logicalModels, systemChannels);
@@ -266,6 +267,9 @@ export function deriveLogicalModels(channels: SystemModelChannel[]): LogicalMode
 
 export function normalizeAgentSkill(skill: AgentSkill): AgentSkill {
     if (skill.id === ECOMMERCE_IMAGE_SKILL.id && !skill.sourceUrl) return { ...ECOMMERCE_IMAGE_SKILL, keywords: [...ECOMMERCE_IMAGE_SKILL.keywords], workspaces: [...ECOMMERCE_IMAGE_SKILL.workspaces], enabled: skill.enabled !== false };
+    const instructions = String(skill.instructions || "")
+        .trim()
+        .slice(0, 8000);
     return {
         id: String(skill.id || randomUUID()),
         name: String(skill.name || "")
@@ -274,9 +278,11 @@ export function normalizeAgentSkill(skill: AgentSkill): AgentSkill {
         description: String(skill.description || "")
             .trim()
             .slice(0, 240),
-        instructions: String(skill.instructions || "")
-            .trim()
-            .slice(0, 8000),
+        plannerSummary:
+            String(skill.plannerSummary || skill.description || instructions)
+                .trim()
+                .slice(0, 240) || undefined,
+        instructions,
         enabled: skill.enabled !== false,
         keywords: Array.isArray(skill.keywords)
             ? skill.keywords
@@ -416,11 +422,6 @@ export function normalizeSiteSettings(settings: Partial<SiteSettings> | undefine
         homeShowcaseItems: normalizeSiteShowcaseItems(settings?.homeShowcaseItems),
         friendLinks: normalizeSiteFriendLinks(settings?.friendLinks),
         socials: normalizeSiteSocials(settings?.socials),
-        brandProductName: normalizeOptionalBrandText(settings?.brandProductName, 40),
-        canvasProjectPrefix: normalizeOptionalBrandText(settings?.canvasProjectPrefix, 40),
-        mailBrandName: normalizeOptionalBrandText(settings?.mailBrandName, 40),
-        repositoryUrl: normalizeOptionalExternalUrl(settings?.repositoryUrl, DEFAULT_SITE_SETTINGS.repositoryUrl, 2000),
-        versionCheckUrl: normalizeOptionalExternalUrl(settings?.versionCheckUrl, DEFAULT_SITE_SETTINGS.versionCheckUrl, 2000),
     };
 }
 
@@ -451,21 +452,31 @@ export function normalizeShowcaseTags(value: unknown): string[] {
 }
 
 export function normalizeSiteFriendLinks(settings: unknown): SiteFriendLink[] {
-    // undefined/null: never configured → seed defaults once.
-    // Array (including []): respect the configured list; do not force-append or pin defaults.
-    const links = Array.isArray(settings) ? settings : settings == null ? DEFAULT_SITE_FRIEND_LINKS : [];
-    return links
+    const links = Array.isArray(settings) ? settings : DEFAULT_SITE_FRIEND_LINKS;
+    const normalized = links
         .map((link, index) => {
             const value = link as Partial<SiteFriendLink>;
             return {
                 id: normalizeText(value.id, `friend-${index + 1}`, 80),
-                label: normalizeText(value.label, "友情链接", 32),
+                label: normalizeText(value.url?.replace(/\/$/, "") === "https://www.vozeb.com" ? "VOZEB PRO" : value.label, "友情链接", 32),
                 url: normalizeLinkUrl(value.url, ""),
                 enabled: value.enabled !== false,
             };
         })
         .filter((link) => link.url)
         .slice(0, 12);
+    for (const link of DEFAULT_SITE_FRIEND_LINKS) {
+        if (normalized.some((item) => item.id === link.id || item.url.replace(/\/$/, "") === link.url.replace(/\/$/, ""))) continue;
+        normalized.push(link);
+    }
+    const defaultOrdered = DEFAULT_SITE_FRIEND_LINKS.flatMap((link) => {
+        const normalizedUrl = link.url.replace(/\/$/, "");
+        const matched = normalized.find((item) => item.id === link.id || item.url.replace(/\/$/, "") === normalizedUrl);
+        return matched ? [matched] : [];
+    });
+    const defaultKeys = new Set(DEFAULT_SITE_FRIEND_LINKS.flatMap((link) => [link.id, link.url.replace(/\/$/, "")]));
+    const others = normalized.filter((link) => !defaultKeys.has(link.id) && !defaultKeys.has(link.url.replace(/\/$/, "")));
+    return [...defaultOrdered, ...others].slice(0, 12);
 }
 
 export function normalizeSiteSocials(settings: Partial<SiteSocialSettings> | undefined): SiteSocialSettings {
@@ -509,21 +520,6 @@ export function normalizeSecretText(value: unknown, fallback: string, maxPlainLe
 export function normalizeText(value: unknown, fallback: string, maxLength: number) {
     const text = typeof value === "string" ? repairKnownMojibakeText(value.trim()) : "";
     return (text || fallback).slice(0, maxLength);
-}
-
-// 品牌进阶文本字段：允许空字符串原样入库（不烙印默认值），回落到 site.title 的逻辑放在消费端（见 lib/site-brand.ts）
-export function normalizeOptionalBrandText(value: unknown, maxLength: number) {
-    const text = typeof value === "string" ? repairKnownMojibakeText(value.trim()) : "";
-    return text.slice(0, maxLength);
-}
-
-// 品牌进阶 URL 字段：未传值（旧数据/undefined）回落默认地址；显式传空字符串视为"主动关闭"，原样保留空串
-export function normalizeOptionalExternalUrl(value: unknown, fallback: string, maxLength: number) {
-    if (value === undefined || value === null) return fallback;
-    const url = typeof value === "string" ? value.trim() : "";
-    if (!url) return "";
-    if (url.startsWith("https://") || url.startsWith("http://")) return url.slice(0, maxLength);
-    return fallback;
 }
 
 export function repairKnownMojibakeText(value: string) {
@@ -581,6 +577,7 @@ export function normalizeLinkUrl(value: unknown, fallback: string) {
 }
 
 export function normalizeSystemChannel(channel: Partial<SystemModelChannel>): SystemModelChannel {
+    const healthResults = normalizeSystemChannelHealthResults(channel.healthResults);
     return {
         id: channel.id?.trim() || randomUUID(),
         name: repairKnownMojibakeText(channel.name?.trim() || "") || "通用接口",
@@ -590,45 +587,8 @@ export function normalizeSystemChannel(channel: Partial<SystemModelChannel>): Sy
         models: Array.from(new Set((channel.models || []).map((model) => model.trim()).filter(Boolean))),
         enabled: channel.enabled !== false,
         advancedConfig: normalizeSystemChannelAdvancedConfig(channel.advancedConfig),
+        ...(Object.keys(healthResults).length ? { healthResults } : {}),
     };
-}
-
-export function normalizeSystemChannelAdvancedConfig(config: Partial<SystemChannelAdvancedConfig> | undefined): SystemChannelAdvancedConfig | undefined {
-    if (!config || typeof config !== "object") return undefined;
-    const protocol = ["auto", "openai", "sub2api", "qingyan", "globalaiopc", "seedance", "compatible"].includes(config.protocol || "") ? config.protocol! : "auto";
-    const globalAiOpcPresets = Array.from(new Set((Array.isArray(config.globalAiOpcPresets) ? config.globalAiOpcPresets : []).filter(isGlobalAiOpcPreset)));
-    const legacyGlobalAiOpcPreset = isGlobalAiOpcPreset(config.globalAiOpcPreset) ? config.globalAiOpcPreset : undefined;
-    return {
-        protocol,
-        ...(globalAiOpcPresets.length
-            ? { globalAiOpcPresets, ...(globalAiOpcPresets.length === 1 ? { globalAiOpcPreset: globalAiOpcPresets[0] } : {}) }
-            : legacyGlobalAiOpcPreset
-              ? { globalAiOpcPreset: legacyGlobalAiOpcPreset, globalAiOpcPresets: [legacyGlobalAiOpcPreset] }
-              : {}),
-        textModel: textOrEmpty(config.textModel, 120),
-        imageModel: textOrEmpty(config.imageModel, 120),
-        videoModel: textOrEmpty(config.videoModel, 120),
-        createPath: normalizeApiPath(config.createPath),
-        queryPath: normalizeApiPath(config.queryPath),
-        requestTemplate: textOrEmpty(config.requestTemplate, 4000),
-        resultField: textOrEmpty(config.resultField, 500),
-        statusField: textOrEmpty(config.statusField, 500),
-        durationRange: textOrEmpty(config.durationRange, 120),
-        referenceRule: textOrEmpty(config.referenceRule, 1000),
-        supportsReferenceImage: Boolean(config.supportsReferenceImage),
-        supportsReferenceVideo: Boolean(config.supportsReferenceVideo),
-        supportsReferenceAudio: Boolean(config.supportsReferenceAudio),
-    };
-}
-
-export function normalizeApiPath(value: unknown) {
-    const path = textOrEmpty(value, 300);
-    if (!path) return "";
-    return path.startsWith("/") ? path : `/${path}`;
-}
-
-export function textOrEmpty(value: unknown, maxLength: number) {
-    return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
 export function normalizePoints(value: unknown, fallback: number) {
@@ -707,7 +667,7 @@ export function normalizeQuotaUsage(value: Partial<StoredQuotaUsage>): StoredQuo
     };
 }
 
-export function toPublicCdkCode(code: StoredCdkCode, db?: { users: Array<Pick<StoredUser, "id" | "username" | "displayName">> }, options?: { includePlain?: boolean }): PublicCdkCode {
+export function toPublicCdkCode(code: StoredCdkCode, db?: { users: Array<Pick<StoredUser, "id" | "username" | "displayName"> & Partial<Pick<StoredUser, "accountId">>> }, options?: { includePlain?: boolean }): PublicCdkCode {
     return {
         id: code.id,
         codePreview: code.codePreview,
@@ -719,6 +679,7 @@ export function toPublicCdkCode(code: StoredCdkCode, db?: { users: Array<Pick<St
             const user = db?.users.find((item) => item.id === redemption.userId);
             return {
                 userId: redemption.userId,
+                accountId: user?.accountId,
                 username: user?.username || "已删除用户",
                 displayName: user?.displayName || user?.username || "已删除用户",
                 redeemedAt: redemption.redeemedAt,
@@ -918,36 +879,4 @@ export function consumeEmailCode(db: AuthDatabase, input: { purpose: EmailCodePu
     }
     if (item.codeHash !== hashToken(code)) throw new EmailCodeAttemptError("邮箱验证码不正确或已过期");
     item.consumedAt = new Date().toISOString();
-}
-
-export function currentQuotaDate() {
-    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Shanghai" }).format(new Date());
-}
-
-export function validateUsername(username: string) {
-    if (!USERNAME_PATTERN.test(username)) throw new AuthInputError("用户名只能使用 3-32 位字母、数字、下划线、点或短横线");
-}
-
-export function validateEmail(email: string) {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 160) throw new AuthInputError("邮箱格式不正确");
-}
-
-export function validatePassword(password: string) {
-    if (password.length < 8) throw new AuthInputError("密码至少需要 8 位");
-    if (password.length > 128) throw new AuthInputError("密码不能超过 128 位");
-}
-
-export function parseSessionCookie(cookieValue: string | undefined) {
-    if (!cookieValue) return null;
-    const separatorIndex = cookieValue.indexOf(".");
-    if (separatorIndex < 0) return null;
-    return { id: cookieValue.slice(0, separatorIndex), token: cookieValue.slice(separatorIndex + 1) };
-}
-
-export function hashToken(token: string) {
-    return createHash("sha256").update(token).digest("hex");
-}
-
-export function randomNumericCode() {
-    return String(randomBytes(4).readUInt32BE(0) % 1_000_000).padStart(6, "0");
 }

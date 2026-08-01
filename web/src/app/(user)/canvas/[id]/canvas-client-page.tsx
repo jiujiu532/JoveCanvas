@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 
 import { Button, Modal } from "antd";
-import { useTranslations } from "next-intl";
 import { imagePreviewUrl } from "@/lib/media-image-url";
 import { CanvasConfigComposer } from "../components/canvas-config-composer";
 import { CanvasConfigNodePanel } from "../components/canvas-config-node-panel";
@@ -47,7 +46,6 @@ export default function CanvasPage() {
 import { useCanvasPageController } from "./use-canvas-page-controller";
 
 function VozebProCanvasPage() {
-    const t = useTranslations("canvas");
     const [nodeCreatePosition, setNodeCreatePosition] = useState<Position | null>(null);
     const controller = useCanvasPageController();
     const {
@@ -80,7 +78,6 @@ function VozebProCanvasPage() {
         hydratedUserId,
         hydrate,
         createProject,
-        openProject,
         updateProject,
         renameProject,
         deleteProjects,
@@ -187,6 +184,7 @@ function VozebProCanvasPage() {
         resumingImageTaskIdsRef,
         resumingVideoTaskIdsRef,
         resumingTextTaskIdsRef,
+        resumingAudioTaskIdsRef,
         createHistoryEntry,
         startGenerationRequest,
         finishGenerationRequest,
@@ -196,6 +194,7 @@ function VozebProCanvasPage() {
         completeImageTask,
         startAndCompleteImageTask,
         completeTextTask,
+        completeAudioTask,
         screenToCanvas,
         getCanvasCenter,
         setConnecting,
@@ -258,6 +257,7 @@ function VozebProCanvasPage() {
         pasteSystemClipboard,
         handleConnectStart,
         handleNodeResize,
+        handleImageDimensions,
         toggleNodeFreeResize,
         handleNodeContentChange,
         toggleBatchExpanded,
@@ -298,7 +298,7 @@ function VozebProCanvasPage() {
         <main className="flex h-full min-h-0 overflow-hidden" style={{ background: theme.canvas.backdrop, color: theme.node.text }}>
             <section className="relative min-w-0 flex-1 overflow-hidden">
                 <CanvasTopBar
-                    title={currentProject?.title || t("editor.untitled")}
+                    title={currentProject?.title || "未命名画布"}
                     titleDraft={titleDraft}
                     isTitleEditing={titleEditing}
                     onTitleDraftChange={setTitleDraft}
@@ -445,6 +445,7 @@ function VozebProCanvasPage() {
                             }}
                             onConnectStart={handleConnectStart}
                             onResize={handleNodeResize}
+                            onImageDimensions={handleImageDimensions}
                             onContentChange={handleNodeContentChange}
                             onToggleBatch={toggleBatchExpanded}
                             onSetBatchPrimary={setBatchPrimary}
@@ -589,7 +590,7 @@ function VozebProCanvasPage() {
                 {angleNode?.metadata?.content ? <CanvasNodeAngleDialog dataUrl={angleNode.metadata.content} open={Boolean(angleNode)} onClose={() => setAngleNodeId(null)} onConfirm={(params) => void generateAngleNode(angleNode!, params)} /> : null}
 
                 <Modal
-                    title={t("editor.imageDetail")}
+                    title="图片详情"
                     open={Boolean(previewNode?.metadata?.content)}
                     centered
                     onCancel={() => setPreviewNodeId(null)}
@@ -597,24 +598,24 @@ function VozebProCanvasPage() {
                     width="auto"
                     styles={{ body: { padding: 0, display: "flex", justifyContent: "center", alignItems: "center", maxHeight: "80vh" } }}
                 >
-                    {previewNode?.metadata?.content ? <img src={imagePreviewUrl(previewNode.metadata.content, 1920)} alt={previewNode.title || t("editor.image")} style={{ maxWidth: "100%", maxHeight: "80vh", objectFit: "contain" }} /> : null}
+                    {previewNode?.metadata?.content ? <img src={imagePreviewUrl(previewNode.metadata.content, 1920)} alt={previewNode.title || "图片"} style={{ maxWidth: "100%", maxHeight: "80vh", objectFit: "contain" }} /> : null}
                 </Modal>
 
                 <Modal
-                    title={t("editor.clearCanvasTitle")}
+                    title="清空画布？"
                     open={clearConfirmOpen}
                     centered
                     onCancel={() => setClearConfirmOpen(false)}
                     footer={
                         <>
-                            <Button onClick={() => setClearConfirmOpen(false)}>{t("editor.cancel")}</Button>
+                            <Button onClick={() => setClearConfirmOpen(false)}>取消</Button>
                             <Button danger type="primary" onClick={clearCanvas}>
-                                {t("editor.clear")}
+                                清空
                             </Button>
                         </>
                     }
                 >
-                    <p className="text-sm opacity-60">{t("editor.clearCanvasDesc")}</p>
+                    <p className="text-sm opacity-60">这会删除当前画布上的所有节点和连线。</p>
                 </Modal>
 
                 {assetPickerOpen ? <AssetPickerModal open={assetPickerOpen} onInsert={handleAssetInsert} onClose={() => setAssetPickerOpen(false)} /> : null}

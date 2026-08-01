@@ -22,8 +22,6 @@ type ImageToolHandlers = {
     onReversePrompt: (node: CanvasNodeData) => void;
 };
 
-type CanvasT = (key: string, values?: Record<string, string | number>) => string;
-
 type ImageToolDefinition = {
     id: ImageNodeActionToolId;
     defaultVisible: boolean;
@@ -37,126 +35,119 @@ type ImageToolDefinition = {
 
 type ImageQuickToolsConfig = {
     ids: ImageQuickToolId[];
-    showLabels: boolean;
 };
 
 export const IMAGE_QUICK_TOOLS_STORAGE_KEY = "canvas-image-quick-tools-v6";
 
 const defaultBaseToolIds: ImageQuickToolId[] = ["info", "delete", "saveAsset", "download", "edit"];
 
-const IMAGE_TOOL_IDS: ImageNodeActionToolId[] = ["copyPrompt", "reversePrompt", "replace", "resize", "maskEdit", "crop", "split", "upscale", "superResolve", "angle", "view"];
+const imageToolDefinitions: ImageToolDefinition[] = [
+    {
+        id: "copyPrompt",
+        defaultVisible: true,
+        panelLabel: "复制提示词",
+        label: "复制提示词",
+        title: "复制生成该图片的提示词",
+        icon: () => <Copy className="size-4" />,
+        run: (node, handlers) => handlers.onCopyPrompt(node),
+    },
+    {
+        id: "reversePrompt",
+        defaultVisible: true,
+        panelLabel: "反推提示词",
+        label: "反推提示词",
+        title: "创建反推提示词的文本和配置节点",
+        icon: () => <FileText className="size-4" />,
+        run: (node, handlers) => handlers.onReversePrompt(node),
+    },
+    {
+        id: "replace",
+        defaultVisible: true,
+        panelLabel: "替换图片",
+        label: "替换图片",
+        title: "替换图片",
+        icon: () => <Upload className="size-4" />,
+        run: (node, handlers) => handlers.onUpload(node),
+    },
+    {
+        id: "resize",
+        defaultVisible: false,
+        panelLabel: "锁比例",
+        label: (node) => (node.metadata?.freeResize ? "自由比例" : "锁比例"),
+        title: (node) => (node.metadata?.freeResize ? "切换为等比缩放" : "切换为自由比例"),
+        icon: (node) => (node.metadata?.freeResize ? <LockOpen className="size-4" /> : <Lock className="size-4" />),
+        active: (node) => Boolean(node.metadata?.freeResize),
+        run: (node, handlers) => handlers.onToggleFreeResize(node),
+    },
+    {
+        id: "maskEdit",
+        defaultVisible: true,
+        panelLabel: "局部编辑",
+        label: "局部编辑",
+        title: "添加蒙版遮罩后局部修改",
+        icon: () => <Brush className="size-4" />,
+        run: (node, handlers) => handlers.onMaskEdit(node),
+    },
+    {
+        id: "crop",
+        defaultVisible: true,
+        panelLabel: "裁剪",
+        label: "裁剪",
+        title: "裁剪并生成新节点",
+        icon: () => <Scissors className="size-4" />,
+        run: (node, handlers) => handlers.onCrop(node),
+    },
+    {
+        id: "split",
+        defaultVisible: true,
+        panelLabel: "切图",
+        label: "切图",
+        title: "按行列切分图片",
+        icon: () => <Grid2x2 className="size-4" />,
+        run: (node, handlers) => handlers.onSplit(node),
+    },
+    {
+        id: "upscale",
+        defaultVisible: true,
+        panelLabel: "放大",
+        label: "放大",
+        title: "放大图片分辨率",
+        icon: () => <ZoomIn className="size-4" />,
+        run: (node, handlers) => handlers.onUpscale(node),
+    },
+    {
+        id: "superResolve",
+        defaultVisible: false,
+        panelLabel: "超分放大",
+        label: "超分放大",
+        title: "使用高清放大生成更高分辨率图片",
+        icon: () => <Sparkles className="size-4" />,
+        run: (node, handlers) => handlers.onSuperResolve(node),
+    },
+    {
+        id: "angle",
+        defaultVisible: false,
+        panelLabel: "多角度",
+        label: "多角度",
+        title: "生成角度",
+        icon: () => <Camera className="size-4" />,
+        run: (node, handlers) => handlers.onAngle(node),
+    },
+    {
+        id: "view",
+        defaultVisible: true,
+        panelLabel: "查看大图",
+        label: "查看大图",
+        title: "查看图片详情",
+        icon: () => <Maximize2 className="size-4" />,
+        run: (node, handlers) => handlers.onViewImage(node),
+    },
+];
 
-const DEFAULT_VISIBLE_IMAGE_TOOL_IDS: ImageNodeActionToolId[] = ["copyPrompt", "reversePrompt", "replace", "maskEdit", "crop", "split", "upscale", "view"];
+export const defaultImageQuickToolIds: ImageQuickToolId[] = [...defaultBaseToolIds, ...imageToolDefinitions.filter((tool) => tool.defaultVisible).map((tool) => tool.id)];
 
-function buildImageToolDefinitions(t: CanvasT): ImageToolDefinition[] {
-    return [
-        {
-            id: "copyPrompt",
-            defaultVisible: true,
-            panelLabel: t("actions.copyPrompt"),
-            label: t("actions.copyPrompt"),
-            title: t("imageTools.copyPromptTitle"),
-            icon: () => <Copy className="size-4" />,
-            run: (node, handlers) => handlers.onCopyPrompt(node),
-        },
-        {
-            id: "reversePrompt",
-            defaultVisible: true,
-            panelLabel: t("actions.reversePrompt"),
-            label: t("actions.reversePrompt"),
-            title: t("imageTools.reversePromptTitle"),
-            icon: () => <FileText className="size-4" />,
-            run: (node, handlers) => handlers.onReversePrompt(node),
-        },
-        {
-            id: "replace",
-            defaultVisible: true,
-            panelLabel: t("actions.replaceImage"),
-            label: t("actions.replaceImage"),
-            title: t("actions.replaceImage"),
-            icon: () => <Upload className="size-4" />,
-            run: (node, handlers) => handlers.onUpload(node),
-        },
-        {
-            id: "resize",
-            defaultVisible: false,
-            panelLabel: t("actions.lockAspect"),
-            label: (node) => (node.metadata?.freeResize ? t("actions.freeAspect") : t("actions.lockAspect")),
-            title: (node) => (node.metadata?.freeResize ? t("imageTools.switchToLockAspect") : t("imageTools.switchToFreeAspect")),
-            icon: (node) => (node.metadata?.freeResize ? <LockOpen className="size-4" /> : <Lock className="size-4" />),
-            active: (node) => Boolean(node.metadata?.freeResize),
-            run: (node, handlers) => handlers.onToggleFreeResize(node),
-        },
-        {
-            id: "maskEdit",
-            defaultVisible: true,
-            panelLabel: t("actions.inpaint"),
-            label: t("actions.inpaint"),
-            title: t("imageTools.inpaintTitle"),
-            icon: () => <Brush className="size-4" />,
-            run: (node, handlers) => handlers.onMaskEdit(node),
-        },
-        {
-            id: "crop",
-            defaultVisible: true,
-            panelLabel: t("actions.crop"),
-            label: t("actions.crop"),
-            title: t("imageTools.cropTitle"),
-            icon: () => <Scissors className="size-4" />,
-            run: (node, handlers) => handlers.onCrop(node),
-        },
-        {
-            id: "split",
-            defaultVisible: true,
-            panelLabel: t("actions.slice"),
-            label: t("actions.slice"),
-            title: t("imageTools.sliceTitle"),
-            icon: () => <Grid2x2 className="size-4" />,
-            run: (node, handlers) => handlers.onSplit(node),
-        },
-        {
-            id: "upscale",
-            defaultVisible: true,
-            panelLabel: t("actions.zoomIn"),
-            label: t("actions.zoomIn"),
-            title: t("imageTools.zoomResolutionTitle"),
-            icon: () => <ZoomIn className="size-4" />,
-            run: (node, handlers) => handlers.onUpscale(node),
-        },
-        {
-            id: "superResolve",
-            defaultVisible: false,
-            panelLabel: t("actions.upscale"),
-            label: t("actions.upscale"),
-            title: t("imageTools.superResolveTitle"),
-            icon: () => <Sparkles className="size-4" />,
-            run: (node, handlers) => handlers.onSuperResolve(node),
-        },
-        {
-            id: "angle",
-            defaultVisible: false,
-            panelLabel: t("actions.multiAngle"),
-            label: t("actions.multiAngle"),
-            title: t("imageTools.angleTitle"),
-            icon: () => <Camera className="size-4" />,
-            run: (node, handlers) => handlers.onAngle(node),
-        },
-        {
-            id: "view",
-            defaultVisible: true,
-            panelLabel: t("actions.viewLarge"),
-            label: t("actions.viewLarge"),
-            title: t("imageTools.viewTitle"),
-            icon: () => <Maximize2 className="size-4" />,
-            run: (node, handlers) => handlers.onViewImage(node),
-        },
-    ];
-}
-
-export const defaultImageQuickToolIds: ImageQuickToolId[] = [...defaultBaseToolIds, ...DEFAULT_VISIBLE_IMAGE_TOOL_IDS];
-
-export function buildImageToolbarTools(node: CanvasNodeData, handlers: ImageToolHandlers, t: CanvasT) {
-    return buildImageToolDefinitions(t).map((tool) => ({
+export function buildImageToolbarTools(node: CanvasNodeData, handlers: ImageToolHandlers) {
+    return imageToolDefinitions.map((tool) => ({
         id: tool.id,
         label: resolveToolText(tool.label, node),
         title: resolveToolText(tool.title, node),
@@ -167,18 +158,17 @@ export function buildImageToolbarTools(node: CanvasNodeData, handlers: ImageTool
 }
 
 function normalizeImageQuickToolIds(value: unknown[]) {
-    const allIds: ImageQuickToolId[] = [...defaultBaseToolIds, ...IMAGE_TOOL_IDS];
+    const allIds: ImageQuickToolId[] = [...defaultBaseToolIds, ...imageToolDefinitions.map((tool) => tool.id)];
     const ids = new Set(allIds);
     return allIds.filter((id) => value.includes(id) && ids.has(id));
 }
 
 export function readImageQuickToolsConfig(value: unknown): ImageQuickToolsConfig {
-    if (Array.isArray(value)) return { ids: normalizeImageQuickToolIds(value), showLabels: true };
-    if (!value || typeof value !== "object") return { ids: defaultImageQuickToolIds, showLabels: true };
+    if (Array.isArray(value)) return { ids: normalizeImageQuickToolIds(value) };
+    if (!value || typeof value !== "object") return { ids: defaultImageQuickToolIds };
     const data = value as Partial<ImageQuickToolsConfig>;
     return {
         ids: Array.isArray(data.ids) ? normalizeImageQuickToolIds(data.ids) : defaultImageQuickToolIds,
-        showLabels: data.showLabels !== false,
     };
 }
 

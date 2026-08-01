@@ -60,33 +60,11 @@ export class AnnouncementsRepository {
 export class PromptsRepository {
     constructor(private readonly db: QueryExecutor) {}
 
-    async list(
-        input: PageInput & {
-            scope: PromptScope;
-            ownerUserId?: string;
-            keyword?: string;
-            category?: string;
-            tags?: string[];
-            random?: boolean;
-            preferLocale?: "zh" | "en";
-        },
-    ): Promise<PageResult<PromptRecord>> {
+    async list(input: PageInput & { scope: PromptScope; ownerUserId?: string; keyword?: string; category?: string; tags?: string[]; random?: boolean }): Promise<PageResult<PromptRecord>> {
         const page = normalizePage(input.page);
         const pageSize = normalizePageSize(input.pageSize);
         const keyword = input.keyword?.trim().toLowerCase() || "";
         const tags = input.tags?.map((tag) => tag.trim().toLowerCase()).filter(Boolean) || [];
-        const preferLocale = !input.random && (input.preferLocale === "zh" || input.preferLocale === "en") ? input.preferLocale : null;
-        // Prefer-locale ranking only when not random and preferLocale is set.
-        // Never filter by locale (no WHERE locale = prefer).
-        const orderBy = input.random
-            ? "random()"
-            : preferLocale
-              ? `CASE WHEN locale = $7 THEN 0 WHEN locale = 'mixed' THEN 1 WHEN locale IS NULL OR locale = '' THEN 2 ELSE 3 END, updated_at DESC`
-              : "updated_at DESC";
-        const params = preferLocale
-            ? [input.scope, input.ownerUserId || null, keyword, `%${keyword}%`, input.category || "", tags.length ? tags : null, preferLocale, pageSize, (page - 1) * pageSize]
-            : [input.scope, input.ownerUserId || null, keyword, `%${keyword}%`, input.category || "", tags.length ? tags : null, pageSize, (page - 1) * pageSize];
-        const limitOffset = preferLocale ? "LIMIT $8 OFFSET $9" : "LIMIT $7 OFFSET $8";
         const result = await this.db.query(
             `
             SELECT *, count(*) OVER() AS total_count
@@ -96,10 +74,10 @@ export class PromptsRepository {
               AND ($3 = '' OR lower(title) LIKE $4 OR lower(prompt) LIKE $4 OR lower(category) LIKE $4 OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(tags) AS prompt_tag WHERE lower(prompt_tag) LIKE $4))
               AND ($5 = '' OR category = $5)
               AND ($6::text[] IS NULL OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(tags) AS prompt_tag WHERE prompt_tag = ANY($6::text[])))
-            ORDER BY ${orderBy}
-            ${limitOffset}
+            ORDER BY ${input.random ? "random()" : "updated_at DESC"}
+            LIMIT $7 OFFSET $8
             `,
-            params,
+            [input.scope, input.ownerUserId || null, keyword, `%${keyword}%`, input.category || "", tags.length ? tags : null, pageSize, (page - 1) * pageSize],
         );
         return pageResult(result.rows.map(mapPrompt), Number(result.rows[0]?.total_count || 0), page, pageSize);
     }
@@ -150,32 +128,20 @@ export class PromptsRepository {
         return Boolean(result.rows[0]);
     }
 
-    /**
-     * Claim a versioned seed source, then replace all prompts under the same prefix.
-     * Must run inside a transaction so concurrent apply of the same `source` cannot both write.
-     * Order: INSERT claim → DELETE prefix prompts → DELETE other prefix sources → upsert.
-     * Returns `{ claimed: false }` when the exact source is already registered (no deletes).
-     */
-    async replaceSeededPrompts(sourcePrefix: string, source: string, prompts: PromptRecord[]): Promise<{ claimed: boolean }> {
-        // Unique-key claim: only the first concurrent writer proceeds; losers skip without DELETE.
-        const claim = await this.db.query("INSERT INTO prompt_seed_sources (source) VALUES ($1) ON CONFLICT (source) DO NOTHING RETURNING source", [source]);
-        if (!claim.rows[0]) {
-            return { claimed: false };
+    async replaceSeededPrompts(sourcePrefixes: string[], source: string, prompts: PromptRecord[]) {
+        for (const sourcePrefix of sourcePrefixes) {
+            await this.db.query("DELETE FROM prompts WHERE source LIKE $1", [`${sourcePrefix}%`]);
+            await this.db.query("DELETE FROM prompt_seed_sources WHERE source LIKE $1", [`${sourcePrefix}%`]);
         }
-
-        await this.db.query("DELETE FROM prompts WHERE source LIKE $1", [`${sourcePrefix}%`]);
-        // Keep the just-claimed source row; drop older versioned rows under the same prefix.
-        await this.db.query("DELETE FROM prompt_seed_sources WHERE source LIKE $1 AND source <> $2", [`${sourcePrefix}%`, source]);
+        await this.db.query("INSERT INTO prompt_seed_sources (source) VALUES ($1) ON CONFLICT (source) DO NOTHING", [source]);
         for (const prompt of prompts) await this.upsert(prompt);
-        return { claimed: true };
     }
 
     async upsert(prompt: PromptRecord) {
-        const locale = prompt.locale === "zh" || prompt.locale === "en" || prompt.locale === "mixed" ? prompt.locale : null;
         const result = await this.db.query(
             `
-            INSERT INTO prompts (id, scope, owner_user_id, title, cover_url, prompt, tags, category, preview, github_url, source, locale, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            INSERT INTO prompts (id, scope, owner_user_id, title, cover_url, prompt, tags, category, preview, github_url, source, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             ON CONFLICT (id) DO UPDATE SET
                 scope = EXCLUDED.scope,
                 owner_user_id = EXCLUDED.owner_user_id,
@@ -187,26 +153,10 @@ export class PromptsRepository {
                 preview = EXCLUDED.preview,
                 github_url = EXCLUDED.github_url,
                 source = EXCLUDED.source,
-                locale = EXCLUDED.locale,
                 updated_at = EXCLUDED.updated_at
             RETURNING *
             `,
-            [
-                prompt.id,
-                prompt.scope,
-                prompt.ownerUserId || null,
-                prompt.title,
-                prompt.coverUrl,
-                prompt.prompt,
-                jsonParam(prompt.tags),
-                prompt.category,
-                prompt.preview,
-                prompt.githubUrl || null,
-                prompt.source || null,
-                locale,
-                prompt.createdAt,
-                prompt.updatedAt,
-            ],
+            [prompt.id, prompt.scope, prompt.ownerUserId || null, prompt.title, prompt.coverUrl, prompt.prompt, jsonParam(prompt.tags), prompt.category, prompt.preview, prompt.githubUrl || null, prompt.source || null, prompt.createdAt, prompt.updatedAt],
         );
         return mapPrompt(result.rows[0]);
     }
@@ -348,7 +298,7 @@ export class GenerationLogsRepository {
                 FROM ranked_assets
                 WHERE duplicate_rank = 1
                 ORDER BY created_at DESC, sort_order ASC
-                LIMIT 8
+                LIMIT 6
             )
             SELECT
                 COALESCE((
@@ -378,7 +328,7 @@ export class GenerationLogsRepository {
                     if (!id || !url || /^(data|blob):/i.test(url)) return [];
                     return [{ id, kind: item.kind === "video" ? "video" : "image", title: textValue(item.title), url, createdAt: isoValue(item.createdAt) }];
                 })
-                .slice(0, 8),
+                .slice(0, 6),
         };
     }
 
@@ -415,9 +365,9 @@ export class GenerationLogsRepository {
             `
             INSERT INTO generation_logs (
                 id, user_id, conversation_id, username, display_name, kind, source, status, title, prompt, model, summary,
-                duration_ms, count, success_count, fail_count, task_id, error, created_at, updated_at, completed_at
+                duration_ms, count, success_count, fail_count, request_snapshot, task_id, error, created_at, updated_at, completed_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17::jsonb, $18, $19, $20, $21, $22)
             ON CONFLICT (id) DO UPDATE SET
                 conversation_id = EXCLUDED.conversation_id,
                 username = EXCLUDED.username,
@@ -431,6 +381,7 @@ export class GenerationLogsRepository {
                 count = EXCLUDED.count,
                 success_count = EXCLUDED.success_count,
                 fail_count = EXCLUDED.fail_count,
+                request_snapshot = EXCLUDED.request_snapshot,
                 task_id = EXCLUDED.task_id,
                 error = EXCLUDED.error,
                 completed_at = EXCLUDED.completed_at
@@ -454,6 +405,7 @@ export class GenerationLogsRepository {
                 log.count,
                 log.successCount,
                 log.failCount,
+                JSON.stringify(log.requestSnapshot || {}),
                 log.taskId || null,
                 log.error || null,
                 log.createdAt,

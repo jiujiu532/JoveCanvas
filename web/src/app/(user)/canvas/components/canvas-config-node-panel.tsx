@@ -3,7 +3,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Image as ImageIcon, LoaderCircle, MessageSquare, Music2, Play, Settings2, Square, Video } from "lucide-react";
 import { Button, Segmented } from "antd";
-import { useTranslations } from "next-intl";
 
 import { ModelPicker } from "@/components/model-picker";
 import { CreditSymbol, formatCreditAmount, requestCreditCost } from "@/constant/credits";
@@ -28,7 +27,6 @@ type CanvasConfigNodePanelProps = {
 };
 
 export function CanvasConfigNodePanel({ node, isRunning, inputSummary, onConfigChange, onGenerate, onStop, onComposerToggle }: CanvasConfigNodePanelProps) {
-    const t = useTranslations("canvas");
     const globalConfig = useEffectiveConfig();
     const openConfigDialog = useConfigStore((state) => state.openConfigDialog);
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
@@ -54,7 +52,7 @@ export function CanvasConfigNodePanel({ node, isRunning, inputSummary, onConfigC
     return (
         <div className="flex h-full w-full cursor-move flex-col px-3 pb-3 pt-5 text-sm" style={{ color: theme.node.text }} onWheel={(event) => event.stopPropagation()}>
             <div className="mb-2 flex items-center justify-between gap-3">
-                <div className="shrink-0 text-sm font-semibold">{t("config.title")}</div>
+                <div className="shrink-0 text-sm font-semibold">生成配置</div>
                 <div className="cursor-default" onMouseDown={(event) => event.stopPropagation()}>
                     <Segmented
                         size="small"
@@ -67,7 +65,7 @@ export function CanvasConfigNodePanel({ node, isRunning, inputSummary, onConfigC
                                 label: (
                                     <span className="inline-flex items-center gap-1">
                                         <ImageIcon className="size-3.5" />
-                                        {t("config.modeImage")}
+                                        生图
                                     </span>
                                 ),
                             },
@@ -76,7 +74,7 @@ export function CanvasConfigNodePanel({ node, isRunning, inputSummary, onConfigC
                                 label: (
                                     <span className="inline-flex items-center gap-1">
                                         <MessageSquare className="size-3.5" />
-                                        {t("config.modeText")}
+                                        文本
                                     </span>
                                 ),
                             },
@@ -85,7 +83,7 @@ export function CanvasConfigNodePanel({ node, isRunning, inputSummary, onConfigC
                                 label: (
                                     <span className="inline-flex items-center gap-1">
                                         <Video className="size-3.5" />
-                                        {t("config.modeVideo")}
+                                        视频
                                     </span>
                                 ),
                             },
@@ -94,7 +92,7 @@ export function CanvasConfigNodePanel({ node, isRunning, inputSummary, onConfigC
                                 label: (
                                     <span className="inline-flex items-center gap-1">
                                         <Music2 className="size-3.5" />
-                                        {t("config.modeAudio")}
+                                        音频
                                     </span>
                                 ),
                             },
@@ -105,14 +103,14 @@ export function CanvasConfigNodePanel({ node, isRunning, inputSummary, onConfigC
 
             <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
                 <div className="flex h-7 min-w-0 items-center divide-x overflow-hidden rounded-md border" style={{ background: theme.node.fill, borderColor: theme.node.stroke }}>
-                    <InputCount icon={<MessageSquare className="size-3" />} label={t("config.promptCount")} value={inputSummary.textCount} style={chipStyle} />
-                    <InputCount icon={<ImageIcon className="size-3" />} label={t("config.refImage")} value={inputSummary.imageCount} style={chipStyle} />
-                    <InputCount icon={<Video className="size-3" />} label={t("config.refVideo")} value={inputSummary.videoCount} style={chipStyle} />
-                    <InputCount icon={<Music2 className="size-3" />} label={t("config.refAudio")} value={inputSummary.audioCount} style={chipStyle} />
+                    <InputCount icon={<MessageSquare className="size-3" />} label="提示词" value={inputSummary.textCount} style={chipStyle} />
+                    <InputCount icon={<ImageIcon className="size-3" />} label="参考图" value={inputSummary.imageCount} style={chipStyle} />
+                    <InputCount icon={<Video className="size-3" />} label="参考视频" value={inputSummary.videoCount} style={chipStyle} />
+                    <InputCount icon={<Music2 className="size-3" />} label="参考音频" value={inputSummary.audioCount} style={chipStyle} />
                 </div>
                 <button type="button" className="inline-flex h-7 shrink-0 cursor-pointer items-center gap-1 rounded-md border px-2 text-[11px]" style={chipStyle} onMouseDown={(event) => event.stopPropagation()} onClick={onComposerToggle}>
                     <Settings2 className="size-3.5" />
-                    {t("config.composePrompt")}
+                    组装提示词
                 </button>
             </div>
 
@@ -166,7 +164,7 @@ export function CanvasConfigNodePanel({ node, isRunning, inputSummary, onConfigC
                         <>
                             <LoaderCircle className="size-4 animate-spin" />
                             <Square className="size-3.5 fill-current" />
-                            <span>{t("config.stop")}</span>
+                            <span>停止</span>
                         </>
                     ) : (
                         <>
@@ -175,7 +173,7 @@ export function CanvasConfigNodePanel({ node, isRunning, inputSummary, onConfigC
                                 {formatCreditAmount(credits)}
                             </span>
                             <Play className="size-4" />
-                            <span>{t("config.startGenerate")}</span>
+                            <span>开始生成</span>
                         </>
                     )}
                 </span>
