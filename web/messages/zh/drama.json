@@ -1,0 +1,573 @@
+{
+    "list": {
+        "eyebrow": "短剧生产线",
+        "title": "短剧项目",
+        "summary": "{count} 个项目 · {episodes} 集 · {pending} 个执行中任务",
+        "createButton": "新建短剧",
+        "syncError": "项目服务暂不可用：{error}",
+        "loading": "正在加载短剧项目…",
+        "emptyTitle": "还没有短剧项目",
+        "emptyDescription": "从剧本结构开始创建第一条短剧生产线。",
+        "emptyAction": "新建第一个项目",
+        "modalTitle": "新建短剧项目",
+        "modalOk": "创建并进入",
+        "titleLabel": "项目名称",
+        "titlePlaceholder": "例如：月影长安",
+        "summaryLabel": "故事简介",
+        "summaryPlaceholder": "一句话说明人物、冲突和目标",
+        "styleLabel": "视觉风格",
+        "styleDefault": "电影感国漫",
+        "ratioLabel": "成片比例",
+        "nameRequired": "请输入项目名称",
+        "createFailed": "短剧项目创建失败"
+    },
+    "card": {
+        "noSummary": "还没有填写项目简介",
+        "pendingTag": "{count} 执行中",
+        "failedTag": "{count} 失败",
+        "deleteConfirmTitle": "删除这个短剧项目？",
+        "deleteAria": "删除项目",
+        "deleteFailed": "项目删除失败",
+        "continueButton": "继续制作",
+        "stats": "{episodes} 集 · {characters} 角色 · {scenes} 场景 · {shots} 分镜"
+    },
+    "editor": {
+        "loading": "正在加载短剧项目…",
+        "notFound": "短剧项目不存在",
+        "backToList": "返回项目列表",
+        "backAria": "返回短剧项目",
+        "summaryFallback": "完善剧本与角色后，再逐镜头生成视频。",
+        "shotsCountTag": "{count} 个镜头",
+        "versionsButton": "版本",
+        "deleteEpisodeConfirmTitle": "删除{title}？",
+        "deleteEpisodeConfirmContent": "本集剧本、分镜和任务记录会一起删除。",
+        "stages": {
+            "script": "剧本",
+            "scriptShort": "剧本",
+            "review": "内容审核",
+            "reviewShort": "审核",
+            "assets": "视觉资产",
+            "assetsShort": "资产",
+            "storyboard": "分镜",
+            "storyboardShort": "分镜",
+            "generate": "镜头生成",
+            "generateShort": "生成"
+        },
+        "videoModes": {
+            "storyboard": "分镜驱动",
+            "direct": "直接生成",
+            "reference": "参考图"
+        },
+        "versionReasons": {
+            "beforeContentAnalysis": "AI 内容解析前",
+            "beforeImport": "整本导入前",
+            "beforeVisualDesign": "视觉方案生成前",
+            "manualSave": "手动保存版本"
+        },
+        "script": {
+            "sectionTitle": "剧本与创作方向",
+            "sectionDescription": "先整理故事文本，AI 只提取可审核的内容结构，不会在这一步生成视觉提示词。",
+            "importButton": "导入整本并分集",
+            "scriptPlaceholder": "粘贴或编写本集剧本，每个段落会生成一个镜头草稿…",
+            "episodeTitleLabel": "本集名称",
+            "summaryLabel": "故事简介",
+            "styleLabel": "视觉风格",
+            "videoModeLabel": "视频生产模式",
+            "analyzeButton": "AI 提取内容结构",
+            "analyzeHint": "解析结果会进入内容审核，不会直接启动图片或视频生成。",
+            "needScript": "请先填写剧本内容",
+            "analyzeFailed": "AI 剧本解析失败",
+            "analyzeSuccess": "已提取 {characters} 个角色、{scenes} 个场景和 {shots} 个待审核镜头",
+            "importEmpty": "导入文件没有可识别的文本内容",
+            "importConfirmTitle": "导入并自动分为 {count} 集？",
+            "importConfirmContent": "当前剧集会被替换，系统会先保存一个可恢复的版本快照。",
+            "importConfirmOk": "导入分集",
+            "importSuccess": "已导入 {count} 集，请逐集检查并提取内容结构",
+            "importFailed": "整本导入失败"
+        }
+    },
+    "review": {
+        "sectionTitle": "内容审核",
+        "sectionDescription": "先确认剧本事实、镜头边界和叙事信息；视觉模型不会在这个阶段改写你的内容。",
+        "confirmButton": "确认内容并生成视觉方案",
+        "fields": {
+            "outline": {
+                "label": "本集大纲",
+                "placeholder": "用一句话概括本集推进"
+            },
+            "sourceRange": {
+                "label": "来源范围",
+                "placeholder": "例如：原文第 1-3 节"
+            },
+            "hook": {
+                "label": "结尾钩子",
+                "placeholder": "本集结尾要留下的冲突"
+            },
+            "nextPreview": {
+                "label": "下集预告",
+                "placeholder": "下一集承接方向"
+            }
+        },
+        "noSourceText": "暂无原文依据",
+        "editableBadge": "可编辑内容",
+        "sourceTextLabel": "原文依据",
+        "sourceTextPlaceholder": "保留这一镜头对应的连续原文，便于核对台词和动作",
+        "shotFactsLabel": "镜头事实",
+        "shotFactsPlaceholder": "只写画面中能看到的动作、人物状态和环境事实",
+        "shotBoundaryLabel": "镜头边界",
+        "shotBoundaryPlaceholder": "例如：说话人改变、动作反应或场景变化",
+        "narrationLabel": "画外音（旁白）",
+        "narrationPlaceholder": "只填写原文明确存在的旁白；没有旁白请留空",
+        "shotDurationLabel": "镜头时长",
+        "promptHint": "视觉提示词将在确认后生成",
+        "sourcePreviewPrefix": "原文：{text}",
+        "dialogueCountLabel": "{count} 句对白",
+        "noDialogue": "暂无对白",
+        "durationValue": "{count} 秒",
+        "empty": "还没有待审核的内容结构",
+        "needContent": "请先完成内容解析",
+        "designFailed": "AI 视觉方案生成失败",
+        "designSuccess": "已按审核内容生成视觉方案"
+    },
+    "assets": {
+        "sectionTitle": "视觉资产",
+        "sectionDescription": "先固定角色、场景和关键道具，再让镜头提示词自动引用这些设定。",
+        "kinds": {
+            "characters": {
+                "title": "角色",
+                "label": "人物"
+            },
+            "scenes": {
+                "title": "场景",
+                "label": "地点"
+            },
+            "props": {
+                "title": "道具",
+                "label": "道具"
+            },
+            "clues": {
+                "title": "线索",
+                "label": "线索"
+            }
+        },
+        "profileLabels": {
+            "characters": {
+                "visualIdentity": "固定外貌",
+                "styling": "服装与造型",
+                "colorPalette": "标志色",
+                "consistencyRules": "一致性规则"
+            },
+            "scenes": {
+                "visualIdentity": "空间结构",
+                "styling": "陈设与材质",
+                "colorPalette": "环境色",
+                "consistencyRules": "固定空间规则"
+            },
+            "props": {
+                "visualIdentity": "外形识别",
+                "styling": "材质与细节",
+                "colorPalette": "固定色彩",
+                "consistencyRules": "使用与一致性规则"
+            },
+            "clues": {
+                "visualIdentity": "视觉识别",
+                "styling": "出现形态",
+                "colorPalette": "提示色",
+                "consistencyRules": "前后呼应规则"
+            }
+        },
+        "nameRequired": "请输入{label}名称",
+        "namePlaceholder": "{label}名称",
+        "descriptionPlaceholder": "一句话说明剧情身份或用途",
+        "payoffPlaceholder": "线索在何时揭示或回收",
+        "sectionTitleTemplate": "{title}设定",
+        "addButton": "添加{label}",
+        "baselineImageAlt": "{name}基准图",
+        "itemDescriptionPlaceholder": "剧情身份或用途",
+        "deleteConfirmTitle": "删除{label}？",
+        "deleteAria": "删除{label}",
+        "profileButtonTitle": "设定档与参考图",
+        "profileSummaryWithBaseline": "{count} 张参考图 · 已设基准",
+        "profileSummaryEmpty": "补充外观规则与基准图",
+        "voiceSpeedUnit": "倍速",
+        "voiceIdPlaceholder": "音色 ID，留空用默认",
+        "voiceInstructionsPlaceholder": "语气、年龄感、情绪等配音指令",
+        "suggestBaseline": "建议至少设置一张基准图",
+        "currentBaseline": "当前基准图",
+        "setAsBaseline": "设为基准图",
+        "baselineTag": "基准",
+        "setAsBaselineShort": "设为基准",
+        "deleteReferenceConfirmTitle": "删除这张参考图？",
+        "deleteReferenceConfirmDescription": "删除后将自动使用下一张候选图作为基准。",
+        "deleteReferenceTooltip": "删除参考图",
+        "deleteReferenceAria": "删除参考图：{label}",
+        "emptyKind": "还没有{title}设定",
+        "clueGenerateHint": "线索参考图建议从剧情画面中截取并上传",
+        "generateNoUrl": "生成结果没有可持久化地址",
+        "generateSuccess": "候选图已生成并设为基准",
+        "generateFailed": "候选图生成失败",
+        "uploadSuccess": "参考图已上传并设为基准",
+        "uploadFailed": "参考图上传失败",
+        "noDescription": "暂无描述",
+        "notAddedYet": "暂未添加",
+        "generatedCandidateLabel": "AI 候选图",
+        "legacyReferenceLabel": "原参考图",
+        "payoffEditPlaceholder": "线索回收位置",
+        "settingImageSuffix": "设定图"
+    },
+    "storyboard": {
+        "sectionTitle": "分镜编辑",
+        "sectionDescription": "视觉字段来自已审核内容；这里可以精调画面、镜头运动和模型提示词。",
+        "empty": "还没有分镜",
+        "goToScript": "先填写剧本",
+        "startFrame": "起始帧",
+        "endFrame": "结束帧",
+        "status": {
+            "generation": {
+                "idle": "未生成",
+                "queued": "排队中",
+                "running": "生成中",
+                "success": "已完成",
+                "error": "失败",
+                "cancelled": "已取消"
+            },
+            "storyboard": {
+                "idle": "待分镜图",
+                "queued": "分镜排队",
+                "running": "分镜图生成中",
+                "success": "分镜图完成",
+                "error": "分镜图失败",
+                "cancelled": "分镜图取消"
+            },
+            "audio": {
+                "idle": "未配音",
+                "queued": "配音排队",
+                "running": "配音中",
+                "success": "配音完成",
+                "error": "配音失败",
+                "cancelled": "配音取消"
+            }
+        },
+        "audioModes": {
+            "source": "视频原声",
+            "voiceover": "AI 配音",
+            "mute": "静音"
+        },
+        "audioModeDescriptions": {
+            "source": "保留即梦等视频模型生成的对白、环境声和音乐。",
+            "voiceover": "关闭视频模型原声，按角色音色生成独立配音并替换音轨。",
+            "mute": "生成静音镜头，整集合成时不保留视频原声。"
+        },
+        "audioModeLabel": "成片声音",
+        "audioModeHint": "按镜头选择，不会重复配音",
+        "continuity": {
+            "title": "连续性控制",
+            "subtitle": "站位、视线、轴线与动作衔接",
+            "openButton": "设置连续性",
+            "shotSize": {
+                "label": "景别",
+                "placeholder": "特写 / 近景 / 中景 / 全景"
+            },
+            "cameraAngle": {
+                "label": "机位与角度",
+                "placeholder": "平视、俯拍、侧后方"
+            },
+            "composition": {
+                "label": "构图",
+                "placeholder": "主体位于画面左侧，门口留出视线空间"
+            },
+            "characterBlocking": {
+                "label": "人物站位",
+                "placeholder": "女主在前景右侧，男主位于门边"
+            },
+            "gazeDirection": {
+                "label": "视线与屏幕方向",
+                "placeholder": "女主看向画面左侧，保持向右运动"
+            },
+            "axisRule": {
+                "label": "轴线规则",
+                "placeholder": "保持人物连线同侧，不越轴"
+            },
+            "actionStart": {
+                "label": "动作起始状态",
+                "placeholder": "镜头开始时人物正在做什么"
+            },
+            "actionEnd": {
+                "label": "动作结束状态",
+                "placeholder": "镜头结束时动作停在哪里，为下一镜头留下什么状态"
+            },
+            "continuityNotes": {
+                "label": "相邻镜头备注",
+                "placeholder": "与上一镜头或下一镜头必须保持的细节"
+            }
+        },
+        "dialogue": {
+            "title": "对白（原话）",
+            "countBadge": "{count} 句",
+            "editButton": "编辑对白",
+            "addButton": "添加对白",
+            "unlabeledSpeaker": "未标注",
+            "pendingText": "待填写对白内容",
+            "moreCount": " · 还有 {count} 句",
+            "emptyHint": "暂无对白，点击添加角色原话",
+            "modalTitle": "对白编辑",
+            "addRowButton": "添加一句对白",
+            "modalHint": "按“说话人 + 原话”逐句核对，长对白只在这里滚动。",
+            "speakerPlaceholder": "说话人",
+            "speakerAria": "第 {index} 句对白的说话人",
+            "textPlaceholder": "角色实际说出的原话",
+            "textAria": "第 {index} 句对白内容",
+            "deleteAria": "删除第 {index} 句对白"
+        },
+        "shotTitleFallback": "镜头 {order}",
+        "frame": {
+            "uploadedSuccess": "{frame}已上传",
+            "uploadFailed": "分镜图片上传失败",
+            "title": "分镜帧",
+            "hint": "生成镜头时自动补齐缺失帧，可上传覆盖",
+            "modes": {
+                "single": "单帧",
+                "firstLast": "首尾帧"
+            },
+            "uploadAria": "上传{title}",
+            "replaceButton": "替换",
+            "uploadButton": "上传",
+            "removeAria": "移除{title}"
+        },
+        "shotFactsLabel": "镜头事实",
+        "narrationLabel": "画外音（旁白）",
+        "sourceTextSummary": "查看原文依据",
+        "shotContentTitle": "镜头内容",
+        "speakersDialogueCount": "{speakers} · 已保留 {count} 句对白",
+        "dialogueCountOnly": "已保留 {count} 句对白",
+        "noDialogueYet": "本镜头暂无明确对白",
+        "noSourceTextDetails": "暂无原文依据",
+        "imagePromptLabel": "画面提示词",
+        "imagePromptHint": "主体、场景、景别、构图与光线",
+        "imagePromptPlaceholder": "例如：女主站在雨夜天台，中景，侧逆光，压抑冷色调",
+        "videoPromptLabel": "动态提示词",
+        "videoPromptHint": "动作过程、节奏和起止状态",
+        "videoPromptPlaceholder": "例如：女主缓慢回头，雨水掠过脸侧，最后看向门口",
+        "cameraMotionLabel": "镜头运动",
+        "cameraMotionHint": "机位移动和速度",
+        "cameraMotionPlaceholder": "例如：固定机位、缓慢推进、向右横移",
+        "videoModeLabel": "视频生成方式",
+        "durationLabel": "时长",
+        "noPromptYet": "尚未生成视觉提示词",
+        "dialoguePrefix": "对白：{text}",
+        "narrationPrefix": "旁白：{text}",
+        "shotFactsPlaceholder": "只写画面中真实发生的动作和人物状态",
+        "narrationPlaceholder": "没有旁白请留空",
+        "endFrameTag": "尾帧",
+        "startFrameFileSuffix": "起始帧",
+        "endFrameFileSuffix": "结束帧",
+        "endFrameLogSuffix": "尾帧",
+        "endFrameNoUrl": "尾帧图没有可持久化的访问地址",
+        "imageNoUrl": "分镜图没有可持久化的访问地址",
+        "endFrameGenerateFailed": "尾帧图生成失败",
+        "imageGenerateFailed": "分镜图生成失败",
+        "endFrameTaskCreateFailed": "尾帧图任务创建失败",
+        "imageTaskCreateFailed": "分镜图任务创建失败"
+    },
+    "render": {
+        "needReviewHint": "请先在“{stage}”中确认镜头，并生成完整视觉方案。",
+        "stats": {
+            "estimatedLabel": "本集预计",
+            "actualLabel": "任务实际",
+            "taskCountLabel": "已登记任务",
+            "failedLabel": "失败/取消",
+            "pointsValue": "{value} 积分"
+        },
+        "queue": {
+            "title": "镜头生成队列",
+            "description": "项目内串行创建后台视频任务，避免超过用户并发上限；也可继续把单镜头送入视频工作台精调。"
+        },
+        "tooltips": {
+            "ffmpegMissing": "服务器尚未安装 FFmpeg",
+            "allShotsRequired": "需要所有镜头视频完成；选择 AI 配音的镜头还需配音完成",
+            "audioModelMissing": "请管理员先在后台设置默认音频模型"
+        },
+        "buttons": {
+            "checking": "检查合成环境",
+            "renderAll": "合成整集",
+            "ffmpegNotReady": "FFmpeg 未就绪",
+            "batchVoiceover": "批量生成配音",
+            "reviewVisuals": "视觉复盘",
+            "batchGenerate": "批量生成未完成镜头",
+            "subtitleTimeline": "字幕时间轴",
+            "exportSrt": "导出 SRT",
+            "jianyingDraft": "剪映草稿",
+            "cancelVoiceover": "取消配音",
+            "retryVoiceover": "重试配音",
+            "generateVoiceover": "生成配音",
+            "switchToAiVoiceover": "改用 AI 配音",
+            "cancelGeneration": "取消生成",
+            "retryGenerate": "重试生成",
+            "generateShot": "生成镜头",
+            "sendToVideoWorkbench": "视频工作台精调"
+        },
+        "review": {
+            "title": "分镜视觉复盘",
+            "status": {
+                "passed": "通过",
+                "needsRevision": "需调整",
+                "pending": "未完成"
+            },
+            "scoreValue": "{score} 分",
+            "retryButton": "重试问题镜头",
+            "correctionPrefix": "建议：{correction}"
+        },
+        "audioUnavailableHint": "配音暂不可用：后台尚未配置可用的默认音频模型。视频镜头生成和整集合成不受影响。",
+        "task": {
+            "title": "整集合成",
+            "status": {
+                "success": "成片已生成",
+                "error": "合成失败",
+                "cancelled": "合成已取消",
+                "inProgress": "正在转码、拼接并烧录字幕…"
+            },
+            "cancelButton": "取消合成",
+            "downloadLink": "下载整集成片"
+        },
+        "shotTitleFallback": "镜头 {order}",
+        "subtitleLinePrefix": "字幕：{text}",
+        "emptyNeedStoryboard": "请先生成分镜草稿",
+        "subtitleEmpty": "请先填写至少一条对白或字幕",
+        "subtitleFileNameFallback": "短剧字幕",
+        "subtitleExported": "SRT 字幕已导出",
+        "referenceModeRequired": "参考图模式需要先为关联角色、场景、道具或项目素材配置参考图",
+        "videoCreateFailed": "视频任务创建失败",
+        "videoQueryFailed": "视频任务查询失败",
+        "createFailed": "整集合成任务创建失败",
+        "createSuccess": "整集合成任务已创建",
+        "reviewNeedShot": "请先生成至少一张分镜图",
+        "reviewPassed": "视觉复盘通过",
+        "reviewNeedsRevision": "视觉复盘发现需要调整的镜头",
+        "reviewFailed": "视觉复盘失败",
+        "audioQueue": {
+            "noAudioModel": "后台尚未配置可用的默认音频模型",
+            "noDialogue": "请先填写对白或字幕",
+            "createFailed": "音频任务创建失败",
+            "queryFailed": "音频任务查询失败"
+        }
+    },
+    "modals": {
+        "close": "关闭",
+        "version": {
+            "title": "版本历史",
+            "hint": "关键重生成前会自动保存当前项目快照。",
+            "saveButton": "保存当前版本",
+            "versionLabel": "版本 {version}",
+            "restoreButton": "恢复",
+            "empty": "还没有版本快照",
+            "loadFailed": "版本记录加载失败",
+            "restoreSuccess": "已恢复到版本 {version}",
+            "restoreFailed": "版本恢复失败"
+        },
+        "jianying": {
+            "title": "导出剪映草稿",
+            "exportButton": "导出 ZIP",
+            "pathLabel": "剪映草稿目录",
+            "pathPlaceholder": "C:\\Users\\YourUsername\\AppData\\Local\\JianyingPro\\User Data\\Projects\\com.lveditor.draft",
+            "versionLabel": "剪映版本",
+            "pathRequired": "请填写剪映草稿目录",
+            "exported": "剪映草稿已导出",
+            "exportFailed": "剪映草稿导出失败"
+        },
+        "subtitle": {
+            "title": "字幕时间轴"
+        }
+    },
+    "agent": {
+        "openMobileAria": "打开短剧项目 Agent",
+        "title": "项目 Agent",
+        "subtitle": "理解当前集剧本、角色、场景和镜头资产",
+        "loadingConversation": "正在读取项目对话...",
+        "emptyConversation": "暂无项目对话",
+        "fallbackProjectTitle": "短剧",
+        "inputPlaceholder": "告诉 Agent 下一步要做什么",
+        "uploadAria": "上传参考图",
+        "stopAria": "停止项目 Agent",
+        "sendAria": "发送给项目 Agent",
+        "removeReferenceAria": "移除参考图：{title}",
+        "referenceImageFallback": "参考图",
+        "upload": {
+            "unsupportedFormat": "{name} 不是支持的图片格式",
+            "tooLarge": "{name} 超过 20MB",
+            "success": "已上传 {count} 张参考图",
+            "failed": "参考图上传失败"
+        },
+        "reference": {
+            "appliedSuccess": "已引用为{title}的{frame}"
+        },
+        "visualAsset": {
+            "generatedImageFallback": "Agent 生成图",
+            "referenceNameFallback": "{kind}参考",
+            "addedToExisting": "已加入{name}的视觉参考图",
+            "autoDescription": "来自项目 Agent 的视觉参考",
+            "createdCharacter": "已创建角色“{name}”并加入参考图",
+            "createdScene": "已创建场景“{name}”并加入参考图",
+            "createdProp": "已创建道具“{name}”并加入参考图",
+            "createdClue": "已创建线索“{name}”并加入参考图"
+        },
+        "generatedMediaFallback": "Agent 生成媒体",
+        "referenceToShotButton": "引用到分镜",
+        "addToVisualAssetButton": "加入视觉资产",
+        "referenceModal": {
+            "title": "引用图片到分镜",
+            "ok": "确认引用",
+            "targetShotLabel": "目标镜头",
+            "targetShotPlaceholder": "选择要引用的镜头",
+            "positionLabel": "引用位置",
+            "hint": "引用后会替换该位置现有图片；如镜头已有视频，需要重新生成以应用新画面。"
+        },
+        "visualAssetModal": {
+            "title": "加入视觉资产",
+            "ok": "保存到视觉资产",
+            "hint": "这张 Agent 图片会直接保存为角色、场景、道具或线索的参考图，不需要下载后重新上传。",
+            "kindLabel": "资产类型",
+            "existingLabel": "加入已有资产",
+            "existingPlaceholder": "选择已有角色、场景、道具或线索",
+            "newNameLabel": "或新建资产名称",
+            "newNamePlaceholder": "例如：{example}"
+        },
+        "visualAssetKinds": {
+            "characters": "角色",
+            "scenes": "场景",
+            "props": "道具",
+            "clues": "线索",
+            "characterExample": "女主角",
+            "sceneExample": "医院走廊",
+            "propExample": "旧手机",
+            "clueExample": "染血的手帕",
+            "fallbackExample": "关键资产"
+        },
+        "requestFailed": "项目 Agent 请求失败，请稍后重试。",
+        "downloadFallback": {
+            "video": "生成视频",
+            "image": "生成图片"
+        },
+        "conversationTitle": "{title} Agent"
+    },
+    "store": {
+        "loginRequired": "请先登录",
+        "sessionChanged": "登录会话已变更，请重试",
+        "projectLoadFailed": "短剧项目加载失败",
+        "projectSaveFailed": "短剧项目保存失败",
+        "episodeTitleTemplate": "第 {n} 集",
+        "paragraphBoundary": "段落边界",
+        "contextSeparator": "，",
+        "defaultImagePrompt": "{context}，角色与画风保持一致，电影分镜画面",
+        "defaultVideoPrompt": "{context}，镜头运动自然，人物动作连续，保持角色一致性",
+        "defaultCameraMotion": "自然镜头运动",
+        "defaultNegativePrompt": "文字、水印、角色身份漂移、服装变化、错误肢体"
+    },
+    "shared": {
+        "collapse": "收起",
+        "expand": "展开",
+        "view": "查看",
+        "uploadCandidate": "上传候选",
+        "generateCandidate": "生成候选",
+        "secondsUnit": "秒"
+    }
+}

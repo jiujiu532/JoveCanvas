@@ -92,7 +92,7 @@ Route Handlers must stay thin — no business rules or raw SQL in `app/api/**/ro
 | `lib/server/database/` | PostgreSQL schema, parameterized repositories, file-provider fallback |
 | `proxy.ts` | Next.js request proxy: CSRF origin/referer checks on mutating `/api/*` (billing webhooks exempt) |
 
-Auth/install-state gating still happens per route group (e.g. `app/(user)/layout.tsx` calls `getAuthenticatedPageAccess()` and redirects to `/install` or `/login`). There is no classic `middleware.ts`; CSRF is enforced by `proxy.ts`. Sessions: PBKDF2-SHA256 (210k iterations) password hashing, opaque random session tokens in a `vozeb_pro_session` httpOnly cookie backed by a Postgres `sessions` table. UI copy is Chinese hardcoded — there is no i18n library (`next-intl` / message catalogs were removed in v0.0.3).
+Auth/install-state gating still happens per route group (e.g. `app/(user)/layout.tsx` calls `getAuthenticatedPageAccess()` and redirects to `/install` or `/login`). There is no classic `middleware.ts`; CSRF is enforced by `proxy.ts`. Sessions: PBKDF2-SHA256 (210k iterations) password hashing, opaque random session tokens in a `vozeb_pro_session` httpOnly cookie backed by a Postgres `sessions` table. UI copy is bilingual via next-intl (cookie `NEXT_LOCALE`, no locale route prefix); message catalogs live under `web/messages/{zh,en}/`.
 
 Key entry points worth reading first when orienting in a subsystem:
 
@@ -171,7 +171,7 @@ These are the highlights most likely to bite; the full, current list lives in `A
 - Canvas UI must use `canvasThemes` / `useThemeStore` / antd `ConfigProvider` tokens — never hardcode colors, or dark mode breaks.
 - Every clickable element needs explicit light/dark/hover/disabled states with real contrast — no black-on-black or low-contrast icon-on-background.
 - Admin sidebar sections are fixed by business role (经营分析/商品运营/财务管理/上游配置/系统管理/内容运营) — payment/CDK/ledger/coupons go under 财务管理, model channels/protocol center/Agent Skills go under 上游配置, works governance under 内容运营.
-- Chinese UI copy is hardcoded throughout (no i18n library / message catalogs); code comments/identifiers in English/Chinese per existing file convention.
+- UI copy uses next-intl catalogs (`web/messages/{zh,en}`); code comments/identifiers follow existing file convention.
 - Brand surface is **JoveCanvas** (logo/icon, store-foundation titles, docs, README). Keep runtime env prefix `VOZEB_PRO_*` and table prefix injection as-is.
 - Baota-specific host-network/proxy-hop defaults belong only in `docker-compose.baota.yml`/install docs — never in the shared app defaults.
 - After every change: run the relevant automated checks, then do the mandated browser regression pass (desktop + mobile, canvas node/link interactions, image/video workbench generate+history+reference flows, works publish/gallery paths when touched, all touched buttons). Report explicitly if the full matrix couldn't be run.

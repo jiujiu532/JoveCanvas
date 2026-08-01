@@ -12,7 +12,7 @@ export const composeProfiles = [
 ];
 
 export const docsComposeProfiles = [
-    { file: "docs/docker-compose.yml", image: "ghcr.io/csyqlz/vozeb-pro-docs:latest" },
+    { file: "docs/docker-compose.yml", image: "ghcr.io/jiujiu532/jovecanvas-docs:latest" },
     { file: "docs/docker-compose.local.yml", build: { context: "..", dockerfile: "docs/Dockerfile" } },
 ];
 

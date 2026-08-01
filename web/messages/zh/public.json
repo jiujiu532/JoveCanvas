@@ -1,0 +1,353 @@
+{
+    "landing": {
+        "ariaSceneList": "创作场景",
+        "heroBadge": "Agent 创作入口",
+        "heroDescription": "从商品展示到短剧分镜，再到人像精修，把想法、参考图和常用风格放在同一个入口，快速得到可继续编辑的视觉结果。",
+        "heroWorkflow": {
+            "step1": "选场景",
+            "step2": "加参考",
+            "step3": "写描述",
+            "step4": "生成",
+            "step5": "微调",
+            "step6": "保存"
+        },
+        "heroValue": {
+            "commerce": "电商",
+            "comic": "短剧",
+            "beauty": "美颜"
+        },
+        "heroPipeline": {
+            "recognition": {
+                "name": "参考图识别",
+                "status": "完成"
+            },
+            "styleGeneration": {
+                "name": "风格生成",
+                "status": "生成中"
+            },
+            "detailPolish": {
+                "name": "细节优化",
+                "status": "待处理"
+            }
+        },
+        "heroOutput": {
+            "commerce": {
+                "label": "电商",
+                "title": "上新视觉",
+                "detail": "商品展示 / 海报 / 详情"
+            },
+            "comic": {
+                "label": "短剧",
+                "title": "角色分镜",
+                "detail": "封面 / 连载 / 对话"
+            },
+            "beauty": {
+                "label": "美颜",
+                "title": "人像精修",
+                "detail": "肤色 / 光影 / 质感"
+            }
+        },
+        "workbenchTaskStatus": "创作任务 / 生成中",
+        "creativeBoardLabel": "AI 创作台",
+        "creativeBoardSubtitle": "电商、短剧与美颜",
+        "creativeStatusGenerating": "正在生成",
+        "creativeInputLabel": "输入",
+        "creativeInputTitle": "参考图 + 一句话",
+        "creativeInputDesc": "保持风格、比例与人物特征，自动拆成多组可编辑结果。",
+        "creativePromptLabel": "当前描述",
+        "creativePromptValue": "夏季上新、漫画分镜、自然人像光",
+        "creativeResultsCount": "{count} 个结果",
+        "navEnterWorkspace": "进入工作台",
+        "navLogin": "登录",
+        "themeToggleToLight": "切换到浅色主题",
+        "themeToggleToDark": "切换到深色主题",
+        "ctaStartCreating": "开始创作",
+        "showcaseSectionTitle": "常用场景，直接开做",
+        "showcaseSectionDesc": "电商、短剧、美颜和常用风格都能保存下来，下次从熟悉的入口继续创作。",
+        "showcase": {
+            "commerce": {
+                "label": "电商",
+                "title": "上新主图与详情视觉",
+                "text": "商品、背景、卖点和版式可以连续生成，适合日常上新和活动图。",
+                "tag1": "商品主图",
+                "tag2": "活动海报",
+                "tag3": "详情页"
+            },
+            "comic": {
+                "label": "短剧",
+                "title": "角色封面与分镜",
+                "text": "固定角色、画风和镜头节奏，快速生成封面、连载图和剧情分镜。",
+                "tag1": "角色设定",
+                "tag2": "分镜",
+                "tag3": "封面"
+            },
+            "beauty": {
+                "label": "美颜",
+                "title": "自然人像精修",
+                "text": "保留人物特征，统一肤色、光影和质感，让头像、写真和展示图更干净。",
+                "tag1": "肤色",
+                "tag2": "光影",
+                "tag3": "质感"
+            },
+            "style": {
+                "label": "复用",
+                "title": "常用风格一键继续",
+                "text": "把好看的参考图、提示和结果保存起来，下次不用从零开始。",
+                "tag1": "参考图",
+                "tag2": "常用风格",
+                "tag3": "继续创作"
+            }
+        },
+        "ariaShowcaseCard": "{label}：{title}",
+        "promptGalleryTitleCustom": "精选灵感图",
+        "promptGalleryTitleRandom": "随机灵感图",
+        "promptGalleryLink": "公共提示词库",
+        "ariaPromptCard": "{title}，查看提示词封面",
+        "promptGalleryEmptyCustom": "暂无精选内容，请在管理后台添加首页展示。",
+        "promptGalleryEmptyRandom": "暂时没有可展示的灵感图。",
+        "footerAnnouncements": "网站公告",
+        "footerTerms": "使用条款",
+        "footerPrivacy": "隐私政策",
+        "authModalTag": "开始创作",
+        "authModalTitle": "登录后继续创作",
+        "authModalDesc": "进入画布，继续电商、短剧、美颜和提示词创作。",
+        "authModalBullet1": "多场景视觉创作",
+        "authModalBullet2": "画布持续编辑",
+        "authModalBullet3": "灵感与提示词复用"
+    },
+    "terms": {
+        "metaTitle": "使用条款",
+        "metaDescription": "查看 VOZEB PRO 的开源协议、服务配置、内容管理与备份使用说明。",
+        "backHome": "返回首页",
+        "title": "使用条款",
+        "subtitle": "使用、部署或二次开发 VOZEB PRO 前，请确认你已理解开源协议、服务配置责任、内容合规和升级备份要求。",
+        "section1Title": "开源协议与致谢",
+        "section1Body": "VOZEB PRO 是面向 AI 创作、画布、提示词管理和素材沉淀的开源项目。你可以在遵守 AGPL-3.0 协议和原作者致谢要求的前提下部署、修改和分发。",
+        "section2Title": "服务配置责任",
+        "section2Body": "部署者需要自行配置并管理 AI 接口、模型服务、邮箱 SMTP 和第三方存储服务，并遵守对应服务商的条款。由外部接口、模型输出、邮箱服务或部署环境导致的问题，应由部署者自行评估和处理。",
+        "section3Title": "内容与管理规范",
+        "section3Body": "管理员可以管理用户、额度、注册策略、邮箱服务、网站信息和公共提示词库。请勿上传、生成或传播违法、侵权、恶意或违反当地法律法规的内容。",
+        "section4Title": "升级与备份建议",
+        "section4Body": "本项目仍处于快速迭代阶段。升级前请先从管理员后台导出脱敏业务数据，并按当前部署方式另外备份 PostgreSQL、支付流水、服务器媒体目录和外部对象存储。"
+    },
+    "privacy": {
+        "metaTitle": "隐私政策",
+        "metaDescription": "了解 VOZEB PRO 对账号、创作、媒体与第三方服务数据的处理方式。",
+        "backHome": "返回首页",
+        "title": "隐私政策",
+        "subtitle": "这里说明 VOZEB PRO 在账号、邮箱、模型请求和备份文件中的数据处理方式，方便部署者和使用者提前了解边界。",
+        "section1Title": "账号与配置数据",
+        "section1Body": "VOZEB PRO 将账号、项目、创作对话、生成记录和媒体文件保存在服务器；媒体按临时与长期分类，管理员可在后台管理和删除。",
+        "section2Title": "邮箱验证码",
+        "section2Body": "开启邮箱注册、修改邮箱或忘记密码时，系统会通过管理员配置的 SMTP 服务发送验证码。验证码仅用于验证当前操作，默认 10 分钟有效，使用后失效。",
+        "section3Title": "AI 模型请求",
+        "section3Body": "AI 生成请求统一经过系统接口代理发送到管理员配置的模型服务或 OpenAI 兼容接口，用户端不会展示真实上游域名或 API Key。部署者仍需确认对应服务商的数据处理规则。",
+        "section4Title": "备份文件安全",
+        "section4Body": "管理员可在后台导出脱敏业务数据。导出不包含邮箱、密码哈希、会话、验证码、CDK、渠道密钥、支付配置、外部存储凭据或媒体原文件；完整数据库和媒体仍由部署者按本机、Docker、宝塔或云服务方案备份。"
+    },
+    "announcements": {
+        "metaTitle": "网站公告",
+        "metaDescription": "查看站点通知、维护说明和功能更新。",
+        "title": "网站公告",
+        "subtitle": "按发布时间展示站点通知、维护说明和功能提醒。",
+        "backHome": "返回首页",
+        "empty": "暂无公告"
+    },
+    "forgotPassword": {
+        "backLogin": "返回登录",
+        "eyebrow": "找回账号",
+        "title": "重置密码",
+        "description": "输入绑定邮箱，获取验证码后设置新密码。",
+        "emailPlaceholder": "绑定邮箱",
+        "codePlaceholder": "6 位验证码",
+        "sendCode": "获取验证码",
+        "newPasswordPlaceholder": "新密码，至少 8 位",
+        "submit": "重置密码",
+        "codeSendFailed": "验证码发送失败",
+        "codeSendSuccess": "验证码已发送，请查看邮箱",
+        "resetFailed": "重置密码失败",
+        "resetSuccess": "密码已重置，请登录"
+    },
+    "install": {
+        "wizardTitle": "{site} 安装向导",
+        "wizardSubtitle": "三步完成服务器初始化",
+        "steps": {
+            "intro": {
+                "title": "安装说明",
+                "description": "确认部署方式和准备事项"
+            },
+            "database": {
+                "title": "配置数据库",
+                "description": "生成配置并初始化 PostgreSQL"
+            },
+            "admin": {
+                "title": "创建管理员",
+                "description": "创建第一个后台账号"
+            }
+        },
+        "stepLockedHint": "先完成数据库和加密配置",
+        "metricDatabaseLabel": "数据库",
+        "metricEncryptionLabel": "加密",
+        "metricUserLabel": "用户",
+        "databaseInitialized": "已初始化",
+        "databasePending": "待初始化",
+        "databaseFailed": "连接失败",
+        "databaseUnconfigured": "未配置",
+        "encryptionReady": "已就绪",
+        "encryptionNotReady": "未就绪",
+        "userCount": "{count} 个",
+        "userNone": "未创建",
+        "statusReady": "安装完成",
+        "statusWaitingAdmin": "等待创建管理员",
+        "statusWaitingSchema": "等待初始化",
+        "statusDatabaseError": "数据库需检查",
+        "statusWaitingDatabase": "等待配置数据库",
+        "intro": {
+            "stepLabel": "步骤 1 / 3",
+            "title": "先确认安装流程",
+            "description": "{site} 面向服务器部署，商业数据会进入 PostgreSQL。安装向导会引导你生成配置、检查初始化状态，并创建第一个管理员账号。",
+            "process1Title": "准备 PostgreSQL",
+            "process1Text": "本机使用 localhost；Docker 内置数据库使用 postgres；宝塔宿主机数据库使用 127.0.0.1；云数据库使用服务商连接地址。",
+            "process2Title": "写入环境变量",
+            "process2Text": "安装页不会保存数据库密码。复制生成的配置后，写入 .env.local、Docker Compose 或服务器环境变量。",
+            "process3Title": "让配置生效并初始化",
+            "process3Text": "根据所选部署方式执行页面给出的重启命令，等待服务恢复后刷新检查；连接成功后手动初始化表结构，再创建管理员。",
+            "footerHint": "如果你已经完成数据库配置，本页会直接显示当前初始化状态。",
+            "nextButton": "下一步：配置数据库"
+        },
+        "database": {
+            "stepLabel": "步骤 2 / 3",
+            "title": "配置并初始化数据库",
+            "description": "填写数据库信息后复制配置，写入服务器环境变量并重启 Web 服务。状态检查只验证连接；确认无误后由你显式初始化表结构。",
+            "runtimeReadyTitle": "运行环境已就绪",
+            "schemaPendingTitle": "数据库连接成功，等待初始化",
+            "waitingTitle": "等待数据库与密钥就绪",
+            "encryptionTitle": "敏感配置加密",
+            "nextStepsTitle": "配置生效后的操作",
+            "nextStep1": "按左侧当前部署方式的命令重新启动应用。",
+            "nextStep2": "等待 10-30 秒，再点击下方“刷新检查”。",
+            "nextStep3": "看到“数据库连接成功”后点击“初始化表结构”。",
+            "nextStep4": "初始化成功后再进入下一步创建管理员。",
+            "refreshCheck": "刷新检查",
+            "initializing": "正在初始化",
+            "initSchema": "初始化表结构",
+            "initFailedDefault": "数据库初始化失败",
+            "nextAdmin": "下一步：创建管理员",
+            "backIntro": "返回安装说明"
+        },
+        "admin": {
+            "notReadyStepLabel": "步骤 3 / 3",
+            "notReadyTitle": "先完成运行环境配置",
+            "notReadyDescription": "数据库表结构或敏感配置加密密钥尚未就绪，暂时不能创建管理员账号。",
+            "backDatabase": "返回配置数据库",
+            "readyStepLabel": "步骤 3 / 3",
+            "readyTitle": "管理员账号已创建",
+            "readyDescription": "站点已经完成初始化，可以进入后台继续配置模型渠道、套餐权益和支付渠道。",
+            "loginBackend": "登录后台",
+            "firstAdminNoteTitle": "首个账号自动成为管理员",
+            "firstAdminNoteText": "创建成功后会直接进入后台。后续普通用户注册会按后台注册策略控制。"
+        },
+        "database2": {
+            "headerTitle": "数据库填写",
+            "headerSubtitle": "生成 PostgreSQL 环境变量",
+            "modes": {
+                "local": {
+                    "label": "本机",
+                    "description": "Web 与 PostgreSQL 都直接运行在当前系统，不使用 Docker；配置保存到 web/.env.local。"
+                },
+                "docker": {
+                    "label": "Docker",
+                    "description": "Web 与项目自带 PostgreSQL 分别运行在容器中，由默认 docker-compose.yml 一起启动。"
+                },
+                "baota": {
+                    "label": "宝塔",
+                    "description": "Web 运行在容器中，连接宝塔宿主机已经安装的 PostgreSQL；不会再启动一套数据库。"
+                },
+                "cloud": {
+                    "label": "云数据库",
+                    "description": "Web 连接云厂商提供的远程 PostgreSQL，需要填写服务商地址并按要求启用 SSL。"
+                }
+            },
+            "snippetEnvLabel": "环境变量",
+            "snippetEnvTitleLocal": "web/.env.local",
+            "snippetEnvTitleOther": "项目根目录 .env",
+            "snippetEnvDescription": "应用连接数据库所需的环境变量",
+            "snippetComposeLabel": "Compose",
+            "snippetComposeTitleBaota": "宝塔 Compose 模板",
+            "snippetComposeTitleOther": "Docker Compose 模板",
+            "snippetComposeDescription": "用于启动或重建应用容器",
+            "snippetSqlLabel": "建库命令",
+            "snippetSqlTitle": "PostgreSQL 建库命令",
+            "snippetSqlDescription": "在数据库服务器终端中创建独立账号和数据库",
+            "passwordPlaceholder": "数据库用户密码",
+            "encryptionKeyAriaLabel": "敏感配置加密密钥",
+            "regenerateKeyTitle": "重新生成加密密钥",
+            "sslLabel": "启用 SSL",
+            "sslHint": "云数据库按服务商要求开启",
+            "fieldNoteHostPortTitle": "Host / Port",
+            "fieldNoteHostPortText": "宝塔宿主机数据库使用 127.0.0.1；Docker 内置数据库使用 postgres。",
+            "fieldNoteDatabaseUserTitle": "Database / User",
+            "fieldNoteDatabaseUserText": "建议使用独立库和独立账号，避免和同一 PostgreSQL 内其他项目混用。",
+            "fieldNotePasswordTitle": "Password",
+            "fieldNotePasswordText": "安装页只生成配置文本，不会把数据库密码保存到浏览器或服务端。",
+            "fieldNoteEncryptionKeyTitle": "Encryption Key",
+            "fieldNoteEncryptionKeyText": "随机生成 32 字节密钥；部署后必须保持不变，否则已保存密钥无法解密。",
+            "copyConfigTitle": "复制部署配置",
+            "copyConfigDesc": "一次查看一段完整配置，避免窄列和横向滚动。",
+            "passwordMissingTitle": "还差数据库密码",
+            "passwordMissingText": "请先填写上方 Password。加密密钥已自动生成，填写完成后复制按钮会立即启用。",
+            "ariaSnippetTabs": "部署配置类型",
+            "copied": "已复制",
+            "copy": "复制",
+            "copyAriaLabel": "复制{label}配置",
+            "deploymentStepsTitle": "{modeLabel}部署操作顺序",
+            "steps": {
+                "local": {
+                    "step1Title": "创建数据库",
+                    "step1Text": "复制“建库命令”并在本机 PostgreSQL 终端执行；已有数据库和账号时可跳过。",
+                    "step2Title": "保存环境变量",
+                    "step2Text": "复制“环境变量”，保存为项目 web 目录下的 .env.local 文件。",
+                    "step3Title": "重新启动开发服务",
+                    "step3Text": "停止旧进程后，在 web 目录重新启动，环境变量才会生效。",
+                    "step4Title": "完成初始化",
+                    "step4Text": "刷新安装页，连接成功后点击“初始化表结构”，然后创建管理员。"
+                },
+                "docker": {
+                    "step1Title": "保存环境变量",
+                    "step1Text": "复制“环境变量”并保存到项目根目录 .env；内置 PostgreSQL 会由 Compose 自动创建。",
+                    "step2Title": "确认 Compose",
+                    "step2Text": "使用项目自带 docker-compose.yml，或复制上方 Compose 模板覆盖你的部署配置。",
+                    "step3Title": "启动应用",
+                    "step3Text": "在项目根目录执行命令并等待容器健康。",
+                    "step4Title": "完成初始化",
+                    "step4Text": "刷新安装页，确认数据库连接可用后点击“初始化表结构”，然后创建管理员。"
+                },
+                "baota": {
+                    "step1Title": "创建数据库",
+                    "step1Text": "打开上方“建库命令”，复制后在宝塔“终端”执行。已有数据库和账号时可跳过。",
+                    "step2Title": "保存环境变量",
+                    "step2Text": "复制“环境变量”，在 /www/wwwroot/vozeb-pro 下创建或更新 .env 文件。",
+                    "step3Title": "重建应用容器",
+                    "step3Text": "在宝塔终端进入项目目录并执行下面的命令，让新环境变量真正生效。",
+                    "step4Title": "返回安装页",
+                    "step4Text": "等待 10-30 秒，点击右侧“刷新检查”；看到连接可用后，再点击“初始化表结构”。"
+                },
+                "cloud": {
+                    "step1Title": "准备云数据库",
+                    "step1Text": "先在云数据库控制台创建数据库和账号，并按服务商要求放行应用服务器 IP。",
+                    "step2Title": "保存环境变量",
+                    "step2Text": "复制“环境变量”到项目根目录 .env；服务商要求 SSL 时保持“启用 SSL”开启。",
+                    "step3Title": "重启应用",
+                    "step3Text": "重新创建应用容器，使 DATABASE_URL 和加密密钥生效。",
+                    "step4Title": "完成初始化",
+                    "step4Text": "刷新安装页，连接成功后点击“初始化表结构”，然后创建管理员。"
+                }
+            }
+        }
+    },
+    "notFound": {
+        "title": "页面不存在",
+        "description": "这个地址没有对应的页面，可能已经移动或被合并到其他入口。",
+        "backHome": "返回首页"
+    }
+}

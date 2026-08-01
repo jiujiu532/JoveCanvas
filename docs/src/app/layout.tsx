@@ -4,13 +4,13 @@ import "./global.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "VOZEB PRO 文档",
-    template: "%s | VOZEB PRO 文档",
+    default: "JoveCanvas 文档",
+    template: "%s | JoveCanvas 文档",
   },
   description:
-    "VOZEB PRO - AI创意工作台官方文档，提供图片、视频、音频、短剧等多种AI生成能力的完整指南。",
+    "JoveCanvas - AI创意工作台官方文档，提供图片、视频、音频、短剧等多种AI生成能力的完整指南。",
   keywords: [
-    "VOZEB PRO",
+    "JoveCanvas",
     "AI创意",
     "图片生成",
     "视频生成",
@@ -36,15 +36,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "zh_CN",
     url: "/",
-    title: "VOZEB PRO 文档",
-    description: "VOZEB PRO - AI创意工作台官方文档",
-    siteName: "VOZEB PRO 文档",
+    title: "JoveCanvas 文档",
+    description: "JoveCanvas - AI创意工作台官方文档",
+    siteName: "JoveCanvas 文档",
     images: ["/logo.svg"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "VOZEB PRO 文档",
-    description: "VOZEB PRO - AI创意工作台官方文档",
+    title: "JoveCanvas 文档",
+    description: "JoveCanvas - AI创意工作台官方文档",
     images: ["/logo.svg"],
   },
   robots: {

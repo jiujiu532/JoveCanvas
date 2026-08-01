@@ -1,0 +1,353 @@
+{
+    "landing": {
+        "ariaSceneList": "Creative scenarios",
+        "heroBadge": "Agent creation entry",
+        "heroDescription": "From product visuals to short-drama storyboards and portrait retouching, keep your ideas, references, and favorite styles in one place to get editable visual results fast.",
+        "heroWorkflow": {
+            "step1": "Pick a scene",
+            "step2": "Add reference",
+            "step3": "Write prompt",
+            "step4": "Generate",
+            "step5": "Fine-tune",
+            "step6": "Save"
+        },
+        "heroValue": {
+            "commerce": "Commerce",
+            "comic": "Drama",
+            "beauty": "Beauty"
+        },
+        "heroPipeline": {
+            "recognition": {
+                "name": "Reference recognition",
+                "status": "Done"
+            },
+            "styleGeneration": {
+                "name": "Style generation",
+                "status": "Generating"
+            },
+            "detailPolish": {
+                "name": "Detail polish",
+                "status": "Pending"
+            }
+        },
+        "heroOutput": {
+            "commerce": {
+                "label": "Commerce",
+                "title": "New arrival visuals",
+                "detail": "Product shots / posters / details"
+            },
+            "comic": {
+                "label": "Drama",
+                "title": "Character storyboards",
+                "detail": "Covers / series / dialogue"
+            },
+            "beauty": {
+                "label": "Beauty",
+                "title": "Portrait retouching",
+                "detail": "Skin tone / lighting / texture"
+            }
+        },
+        "workbenchTaskStatus": "Creative task / generating",
+        "creativeBoardLabel": "AI creative board",
+        "creativeBoardSubtitle": "Commerce, drama & beauty",
+        "creativeStatusGenerating": "Generating",
+        "creativeInputLabel": "Input",
+        "creativeInputTitle": "Reference image + one line",
+        "creativeInputDesc": "Keep style, aspect ratio, and character traits, and automatically split into multiple editable results.",
+        "creativePromptLabel": "Current prompt",
+        "creativePromptValue": "Summer new arrivals, comic storyboard, natural portrait lighting",
+        "creativeResultsCount": "{count} results",
+        "navEnterWorkspace": "Enter workspace",
+        "navLogin": "Log in",
+        "themeToggleToLight": "Switch to light theme",
+        "themeToggleToDark": "Switch to dark theme",
+        "ctaStartCreating": "Start creating",
+        "showcaseSectionTitle": "Common scenarios, ready to go",
+        "showcaseSectionDesc": "Commerce, drama, beauty, and your favorite styles can all be saved, so you can pick up where you left off.",
+        "showcase": {
+            "commerce": {
+                "label": "Commerce",
+                "title": "New arrival hero & detail visuals",
+                "text": "Generate products, backgrounds, selling points, and layouts continuously — great for daily launches and campaign graphics.",
+                "tag1": "Product hero shot",
+                "tag2": "Campaign poster",
+                "tag3": "Detail page"
+            },
+            "comic": {
+                "label": "Drama",
+                "title": "Character covers & storyboards",
+                "text": "Lock in characters, art style, and shot pacing to quickly generate covers, serial images, and story storyboards.",
+                "tag1": "Character design",
+                "tag2": "Storyboard",
+                "tag3": "Cover"
+            },
+            "beauty": {
+                "label": "Beauty",
+                "title": "Natural portrait retouching",
+                "text": "Preserve facial features while unifying skin tone, lighting, and texture for cleaner avatars, portraits, and display images.",
+                "tag1": "Skin tone",
+                "tag2": "Lighting",
+                "tag3": "Texture"
+            },
+            "style": {
+                "label": "Reuse",
+                "title": "Continue with your favorite style",
+                "text": "Save great references, prompts, and results so you never have to start from scratch.",
+                "tag1": "Reference image",
+                "tag2": "Favorite style",
+                "tag3": "Continue creating"
+            }
+        },
+        "ariaShowcaseCard": "{label}: {title}",
+        "promptGalleryTitleCustom": "Featured inspiration",
+        "promptGalleryTitleRandom": "Random inspiration",
+        "promptGalleryLink": "Public prompt library",
+        "ariaPromptCard": "{title}, view prompt cover",
+        "promptGalleryEmptyCustom": "No featured content yet. Add homepage showcase items in the admin console.",
+        "promptGalleryEmptyRandom": "No inspiration images to show right now.",
+        "footerAnnouncements": "Announcements",
+        "footerTerms": "Terms of Service",
+        "footerPrivacy": "Privacy Policy",
+        "authModalTag": "Start creating",
+        "authModalTitle": "Log in to keep creating",
+        "authModalDesc": "Enter the canvas and continue creating for commerce, drama, beauty, and prompts.",
+        "authModalBullet1": "Multi-scenario visual creation",
+        "authModalBullet2": "Continuous canvas editing",
+        "authModalBullet3": "Reuse inspiration & prompts"
+    },
+    "terms": {
+        "metaTitle": "Terms of Service",
+        "metaDescription": "Review the open-source license, service configuration, content management, and backup guidance for VOZEB PRO.",
+        "backHome": "Back to home",
+        "title": "Terms of Service",
+        "subtitle": "Before using, deploying, or extending VOZEB PRO, please make sure you understand the open-source license, service configuration responsibilities, content compliance, and upgrade/backup requirements.",
+        "section1Title": "Open-source license & attribution",
+        "section1Body": "VOZEB PRO is an open-source project for AI creation, canvas, prompt management, and asset accumulation. You may deploy, modify, and distribute it as long as you comply with the AGPL-3.0 license and the original author's attribution requirements.",
+        "section2Title": "Service configuration responsibility",
+        "section2Body": "Deployers must configure and manage AI interfaces, model services, email SMTP, and third-party storage services themselves, and comply with the corresponding providers' terms. Issues caused by external interfaces, model output, email services, or the deployment environment should be assessed and handled by the deployer.",
+        "section3Title": "Content & management standards",
+        "section3Body": "Administrators can manage users, quotas, registration policies, email services, site information, and the public prompt library. Do not upload, generate, or spread illegal, infringing, malicious content, or content that violates local laws and regulations.",
+        "section4Title": "Upgrade & backup recommendations",
+        "section4Body": "This project is still under active development. Before upgrading, export desensitized business data from the admin console first, and separately back up PostgreSQL, payment records, the server media directory, and external object storage according to your deployment method."
+    },
+    "privacy": {
+        "metaTitle": "Privacy Policy",
+        "metaDescription": "Learn how VOZEB PRO handles account, creation, media, and third-party service data.",
+        "backHome": "Back to home",
+        "title": "Privacy Policy",
+        "subtitle": "This page explains how VOZEB PRO handles data for accounts, email, model requests, and backup files, so deployers and users can understand the boundaries in advance.",
+        "section1Title": "Account & configuration data",
+        "section1Body": "VOZEB PRO stores accounts, projects, creative conversations, generation records, and media files on the server. Media is categorized as temporary or long-term, and administrators can manage and delete it in the admin console.",
+        "section2Title": "Email verification codes",
+        "section2Body": "When email registration, email change, or password recovery is enabled, the system sends verification codes through the SMTP service configured by the administrator. Codes are used only to verify the current action, are valid for 10 minutes by default, and expire after use.",
+        "section3Title": "AI model requests",
+        "section3Body": "AI generation requests are all sent through the system's interface proxy to the model service or OpenAI-compatible interface configured by the administrator; the client never sees the real upstream domain or API key. Deployers should still confirm the data handling policies of the corresponding providers.",
+        "section4Title": "Backup file security",
+        "section4Body": "Administrators can export desensitized business data from the admin console. Exports do not include emails, password hashes, sessions, verification codes, CDKs, channel keys, payment configuration, external storage credentials, or original media files; the full database and media are still backed up by the deployer via local, Docker, Baota, or cloud solutions."
+    },
+    "announcements": {
+        "metaTitle": "Announcements",
+        "metaDescription": "View site notices, maintenance notes, and feature updates.",
+        "title": "Announcements",
+        "subtitle": "Site notices, maintenance notes, and feature reminders, sorted by publish time.",
+        "backHome": "Back to home",
+        "empty": "No announcements yet"
+    },
+    "forgotPassword": {
+        "backLogin": "Back to login",
+        "eyebrow": "Recover account",
+        "title": "Reset password",
+        "description": "Enter your linked email, get a verification code, and set a new password.",
+        "emailPlaceholder": "Linked email",
+        "codePlaceholder": "6-digit code",
+        "sendCode": "Send code",
+        "newPasswordPlaceholder": "New password, at least 8 characters",
+        "submit": "Reset password",
+        "codeSendFailed": "Failed to send verification code",
+        "codeSendSuccess": "Verification code sent, please check your email",
+        "resetFailed": "Failed to reset password",
+        "resetSuccess": "Password reset, please log in"
+    },
+    "install": {
+        "wizardTitle": "{site} Install Wizard",
+        "wizardSubtitle": "Complete server setup in three steps",
+        "steps": {
+            "intro": {
+                "title": "Setup guide",
+                "description": "Confirm deployment method and prerequisites"
+            },
+            "database": {
+                "title": "Configure database",
+                "description": "Generate configuration and initialize PostgreSQL"
+            },
+            "admin": {
+                "title": "Create administrator",
+                "description": "Create the first admin account"
+            }
+        },
+        "stepLockedHint": "Finish database and encryption configuration first",
+        "metricDatabaseLabel": "Database",
+        "metricEncryptionLabel": "Encryption",
+        "metricUserLabel": "Users",
+        "databaseInitialized": "Initialized",
+        "databasePending": "Pending initialization",
+        "databaseFailed": "Connection failed",
+        "databaseUnconfigured": "Not configured",
+        "encryptionReady": "Ready",
+        "encryptionNotReady": "Not ready",
+        "userCount": "{count}",
+        "userNone": "None yet",
+        "statusReady": "Setup complete",
+        "statusWaitingAdmin": "Waiting for administrator",
+        "statusWaitingSchema": "Waiting for initialization",
+        "statusDatabaseError": "Database needs attention",
+        "statusWaitingDatabase": "Waiting for database configuration",
+        "intro": {
+            "stepLabel": "Step 1 / 3",
+            "title": "Confirm the setup process first",
+            "description": "{site} is built for server deployment; business data is stored in PostgreSQL. The wizard will guide you through generating configuration, checking initialization status, and creating the first administrator account.",
+            "process1Title": "Prepare PostgreSQL",
+            "process1Text": "Use localhost for local deployment; postgres for the bundled Docker database; 127.0.0.1 for a Baota host database; use the provider's connection address for a cloud database.",
+            "process2Title": "Write environment variables",
+            "process2Text": "The setup page never saves your database password. Copy the generated configuration and write it into .env.local, Docker Compose, or your server's environment variables.",
+            "process3Title": "Apply configuration and initialize",
+            "process3Text": "Run the restart command shown for your deployment method, then refresh the check once the service is back up; after the connection succeeds, manually initialize the schema and create an administrator.",
+            "footerHint": "If you've already configured the database, this page will show the current initialization status directly.",
+            "nextButton": "Next: Configure database"
+        },
+        "database": {
+            "stepLabel": "Step 2 / 3",
+            "title": "Configure and initialize the database",
+            "description": "Fill in the database details, copy the configuration, write it into server environment variables, and restart the web service. The status check only verifies the connection; you explicitly initialize the schema once it looks correct.",
+            "runtimeReadyTitle": "Runtime environment ready",
+            "schemaPendingTitle": "Database connected, waiting for initialization",
+            "waitingTitle": "Waiting for database and encryption key",
+            "encryptionTitle": "Sensitive configuration encryption",
+            "nextStepsTitle": "After the configuration takes effect",
+            "nextStep1": "Restart the application using the command for your current deployment method on the left.",
+            "nextStep2": "Wait 10-30 seconds, then click \"Refresh check\" below.",
+            "nextStep3": "Once you see \"Database connected\", click \"Initialize schema\".",
+            "nextStep4": "After initialization succeeds, move on to creating the administrator.",
+            "refreshCheck": "Refresh check",
+            "initializing": "Initializing",
+            "initSchema": "Initialize schema",
+            "initFailedDefault": "Database initialization failed",
+            "nextAdmin": "Next: Create administrator",
+            "backIntro": "Back to setup guide"
+        },
+        "admin": {
+            "notReadyStepLabel": "Step 3 / 3",
+            "notReadyTitle": "Finish the runtime configuration first",
+            "notReadyDescription": "The database schema or the encryption key isn't ready yet, so you can't create an administrator account.",
+            "backDatabase": "Back to configure database",
+            "readyStepLabel": "Step 3 / 3",
+            "readyTitle": "Administrator account created",
+            "readyDescription": "The site setup is complete. You can now go to the admin console to configure model channels, plan benefits, and payment channels.",
+            "loginBackend": "Log in to admin console",
+            "firstAdminNoteTitle": "The first account automatically becomes administrator",
+            "firstAdminNoteText": "You'll be taken straight to the admin console after creation. Subsequent user registrations will follow the admin registration policy."
+        },
+        "database2": {
+            "headerTitle": "Database details",
+            "headerSubtitle": "Generate PostgreSQL environment variables",
+            "modes": {
+                "local": {
+                    "label": "Local",
+                    "description": "Web and PostgreSQL both run directly on the current system without Docker; configuration is saved to web/.env.local."
+                },
+                "docker": {
+                    "label": "Docker",
+                    "description": "Web and the bundled PostgreSQL run in separate containers, started together by the default docker-compose.yml."
+                },
+                "baota": {
+                    "label": "Baota",
+                    "description": "Web runs in a container and connects to a PostgreSQL instance already installed on the Baota host; no additional database is started."
+                },
+                "cloud": {
+                    "label": "Cloud database",
+                    "description": "Web connects to a remote PostgreSQL hosted by a cloud provider; enter the provider's address and enable SSL as required."
+                }
+            },
+            "snippetEnvLabel": "Environment variables",
+            "snippetEnvTitleLocal": "web/.env.local",
+            "snippetEnvTitleOther": "Project root .env",
+            "snippetEnvDescription": "Environment variables the app needs to connect to the database",
+            "snippetComposeLabel": "Compose",
+            "snippetComposeTitleBaota": "Baota Compose template",
+            "snippetComposeTitleOther": "Docker Compose template",
+            "snippetComposeDescription": "Used to start or rebuild the application container",
+            "snippetSqlLabel": "Create-database command",
+            "snippetSqlTitle": "PostgreSQL create-database command",
+            "snippetSqlDescription": "Run in the database server terminal to create a dedicated account and database",
+            "passwordPlaceholder": "Database user password",
+            "encryptionKeyAriaLabel": "Sensitive configuration encryption key",
+            "regenerateKeyTitle": "Regenerate encryption key",
+            "sslLabel": "Enable SSL",
+            "sslHint": "Enable when required by your cloud database provider",
+            "fieldNoteHostPortTitle": "Host / Port",
+            "fieldNoteHostPortText": "Use 127.0.0.1 for a Baota host database; use postgres for the bundled Docker database.",
+            "fieldNoteDatabaseUserTitle": "Database / User",
+            "fieldNoteDatabaseUserText": "We recommend a dedicated database and account to avoid mixing with other projects in the same PostgreSQL instance.",
+            "fieldNotePasswordTitle": "Password",
+            "fieldNotePasswordText": "The setup page only generates configuration text; it never saves the database password in the browser or on the server.",
+            "fieldNoteEncryptionKeyTitle": "Encryption Key",
+            "fieldNoteEncryptionKeyText": "A random 32-byte key is generated; it must stay unchanged after deployment, or previously saved secrets can no longer be decrypted.",
+            "copyConfigTitle": "Copy deployment configuration",
+            "copyConfigDesc": "View one complete configuration block at a time, avoiding narrow columns and horizontal scrolling.",
+            "passwordMissingTitle": "Database password still needed",
+            "passwordMissingText": "Please fill in the Password field above first. The encryption key has been generated automatically; the copy button will be enabled once the password is filled in.",
+            "ariaSnippetTabs": "Deployment configuration type",
+            "copied": "Copied",
+            "copy": "Copy",
+            "copyAriaLabel": "Copy {label} configuration",
+            "deploymentStepsTitle": "{modeLabel} deployment steps",
+            "steps": {
+                "local": {
+                    "step1Title": "Create database",
+                    "step1Text": "Copy the \"create-database command\" and run it in your local PostgreSQL terminal; skip this if the database and account already exist.",
+                    "step2Title": "Save environment variables",
+                    "step2Text": "Copy the \"environment variables\" and save them as a .env.local file in the project's web directory.",
+                    "step3Title": "Restart the dev server",
+                    "step3Text": "Stop the old process, then restart it from the web directory so the environment variables take effect.",
+                    "step4Title": "Finish initialization",
+                    "step4Text": "Refresh the setup page, and once connected click \"Initialize schema\", then create an administrator."
+                },
+                "docker": {
+                    "step1Title": "Save environment variables",
+                    "step1Text": "Copy the \"environment variables\" and save them to the project root .env; the bundled PostgreSQL will be created automatically by Compose.",
+                    "step2Title": "Confirm Compose",
+                    "step2Text": "Use the project's bundled docker-compose.yml, or copy the Compose template above to overwrite your deployment configuration.",
+                    "step3Title": "Start the app",
+                    "step3Text": "Run the command in the project root and wait for the containers to become healthy.",
+                    "step4Title": "Finish initialization",
+                    "step4Text": "Refresh the setup page, and once the database connection is confirmed click \"Initialize schema\", then create an administrator."
+                },
+                "baota": {
+                    "step1Title": "Create database",
+                    "step1Text": "Open the \"create-database command\" above, copy it, and run it in the Baota \"Terminal\". Skip this if the database and account already exist.",
+                    "step2Title": "Save environment variables",
+                    "step2Text": "Copy the \"environment variables\" and create or update the .env file under /www/wwwroot/vozeb-pro.",
+                    "step3Title": "Rebuild the app container",
+                    "step3Text": "In the Baota terminal, go to the project directory and run the command below so the new environment variables actually take effect.",
+                    "step4Title": "Return to the setup page",
+                    "step4Text": "Wait 10-30 seconds, then click \"Refresh check\" on the right; once connected, click \"Initialize schema\"."
+                },
+                "cloud": {
+                    "step1Title": "Prepare the cloud database",
+                    "step1Text": "Create the database and account in your cloud database console first, and allow your app server's IP as required by the provider.",
+                    "step2Title": "Save environment variables",
+                    "step2Text": "Copy the \"environment variables\" to the project root .env; keep \"Enable SSL\" on if required by the provider.",
+                    "step3Title": "Restart the app",
+                    "step3Text": "Recreate the application container so DATABASE_URL and the encryption key take effect.",
+                    "step4Title": "Finish initialization",
+                    "step4Text": "Refresh the setup page, and once connected click \"Initialize schema\", then create an administrator."
+                }
+            }
+        }
+    },
+    "notFound": {
+        "title": "Page not found",
+        "description": "This address has no matching page. It may have been moved or merged into another entry.",
+        "backHome": "Back to home"
+    }
+}

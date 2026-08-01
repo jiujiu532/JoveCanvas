@@ -1,8 +1,8 @@
-# VOZEB PRO Security Policy
+# JoveCanvas Security Policy
 
 ## Supported Versions
 
-VOZEB PRO is in active development. Security fixes are accepted for the `main`
+JoveCanvas is in active development. Security fixes are accepted for the `main`
 branch and the latest tagged release. Older versions may be handled on a
 best-effort basis when the issue can be reproduced safely.
 
@@ -35,7 +35,7 @@ Examples of in-scope reports:
 
 - Cross-site scripting or token exfiltration in the web app.
 - Exposure of locally stored API keys, account data, or synced canvas data
-  caused by VOZEB PRO code.
+  caused by JoveCanvas code.
 - Unsafe server file handling, import/export behavior, or media access control.
 - Authentication, authorization, or access-control flaws in project-managed
   features.
