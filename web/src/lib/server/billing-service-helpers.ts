@@ -1,10 +1,12 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 
-import { normalizePaymentProvider } from "@/lib/payment-provider";
 import type { BillingProductInput } from "@/lib/server/billing-service";
 import { BillingInputError } from "@/lib/server/billing-errors";
 import { createPostgresRepositories, ensurePostgresSchema, isPostgresDatabaseEnabled, type BillingOrderRecord, type BillingProductRecord, type JsonValue, type QueryExecutor, type UserPlanAssignmentRecord } from "@/lib/server/database";
+import { normalizeProvider, normalizeText } from "@/lib/server/normalize-utils";
 import type { PaymentRefundResult } from "@/lib/server/payment-refund-service";
+
+export { normalizeProvider, normalizeText };
 
 const DEFAULT_ORDER_EXPIRES_MINUTES = 30;
 const REFUND_CLAIM_TTL_MS = 10 * 60 * 1000;
@@ -180,18 +182,9 @@ export function normalizeId(value: unknown) {
     return normalizeText(value, "", 120).replace(/[^a-zA-Z0-9_.:-]/g, "");
 }
 
-export function normalizeProvider(value: unknown) {
-    return normalizePaymentProvider(value);
-}
-
 export function normalizeCurrency(value: unknown) {
     const currency = normalizeText(value, "CNY", 8).toUpperCase();
     return /^[A-Z]{3,8}$/.test(currency) ? currency : "CNY";
-}
-
-export function normalizeText(value: unknown, fallback: string, maxLength: number) {
-    const text = typeof value === "string" ? value.trim() : "";
-    return (text || fallback).slice(0, maxLength);
 }
 
 export function normalizeIso(value: unknown, fallback: string) {

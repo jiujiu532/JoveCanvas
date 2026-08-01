@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { PublicUser, UserRole } from "@/lib/auth/store";
 import { ensurePostgresSchema, isPostgresDatabaseEnabled, postgresQuery, withPostgresTransaction, type QueryExecutor } from "@/lib/server/database";
 import { readJsonDataFile, writeJsonDataFile } from "@/lib/server/data-adapter";
+import { normalizeText } from "@/lib/server/normalize-utils";
 import { getClientIp } from "@/lib/server/security";
 
 type AuditLogStatus = "success" | "failure";
@@ -356,11 +357,6 @@ function sanitizeValue(value: unknown, depth: number): unknown {
 
 function normalizeAction(value: unknown) {
     return normalizeText(value, "unknown", 120).replace(/[^a-z0-9_.:-]/gi, "");
-}
-
-function normalizeText(value: unknown, fallback: string, maxLength: number) {
-    const text = typeof value === "string" ? value.trim() : "";
-    return (text || fallback).slice(0, maxLength);
 }
 
 function normalizeOptionalText(value: unknown, maxLength: number) {

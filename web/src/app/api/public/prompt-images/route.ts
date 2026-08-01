@@ -1,8 +1,14 @@
+import { NextResponse } from "next/server";
+
 import { createPublicPromptImage } from "@/lib/server/public-prompt-image";
+import { checkPublicMediaRateLimit, rateLimitHeaders } from "@/lib/server/security";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
+    const rate = await checkPublicMediaRateLimit("prompt-images", request);
+    if (!rate.allowed) return NextResponse.json({ code: 429, data: null, msg: "访问过于频繁，请稍后重试" }, { status: 429, headers: rateLimitHeaders(rate) });
+
     const params = new URL(request.url).searchParams;
     if (!params.get("path")) return Response.json({ code: 400, data: null, msg: "缺少图片路径" }, { status: 400 });
     try {

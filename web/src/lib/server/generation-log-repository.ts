@@ -10,9 +10,12 @@ import { readJsonDataFile, writeJsonDataFile } from "@/lib/server/data-adapter";
 import { normalizeGeneratedImageBytes } from "@/lib/server/generated-image-normalizer";
 import { createDatedMediaPath, GENERATION_MEDIA_ROOT } from "@/lib/server/local-media-storage";
 import { deleteLocalMediaRegistrations, getLocalMediaRegistration, registerLocalMediaAsset } from "@/lib/server/local-media-registry";
+import { normalizeText } from "@/lib/server/normalize-utils";
 import { deleteExternalMediaObject, persistExternalMediaIfEnabled } from "@/lib/server/object-storage-service";
 import { isPublicIpAddress } from "@/lib/server/security";
 import type { GenerationLogAsset, GenerationLogDatabase, GenerationLogKind, GenerationLogSource, GenerationLogStatus, StoredGenerationLog } from "./generation-log-types";
+
+export { normalizeText };
 
 const LOG_DATA_FILE = "generation-logs.json";
 const ASSET_ROOT = GENERATION_MEDIA_ROOT;
@@ -613,11 +616,6 @@ export function defaultSummary(kind: GenerationLogKind, status: GenerationLogSta
     if (status === "failed") return `${type}生成失败`;
     if (status === "pending") return `${type}生成中`;
     return `${type}生成完成`;
-}
-
-export function normalizeText(value: unknown, fallback: string, maxLength: number) {
-    const text = typeof value === "string" ? value.trim() : "";
-    return (text || fallback).slice(0, maxLength);
 }
 
 export function normalizeModelName(value: unknown) {

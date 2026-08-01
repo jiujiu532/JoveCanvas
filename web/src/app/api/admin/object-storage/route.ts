@@ -18,7 +18,23 @@ export async function PATCH(request: Request) {
     const denied = await requireAdmin();
     if (denied) return denied;
     try {
-        const body = (await request.json()) as Partial<ObjectStorageSettingsUpdate>;
+        const raw = await request.json().catch(() => null);
+        if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+            return NextResponse.json({ code: 400, data: null, msg: "请求体格式无效" }, { status: 400 });
+        }
+        const body = raw as Record<string, unknown>;
+        const booleanFields = ["enabled", "forcePathStyle", "clearAccessKeyId", "clearSecretAccessKey"] as const;
+        for (const field of booleanFields) {
+            if (field in body && typeof body[field] !== "boolean") {
+                return NextResponse.json({ code: 400, data: null, msg: `${field} 必须是布尔值` }, { status: 400 });
+            }
+        }
+        const stringFields = ["endpoint", "region", "bucket", "prefix", "accessKeyId", "secretAccessKey"] as const;
+        for (const field of stringFields) {
+            if (field in body && body[field] !== undefined && typeof body[field] !== "string") {
+                return NextResponse.json({ code: 400, data: null, msg: `${field} 必须是字符串` }, { status: 400 });
+            }
+        }
         const data = await saveObjectStorageAdminSettings({
             enabled: body.enabled === true,
             endpoint: stringValue(body.endpoint),
@@ -30,7 +46,7 @@ export async function PATCH(request: Request) {
             secretAccessKey: stringValue(body.secretAccessKey),
             clearAccessKeyId: body.clearAccessKeyId === true,
             clearSecretAccessKey: body.clearSecretAccessKey === true,
-        });
+        } satisfies ObjectStorageSettingsUpdate);
         return NextResponse.json({ code: 0, data, msg: "外部存储配置已保存" }, { headers: { "Cache-Control": "private, no-store" } });
     } catch (error) {
         return NextResponse.json({ code: 400, data: null, msg: error instanceof Error ? error.message : "外部存储配置保存失败" }, { status: 400 });

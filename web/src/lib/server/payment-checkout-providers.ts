@@ -2,12 +2,14 @@ import { createSign, randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 
 import { DEFAULT_ALIPAY_PAYMENT_MODE, isAlipayPaymentMode } from "@/lib/payment-config-types";
-import { normalizePaymentProvider } from "@/lib/payment-provider";
 import { BillingInputError } from "@/lib/server/billing-errors";
 import { getPaymentRuntimeEnv, getPaymentRuntimeValue, type PaymentRuntimeConfig } from "@/lib/server/payment-config-store";
 import type { BillingOrderRecord, JsonValue } from "@/lib/server/database";
+import { normalizeProvider, normalizeText } from "@/lib/server/normalize-utils";
 import { loadPaymentPublicKey, verifyRsaSha256 } from "@/lib/server/payment-signature-utils";
 import type { CreatePaymentCheckoutOptions, PaymentCheckoutKind, PaymentCheckoutResult } from "./payment-checkout-types";
+
+export { normalizeProvider };
 
 export async function createProviderCheckout(provider: string, order: BillingOrderRecord, options: CreatePaymentCheckoutOptions, paymentConfig: PaymentRuntimeConfig): Promise<PaymentCheckoutResult> {
     if (provider === "stripe") return createStripeCheckout(order, options, paymentConfig);
@@ -574,15 +576,6 @@ function normalizeOptionalIso(value: unknown) {
 
 export function normalizeId(value: unknown) {
     return normalizeText(value, "", 120).replace(/[^a-zA-Z0-9_.:-]/g, "");
-}
-
-export function normalizeProvider(value: unknown) {
-    return normalizePaymentProvider(value);
-}
-
-function normalizeText(value: unknown, fallback: string, maxLength: number) {
-    const text = typeof value === "string" ? value.trim() : value === null || value === undefined ? "" : String(value).trim();
-    return (text || fallback).slice(0, maxLength);
 }
 
 function normalizeOptionalText(value: unknown, maxLength: number) {

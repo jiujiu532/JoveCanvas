@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { normalizePaymentProvider } from "@/lib/payment-provider";
 import { BillingInputError } from "@/lib/server/billing-errors";
 import type { BillingOrderRecord, JsonValue, PaymentTransactionRecord } from "@/lib/server/database";
+import { normalizeText } from "@/lib/server/normalize-utils";
 import { getPaymentRuntimeConfig, getPaymentRuntimeEnv, getPaymentRuntimeValue, type PaymentRuntimeConfig } from "@/lib/server/payment-config-store";
 
 export type PaymentRefundStatus = "succeeded" | "pending" | "manual";
@@ -412,6 +413,7 @@ function renderTemplate(template: string, values: Record<string, string>) {
 }
 
 function normalizeProvider(value: unknown) {
+    // Refund flow maps custom providers to manual (no automatic refund path).
     const provider = normalizePaymentProvider(value);
     if (provider === "custom") return "manual";
     return provider;
@@ -422,11 +424,6 @@ function normalizeWechatRefundStatus(value: unknown): Exclude<PaymentRefundStatu
     if (status === "SUCCESS") return "succeeded";
     if (status === "PROCESSING") return "pending";
     return undefined;
-}
-
-function normalizeText(value: unknown, fallback: string, maxLength: number) {
-    const text = typeof value === "string" ? value.trim() : value === null || value === undefined ? "" : String(value).trim();
-    return (text || fallback).slice(0, maxLength);
 }
 
 function normalizeOptionalText(value: unknown, maxLength: number) {

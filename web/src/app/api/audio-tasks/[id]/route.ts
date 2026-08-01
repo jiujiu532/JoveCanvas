@@ -30,8 +30,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const user = await getCurrentUser(request);
     const task = user ? await getAudioTask((await params).id) : null;
     if (!user || !task || (task.userId !== user.id && user.role !== "admin")) return NextResponse.json({ error: "任务不存在或已过期" }, { status: user ? 404 : 401 });
-    const body = (await request.json().catch(() => ({}))) as { status?: string };
-    if (body.status !== "cancelled" || !["pending", "running"].includes(task.status)) return NextResponse.json({ error: "当前任务无法取消" }, { status: 409 });
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+        return NextResponse.json({ error: "请求体格式无效" }, { status: 400 });
+    }
+    if (body.status !== "cancelled") {
+        return NextResponse.json({ error: "status 仅支持 cancelled" }, { status: 400 });
+    }
+    if (!["pending", "running"].includes(task.status)) return NextResponse.json({ error: "当前任务无法取消" }, { status: 409 });
     const shouldRefund = Boolean(task.billing?.pointsRecordId && !task.billing.refunded);
     const next = await transitionAudioTask(task, ["pending", "running"], { status: "cancelled", error: "任务已取消", config: { ...task.config, apiKey: "" }, billing: task.billing });
     if (!next) return NextResponse.json({ error: "当前任务无法取消" }, { status: 409 });

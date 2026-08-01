@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
 
 import type { BillingReconciliationIssue, BillingReconciliationIssueCode, BillingReconciliationResult, BillingReconciliationRow, BillingStatementStatus } from "@/lib/admin-billing-types";
-import { normalizePaymentProvider } from "@/lib/payment-provider";
 import { BillingInputError } from "@/lib/server/billing-errors";
 import type { BillingOrderRecord, BillingReconciliationRowRecord, BillingReconciliationRunRecord, JsonValue, PaymentTransactionRecord } from "@/lib/server/database";
+import { normalizeProvider, normalizeText } from "@/lib/server/normalize-utils";
+
+export { normalizeProvider, normalizeText };
 
 export type BillingReconciliationActor = {
     userId?: string;
@@ -458,10 +460,6 @@ function keyValue(value: string | undefined) {
     return (value || "").trim().toLowerCase();
 }
 
-export function normalizeProvider(value: unknown) {
-    return normalizePaymentProvider(value);
-}
-
 export function normalizeOptionalProvider(value: unknown) {
     const provider = normalizeText(value, "", 60);
     return provider ? normalizeProvider(provider) : undefined;
@@ -470,11 +468,6 @@ export function normalizeOptionalProvider(value: unknown) {
 function normalizeCurrency(value: unknown) {
     const currency = normalizeText(value, "", 12).toUpperCase();
     return currency || undefined;
-}
-
-export function normalizeText(value: unknown, fallback: string, maxLength: number) {
-    const text = typeof value === "string" ? value.trim() : value === null || value === undefined ? "" : String(value).trim();
-    return (text || fallback).slice(0, maxLength);
 }
 
 export function normalizeInteger(value: unknown, fallback: number, min: number, max: number) {

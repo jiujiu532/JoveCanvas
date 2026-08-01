@@ -45,8 +45,14 @@ export async function GET(request: Request) {
 export async function DELETE(request: Request) {
     const denied = await requireAdmin();
     if (denied) return denied;
-    const body = (await request.json().catch(() => ({}))) as { keys?: unknown };
-    const keys = Array.isArray(body.keys) ? body.keys.filter((key): key is string => typeof key === "string") : [];
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+        return NextResponse.json({ code: 400, data: null, msg: "请求体格式无效" }, { status: 400 });
+    }
+    if ("keys" in body && !Array.isArray(body.keys)) {
+        return NextResponse.json({ code: 400, data: null, msg: "keys 必须是字符串数组" }, { status: 400 });
+    }
+    const keys = Array.isArray(body.keys) ? body.keys.filter((key): key is string => typeof key === "string" && key.trim().length > 0) : [];
     if (!keys.length) return NextResponse.json({ code: 400, data: null, msg: "请选择要删除的对象" }, { status: 400 });
     try {
         const data = await deleteExternalStorageFiles(keys);

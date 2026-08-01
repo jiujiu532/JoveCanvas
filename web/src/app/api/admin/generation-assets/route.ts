@@ -45,9 +45,18 @@ export async function DELETE(request: Request) {
     if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
     if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
 
-    const body = (await request.json().catch(() => ({}))) as { ids?: unknown; expired?: unknown };
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+        return NextResponse.json({ code: 400, data: null, msg: "请求体格式无效" }, { status: 400 });
+    }
+    if ("expired" in body && typeof body.expired !== "boolean") {
+        return NextResponse.json({ code: 400, data: null, msg: "expired 必须是布尔值" }, { status: 400 });
+    }
     if (body.expired === true) return NextResponse.json({ code: 0, data: await cleanupExpiredLocalMediaAssets(), msg: "过期临时文件已清理" });
-    const ids = Array.isArray(body.ids) ? body.ids.filter((id): id is string => typeof id === "string") : [];
+    if ("ids" in body && !Array.isArray(body.ids)) {
+        return NextResponse.json({ code: 400, data: null, msg: "ids 必须是数组" }, { status: 400 });
+    }
+    const ids = Array.isArray(body.ids) ? body.ids.filter((id): id is string => typeof id === "string" && id.trim().length > 0) : [];
     if (!ids.length) return NextResponse.json({ code: 400, data: null, msg: "请选择要删除的媒体文件" }, { status: 400 });
     const result = await deleteLocalMediaAssets(ids);
     return NextResponse.json({ code: 0, data: result, msg: result.blocked.length ? "部分文件仍被业务记录引用，未执行删除" : "媒体文件已删除" });

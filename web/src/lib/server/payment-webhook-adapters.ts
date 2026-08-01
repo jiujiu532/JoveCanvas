@@ -3,6 +3,7 @@ import { createDecipheriv, createHmac, timingSafeEqual } from "node:crypto";
 import { normalizePaymentProvider } from "@/lib/payment-provider";
 import { BillingInputError } from "@/lib/server/billing-errors";
 import type { JsonValue } from "@/lib/server/database";
+import { normalizeText } from "@/lib/server/normalize-utils";
 import { getPaymentRuntimeEnv, getPaymentRuntimeValue, type PaymentRuntimeConfig } from "@/lib/server/payment-config-store";
 import { loadPaymentPublicKey, verifyRsaSha256 } from "@/lib/server/payment-signature-utils";
 
@@ -326,6 +327,7 @@ function readConfiguredPath(paymentConfig: PaymentRuntimeConfig, payload: unknow
 }
 
 export function normalizeProvider(value: unknown) {
+    // Webhook adapters default unknown providers to custom (field-mappable path).
     return normalizePaymentProvider(value, "custom");
 }
 
@@ -341,11 +343,6 @@ function normalizeOptionalId(value: unknown) {
 function normalizeOptionalText(value: unknown, maxLength: number) {
     const text = normalizeText(value, "", maxLength);
     return text || undefined;
-}
-
-function normalizeText(value: unknown, fallback: string, maxLength: number) {
-    const text = typeof value === "string" ? value.trim() : value === null || value === undefined ? "" : String(value).trim();
-    return (text || fallback).slice(0, maxLength);
 }
 
 function normalizeOptionalInteger(value: unknown) {
