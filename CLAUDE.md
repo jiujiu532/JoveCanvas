@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-VOZEB PRO is an open-source AI creation workspace (Agent chat, image/video generation, an infinite canvas, and short-drama production) built as a Next.js full-stack monorepo-style repo with two independent apps:
+**JoveCanvas v0.0.3** is an open-source AI creation workspace (Agent chat, image/video generation, an infinite canvas, short-drama production, and a public works gallery) built as a Next.js full-stack monorepo-style repo with two independent apps:
 
-- `web/` — the main application (Next.js 16, App Router, React 19, TypeScript). All product features, API routes, and business logic live here.
+- `web/` — the main application (Next.js 16, App Router, React 19, TypeScript). All product features, API routes, generation workers, and business logic live here.
 - `docs/` — a Fumadocs-based documentation site, built and deployed independently of `web/`.
 
-There is no root `package.json`; each app is installed and run separately with pnpm.
+There is no root `package.json`; each app is installed and run separately with pnpm. Runtime env vars keep the historical `VOZEB_PRO_*` prefix (do not rename).
 
 **Read `AGENTS.md` in the repo root before making any change.** It is the authoritative, actively-maintained engineering constitution for this repo (backend layering, frontend state rules, admin UI conventions, canvas theming, documentation placement, release process, and a growing list of hard-won "project gotchas"). This CLAUDE.md summarizes architecture for orientation; `AGENTS.md` overrides it on any conflict and must be followed literally.
 
@@ -20,11 +20,11 @@ All commands run from `web/` unless noted. Requires Node.js 22, pnpm 10+, Postgr
 ```bash
 cd web
 pnpm install --frozen-lockfile
-cp ../.env.example .env.local     # then set NEXT_PUBLIC_SITE_URL, DATABASE_URL/POSTGRES_*, VOZEB_PRO_ENCRYPTION_KEY
-pnpm run dev                      # next dev --webpack -H 0.0.0.0 -p 3000
+cp ../.env.example .env.local     # then set NEXT_PUBLIC_SITE_URL, DATABASE_URL/POSTGRES_*, VOZEB_PRO_ENCRYPTION_KEY, VOZEB_PRO_MAINTENANCE_TOKEN (≥32 chars)
+pnpm run dev                      # next dev --webpack -H 0.0.0.0 -p 3000 (also starts a local generation-worker via generation-runtime)
 ```
 
-Then open `http://localhost:3000/install` to initialize the database schema and create the first admin account (there is no separate migration CLI — see Database section below).
+Then open `http://localhost:3000/install` to initialize the database schema and create the first admin account (there is no separate migration CLI — see Database section below). **v0.0.3 is not compatible with a v0.0.2 database** — rebuild/reinstall rather than upgrading an old schema in place.
 
 Quality gate (run before considering any change done, per `AGENTS.md`):
 
@@ -78,28 +78,34 @@ Route Handlers must stay thin — no business rules or raw SQL in `app/api/**/ro
 
 | Path | Responsibility |
 |---|---|
-| `app/(user)/` | Logged-in workspace: Agent, image/video workbenches, Canvas, drama production, assets, prompts, profile |
+| `app/(user)/` | Logged-in workspace: Agent, image/video workbenches, Canvas, drama production, assets, prompts, works drafts, profile |
+| `app/gallery/`, `app/share/`, `app/u/` | Public works square, share pages, author profiles |
 | `app/admin/` | Admin console and install/setup wizard entry |
 | `app/api/` | Route Handlers only — auth, service calls, response mapping |
-| `components/` | Shared layout, cross-page business components, admin views |
+| `components/` | Shared layout, cross-page business components (incl. works), admin views |
 | `hooks/` | Cross-page reusable hooks (generation flows, copy/download-with-toast, session sync) |
 | `services/api/` | Typed browser→own-API request clients |
 | `stores/` | Zustand global client state (user, theme, public site config, assets) — transient only |
-| `lib/*.ts` | Cross-cutting domain contracts (canvas, drama, prompts, model routing, payments) |
-| `lib/auth/` | Session, user, permissions, points wallet, public settings |
-| `lib/server/` | Business services, task orchestration, provider adapters, billing, media, security |
+| `lib/*.ts` | Cross-cutting domain contracts (canvas, drama, prompts, model routing, channel protocols, payments) |
+| `lib/auth/` | Session, user, permissions, points wallet, entitlements, public settings |
+| `lib/server/` | Business services, task orchestration, generation worker/heartbeat, provider adapters, billing/commerce, media, security |
 | `lib/server/database/` | PostgreSQL schema, parameterized repositories, file-provider fallback |
+| `proxy.ts` | Next.js request proxy: CSRF origin/referer checks on mutating `/api/*` (billing webhooks exempt) |
 
-There is no `middleware.ts` — auth/install-state gating happens per route group, e.g. `app/(user)/layout.tsx` calls `getAuthenticatedPageAccess()` and redirects to `/install` or `/login` as needed. Sessions: PBKDF2-SHA256 (210k iterations) password hashing, opaque random session tokens in a `vozeb_pro_session` httpOnly cookie backed by a Postgres `sessions` table.
+Auth/install-state gating still happens per route group (e.g. `app/(user)/layout.tsx` calls `getAuthenticatedPageAccess()` and redirects to `/install` or `/login`). There is no classic `middleware.ts`; CSRF is enforced by `proxy.ts`. Sessions: PBKDF2-SHA256 (210k iterations) password hashing, opaque random session tokens in a `vozeb_pro_session` httpOnly cookie backed by a Postgres `sessions` table. UI copy is Chinese hardcoded — there is no i18n library (`next-intl` / message catalogs were removed in v0.0.3).
 
 Key entry points worth reading first when orienting in a subsystem:
 
 - `lib/server/agent-run-executor.ts` — Agent Run claim/execute/finalize lifecycle
 - `lib/server/logical-model-router.ts` — logical model → real channel/upstream model resolution with failover candidates
-- `lib/server/generation-task-store.ts` — shared state machine for async generation tasks (claim, cancel, stats)
+- `lib/server/generation-task-store.ts` / `generation-task-scheduler.ts` — shared state machine for async generation tasks (lease, claim, cancel, stats)
+- `lib/server/generation-worker-heartbeat.ts` / `scripts/generation-worker.mjs` — persistent generation Worker process (lease/heartbeat/HMAC callback)
+- `lib/channel-protocol-registry.ts` / `lib/server/channel-protocol-assistant.ts` — protocol center (OpenAI / Gemini / Seedance 2.0 / SD / A1111 / Forge / custom)
 - `lib/server/object-storage-service.ts` / `local-media-registry.ts` — S3-compatible vs local media storage, both registered through the same media table
 - `lib/server/database/schema.ts` — single source of truth for the Postgres schema
 - `lib/server/database/repositories.ts` — repository aggregation entry point
+- `lib/auth/store-normalizers-billing.ts` — entitlements / plan limits enforcement
+- `proxy.ts` — CSRF origin validation for mutating API requests
 - `services/api/request.ts` — shared response parsing/error mapping for the browser API client
 
 ### Agent execution engine
@@ -117,13 +123,27 @@ Image/video workbenches use a lighter single-shot planner (`workbench-agent-serv
 
 "Logical models" (stable IDs configured in the admin console) resolve via `logical-model-router.ts` to a prioritized list of `(channel, upstream model)` bindings, filtered by enabled/healthy channels, giving multi-channel failover. Pricing, quota, and refund logic must all key off the logical model ID (upstream model name is only a compatibility read path) — see the pricing rules in `AGENTS.md` "项目注意事项" before touching billing/refund code.
 
+### Protocol center
+
+Upstream channel adapters are protocol-driven rather than hard-coded per vendor. The protocol registry covers OpenAI-compatible, Gemini, Seedance 2.0, Stable Diffusion, A1111/Forge, and declarative custom create/query/cancel protocols. Same-name models can be merged across channels; Seedance 2.0 special pricing uses its own content-endpoint fallback without changing the official NewAPI path. Prefer extending protocol definitions over one-off route handlers when adding a new upstream shape.
+
+### Generation Worker
+
+Image / video / audio tasks are executed by a durable Worker process (`web/scripts/generation-worker.mjs`), not only by the Next.js request lifecycle. The Worker claims leased tasks, sends heartbeats, accepts HMAC-authenticated callbacks, and can be notified across instances via PostgreSQL. Compose topologies run a sibling `generation-worker` container on the same image as `app`, sharing `VOZEB_PRO_MAINTENANCE_TOKEN` (≥32 chars) and talking to the app via `VOZEB_PRO_WORKER_API_ORIGIN` — the Worker must **not** hold a direct `DATABASE_URL`. Local `pnpm run dev` / standalone entrypoints start the Worker through `generation-runtime.mjs`.
+
+### Works gallery
+
+The works module covers drafts, version review, publish/share, public gallery search, content moderation, likes, follows, and author pages (`/works`, `/gallery`, `/share/*`, `/u/[username]`, plus admin works governance). Treat published works as user-facing content: review gates and moderation paths are first-class, not optional.
+
 ### Database
 
-~40 tables defined as one large idempotent SQL string in `lib/server/database/schema.ts` (`CREATE TABLE IF NOT EXISTS` + `ALTER TABLE ADD COLUMN IF NOT EXISTS` + data backfills). **There is no up/down migration system** — the install wizard (`/install`, `lib/server/install-status.ts`) runs the whole script to bring any environment to the current target state. When you change the schema, edit this file directly and keep every statement idempotent; also update `docs/content/docs/backend/backend-database.mdx` (required by `AGENTS.md`).
+Schema is defined as one large idempotent SQL string in `lib/server/database/schema.ts` (`CREATE TABLE IF NOT EXISTS` + `ALTER TABLE ADD COLUMN IF NOT EXISTS` + data backfills). **There is no up/down migration system** — the install wizard (`/install`, `lib/server/install-status.ts`) runs the whole script to bring any environment to the current target state. When you change the schema, edit this file directly and keep every statement idempotent; also update `docs/content/docs/backend/backend-database.mdx` (required by `AGENTS.md`).
+
+**v0.0.3 is intentionally incompatible with v0.0.2 databases** — plan for rebuild rather than in-place upgrade.
 
 Table names get a `vozeb_pro_` prefix injected at runtime via regex (`prefixPostgresSql`) so the schema source stays unprefixed and readable. Access goes through `pg` `Pool` (no ORM) via per-domain Repository classes aggregated in `repositories.ts`.
 
-A `VOZEB_PRO_DATABASE_PROVIDER=file` mode exists as a server-side JSON-file fallback for parts of the auth/settings layer — most business domains (billing, canvas, drama) are Postgres-only.
+A `VOZEB_PRO_DATABASE_PROVIDER=file` mode exists as a server-side JSON-file fallback for parts of the auth/settings layer — most business domains (billing, canvas, drama, works, generation tasks) are Postgres-only.
 
 ### Storage
 
@@ -131,7 +151,11 @@ Media can be written to local disk (`VOZEB_PRO_DATA_DIR`) or an S3-compatible ob
 
 ### Billing/points
 
-Dual-account wallet: permanent points + daily plan-quota points (reset at UTC+8 midnight). Every credit/debit/refund call takes an idempotency key so retries can't double-charge or double-refund. Orders go `pending → paid → (refunding) → refunded`, refunds use a claim-token pattern to survive concurrent refund attempts and provider callback races. Supported payment providers: Stripe, Alipay, WeChat Pay (native), plus a field-mappable generic/custom provider. Webhooks are verified, deduped by provider event ID, then routed through the same `completeBillingOrderPayment` path orders use elsewhere.
+Dual-account wallet: permanent points + daily plan-quota points (reset at UTC+8 midnight). Every credit/debit/refund call takes an idempotency key so retries can't double-charge or double-refund. Orders go `pending → paid → (refunding) → refunded`, refunds use a claim-token pattern to survive concurrent refund attempts and provider callback races. Supported payment providers: Stripe, Alipay (official + face-to-face), WeChat Pay (native), PayPly, plus a field-mappable generic/custom provider. Commerce add-ons include plan promotions, coupons, invite rewards, channel locking, and reconciliation. Webhooks are verified, deduped by provider event ID, then routed through the same `completeBillingOrderPayment` path orders use elsewhere.
+
+### Entitlements
+
+Plan entitlements (`settings.entitlements`) gate feature access and daily usage limits by plan (beyond pure points balance). Enforcement lives in auth/billing normalizers (`assertEntitlementUsageAllowed` / plan limit resolution) and must stay consistent with the admin-configured default plan and enabled plan list.
 
 ### Short-drama pipeline
 
@@ -146,11 +170,14 @@ These are the highlights most likely to bite; the full, current list lives in `A
 - No client-side persistence (localStorage/IndexedDB/localforage) of business data — creative sessions, generation history, canvas/drama projects must be server-saved and restored per user.
 - Canvas UI must use `canvasThemes` / `useThemeStore` / antd `ConfigProvider` tokens — never hardcode colors, or dark mode breaks.
 - Every clickable element needs explicit light/dark/hover/disabled states with real contrast — no black-on-black or low-contrast icon-on-background.
-- Admin sidebar sections are fixed by business role (经营分析/商品运营/财务管理/上游配置/系统管理/内容运营) — payment/CDK/ledger go under 财务管理, model channels/Agent Skills go under 上游配置.
-- Chinese UI copy throughout; code comments/identifiers in English/Chinese per existing file convention.
+- Admin sidebar sections are fixed by business role (经营分析/商品运营/财务管理/上游配置/系统管理/内容运营) — payment/CDK/ledger/coupons go under 财务管理, model channels/protocol center/Agent Skills go under 上游配置, works governance under 内容运营.
+- Chinese UI copy is hardcoded throughout (no i18n library / message catalogs); code comments/identifiers in English/Chinese per existing file convention.
+- Brand surface is **JoveCanvas** (logo/icon, store-foundation titles, docs, README). Keep runtime env prefix `VOZEB_PRO_*` and table prefix injection as-is.
 - Baota-specific host-network/proxy-hop defaults belong only in `docker-compose.baota.yml`/install docs — never in the shared app defaults.
-- After every change: run the relevant automated checks, then do the mandated browser regression pass (desktop + mobile, canvas node/link interactions, image/video workbench generate+history+reference flows, all touched buttons). Report explicitly if the full matrix couldn't be run.
+- After every change: run the relevant automated checks, then do the mandated browser regression pass (desktop + mobile, canvas node/link interactions, image/video workbench generate+history+reference flows, works publish/gallery paths when touched, all touched buttons). Report explicitly if the full matrix couldn't be run.
 
 ## Deployment topologies
 
-Five Docker Compose variants share the same image and DB schema: `docker-compose.yml` (bundled Postgres), `docker-compose.baota.yml` (host network, external Baota-managed Postgres), `docker-compose.external-db.yml`, `docker-compose.lowmem.yml` (384MB Node heap cap), plus `render.yaml` for Render.com. `Dockerfile` is a multi-stage pnpm + Next `standalone` build with ffmpeg and CJK fonts baked in. Don't test with local Docker builds/`docker run`/`docker compose` per the user's global environment policy — verify through `pnpm run build` + `pnpm run dev` instead.
+Compose variants share the same image and DB schema: `docker-compose.yml` (bundled Postgres), `docker-compose.baota.yml` (host network, external Baota-managed Postgres), `docker-compose.external-db.yml`, `docker-compose.lowmem.yml` (low Node heap), `docker-compose.local.yml`, plus `render.yaml` for Render.com. Each runtime profile runs **`app` + `generation-worker`** on the same image (`node /app/web/scripts/generation-worker.mjs` for the Worker). Both require a shared `VOZEB_PRO_MAINTENANCE_TOKEN` (≥32 characters); the Worker uses `VOZEB_PRO_WORKER_API_ORIGIN` and must not open its own database connection.
+
+Default image reference is `ghcr.io/jiujiu532/jovecanvas` via `VOZEB_PRO_IMAGE`. `Dockerfile` is a multi-stage pnpm + Next `standalone` build with ffmpeg, CJK fonts, and Sharp/libvips native libs baked in. **Do not reuse a v0.0.2 database on v0.0.3.** Don't test with local Docker builds/`docker run`/`docker compose` per the user's global environment policy — verify through `pnpm run build` + `pnpm run dev` instead.

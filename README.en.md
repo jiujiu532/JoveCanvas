@@ -35,8 +35,10 @@
 - **Video workbench**: text-to-video, image-to-video, multi-type references, duration / aspect / resolution params, async resume, and result management.
 - **Infinite canvas**: text, image, video, audio, and generation nodes with drag, connect, zoom, undo/redo, import/export, and Agent Run.
 - **Short-drama pipeline**: script, content review, characters / scenes / props, storyboard, shot video, voice, subtitles, versions, and FFmpeg compose.
-- **Model routing**: admins maintain channels, protocols, real models, logical models, capabilities, priority, and defaults — end users never see upstream keys.
-- **Commercial admin**: users, plans, points, CDK, orders, payments, refunds, ledger, announcements, prompts, generation ops, and audit logs.
+- **Work gallery**: drafts, version review, publish/share, gallery search, content moderation, and author profiles; public interactions include likes and follows.
+- **Protocol hub**: admins maintain channels, protocols, real models, logical models, capabilities, priority, and defaults — covering OpenAI, Gemini, Seedance 2.0, Stable Diffusion, A1111/Forge, and custom protocols; end users never see upstream keys.
+- **Generation Worker**: durable task execution with leases, heartbeats, HMAC callbacks, and PostgreSQL cross-instance notifications; jobs keep polling the original upstream task after page close or instance switch, with generation ops for exceptions.
+- **Commercial admin**: users, plans, promotions, coupons, invite rewards, points, CDK, orders, payments (Alipay official / face-to-face, PayPly, and more), refunds, reconciliation, ledger, work moderation, announcements, prompts, generation ops, and audit logs.
 - **Storage & backup**: local media, S3-compatible object storage, reference-safe deletes, object migration, and redacted business data import/export.
 
 ## Product flowcharts
@@ -319,20 +321,24 @@ Set at least:
 NEXT_PUBLIC_SITE_URL=https://jove-canvas.example.com
 POSTGRES_PASSWORD=replace-with-a-strong-password
 VOZEB_PRO_ENCRYPTION_KEY=replace-with-openssl-rand-hex-32
+VOZEB_PRO_MAINTENANCE_TOKEN=replace-with-another-openssl-rand-hex-32
 ```
 
 > Note: runtime env vars still use the `VOZEB_PRO_*` prefix (matching current code). That does not change the public product brand **JoveCanvas**.
 
-Generate the encryption key and start:
+Generate the encryption key and maintenance token, write them into `.env`, then start:
 
 ```bash
+openssl rand -hex 32
 openssl rand -hex 32
 docker compose pull
 docker compose up -d
 docker compose ps
 ```
 
-Open `https://your-domain/install`, check the database, initialize schema, and create the first admin.
+`VOZEB_PRO_MAINTENANCE_TOKEN` is a server-side deployment secret — it is **not** entered in the admin UI. Compose starts the main app and `generation-worker` together; both services must share the same token. A standalone Worker must use the exact same value. The install page can generate the key and token for you and put them into copyable env / Compose snippets. Full variable reference: [Configuration](docs/content/docs/overview/configuration.mdx).
+
+Open `https://your-domain/install`, check the database, initialize schema, and create the first admin. After setup finishes, the install page closes automatically.
 
 ### Baota (BT Panel) + PostgreSQL
 
@@ -370,12 +376,12 @@ pnpm run dev
 
 ## First-time setup order
 
-1. Finish DB init and first admin on `/install`.
-2. Configure Base URL, API Key, protocol, and model catalog under admin **Model channels**.
-3. Probe text / image / video / audio, create logical models, and set defaults.
-4. Configure plans, points rules, and optional payment channels.
+1. Finish DB init and first admin on `/install`; the install page closes automatically when setup is complete.
+2. Under admin **Model channels**, use the guided wizard to pick a protocol, configure the connection, fetch models, and verify capabilities. Protocols without auth need no API key; unknown upstreams can generate a custom protocol draft.
+3. Bind real upstream models to stable logical models, set defaults, and re-check results in the verification record.
+4. Configure plans, promotions / coupons / invite rewards, points rules, and optional payment channels.
 5. Configure SMTP, registration policy, local media or S3-compatible object storage.
-6. Walk the **Setup** checklist, then verify real generation, refunds, and backup restore.
+6. Walk the **Setup** checklist, then verify real generation, Worker resume, refunds, and backup restore.
 
 ## Project layout
 
@@ -386,7 +392,7 @@ pnpm run dev
 | `web/src/lib/server/database/` | PostgreSQL schema, parameterized repositories, file-provider fallback |
 | `web/src/components/` / `web/src/hooks/` | Cross-page UI, workbench controllers, asset pickers, session UX |
 | `web/src/services/api/` / `web/src/stores/` | Typed browser→own-API clients; transient client state |
-| `web/scripts/` | Standalone start, admin password reset, pre-release checks, prompt seed import |
+| `web/scripts/` | Standalone start, generation Worker, admin password reset, pre-release checks, prompt seed import |
 | `web/public/` | Site logo, browser icon, model brand marks |
 | `docs/content/docs/` | Feature, install, deploy, database, and troubleshooting docs |
 | `docs/public/screenshots/` | Redacted feature screenshots |

@@ -35,8 +35,10 @@
 - **视频工作台**：文生视频、图生视频、多类型参考素材、时长 / 比例 / 清晰度参数、异步续取和结果管理。
 - **无限画布**：文本、图片、视频、音频与生成节点，支持拖拽、连线、缩放、撤销重做、导入导出和 Agent Run。
 - **短剧生产线**：剧本、内容审核、角色 / 场景 / 道具、分镜、镜头视频、配音、字幕、版本和 FFmpeg 合成。
-- **模型路由**：管理员维护渠道、协议、真实模型、逻辑模型、能力、优先级和默认值，普通用户不接触上游密钥。
-- **商业后台**：用户、套餐、积分、CDK、订单、支付、退款、财务流水、公告、提示词、生成运营和审计日志。
+- **作品广场**：草稿、版本审核、发布分享、广场检索、内容治理和作者主页；公开互动支持点赞和关注。
+- **协议中心**：管理员维护渠道、协议、真实模型、逻辑模型、能力、优先级和默认值；支持 OpenAI、Gemini、Seedance 2.0、Stable Diffusion、A1111/Forge 和自定义协议，普通用户不接触上游密钥。
+- **生成 Worker**：持久化任务执行、任务租约、心跳检查、HMAC 回调与 PostgreSQL 跨实例通知；页面关闭或实例切换后继续查询原上游任务，并在生成运维中处理异常任务。
+- **商业后台**：用户、套餐、促销、优惠券、邀请奖励、积分、CDK、订单、支付（支付宝官方 / 当面付、PayPly 等）、退款、对账、财务流水、作品治理、公告、提示词、生成运营和审计日志。
 - **存储与备份**：本地媒体、S3 兼容对象存储、引用保护、对象迁移和脱敏业务数据导入导出。
 
 ## 项目功能流程
@@ -319,20 +321,24 @@ cp .env.example .env
 NEXT_PUBLIC_SITE_URL=https://jove-canvas.example.com
 POSTGRES_PASSWORD=replace-with-a-strong-password
 VOZEB_PRO_ENCRYPTION_KEY=replace-with-openssl-rand-hex-32
+VOZEB_PRO_MAINTENANCE_TOKEN=replace-with-another-openssl-rand-hex-32
 ```
 
 > 说明：运行时环境变量仍以 `VOZEB_PRO_*` 为前缀（与现有代码一致），不影响产品对外品牌 **JoveCanvas**。
 
-生成加密密钥并启动：
+分别生成加密密钥和维护令牌，再写入 `.env` 并启动：
 
 ```bash
+openssl rand -hex 32
 openssl rand -hex 32
 docker compose pull
 docker compose up -d
 docker compose ps
 ```
 
-打开 `https://你的域名/install`，检查数据库、初始化表结构并创建首个管理员。
+`VOZEB_PRO_MAINTENANCE_TOKEN` 是服务器部署密钥，不在管理后台填写。Compose 默认同时启动主应用与 `generation-worker`，两个服务必须使用同一个令牌；单独部署 Worker 时也必须注入完全相同的值。安装页会自动生成密钥与令牌，并放入可复制的环境变量 / Compose 模板。完整变量说明见[配置说明](docs/content/docs/overview/configuration.mdx)。
+
+打开 `https://你的域名/install`，检查数据库、初始化表结构并创建首个管理员。安装完成后安装页会自动关闭。
 
 ### 宝塔 PostgreSQL
 
@@ -370,12 +376,12 @@ pnpm run dev
 
 ## 首次配置顺序
 
-1. 在 `/install` 完成数据库初始化和首个管理员创建。
-2. 在后台「模型渠道」配置 Base URL、API Key、协议和模型目录。
-3. 检测文本、图片、视频和音频能力，创建逻辑模型并设置默认值。
-4. 配置套餐、积分规则和可选支付渠道。
+1. 在 `/install` 完成数据库初始化和首个管理员创建；安装完成后安装页自动关闭。
+2. 在后台「模型渠道」按向导选择协议、配置连接、获取模型并验证能力；无鉴权协议无需 API Key，未知上游可生成自定义协议草稿。
+3. 把真实上游模型绑定为稳定逻辑模型，设置默认值，并在验证记录中复核结果。
+4. 配置套餐、促销 / 优惠券 / 邀请奖励、积分规则和可选支付渠道。
 5. 配置 SMTP、注册策略、本地媒体或 S3 兼容对象存储。
-6. 在「初始化配置」检查上线项，再验证真实生成、退款和备份恢复。
+6. 在「初始化配置」检查上线项，再验证真实生成、Worker 续取、退款和备份恢复。
 
 ## 项目文件
 
@@ -386,7 +392,7 @@ pnpm run dev
 | `web/src/lib/server/database/` | PostgreSQL 表结构、参数化 Repository、文件 Provider 回退 |
 | `web/src/components/` / `web/src/hooks/` | 跨页面 UI、工作台控制器、素材选择与会话交互 |
 | `web/src/services/api/` / `web/src/stores/` | 浏览器访问本站 API 的类型化客户端与瞬时状态 |
-| `web/scripts/` | standalone 启动、管理员密码重置、发布前检查、提示词种子导入 |
+| `web/scripts/` | standalone 启动、生成 Worker、管理员密码重置、发布前检查、提示词种子导入 |
 | `web/public/` | 站点 Logo、浏览器图标与模型品牌图标 |
 | `docs/content/docs/` | 功能、安装、部署、数据库与排障文档 |
 | `docs/public/screenshots/` | 用户端与管理后台的脱敏功能截图 |
