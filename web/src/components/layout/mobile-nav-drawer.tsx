@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { SiteLogo } from "@/components/layout/site-logo";
 import { navigationGroups, navigationTools, type NavigationToolSlug } from "@/constant/navigation-tools";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ export function MobileNavDrawer({ open, activeToolSlug, onClose }: MobileNavDraw
             open={open}
             onClose={onClose}
             className="lg:hidden"
+            extra={<LocaleSwitcher />}
             styles={{ header: { borderBottomColor: "var(--border)", minHeight: 60, padding: "12px 16px" }, body: { padding: "12px 14px 18px" } }}
         >
             {navigationGroups.map((group, groupIndex) => (

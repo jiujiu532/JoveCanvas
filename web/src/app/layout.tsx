@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { AppProviders } from "@/components/layout/app-providers";
 import { absoluteSiteUrl, getPublicSiteSettings, siteMetadataBase } from "@/lib/server/site-metadata";
 import { buildWebsiteStructuredData, serializeStructuredData } from "@/lib/structured-data";
@@ -20,6 +22,7 @@ export const viewport: Viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
     const site = await getPublicSiteSettings();
+    const locale = await getLocale();
     const base = siteMetadataBase();
     const logoUrl = absoluteSiteUrl(site.logoUrl || "/logo.svg", base);
     const iconUrl = absoluteSiteUrl("/favicon.ico", base);
@@ -44,7 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
             description: site.seoDescription,
             siteName: site.title,
             images: logoUrl ? [{ url: logoUrl }] : undefined,
-            locale: "zh_CN",
+            locale: locale === "en" ? "en_US" : "zh_CN",
         },
         twitter: {
             card: "summary",
@@ -61,6 +64,8 @@ export default async function RootLayout({
     children: React.ReactNode;
 }>) {
     const site = await getPublicSiteSettings();
+    const locale = await getLocale();
+    const messages = await getMessages();
     const base = siteMetadataBase();
     const websiteUrl = absoluteSiteUrl("/", base);
     const websiteStructuredData = buildWebsiteStructuredData({
@@ -71,7 +76,7 @@ export default async function RootLayout({
     });
 
     return (
-        <html lang="zh-CN" suppressHydrationWarning className="font-sans">
+        <html lang={locale === "zh" ? "zh-CN" : "en"} suppressHydrationWarning className="font-sans">
             <head>
                 <link rel="icon" href="/favicon.ico" />
                 <link rel="shortcut icon" href="/favicon.ico" />
@@ -91,9 +96,11 @@ export default async function RootLayout({
                         __html: `try{var s=JSON.parse(localStorage.getItem("vozeb-pro:theme_store")||"{}");var t=s.state&&s.state.theme==="dark"?"dark":"light";document.documentElement.classList.toggle("dark",t==="dark");document.documentElement.style.colorScheme=t}catch(e){}`,
                     }}
                 />
-                <AntdRegistry>
-                    <AppProviders>{children}</AppProviders>
-                </AntdRegistry>
+                <NextIntlClientProvider locale={locale} messages={messages}>
+                    <AntdRegistry>
+                        <AppProviders>{children}</AppProviders>
+                    </AntdRegistry>
+                </NextIntlClientProvider>
             </body>
         </html>
     );
