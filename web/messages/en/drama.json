@@ -586,5 +586,10 @@
     "uploadCandidate": "Upload candidate",
     "generateCandidate": "Generate candidate",
     "secondsUnit": "s"
+  },
+  "mediaPreview": {
+    "title": "Media preview",
+    "viewImageAria": "View image: {title}",
+    "viewVideoAria": "View video: {title}"
   }
 }

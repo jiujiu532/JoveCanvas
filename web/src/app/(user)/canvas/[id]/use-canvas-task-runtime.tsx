@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback } from "react";
+import { useTranslations } from "next-intl";
 
 import { createFreshGenerationTaskContext } from "@/lib/generation-request-context";
 import { recordGenerationLog } from "@/services/api/generation-logs";
@@ -26,6 +27,7 @@ import { audioMetadata, imageMetadata, uploadGeneratedCanvasImage, videoMetadata
 import type { CanvasPageState } from "./use-canvas-page-state";
 
 export function useCanvasTaskRuntime({ state }: { state: CanvasPageState }) {
+    const t = useTranslations("canvas");
     const {
         message,
         modal,
@@ -212,15 +214,15 @@ export function useCanvasTaskRuntime({ state }: { state: CanvasPageState }) {
     const confirmStopGeneration = useCallback(
         (nodeId: string) => {
             modal.confirm({
-                title: "停止生成？",
-                content: "当前生成请求会被中断，已经生成完成的内容会保留。",
-                okText: "停止",
-                cancelText: "继续生成",
+                title: t("modal.stopGenerationTitle"),
+                content: t("modal.stopGenerationContent"),
+                okText: t("modal.stopOk"),
+                cancelText: t("modal.stopCancel"),
                 okButtonProps: { danger: true },
                 onOk: () => stopGenerationByRunningId(nodeId),
             });
         },
-        [modal, stopGenerationByRunningId],
+        [modal, stopGenerationByRunningId, t],
     );
 
     const completeVideoTask = useCallback(async (nodeId: string, generationConfig: AiConfig, task: NonNullable<CanvasNodeMetadata["videoTask"]>, controller: AbortController, prompt?: string) => {
@@ -232,10 +234,10 @@ export function useCanvasTaskRuntime({ state }: { state: CanvasPageState }) {
             kind: "video",
             source: "canvas",
             status: "success",
-            title: finalPrompt.slice(0, 36) || "画布视频",
+            title: finalPrompt.slice(0, 36) || t("defaults.canvasVideo"),
             prompt: finalPrompt,
             model: modelOptionName(generationConfig.model || generationConfig.videoModel),
-            summary: "画布视频生成完成",
+            summary: t("generation.videoCompleteSummary"),
             durationMs: video.durationMs,
             count: 1,
             successCount: 1,
@@ -301,7 +303,7 @@ export function useCanvasTaskRuntime({ state }: { state: CanvasPageState }) {
                 ),
             );
         });
-    }, []);
+    }, [t]);
 
     const completeImageTask = useCallback(async (nodeId: string, generationConfig: AiConfig, task: NonNullable<CanvasNodeMetadata["imageTask"]> | ImageGenerationTask, controller: AbortController, prompt?: string) => {
         const image = await waitForImageGenerationTask(generationConfig, task, { signal: controller.signal });
@@ -342,7 +344,7 @@ export function useCanvasTaskRuntime({ state }: { state: CanvasPageState }) {
             const task = await createImageGenerationTask(generationConfig, prompt, references, mask, {
                 signal: controller.signal,
                 logSource: "canvas",
-                logTitle: prompt.slice(0, 36) || "画布生图",
+                logTitle: prompt.slice(0, 36) || t("defaults.canvasImageGen"),
                 conversationId: currentProject?.creativeConversationId,
                 surface: "canvas",
                 projectId,
@@ -364,7 +366,7 @@ export function useCanvasTaskRuntime({ state }: { state: CanvasPageState }) {
             );
             await completeImageTask(nodeId, generationConfig, task, controller, prompt);
         },
-        [completeImageTask],
+        [completeImageTask, t],
     );
 
     const completeTextTask = useCallback(async (nodeId: string, generationConfig: AiConfig, task: TextGenerationTask, controller: AbortController, prompt?: string) => {
@@ -377,7 +379,7 @@ export function useCanvasTaskRuntime({ state }: { state: CanvasPageState }) {
                           type: CanvasNodeType.Text,
                           metadata: {
                               ...node.metadata,
-                              content: answer || "没有返回内容",
+                              content: answer || t("generation.emptyResponse"),
                               prompt: prompt || node.metadata?.prompt,
                               status: NODE_STATUS_SUCCESS,
                               textTask: undefined,
@@ -387,8 +389,8 @@ export function useCanvasTaskRuntime({ state }: { state: CanvasPageState }) {
                     : node,
             ),
         );
-        return answer || "没有返回内容";
-    }, []);
+        return answer || t("generation.emptyResponse");
+    }, [t]);
 
     const completeAudioTask = useCallback(async (nodeId: string, generationConfig: AiConfig, task: NonNullable<CanvasNodeMetadata["audioTask"]>, controller: AbortController, prompt?: string) => {
         const audio = await storeGeneratedAudio(await waitForAudioGenerationTask(generationConfig, task, { signal: controller.signal }), generationConfig.audioFormat);

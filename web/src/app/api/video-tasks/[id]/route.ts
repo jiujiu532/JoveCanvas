@@ -37,7 +37,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const next = await transitionVideoTask(task, {
         status,
         result: status === "success" ? sanitizeResult(body.result) : undefined,
-        error: status === "error" ? String(body.error || "视频生成失败").slice(0, 500) : undefined,
+        error: status === "error" ? String(body.error || (await serverMessage("tasks.videoGenFailed"))).slice(0, 500) : undefined,
     });
     if (!next) return NextResponse.json({ error: await serverMessage("tasks.cannotModifyStatus") }, { status: 409 });
     if (status === "cancelled") {

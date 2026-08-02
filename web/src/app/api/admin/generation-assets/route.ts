@@ -60,5 +60,9 @@ export async function DELETE(request: Request) {
     const ids = Array.isArray(body.ids) ? body.ids.filter((id): id is string => typeof id === "string" && id.trim().length > 0) : [];
     if (!ids.length) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("media.selectToDelete") }, { status: 400 });
     const result = await deleteLocalMediaAssets(ids);
-    return NextResponse.json({ code: 0, data: result, msg: result.blocked.length ? "部分文件仍被业务记录引用，未执行删除" : "媒体文件已删除" });
+    return NextResponse.json({
+        code: 0,
+        data: result,
+        msg: result.blocked.length ? await serverMessage("media.partialBlockedNotDeleted") : await serverMessage("media.deleted"),
+    });
 }

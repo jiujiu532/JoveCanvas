@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import { uploadMediaFile } from "@/services/file-storage";
 import { NODE_DEFAULT_SIZE } from "../constants";
@@ -19,6 +20,7 @@ import type { CanvasInteractions } from "./use-canvas-interactions";
 import type { CanvasPageState } from "./use-canvas-page-state";
 
 export function useCanvasFileActions({ state, interactions }: { state: CanvasPageState; interactions: CanvasInteractions }) {
+    const t = useTranslations("canvas");
     const {
         message,
         setNodes,
@@ -110,7 +112,7 @@ export function useCanvasFileActions({ state, interactions }: { state: CanvasPag
 
             const node = {
                 ...createCanvasNode(CanvasNodeType.Text, getCanvasCenter(), { content: trimmed, status: NODE_STATUS_SUCCESS }),
-                title: trimmed.slice(0, 32) || "剪切板文本",
+                title: trimmed.slice(0, 32) || t("defaults.clipboardText"),
             };
 
             setNodes((prev) => [...prev, node]);
@@ -120,7 +122,7 @@ export function useCanvasFileActions({ state, interactions }: { state: CanvasPag
             setDialogNodeId(node.id);
             return true;
         },
-        [getCanvasCenter],
+        [getCanvasCenter, t],
     );
 
     const pasteSystemClipboard = useCallback(async () => {
@@ -134,13 +136,13 @@ export function useCanvasFileActions({ state, interactions }: { state: CanvasPag
             const blob = await imageItem.getType(imageType);
             const file = new File([blob], "clipboard-image.png", { type: imageType });
             void createImageFileNode(file, getCanvasCenter());
-            message.success("已从剪切板添加图片");
+            message.success(t("toast.clipboardImageAdded"));
             return;
         }
 
         const text = await navigator.clipboard.readText();
-        if (createTextNodeFromClipboard(text)) message.success("已从剪切板添加文本");
-    }, [createImageFileNode, createTextNodeFromClipboard, getCanvasCenter, message]);
+        if (createTextNodeFromClipboard(text)) message.success(t("toast.clipboardTextAdded"));
+    }, [createImageFileNode, createTextNodeFromClipboard, getCanvasCenter, message, t]);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {

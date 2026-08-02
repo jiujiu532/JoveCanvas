@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth/session";
 import { migrateLocalMediaToObjectStorage } from "@/lib/server/object-storage-service";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,9 +24,20 @@ export async function POST(request: Request) {
     }
     try {
         const data = await migrateLocalMediaToObjectStorage(limit);
-        return NextResponse.json({ code: 0, data, msg: data.remaining ? "本批迁移完成，可继续迁移剩余文件" : "本地媒体迁移完成" });
+        return NextResponse.json({
+            code: 0,
+            data,
+            msg: data.remaining ? await serverMessage("media.localMigrateBatchDone") : await serverMessage("media.localMigrateDone"),
+        });
     } catch (error) {
         console.error("Local media migration failed", error);
-        return NextResponse.json({ code: 500, data: null, msg: error instanceof Error ? error.message : "本地媒体迁移失败" }, { status: 500 });
+        return NextResponse.json(
+            {
+                code: 500,
+                data: null,
+                msg: error instanceof Error ? await localizeErrorMessage(error) : await serverMessage("media.localMigrateFailed"),
+            },
+            { status: 500 },
+        );
     }
 }

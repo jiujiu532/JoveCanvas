@@ -7,7 +7,7 @@ import { readAdminBackupData, restoreAdminBackupData, type AdminBackupData } fro
 import { getDatabaseProvider } from "@/lib/server/database";
 import { copyDataFile, ensureDataDirectory, listDataDirectory, removeDataPath, resolveDataPath, writeJsonDataFile } from "@/lib/server/data-adapter";
 import { readRequestBodyBytes, RequestBodyTooLargeError } from "@/lib/server/request-body-limit";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
     try {
         validateBackupFiles(files);
     } catch (error) {
-        return NextResponse.json({ error: error instanceof Error ? error.message : "备份文件格式不正确" }, { status: 400 });
+        return NextResponse.json({ error: error instanceof Error ? await localizeErrorMessage(error) : await serverMessage("backup.formatInvalid") }, { status: 400 });
     }
     const currentData = await readAdminBackupData();
     const currentAuth = files.auth === undefined || files.auth === null ? null : currentData.auth;
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
     try {
         values = entries.map((entry) => ({ ...entry, value: entry.key === "auth" ? mergeAuthBackupSecrets(entry.value, currentAuth) : entry.value }));
     } catch (error) {
-        return NextResponse.json({ error: error instanceof Error ? error.message : "认证备份不能安全导入" }, { status: 400 });
+        return NextResponse.json({ error: error instanceof Error ? await localizeErrorMessage(error) : await serverMessage("backup.authImportUnsafe") }, { status: 400 });
     }
 
     const importedAt = new Date().toISOString();

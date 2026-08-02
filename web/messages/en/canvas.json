@@ -557,6 +557,44 @@
     "agentRetryFailed": "Agent task retry failed",
     "promptMissing": "Prompt not found. Cannot retry",
     "referenceImageLost": "Reference image is missing. Cannot continue retry",
-    "emptyTextNode": "Text node is empty. Cannot generate image"
+    "emptyTextNode": "Text node is empty. Cannot generate image",
+    "imageFailed": "Image generation failed",
+    "videoFailed": "Video generation failed",
+    "textFailed": "Text generation failed",
+    "audioFailed": "Audio generation failed",
+    "maskEditFailed": "Inpaint failed",
+    "emptyResponse": "No content returned",
+    "videoCompleteSummary": "Canvas video generation completed"
+  },
+  "toast": {
+    "cannotConnectConfigNodes": "Config nodes cannot connect to each other",
+    "clipboardImageAdded": "Image added from clipboard",
+    "clipboardTextAdded": "Text added from clipboard",
+    "addedToAssets": "Added to my assets",
+    "emptyImageCannotReverse": "Image node is empty. Cannot reverse prompt",
+    "splitIntoChildren": "Split into {count} child nodes",
+    "panoramaRatioRequired": "Panorama must be close to 2:1, e.g. 2048x1024",
+    "assistantImageReferenced": "Image added as a reference for this turn"
+  },
+  "defaults": {
+    "clipboardText": "Clipboard text",
+    "canvasText": "Canvas text",
+    "canvasImage": "Canvas image",
+    "canvasVideo": "Canvas video",
+    "canvasImageGen": "Canvas image generation",
+    "reversePrompt": "Reverse prompt",
+    "reversePromptConfig": "Reverse prompt config",
+    "maskEditResult": "Inpaint result"
+  },
+  "errors": {
+    "noSavableText": "No savable text",
+    "noSavableVideo": "No savable video",
+    "noSavableImage": "No savable image"
+  },
+  "modal": {
+    "stopGenerationTitle": "Stop generation?",
+    "stopGenerationContent": "The current generation request will be interrupted. Completed results will be kept.",
+    "stopOk": "Stop",
+    "stopCancel": "Keep generating"
   }
 }

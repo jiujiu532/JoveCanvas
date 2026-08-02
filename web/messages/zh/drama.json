@@ -586,5 +586,10 @@
     "uploadCandidate": "上传候选",
     "generateCandidate": "生成候选",
     "secondsUnit": "秒"
+  },
+  "mediaPreview": {
+    "title": "媒体预览",
+    "viewImageAria": "查看图片：{title}",
+    "viewVideoAria": "查看视频：{title}"
   }
 }

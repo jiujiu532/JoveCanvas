@@ -38,7 +38,7 @@ export async function POST(request: Request) {
             throw error;
         }
         const projectId = text(body.projectId, 120);
-        const title = text(body.title, 120) || "短剧成片";
+        const title = text(body.title, 120) || (await serverMessage("drama.defaultTitle"));
         const shots = normalizeShots(body.shots);
         if (!projectId || !shots.length || shots.some((shot) => !shot.videoUrl)) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("drama.allShotVideosRequired") }, { status: 400 });
         if (shots.some((shot) => shot.audioMode === "voiceover" && !shot.audioUrl)) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("drama.voiceoverIncomplete") }, { status: 400 });
@@ -172,7 +172,9 @@ async function renderDrama(task: DramaRenderTask, shots: NormalizedShot[], sizeV
                 assets: [{ type: "video", url: completed.result.url, mimeType: completed.result.mimeType }],
             }).catch((error) => console.error("Creative render asset registration failed", error));
     } catch (error) {
-        await transitionDramaRenderTask(task, ["running"], { status: "error", error: error instanceof Error ? error.message.slice(0, 2000) : "整集合成失败" });
+        const fallback = await serverMessage("tasks.episodeComposeFailed");
+        const message = error instanceof Error ? await localizeErrorMessage(error) : fallback;
+        await transitionDramaRenderTask(task, ["running"], { status: "error", error: message.slice(0, 2000) });
     } finally {
         clearInterval(heartbeat);
         clearInterval(cancellationMonitor);

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getPublicUsersByIds } from "@/lib/auth/store";
 import { deleteExternalStorageFiles, listExternalStorageFiles } from "@/lib/server/object-storage-service";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,7 +39,14 @@ export async function GET(request: Request) {
         );
     } catch (error) {
         console.error("Object storage list failed", error);
-        return NextResponse.json({ code: 500, data: null, msg: error instanceof Error ? error.message : "外部存储文件加载失败" }, { status: 500 });
+        return NextResponse.json(
+            {
+                code: 500,
+                data: null,
+                msg: error instanceof Error ? await localizeErrorMessage(error) : await serverMessage("media.externalFileLoadFailed"),
+            },
+            { status: 500 },
+        );
     }
 }
 
@@ -57,7 +64,11 @@ export async function DELETE(request: Request) {
     if (!keys.length) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("media.selectObjectsToDelete") }, { status: 400 });
     try {
         const data = await deleteExternalStorageFiles(keys);
-        return NextResponse.json({ code: 0, data, msg: data.blocked.length ? "部分对象仍被业务记录引用，未执行删除" : "外部存储对象已删除" });
+        return NextResponse.json({
+            code: 0,
+            data,
+            msg: data.blocked.length ? await serverMessage("media.externalObjectsPartialBlocked") : await serverMessage("media.externalObjectsDeleted"),
+        });
     } catch (error) {
         console.error("Object storage delete failed", error);
         return NextResponse.json({ code: 500, data: null, msg: await serverMessage("media.externalObjectDeleteFailed") }, { status: 500 });

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { App, Button, Checkbox, Input, Select, Tag } from "antd";
 import { FileSearch, WandSparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { LabeledControl } from "@/components/admin/admin-settings-controls";
 import { applyChannelProtocol, channelProtocolDefinition, channelProtocolOptions } from "@/lib/channel-protocol-registry";
@@ -12,14 +13,8 @@ import { normalizeModelId } from "@/lib/model-capability";
 import { createAdminChannelProtocolDraft } from "@/services/api/admin-channel-protocol";
 import { channelDetectedCapabilities } from "@/lib/model-routing-config";
 
-const capabilityOptions: Array<{ label: string; value: LogicalModelCapability }> = [
-    { label: "文本", value: "text" },
-    { label: "图片", value: "image" },
-    { label: "视频", value: "video" },
-    { label: "音频", value: "audio" },
-];
-
 export function AdminChannelProtocolSetup({ channel, protocolLocked = false, onChange }: { channel: SystemModelChannel; protocolLocked?: boolean; onChange: (patch: Partial<SystemModelChannel>) => void }) {
+    const t = useTranslations("admin");
     const { message } = App.useApp();
     const protocol = channel.advancedConfig?.protocol || "auto";
     const definition = channelProtocolDefinition(protocol);
@@ -31,6 +26,25 @@ export function AdminChannelProtocolSetup({ channel, protocolLocked = false, onC
     const [loading, setLoading] = useState(false);
     const [draft, setDraft] = useState<ChannelProtocolDraft | null>(null);
 
+    const capabilityOptions = useMemo(
+        () =>
+            (["text", "image", "video", "audio"] as LogicalModelCapability[]).map((value) => ({
+                label: t(`channelEditor.kinds.${value}` as never),
+                value,
+            })),
+        [t],
+    );
+    const authModeOptions = useMemo(
+        () =>
+            [
+                { label: t("protocolSetup.auth.none"), value: "none" as const },
+                { label: "Bearer Token", value: "bearer" as const },
+                { label: "X-API-Key", value: "x-api-key" as const },
+                { label: t("protocolSetup.auth.customHeader"), value: "custom-header" as const },
+            ] satisfies Array<{ label: string; value: SystemChannelAuthMode }>,
+        [t],
+    );
+
     const selectProtocol = (value: SystemChannelProtocol) => {
         setDraft(null);
         onChange(applyChannelProtocol(channel, value));
@@ -40,9 +54,9 @@ export function AdminChannelProtocolSetup({ channel, protocolLocked = false, onC
         try {
             const next = await createAdminChannelProtocolDraft({ documentationUrl, documentationText, examples, useTextModel });
             setDraft(next);
-            message.success(next.assisted ? "已分析整套上游协议，请复核后应用" : "已从示例提取整套协议");
+            message.success(next.assisted ? t("protocolSetup.analyzeAssisted") : t("protocolSetup.analyzeExtracted"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "协议分析失败");
+            message.error(error instanceof Error ? error.message : t("protocolSetup.analyzeFailed"));
         } finally {
             setLoading(false);
         }
@@ -82,7 +96,7 @@ export function AdminChannelProtocolSetup({ channel, protocolLocked = false, onC
             models: Array.from(new Set([...channel.models, ...discoveredModels])),
             advancedConfig: nextAdvanced,
         });
-        message.success("整套协议已应用；同步模型目录后会自动继承对应能力配置");
+        message.success(t("protocolSetup.applied"));
     };
     const updateAuth = (patch: Partial<SystemChannelAdvancedConfig>) => onChange({ advancedConfig: { ...channel.advancedConfig!, ...patch } });
 
@@ -90,7 +104,7 @@ export function AdminChannelProtocolSetup({ channel, protocolLocked = false, onC
         <section className="mt-3 border-y border-stone-200 bg-stone-50/70 px-3 py-3 dark:border-stone-800 dark:bg-stone-900/35">
             {!protocolLocked ? (
                 <div className="grid gap-3 lg:grid-cols-[minmax(220px,0.7fr)_minmax(0,1.3fr)] lg:items-end">
-                    <LabeledControl label="接口协议">
+                    <LabeledControl label={t("channelEditor.protocol")}>
                         <Select
                             className="w-full"
                             value={protocol}
@@ -111,12 +125,14 @@ export function AdminChannelProtocolSetup({ channel, protocolLocked = false, onC
                     </LabeledControl>
                     <div className="min-w-0 pb-0.5 text-xs leading-5 text-stone-500 dark:text-stone-400">
                         <div>
-                            {definition.label} 协议；
+                            {t("protocolSetup.protocolLine", { label: definition.label })}
                             {detectedCapabilities.size
-                                ? `当前接口已识别 ${Array.from(detectedCapabilities)
-                                      .map((item) => capabilityOptions.find((option) => option.value === item)?.label)
-                                      .join("、")}模型。`
-                                : "请先拉取或填写模型。"}
+                                ? t("protocolSetup.detectedCapabilities", {
+                                      labels: Array.from(detectedCapabilities)
+                                          .map((item) => capabilityOptions.find((option) => option.value === item)?.label)
+                                          .join("、"),
+                                  })
+                                : t("protocolSetup.needModels")}
                         </div>
                         <div className="mt-1 flex flex-wrap gap-1.5">
                             {definition.capabilities
@@ -126,9 +142,9 @@ export function AdminChannelProtocolSetup({ channel, protocolLocked = false, onC
                                         {capabilityOptions.find((option) => option.value === item)?.label}
                                     </Tag>
                                 ))}
-                            {!detectedCapabilities.size ? <Tag className="m-0">待拉取模型</Tag> : null}
-                            {definition.strict ? <Tag className="m-0">严格路径</Tag> : null}
-                            {definition.builtInModels?.length ? <Tag className="m-0">内置 {definition.builtInModels.length} 个模型</Tag> : null}
+                            {!detectedCapabilities.size ? <Tag className="m-0">{t("protocolSetup.awaitModels")}</Tag> : null}
+                            {definition.strict ? <Tag className="m-0">{t("protocolSetup.strictPath")}</Tag> : null}
+                            {definition.builtInModels?.length ? <Tag className="m-0">{t("protocolSetup.builtInModels", { count: definition.builtInModels.length })}</Tag> : null}
                         </div>
                     </div>
                 </div>
@@ -137,7 +153,7 @@ export function AdminChannelProtocolSetup({ channel, protocolLocked = false, onC
                 <div className={protocolLocked ? "" : "mt-3 border-t border-stone-200 pt-3 dark:border-stone-800"}>
                     {!protocolLocked ? (
                         <div className="mb-3 grid gap-3 sm:grid-cols-2">
-                            <LabeledControl label="鉴权方式">
+                            <LabeledControl label={t("protocolSetup.authMode")}>
                                 <Select
                                     className="w-full"
                                     value={channel.advancedConfig?.authMode || "bearer"}
@@ -147,11 +163,11 @@ export function AdminChannelProtocolSetup({ channel, protocolLocked = false, onC
                             </LabeledControl>
                             {channel.advancedConfig?.authMode === "custom-header" ? (
                                 <>
-                                    <LabeledControl label="鉴权 Header">
-                                        <Input value={channel.advancedConfig.authHeader} placeholder="例如 X-API-Key" onChange={(event) => updateAuth({ authHeader: event.target.value })} />
+                                    <LabeledControl label={t("protocolSetup.authHeader")}>
+                                        <Input value={channel.advancedConfig.authHeader} placeholder={t("protocolSetup.authHeaderPlaceholder")} onChange={(event) => updateAuth({ authHeader: event.target.value })} />
                                     </LabeledControl>
-                                    <LabeledControl label="值前缀（可选）">
-                                        <Input value={channel.advancedConfig.authPrefix} placeholder="例如 Token" onChange={(event) => updateAuth({ authPrefix: event.target.value })} />
+                                    <LabeledControl label={t("protocolSetup.authPrefix")}>
+                                        <Input value={channel.advancedConfig.authPrefix} placeholder={t("protocolSetup.authPrefixPlaceholder")} onChange={(event) => updateAuth({ authPrefix: event.target.value })} />
                                     </LabeledControl>
                                 </>
                             ) : null}
@@ -160,62 +176,63 @@ export function AdminChannelProtocolSetup({ channel, protocolLocked = false, onC
                     <div className="flex items-start gap-2">
                         <FileSearch className="mt-0.5 size-4 shrink-0 text-stone-500 dark:text-stone-400" />
                         <div>
-                            <div className="text-sm font-semibold text-stone-900 dark:text-stone-100">自定义协议助手</div>
-                            <div className="mt-0.5 text-xs leading-5 text-stone-500 dark:text-stone-400">提供官方文档链接或完整 cURL、请求 JSON、成功响应 JSON。系统只生成声明式草稿，不执行文档代码，也不会把 API Key 发给文本模型。</div>
+                            <div className="text-sm font-semibold text-stone-900 dark:text-stone-100">{t("protocolSetup.assistantTitle")}</div>
+                            <div className="mt-0.5 text-xs leading-5 text-stone-500 dark:text-stone-400">{t("protocolSetup.assistantDesc")}</div>
                         </div>
                     </div>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         <div className="sm:col-span-2">
-                            <LabeledControl label="官方文档链接（可选）">
+                            <LabeledControl label={t("protocolSetup.docUrl")}>
                                 <Input value={documentationUrl} placeholder="https://provider.example.com/docs/api" onChange={(event) => setDocumentationUrl(event.target.value)} />
                             </LabeledControl>
                         </div>
                         <div className="sm:col-span-2">
-                            <LabeledControl label="补充文档（可选）">
-                                <Input.TextArea rows={4} value={documentationText} placeholder="可粘贴文档正文、鉴权说明、分页规则或参数表" onChange={(event) => setDocumentationText(event.target.value)} />
+                            <LabeledControl label={t("protocolSetup.docText")}>
+                                <Input.TextArea rows={4} value={documentationText} placeholder={t("protocolSetup.docTextPlaceholder")} onChange={(event) => setDocumentationText(event.target.value)} />
                             </LabeledControl>
                         </div>
                         <div className="sm:col-span-2">
-                            <LabeledControl label="请求与响应示例">
-                                <Input.TextArea rows={6} value={examples} placeholder={"可补充模型目录、创建、查询、取消和成功响应示例，例如：\nGET /v1/models\nPOST /v1/jobs\nGET /v1/jobs/:task_id"} onChange={(event) => setExamples(event.target.value)} />
+                            <LabeledControl label={t("protocolSetup.examples")}>
+                                <Input.TextArea rows={6} value={examples} placeholder={t("protocolSetup.examplesPlaceholder")} onChange={(event) => setExamples(event.target.value)} />
                             </LabeledControl>
                         </div>
                     </div>
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                         <Checkbox checked={useTextModel} onChange={(event) => setUseTextModel(event.target.checked)}>
-                            使用后台默认文本模型辅助识别
+                            {t("protocolSetup.useTextModel")}
                         </Checkbox>
                         <Button type="primary" icon={<WandSparkles className="size-4" />} loading={loading} onClick={() => void analyze()}>
-                            分析全部接口
+                            {t("protocolSetup.analyzeAll")}
                         </Button>
                     </div>
                     {draft ? (
                         <div className="mt-3 border-l-2 border-stone-400 pl-3 text-xs leading-5 text-stone-600 dark:border-stone-600 dark:text-stone-300">
                             <div className="flex flex-wrap items-center gap-1.5">
-                                <span className="mr-1 font-semibold text-stone-900 dark:text-stone-100">协议分析结果</span>
-                                <Tag className="m-0">目录 {draft.modelCatalogPaths.length}</Tag>
-                                <Tag className="m-0">能力 {draft.operations.length}</Tag>
-                                <Tag className="m-0">模型 {new Set(draft.operations.flatMap((item) => item.models.map(normalizeModelId))).size}</Tag>
+                                <span className="mr-1 font-semibold text-stone-900 dark:text-stone-100">{t("protocolSetup.resultTitle")}</span>
+                                <Tag className="m-0">{t("protocolSetup.catalogCount", { count: draft.modelCatalogPaths.length })}</Tag>
+                                <Tag className="m-0">{t("protocolSetup.capabilityCount", { count: draft.operations.length })}</Tag>
+                                <Tag className="m-0">{t("protocolSetup.modelCount", { count: new Set(draft.operations.flatMap((item) => item.models.map(normalizeModelId))).size })}</Tag>
                             </div>
-                            {draft.modelCatalogPaths.length ? <div className="mt-2 break-all">模型目录：{draft.modelCatalogPaths.join("、")}</div> : null}
+                            {draft.modelCatalogPaths.length ? <div className="mt-2 break-all">{t("protocolSetup.catalogPaths", { paths: draft.modelCatalogPaths.join("、") })}</div> : null}
                             <div className="mt-2 divide-y divide-stone-200 border-y border-stone-200 dark:divide-stone-800 dark:border-stone-800">
                                 {draft.operations.map((operation) => (
                                     <div key={operation.capability} className="py-2">
                                         <div className="font-medium text-stone-900 dark:text-stone-100">
-                                            {capabilityOptions.find((item) => item.value === operation.capability)?.label} · {operation.models.length ? `${operation.models.length} 个已识别模型` : "同步目录后自动匹配模型"}
+                                            {capabilityOptions.find((item) => item.value === operation.capability)?.label} ·{" "}
+                                            {operation.models.length ? t("protocolSetup.recognizedModels", { count: operation.models.length }) : t("protocolSetup.autoMatchModels")}
                                         </div>
                                         <div className="mt-0.5 break-all">
-                                            创建 {operation.config.createPath}
-                                            {operation.config.editPath ? ` · 编辑 ${operation.config.editPath}` : ""}
-                                            {operation.config.imageToVideoPath ? ` · 图生视频 ${operation.config.imageToVideoPath}` : ""}
-                                            {operation.config.queryPath ? ` · 查询 ${operation.config.queryPath}` : ""}
-                                            {operation.config.cancelPath ? ` · 取消 ${operation.config.cancelMethod || "POST"} ${operation.config.cancelPath}` : ""}
+                                            {t("protocolSetup.create")} {operation.config.createPath}
+                                            {operation.config.editPath ? ` · ${t("protocolSetup.edit")} ${operation.config.editPath}` : ""}
+                                            {operation.config.imageToVideoPath ? ` · ${t("protocolSetup.imageToVideo")} ${operation.config.imageToVideoPath}` : ""}
+                                            {operation.config.queryPath ? ` · ${t("protocolSetup.query")} ${operation.config.queryPath}` : ""}
+                                            {operation.config.cancelPath ? ` · ${t("protocolSetup.cancel")} ${operation.config.cancelMethod || "POST"} ${operation.config.cancelPath}` : ""}
                                         </div>
                                     </div>
                                 ))}
                             </div>
                             <Button className="mt-2" type="primary" size="small" onClick={applyDraft}>
-                                应用全部配置
+                                {t("protocolSetup.applyAll")}
                             </Button>
                         </div>
                     ) : null}
@@ -224,10 +241,3 @@ export function AdminChannelProtocolSetup({ channel, protocolLocked = false, onC
         </section>
     );
 }
-
-const authModeOptions: Array<{ label: string; value: SystemChannelAuthMode }> = [
-    { label: "无需鉴权", value: "none" },
-    { label: "Bearer Token", value: "bearer" },
-    { label: "X-API-Key", value: "x-api-key" },
-    { label: "自定义 Header", value: "custom-header" },
-];

@@ -10,7 +10,7 @@ import { CreativeStoreConflict } from "@/lib/server/creative-runtime-store";
 import { resolveInternalOrigin } from "@/lib/server/internal-origin";
 import { runGenerationTaskRecoveryBatch } from "@/lib/server/generation-task-recovery-service";
 import { scheduleGenerationTask } from "@/lib/server/generation-task-scheduler";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export async function GET(request: Request) {
     const user = await getCurrentUser(request);
@@ -47,11 +47,17 @@ export async function POST(request: Request) {
                 await scheduleGenerationTask("agent", created.run.id, { executionPhase: "created", nextPollAt: Date.now(), lastUpstreamStatus: "created" });
                 after(() => runGenerationTaskRecoveryBatch({ origin, cookie: request.headers.get("cookie") || "", limit: 1, taskIds: [created.run.id] }));
             }
-            return NextResponse.json({ code: 0, data: { run: created.run, conversation: created.conversation, created: created.created }, msg: created.created ? "Agent 任务已创建" : "Agent 任务已存在" });
+            return NextResponse.json({
+                code: 0,
+                data: { run: created.run, conversation: created.conversation, created: created.created },
+                msg: created.created ? await serverMessage("tasks.agentCreated") : await serverMessage("tasks.agentExists"),
+            });
         });
         return response || NextResponse.json({ code: 429, data: null, msg: await serverMessage("agent.concurrencyLimit", { limit: settings.generationConcurrency.agent }) }, { status: 429 });
     } catch (error) {
-        if (error instanceof CreativeRuntimeInputError || error instanceof CreativeStoreConflict) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
+        if (error instanceof CreativeRuntimeInputError || error instanceof CreativeStoreConflict) {
+            return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });
+        }
         throw error;
     }
 }

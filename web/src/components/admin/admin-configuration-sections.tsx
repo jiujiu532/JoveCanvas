@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { App, Button, Checkbox, DatePicker, Form, Input, InputNumber, Modal, Pagination, Popconfirm, Segmented, Select, Space, Switch, Table, Tag } from "antd";
 import type { TableColumnsType } from "antd";
@@ -101,6 +102,7 @@ import {
 import { PROMPT_PAGE_SIZE, PROMPT_SEARCH_DEBOUNCE_MS, CDK_PAGE_SIZE, GENERATION_LOG_PAGE_SIZE } from "./use-admin-dashboard-controller";
 
 export function AdminSiteSection({ controller }: { controller: AdminDashboardController }) {
+    const t = useTranslations("admin");
     const {
         logoInputRef,
         iconInputRef,
@@ -122,54 +124,54 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
     return (
         <Panel>
             <PanelHeader
-                title="网站设置"
-                description="统一管理前台品牌、Logo、浏览器标题和搜索引擎展示信息。"
+                title={t("siteSettings.title")}
+                description={t("siteSettings.description")}
                 actions={
-                    <Button type="primary" loading={settingsLoading} icon={<Save className="size-4" />} onClick={() => saveSettings({ site: settings.site }, "网站信息已保存")}>
-                        保存网站设置
+                    <Button type="primary" loading={settingsLoading} icon={<Save className="size-4" />} onClick={() => saveSettings({ site: settings.site }, t("siteSettings.saved"))}>
+                        {t("siteSettings.save")}
                     </Button>
                 }
             />
             <div className="grid gap-5 p-4 lg:grid-cols-[minmax(0,1fr)_360px] sm:p-5">
                 <div className="space-y-5">
                     <div className="space-y-5 rounded-lg border border-stone-200 bg-stone-50/70 p-4 dark:border-stone-800 dark:bg-stone-900/40">
-                        <SectionTitle icon={<Globe2 className="size-4" />} title="基础信息" />
+                        <SectionTitle icon={<Globe2 className="size-4" />} title={t("siteSettings.basicInfo")} />
                         <div className="grid gap-4 md:grid-cols-2">
-                            <LabeledControl label="网站标题">
+                            <LabeledControl label={t("siteSettings.siteTitle")}>
                                 <Input value={settings.site.title} maxLength={40} placeholder="JoveCanvas" onChange={(event) => updateSiteSetting("title", event.target.value)} />
                             </LabeledControl>
-                            <LabeledControl label="Logo URL">
+                            <LabeledControl label={t("siteSettings.logoUrl")}>
                                 <div className="flex gap-2">
-                                    <Input value={settings.site.logoUrl} maxLength={2000} placeholder="/logo.svg 或 https://..." onChange={(event) => updateSiteSetting("logoUrl", event.target.value)} />
+                                    <Input value={settings.site.logoUrl} maxLength={2000} placeholder={t("siteSettings.logoPlaceholder")} onChange={(event) => updateSiteSetting("logoUrl", event.target.value)} />
                                     <Button icon={<Upload className="size-4" />} onClick={() => logoInputRef.current?.click()}>
-                                        上传
+                                        {t("siteSettings.upload")}
                                     </Button>
                                 </div>
                             </LabeledControl>
-                            <LabeledControl label="浏览器图标 URL">
+                            <LabeledControl label={t("siteSettings.iconUrl")}>
                                 <div className="flex gap-2">
-                                    <Input value={settings.site.iconUrl} maxLength={2000} placeholder="/icon.svg、/favicon.ico 或 https://..." onChange={(event) => updateSiteSetting("iconUrl", event.target.value)} />
+                                    <Input value={settings.site.iconUrl} maxLength={2000} placeholder={t("siteSettings.iconPlaceholder")} onChange={(event) => updateSiteSetting("iconUrl", event.target.value)} />
                                     <Button icon={<Upload className="size-4" />} onClick={() => iconInputRef.current?.click()}>
-                                        上传
+                                        {t("siteSettings.upload")}
                                     </Button>
                                 </div>
                             </LabeledControl>
                         </div>
                         <div className="rounded-md border border-dashed border-stone-300 bg-white p-3 text-xs leading-5 text-stone-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-400">
-                            Logo 用于站点品牌展示，浏览器图标用于 favicon、Apple 图标和 PWA；两者支持站内路径、远程 URL、data:image 或本地上传，最大 300KB。
+                            {t("siteSettings.mediaHint")}
                         </div>
 
                         <div className="border-t border-stone-200 pt-5 dark:border-stone-800">
-                            <SectionTitle icon={<Search className="size-4" />} title="SEO 信息" />
+                            <SectionTitle icon={<Search className="size-4" />} title={t("siteSettings.seoInfo")} />
                             <div className="mt-4 space-y-4">
-                                <LabeledControl label="SEO 标题">
+                                <LabeledControl label={t("siteSettings.seoTitle")}>
                                     <Input value={settings.site.seoTitle} maxLength={72} placeholder={settings.site.title} onChange={(event) => updateSiteSetting("seoTitle", event.target.value)} />
                                 </LabeledControl>
-                                <LabeledControl label="SEO 描述">
-                                    <Input.TextArea value={settings.site.seoDescription} maxLength={180} rows={4} placeholder="用于搜索结果和社交分享摘要" onChange={(event) => updateSiteSetting("seoDescription", event.target.value)} />
+                                <LabeledControl label={t("siteSettings.seoDescription")}>
+                                    <Input.TextArea value={settings.site.seoDescription} maxLength={180} rows={4} placeholder={t("siteSettings.seoDescriptionPlaceholder")} onChange={(event) => updateSiteSetting("seoDescription", event.target.value)} />
                                 </LabeledControl>
-                                <LabeledControl label="SEO 关键词">
-                                    <Input value={settings.site.seoKeywords} maxLength={240} placeholder="JoveCanvas,AI Agent,AI 绘图,AI 视频,画布,短剧" onChange={(event) => updateSiteSetting("seoKeywords", event.target.value)} />
+                                <LabeledControl label={t("siteSettings.seoKeywords")}>
+                                    <Input value={settings.site.seoKeywords} maxLength={240} placeholder={t("siteSettings.seoKeywordsPlaceholder")} onChange={(event) => updateSiteSetting("seoKeywords", event.target.value)} />
                                 </LabeledControl>
                             </div>
                         </div>
@@ -178,8 +180,8 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                     <div className="rounded-lg border border-stone-200 bg-stone-50/70 p-4 dark:border-stone-800 dark:bg-stone-900/40">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <SectionTitle icon={<Sparkles className="size-4" />} title="首页提示词展示" />
-                                <div className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">控制首页“随机灵感图 / 精选灵感图”区域。随机模式会从公共提示词库抽取，自定义模式展示下方内容。</div>
+                                <SectionTitle icon={<Sparkles className="size-4" />} title={t("siteSettings.homeShowcase")} />
+                                <div className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">{t("siteSettings.homeShowcaseHint")}</div>
                             </div>
                             <div className="w-full sm:w-[272px] sm:shrink-0">
                                 <Segmented
@@ -189,8 +191,8 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                                     value={settings.site.homeShowcaseMode || "random"}
                                     onChange={(value) => updateSiteSetting("homeShowcaseMode", value as AuthSettings["site"]["homeShowcaseMode"])}
                                     options={[
-                                        { label: "随机提示词", value: "random" },
-                                        { label: "后台自定义", value: "custom" },
+                                        { label: t("siteSettings.randomPrompts"), value: "random" },
+                                        { label: t("siteSettings.customShowcase"), value: "custom" },
                                     ]}
                                 />
                             </div>
@@ -199,9 +201,9 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                         {settings.site.homeShowcaseMode === "custom" ? (
                             <div className="mt-5 space-y-3">
                                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                    <div className="text-xs text-stone-500 dark:text-stone-400">建议至少填写 4 条，封面 URL 可留空，首页会自动使用渐变占位。</div>
+                                    <div className="text-xs text-stone-500 dark:text-stone-400">{t("siteSettings.showcaseTip")}</div>
                                     <Button icon={<Plus className="size-4" />} disabled={(settings.site.homeShowcaseItems || []).length >= 8} onClick={addHomeShowcaseItem}>
-                                        添加展示
+                                        {t("siteSettings.addShowcase")}
                                     </Button>
                                 </div>
                                 <div className="grid gap-3">
@@ -212,24 +214,24 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                                                     <img src={imagePreviewUrl(item.coverUrl, 640)} alt="" className="aspect-[4/3] w-full object-cover" referrerPolicy="no-referrer" />
                                                 ) : (
                                                     <div className="flex aspect-[4/3] items-center justify-center bg-[linear-gradient(135deg,#f8fafc,#dff5ff_45%,#111827)] text-xs text-stone-500 dark:bg-[linear-gradient(135deg,#0f172a,#164e63_45%,#020617)] dark:text-stone-300">
-                                                        无封面
+                                                        {t("siteSettings.noCover")}
                                                     </div>
                                                 )}
                                             </div>
                                             <div className="min-w-0 space-y-3">
                                                 <div className="flex items-center justify-between gap-3">
-                                                    <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">展示 {index + 1}</div>
-                                                    <Button size="small" danger icon={<Trash2 className="size-3.5" />} aria-label="删除首页展示" title="删除首页展示" onClick={() => deleteHomeShowcaseItem(item.id)} />
+                                                    <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("siteSettings.showcaseItem", { index: index + 1 })}</div>
+                                                    <Button size="small" danger icon={<Trash2 className="size-3.5" />} aria-label={t("siteSettings.deleteShowcaseAria")} title={t("siteSettings.deleteShowcaseAria")} onClick={() => deleteHomeShowcaseItem(item.id)} />
                                                 </div>
                                                 <div className="grid gap-3 md:grid-cols-2">
-                                                    <Input value={item.title} maxLength={80} placeholder="展示标题" onChange={(event) => updateHomeShowcaseItem(item.id, { title: event.target.value })} />
-                                                    <Input value={item.category} maxLength={40} placeholder="分类，例如 首页展示" onChange={(event) => updateHomeShowcaseItem(item.id, { category: event.target.value })} />
+                                                    <Input value={item.title} maxLength={80} placeholder={t("siteSettings.showcaseTitlePlaceholder")} onChange={(event) => updateHomeShowcaseItem(item.id, { title: event.target.value })} />
+                                                    <Input value={item.category} maxLength={40} placeholder={t("siteSettings.showcaseCategoryPlaceholder")} onChange={(event) => updateHomeShowcaseItem(item.id, { category: event.target.value })} />
                                                 </div>
-                                                <Input value={item.coverUrl} maxLength={2000} placeholder="封面 URL，可留空" onChange={(event) => updateHomeShowcaseItem(item.id, { coverUrl: event.target.value })} />
+                                                <Input value={item.coverUrl} maxLength={2000} placeholder={t("siteSettings.showcaseCoverPlaceholder")} onChange={(event) => updateHomeShowcaseItem(item.id, { coverUrl: event.target.value })} />
                                                 <Input
                                                     value={(item.tags || []).join("，")}
                                                     maxLength={120}
-                                                    placeholder="标签，用逗号分隔"
+                                                    placeholder={t("siteSettings.showcaseTagsPlaceholder")}
                                                     onChange={(event) =>
                                                         updateHomeShowcaseItem(item.id, {
                                                             tags: event.target.value
@@ -239,37 +241,37 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                                                         })
                                                     }
                                                 />
-                                                <Input.TextArea value={item.prompt} rows={3} maxLength={3000} placeholder="提示词内容" onChange={(event) => updateHomeShowcaseItem(item.id, { prompt: event.target.value })} />
+                                                <Input.TextArea value={item.prompt} rows={3} maxLength={3000} placeholder={t("siteSettings.showcasePromptPlaceholder")} onChange={(event) => updateHomeShowcaseItem(item.id, { prompt: event.target.value })} />
                                             </div>
                                         </div>
                                     ))}
                                     {!settings.site.homeShowcaseItems?.length ? (
-                                        <div className="rounded-md border border-dashed border-stone-200 px-3 py-8 text-center text-sm text-stone-500 dark:border-stone-800">暂无自定义展示，点击“添加展示”开始配置。</div>
+                                        <div className="rounded-md border border-dashed border-stone-200 px-3 py-8 text-center text-sm text-stone-500 dark:border-stone-800">{t("siteSettings.showcaseEmpty")}</div>
                                     ) : null}
                                 </div>
                             </div>
                         ) : (
                             <div className="mt-5 rounded-lg border border-dashed border-stone-200 bg-white px-4 py-5 text-sm leading-6 text-stone-600 dark:border-stone-800 dark:bg-stone-950/60 dark:text-stone-300">
-                                当前使用公共提示词库随机展示。首页接近该区域时才会加载随机内容，避免拖慢首屏。
+                                {t("siteSettings.randomModeHint")}
                             </div>
                         )}
                     </div>
 
                     <div className="rounded-lg border border-stone-200 bg-stone-50/70 p-4 dark:border-stone-800 dark:bg-stone-900/40">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <SectionTitle icon={<Globe2 className="size-4" />} title="首页收尾与社交媒体" />
-                            <span className="text-xs font-medium text-stone-500 dark:text-stone-400">独立控制首页尾页展示</span>
+                            <SectionTitle icon={<Globe2 className="size-4" />} title={t("siteSettings.footerSocial")} />
+                            <span className="text-xs font-medium text-stone-500 dark:text-stone-400">{t("siteSettings.footerSocialHint")}</span>
                         </div>
                         <div className="mt-5 space-y-4">
-                            <LabeledControl label="版权所有">
+                            <LabeledControl label={t("siteSettings.copyright")}>
                                 <Input value={settings.site.footerCopyright} maxLength={120} placeholder="© 2026 JoveCanvas. All rights reserved." onChange={(event) => updateSiteSetting("footerCopyright", event.target.value)} />
                             </LabeledControl>
                             <div className="grid gap-4 md:grid-cols-2">
-                                <LabeledControl label="使用条款链接">
-                                    <Input value={settings.site.termsUrl} maxLength={2000} placeholder="/terms 或 https://..." onChange={(event) => updateSiteSetting("termsUrl", event.target.value)} />
+                                <LabeledControl label={t("siteSettings.termsUrl")}>
+                                    <Input value={settings.site.termsUrl} maxLength={2000} placeholder={t("siteSettings.termsPlaceholder")} onChange={(event) => updateSiteSetting("termsUrl", event.target.value)} />
                                 </LabeledControl>
-                                <LabeledControl label="隐私政策链接">
-                                    <Input value={settings.site.privacyUrl} maxLength={2000} placeholder="/privacy 或 https://..." onChange={(event) => updateSiteSetting("privacyUrl", event.target.value)} />
+                                <LabeledControl label={t("siteSettings.privacyUrl")}>
+                                    <Input value={settings.site.privacyUrl} maxLength={2000} placeholder={t("siteSettings.privacyPlaceholder")} onChange={(event) => updateSiteSetting("privacyUrl", event.target.value)} />
                                 </LabeledControl>
                             </div>
                             <div className="grid gap-3">
@@ -282,7 +284,7 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                                                     <span className="flex size-7 items-center justify-center rounded-md bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200/70 dark:bg-cyan-950/40 dark:text-cyan-200 dark:ring-cyan-900/60">{item.icon}</span>
                                                     {item.label}
                                                 </div>
-                                                <Switch checked={social.enabled} checkedChildren="显示" unCheckedChildren="隐藏" onChange={(enabled) => updateSiteSocialSetting(item.key, { enabled })} />
+                                                <Switch checked={social.enabled} checkedChildren={t("siteSettings.show")} unCheckedChildren={t("siteSettings.hide")} onChange={(enabled) => updateSiteSocialSetting(item.key, { enabled })} />
                                             </div>
                                             <div className="grid gap-3 md:grid-cols-[160px_minmax(0,1fr)]">
                                                 <Input value={social.label} maxLength={32} placeholder={item.label} onChange={(event) => updateSiteSocialSetting(item.key, { label: event.target.value })} />
@@ -295,21 +297,21 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                             <div className="border-t border-stone-200 pt-4 dark:border-stone-800">
                                 <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
-                                        <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">友情链接</div>
-                                        <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">启用后会显示在首页顶部导航和底部链接区。</div>
+                                        <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("siteSettings.friendLinks")}</div>
+                                        <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{t("siteSettings.friendLinksHint")}</div>
                                     </div>
                                     <Button icon={<Plus className="size-4" />} onClick={addFriendLink}>
-                                        添加链接
+                                        {t("siteSettings.addLink")}
                                     </Button>
                                 </div>
                                 <div className="grid gap-3">
                                     {(settings.site.friendLinks || []).map((link) => (
                                         <div key={link.id} className="rounded-lg border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-950/60">
                                             <div className="mb-3 flex items-center justify-between gap-3">
-                                                <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{link.label || "友情链接"}</div>
+                                                <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{link.label || t("siteSettings.friendLinkFallback")}</div>
                                                 <div className="flex items-center gap-2">
-                                                    <Switch checked={link.enabled} checkedChildren="显示" unCheckedChildren="隐藏" onChange={(enabled) => updateFriendLink(link.id, { enabled })} />
-                                                    <Button size="small" danger icon={<Trash2 className="size-3.5" />} aria-label="删除友情链接" title="删除友情链接" onClick={() => deleteFriendLink(link.id)} />
+                                                    <Switch checked={link.enabled} checkedChildren={t("siteSettings.show")} unCheckedChildren={t("siteSettings.hide")} onChange={(enabled) => updateFriendLink(link.id, { enabled })} />
+                                                    <Button size="small" danger icon={<Trash2 className="size-3.5" />} aria-label={t("siteSettings.deleteFriendLinkAria")} title={t("siteSettings.deleteFriendLinkAria")} onClick={() => deleteFriendLink(link.id)} />
                                                 </div>
                                             </div>
                                             <div className="grid gap-3 md:grid-cols-[160px_minmax(0,1fr)]">
@@ -318,7 +320,7 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                                             </div>
                                         </div>
                                     ))}
-                                    {!settings.site.friendLinks?.length ? <div className="rounded-md border border-dashed border-stone-200 px-3 py-6 text-center text-sm text-stone-500 dark:border-stone-800">暂无友情链接。</div> : null}
+                                    {!settings.site.friendLinks?.length ? <div className="rounded-md border border-dashed border-stone-200 px-3 py-6 text-center text-sm text-stone-500 dark:border-stone-800">{t("siteSettings.friendLinksEmpty")}。</div> : null}
                                 </div>
                             </div>
                         </div>
@@ -327,13 +329,13 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
 
                 <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
                     <div className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm shadow-stone-200/40 dark:border-stone-800 dark:bg-stone-950 dark:shadow-black/20">
-                        <SectionTitle icon={<ImageIcon className="size-4" />} title="前台预览" />
+                        <SectionTitle icon={<ImageIcon className="size-4" />} title={t("siteSettings.frontendPreview")} />
                         <div className="mt-5 rounded-lg border border-stone-200 bg-white p-5 text-stone-950 shadow-sm shadow-stone-200/60 dark:border-white/10 dark:bg-stone-950 dark:text-white dark:shadow-black/20">
                             <div className="flex items-center gap-3">
                                 <SiteLogoPreview logoUrl={settings.site.logoUrl} />
                                 <div className="min-w-0">
                                     <div className="truncate text-lg font-semibold">{settings.site.title || "JoveCanvas"}</div>
-                                    <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">首页导航品牌</div>
+                                    <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{t("siteSettings.navBrand")}</div>
                                 </div>
                             </div>
                             <div className="mt-6 border-t border-stone-200 pt-4 dark:border-white/10">
@@ -351,22 +353,23 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
 }
 
 export function AdminSettingsSection({ controller }: { controller: AdminDashboardController }) {
+    const t = useTranslations("admin");
     const { settings, setSettings, settingsLoading, mailTestLoading, mailTestTo, setMailTestTo, activeSection, saveSettings, updateGenerationConcurrency, updateGenerationDefaults, updateMailSetting, testMailSettings } = controller;
     if (activeSection !== "settings") return null;
     return (
         <Panel>
             <PanelHeader
-                title="系统设置"
-                description="管理账号注册、邮箱服务、生成并发和默认参数。"
+                title={t("systemSettings.title")}
+                description={t("systemSettings.description")}
                 actions={
                     <div className="flex items-center justify-end gap-1.5 sm:w-auto sm:flex-row sm:gap-2">
                         <div className="hidden flex-wrap gap-2 text-xs text-stone-500 sm:flex dark:text-stone-400">
-                            <Tag className="m-0">{settings.registrationEnabled ? "注册开放" : "注册关闭"}</Tag>
+                            <Tag className="m-0">{settings.registrationEnabled ? t("systemSettings.registrationOpen") : t("systemSettings.registrationClosed")}</Tag>
                         </div>
                         <Button
                             type="primary"
-                            aria-label="保存系统设置"
-                            title="保存系统设置"
+                            aria-label={t("systemSettings.saveAria")}
+                            title={t("systemSettings.saveAria")}
                             loading={settingsLoading}
                             icon={<Save className="size-4" />}
                             onClick={() =>
@@ -378,24 +381,24 @@ export function AdminSettingsSection({ controller }: { controller: AdminDashboar
                                         generationConcurrency: settings.generationConcurrency,
                                         generationDefaults: settings.generationDefaults,
                                     },
-                                    "账号、邮箱与生成默认值已保存",
+                                    t("systemSettings.saved"),
                                 )
                             }
                         >
-                            <span className="sm:hidden">保存</span>
-                            <span className="hidden sm:inline">保存系统设置</span>
+                            <span className="sm:hidden">{t("systemSettings.saveShort")}</span>
+                            <span className="hidden sm:inline">{t("systemSettings.save")}</span>
                         </Button>
                     </div>
                 }
             />
             <div className="space-y-3 p-3 sm:space-y-5 sm:p-5">
                 <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                    <SettingsStatusTile icon={<UserCog className="size-4" />} label="账号入口" value={settings.registrationEnabled ? "注册开放" : "注册关闭"} detail={settings.emailRegistrationEnabled ? "邮箱注册已启用" : "邮箱注册未启用"} tone="cyan" />
+                    <SettingsStatusTile icon={<UserCog className="size-4" />} label={t("systemSettings.accountEntry")} value={settings.registrationEnabled ? t("systemSettings.registrationOpen") : t("systemSettings.registrationClosed")} detail={settings.emailRegistrationEnabled ? t("systemSettings.emailRegistrationEnabled") : t("systemSettings.emailRegistrationDisabled")} tone="cyan" />
                     <SettingsStatusTile
                         icon={<Sparkles className="size-4" />}
-                        label="生成控制"
-                        value={`${settings.generationConcurrency.agent || 1} 个 Agent`}
-                        detail={`图片 ${settings.generationDefaults.imageCount || 1} 张 / ${settings.generationDefaults.videoSeconds === -1 ? "视频智能时长" : `视频 ${settings.generationDefaults.videoSeconds || 5}s`}`}
+                        label={t("systemSettings.generationControl")}
+                        value={t("systemSettings.agentCount", { count: settings.generationConcurrency.agent || 1 })}
+                        detail={`${t("systemSettings.imageCount", { count: settings.generationDefaults.imageCount || 1 })} / ${settings.generationDefaults.videoSeconds === -1 ? t("systemSettings.videoSmartDuration") : t("systemSettings.videoSeconds", { count: settings.generationDefaults.videoSeconds || 5 })}`}
                         tone="blue"
                     />
                 </div>
@@ -403,10 +406,10 @@ export function AdminSettingsSection({ controller }: { controller: AdminDashboar
                 <div className="grid gap-4 2xl:grid-cols-[248px_minmax(0,1fr)]">
                     <aside className="2xl:sticky 2xl:top-4 2xl:self-start">
                         <div className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950">
-                            <div className="px-2 pb-2 text-xs font-semibold text-stone-500 dark:text-stone-400">设置顺序</div>
-                            <nav className="grid grid-cols-2 gap-1.5 sm:gap-2 2xl:grid-cols-1" aria-label="系统设置分组">
-                                <SettingsAnchorItem href="#admin-settings-account" icon={<UserCog className="size-4" />} title="账号与邮箱" detail="注册、SMTP、测试邮件" />
-                                <SettingsAnchorItem href="#admin-settings-generation" icon={<SlidersHorizontal className="size-4" />} title="生成控制" detail="默认值、并发上限" />
+                            <div className="px-2 pb-2 text-xs font-semibold text-stone-500 dark:text-stone-400">{t("systemSettings.settingsOrder")}</div>
+                            <nav className="grid grid-cols-2 gap-1.5 sm:gap-2 2xl:grid-cols-1" aria-label={t("systemSettings.groupsAria")}>
+                                <SettingsAnchorItem href="#admin-settings-account" icon={<UserCog className="size-4" />} title={t("systemSettings.accountMail")} detail={t("systemSettings.accountMailDetail")} />
+                                <SettingsAnchorItem href="#admin-settings-generation" icon={<SlidersHorizontal className="size-4" />} title={t("systemSettings.generationControl")} detail={t("systemSettings.generationDetail")} />
                             </nav>
                         </div>
                     </aside>
@@ -415,22 +418,22 @@ export function AdminSettingsSection({ controller }: { controller: AdminDashboar
                         <section id="admin-settings-account" className="scroll-mt-6 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
                             <div className="grid gap-5 xl:grid-cols-[minmax(240px,0.72fr)_minmax(0,1.28fr)]">
                                 <div className="min-w-0 space-y-4">
-                                    <SectionTitle icon={<UserCog className="size-4" />} title="账号策略" />
+                                    <SectionTitle icon={<UserCog className="size-4" />} title={t("systemSettings.accountPolicy")} />
                                     <div className="grid gap-3">
                                         <SettingToggle
-                                            title="开放注册"
-                                            description="关闭后，新账号不能自助注册。"
+                                            title={t("systemSettings.openRegistration")}
+                                            description={t("systemSettings.openRegistrationDesc")}
                                             checked={settings.registrationEnabled}
-                                            checkedChildren="开放"
-                                            unCheckedChildren="关闭"
+                                            checkedChildren={t("systemSettings.open")}
+                                            unCheckedChildren={t("systemSettings.close")}
                                             onChange={(registrationEnabled) => setSettings((current) => ({ ...current, registrationEnabled }))}
                                         />
                                         <SettingToggle
-                                            title="邮箱注册"
-                                            description="开启后，注册页必须填写邮箱；邮箱唯一，不允许重复注册。"
+                                            title={t("systemSettings.emailRegistration")}
+                                            description={t("systemSettings.emailRegistrationDesc")}
                                             checked={settings.emailRegistrationEnabled}
-                                            checkedChildren="开启"
-                                            unCheckedChildren="关闭"
+                                            checkedChildren={t("systemSettings.on")}
+                                            unCheckedChildren={t("systemSettings.close")}
                                             onChange={(emailRegistrationEnabled) => setSettings((current) => ({ ...current, emailRegistrationEnabled }))}
                                         />
                                     </div>
@@ -438,48 +441,47 @@ export function AdminSettingsSection({ controller }: { controller: AdminDashboar
 
                                 <div className="min-w-0 border-t border-stone-200 pt-4 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0 dark:border-stone-800">
                                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                        <SectionTitle icon={<Mail className="size-4" />} title="邮箱服务" />
+                                        <SectionTitle icon={<Mail className="size-4" />} title={t("systemSettings.mailService")} />
                                         <Button className="w-full sm:w-auto" loading={mailTestLoading} icon={<Send className="size-4" />} onClick={() => void testMailSettings()}>
-                                            测试邮箱
+                                            {t("systemSettings.testMail")}
                                         </Button>
                                     </div>
                                     <div className="mt-4 grid gap-3">
                                         <div className="grid gap-3 sm:grid-cols-2">
-                                            <LabeledControl label="邮箱类型">
-                                                <Input value={settings.mail.provider} placeholder="QQ 邮箱" onChange={(event) => updateMailSetting("provider", event.target.value)} />
+                                            <LabeledControl label={t("systemSettings.mailProvider")}>
+                                                <Input value={settings.mail.provider} placeholder={t("systemSettings.mailProviderPlaceholder")} onChange={(event) => updateMailSetting("provider", event.target.value)} />
                                             </LabeledControl>
-                                            <LabeledControl label="SMTP 服务器">
+                                            <LabeledControl label={t("systemSettings.smtpServer")}>
                                                 <Input value={settings.mail.host} placeholder="smtp.qq.com" onChange={(event) => updateMailSetting("host", event.target.value)} />
                                             </LabeledControl>
                                         </div>
                                         <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-                                            <LabeledControl label="端口">
+                                            <LabeledControl label={t("systemSettings.port")}>
                                                 <InputNumber className="w-full" min={1} max={65535} precision={0} value={settings.mail.port} onChange={(value) => updateMailSetting("port", Number(value) || 465)} />
                                             </LabeledControl>
-                                            <SettingInlineToggle title="SSL" checked={settings.mail.secure} checkedChildren="开启" unCheckedChildren="关闭" onChange={(secure) => updateMailSetting("secure", secure)} />
+                                            <SettingInlineToggle title="SSL" checked={settings.mail.secure} checkedChildren={t("systemSettings.on")} unCheckedChildren={t("systemSettings.close")} onChange={(secure) => updateMailSetting("secure", secure)} />
                                         </div>
                                         <div className="grid gap-3 lg:grid-cols-2">
-                                            <LabeledControl label="邮箱账号">
+                                            <LabeledControl label={t("systemSettings.mailAccount")}>
                                                 <Input value={settings.mail.username} placeholder="admin@example.com" onChange={(event) => updateMailSetting("username", event.target.value)} />
                                             </LabeledControl>
-                                            <LabeledControl label="授权码 / 密码">
-                                                <Input.Password value={settings.mail.password} placeholder="QQ 邮箱请填写 SMTP 授权码" onChange={(event) => updateMailSetting("password", event.target.value)} />
+                                            <LabeledControl label={t("systemSettings.authCode")}>
+                                                <Input.Password value={settings.mail.password} placeholder={t("systemSettings.authCodePlaceholder")} onChange={(event) => updateMailSetting("password", event.target.value)} />
                                             </LabeledControl>
                                         </div>
                                         <div className="grid gap-3 sm:grid-cols-2">
-                                            <LabeledControl label="发件邮箱">
-                                                <Input value={settings.mail.fromEmail} placeholder="默认使用邮箱账号" onChange={(event) => updateMailSetting("fromEmail", event.target.value)} />
+                                            <LabeledControl label={t("systemSettings.fromEmail")}>
+                                                <Input value={settings.mail.fromEmail} placeholder={t("systemSettings.fromEmailPlaceholder")} onChange={(event) => updateMailSetting("fromEmail", event.target.value)} />
                                             </LabeledControl>
-                                            <LabeledControl label="发件名称">
+                                            <LabeledControl label={t("systemSettings.fromName")}>
                                                 <Input value={settings.mail.fromName} placeholder="JoveCanvas" onChange={(event) => updateMailSetting("fromName", event.target.value)} />
                                             </LabeledControl>
                                         </div>
-                                        <LabeledControl label="测试收件邮箱">
-                                            <Input value={mailTestTo} placeholder="留空则发送到发件邮箱" onChange={(event) => setMailTestTo(event.target.value)} />
+                                        <LabeledControl label={t("systemSettings.testTo")}>
+                                            <Input value={mailTestTo} placeholder={t("systemSettings.testToPlaceholder")} onChange={(event) => setMailTestTo(event.target.value)} />
                                         </LabeledControl>
                                         <div className="rounded-lg border border-cyan-200/70 bg-cyan-50/80 px-3 py-2 text-xs leading-5 text-cyan-900 dark:border-cyan-900/50 dark:bg-cyan-950/30 dark:text-cyan-100">
-                                            QQ、网易、企业邮箱都可填写对应 SMTP；QQ 默认 `smtp.qq.com:465 SSL`，密码通常使用邮箱授权码。
-                                        </div>
+                                            {t("systemSettings.mailHint")}</div>
                                     </div>
                                 </div>
                             </div>

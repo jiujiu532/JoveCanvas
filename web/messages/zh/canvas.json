@@ -557,6 +557,44 @@
     "agentRetryFailed": "Agent 任务重试失败",
     "promptMissing": "找不到提示词，无法重试",
     "referenceImageLost": "参考图片已丢失，无法继续重试",
-    "emptyTextNode": "文本节点为空，无法生图"
+    "emptyTextNode": "文本节点为空，无法生图",
+    "imageFailed": "图片生成失败",
+    "videoFailed": "视频生成失败",
+    "textFailed": "文本生成失败",
+    "audioFailed": "音频生成失败",
+    "maskEditFailed": "局部修改失败",
+    "emptyResponse": "没有返回内容",
+    "videoCompleteSummary": "画布视频生成完成"
+  },
+  "toast": {
+    "cannotConnectConfigNodes": "配置节点之间不能连接",
+    "clipboardImageAdded": "已从剪切板添加图片",
+    "clipboardTextAdded": "已从剪切板添加文本",
+    "addedToAssets": "已加入我的素材",
+    "emptyImageCannotReverse": "图片节点为空，无法反推提示词",
+    "splitIntoChildren": "已切分为 {count} 个子节点",
+    "panoramaRatioRequired": "全景图必须接近 2:1 比例，例如 2048x1024",
+    "assistantImageReferenced": "图片已添加到本轮引用"
+  },
+  "defaults": {
+    "clipboardText": "剪切板文本",
+    "canvasText": "画布文本",
+    "canvasImage": "画布图片",
+    "canvasVideo": "画布视频",
+    "canvasImageGen": "画布生图",
+    "reversePrompt": "反推提示词",
+    "reversePromptConfig": "反推提示词配置",
+    "maskEditResult": "局部编辑结果"
+  },
+  "errors": {
+    "noSavableText": "没有可保存的文本",
+    "noSavableVideo": "没有可保存的视频",
+    "noSavableImage": "没有可保存的图片"
+  },
+  "modal": {
+    "stopGenerationTitle": "停止生成？",
+    "stopGenerationContent": "当前生成请求会被中断，已经生成完成的内容会保留。",
+    "stopOk": "停止",
+    "stopCancel": "继续生成"
   }
 }

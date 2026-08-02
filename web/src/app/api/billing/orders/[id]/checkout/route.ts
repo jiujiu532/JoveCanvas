@@ -6,7 +6,7 @@ import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-lo
 import { BillingInputError, isBillingInputError } from "@/lib/server/billing-service";
 import { createPaymentCheckoutForOrder } from "@/lib/server/payment-checkout-service";
 import { readRequestBodyText, RequestBodyTooLargeError } from "@/lib/server/request-body-limit";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,8 +44,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
             target: { type: "billing_order", id },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
-        if (error instanceof RequestBodyTooLargeError) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
+        if (error instanceof RequestBodyTooLargeError) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Create payment checkout failed", error);
         return NextResponse.json({ error: await serverMessage("billing.createPaymentParamsFailed") }, { status: 500 });
     }

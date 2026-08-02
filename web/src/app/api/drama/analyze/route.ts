@@ -87,7 +87,11 @@ export async function POST(request: Request) {
                         console.error("[drama-analyze] normalized output invalid", JSON.stringify({ phase, channelId: candidate.channel.id, model: candidate.upstreamModel, resultCount, expectedCount, shape: describeDramaAnalysisCandidate(parsed) }));
                         throw new Error(phase === "visual" ? "模型没有为全部镜头生成视觉结构" : "模型没有生成有效内容结构");
                     }
-                    const response = NextResponse.json({ code: 0, data, msg: phase === "visual" ? "视觉结构已生成" : "内容结构待审核" });
+                    const response = NextResponse.json({
+                        code: 0,
+                        data,
+                        msg: phase === "visual" ? await serverMessage("drama.visualStructureGenerated") : await serverMessage("drama.contentStructurePendingReview"),
+                    });
                     if (typeof call.pointsRemaining === "number") response.headers.set("x-vozeb-pro-points-remaining", String(call.pointsRemaining));
                     return response;
                 } catch (error) {
@@ -98,9 +102,16 @@ export async function POST(request: Request) {
                 latestError = error;
             }
         }
-        throw latestError instanceof Error ? latestError : new Error("没有可用的文本模型渠道");
+        throw latestError instanceof Error ? latestError : new Error(await serverMessage("tasks.noTextModelChannel"));
     } catch (error) {
-        const response = NextResponse.json({ code: 502, data: null, msg: error instanceof Error ? error.message : "剧本分析失败" }, { status: 502 });
+        const response = NextResponse.json(
+            {
+                code: 502,
+                data: null,
+                msg: error instanceof Error ? await localizeErrorMessage(error) : await serverMessage("tasks.scriptAnalyzeFailed"),
+            },
+            { status: 502 },
+        );
         if (typeof refundedPointsRemaining === "number") response.headers.set("x-vozeb-pro-points-remaining", String(refundedPointsRemaining));
         return response;
     }

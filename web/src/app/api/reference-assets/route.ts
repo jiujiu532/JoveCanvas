@@ -5,7 +5,7 @@ import { CREATIVE_UPLOAD_MAX_BYTES } from "@/lib/creative-upload";
 import { writePersistentMediaDataUrl, writeReferenceMediaDataUrl } from "@/lib/server/reference-asset-store";
 import { readJsonBody } from "@/lib/auth/request";
 import { createSignedReferenceAssetUrl } from "@/lib/server/reference-asset-access";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,7 +42,12 @@ export async function POST(request: Request) {
             mimeType: asset.mimeType,
         });
     } catch (error) {
-        return NextResponse.json({ error: error instanceof Error ? error.message : "参考图临时保存失败" }, { status: 400 });
+        return NextResponse.json(
+            {
+                error: error instanceof Error ? await localizeErrorMessage(error) : await serverMessage("media.refTempSaveFailed"),
+            },
+            { status: 400 },
+        );
     }
 }
 

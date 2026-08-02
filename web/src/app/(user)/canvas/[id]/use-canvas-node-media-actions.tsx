@@ -4,6 +4,7 @@ import { saveAs } from "file-saver";
 import dynamic from "next/dynamic";
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import { useCallback } from "react";
+import { useTranslations } from "next-intl";
 
 import { getDataUrlByteSize } from "@/lib/image-utils";
 import { mediaDownloadFileName } from "@/lib/media-file";
@@ -33,6 +34,7 @@ import type { CanvasPageState } from "./use-canvas-page-state";
 import type { CanvasTaskRuntime } from "./use-canvas-task-runtime";
 
 export function useCanvasNodeMediaActions({ state, tasks, interactions }: { state: CanvasPageState; tasks: CanvasTaskRuntime; interactions: CanvasInteractions }) {
+    const t = useTranslations("canvas");
     const {
         message,
         params,
@@ -183,16 +185,16 @@ export function useCanvasNodeMediaActions({ state, tasks, interactions }: { stat
         async (node: CanvasNodeData) => {
             if (node.type === CanvasNodeType.Text) {
                 const content = node.metadata?.content?.trim();
-                if (!content) return message.error("没有可保存的文本");
-                await addAsset({ kind: "text", title: node.metadata?.prompt?.slice(0, 24) || "画布文本", coverUrl: "", tags: [], source: "Canvas", data: { content }, metadata: { source: "canvas", nodeId: node.id } });
-                message.success("已加入我的素材");
+                if (!content) return message.error(t("errors.noSavableText"));
+                await addAsset({ kind: "text", title: node.metadata?.prompt?.slice(0, 24) || t("defaults.canvasText"), coverUrl: "", tags: [], source: "Canvas", data: { content }, metadata: { source: "canvas", nodeId: node.id } });
+                message.success(t("toast.addedToAssets"));
                 return;
             }
             if (node.type === CanvasNodeType.Video) {
-                if (!node.metadata?.content) return message.error("没有可保存的视频");
+                if (!node.metadata?.content) return message.error(t("errors.noSavableVideo"));
                 await addAsset({
                     kind: "video",
-                    title: node.metadata?.prompt?.slice(0, 24) || "画布视频",
+                    title: node.metadata?.prompt?.slice(0, 24) || t("defaults.canvasVideo"),
                     coverUrl: "",
                     tags: [],
                     source: "Canvas",
@@ -208,14 +210,14 @@ export function useCanvasNodeMediaActions({ state, tasks, interactions }: { stat
                     },
                     metadata: { source: "canvas", nodeId: node.id, prompt: node.metadata?.prompt },
                 });
-                message.success("已加入我的素材");
+                message.success(t("toast.addedToAssets"));
                 return;
             }
-            if (!node.metadata?.content) return message.error("没有可保存的图片");
+            if (!node.metadata?.content) return message.error(t("errors.noSavableImage"));
             const dataUrl = node.metadata.storageKey ? "" : node.metadata.content;
             await addAsset({
                 kind: "image",
-                title: node.metadata?.prompt?.slice(0, 24) || "画布图片",
+                title: node.metadata?.prompt?.slice(0, 24) || t("defaults.canvasImage"),
                 coverUrl: node.metadata.content,
                 tags: [],
                 source: "Canvas",
@@ -231,15 +233,15 @@ export function useCanvasNodeMediaActions({ state, tasks, interactions }: { stat
                 },
                 metadata: { source: "canvas", nodeId: node.id, prompt: node.metadata?.prompt },
             });
-            message.success("已加入我的素材");
+            message.success(t("toast.addedToAssets"));
         },
-        [addAsset, message],
+        [addAsset, message, t],
     );
 
     const createImageReversePromptNodes = useCallback(
         (node: CanvasNodeData) => {
             if (!isCanvasImageNodeType(node.type) || !node.metadata?.content) {
-                message.warning("图片节点为空，无法反推提示词");
+                message.warning(t("toast.emptyImageCannotReverse"));
                 return;
             }
 
@@ -249,7 +251,7 @@ export function useCanvasNodeMediaActions({ state, tasks, interactions }: { stat
             const centerY = node.position.y + node.height / 2;
             const textNode = {
                 ...createCanvasNode(CanvasNodeType.Text, { x: node.position.x + node.width + gap + textSpec.width / 2, y: centerY }, { content: IMAGE_PROMPT_REVERSE_PRESET, prompt: IMAGE_PROMPT_REVERSE_PRESET, status: NODE_STATUS_SUCCESS, fontSize: 14 }),
-                title: "反推提示词",
+                title: t("defaults.reversePrompt"),
             };
             const configNode = {
                 ...createCanvasNode(
@@ -262,7 +264,7 @@ export function useCanvasNodeMediaActions({ state, tasks, interactions }: { stat
                         composerContent: `参考图片：@[node:${node.id}]\n任务说明：@[node:${textNode.id}]`,
                     },
                 ),
-                title: "反推提示词配置",
+                title: t("defaults.reversePromptConfig"),
             };
 
             setNodes((prev) => [...prev, textNode, configNode]);
@@ -272,7 +274,7 @@ export function useCanvasNodeMediaActions({ state, tasks, interactions }: { stat
             setDialogNodeId(configNode.id);
             setContextMenu(null);
         },
-        [effectiveConfig.model, effectiveConfig.textModel, message],
+        [effectiveConfig.model, effectiveConfig.textModel, message, t],
     );
 
     const appendDerivedImageNode = useCallback((sourceNode: CanvasNodeData, image: UploadedImage, title: string, size: { width: number; height: number }) => {
@@ -320,7 +322,7 @@ export function useCanvasNodeMediaActions({ state, tasks, interactions }: { stat
                     return {
                         id,
                         type: CanvasNodeType.Image,
-                        title: `${node.title || "图片"} ${piece.row + 1}-${piece.column + 1}`,
+                        title: `${node.title || t("page.imageAlt")} ${piece.row + 1}-${piece.column + 1}`,
                         position: { x: startX + piece.column * (cellWidth + gap), y: startY + piece.row * (cellHeight + gap) },
                         width: cellWidth,
                         height: cellHeight,
@@ -336,9 +338,9 @@ export function useCanvasNodeMediaActions({ state, tasks, interactions }: { stat
             setSelectedNodeIds(new Set(childNodes.map((child) => child.id)));
             setSelectedConnectionId(null);
             setDialogNodeId(null);
-            message.success(`已切分为 ${childNodes.length} 个子节点`);
+            message.success(t("toast.splitIntoChildren", { count: childNodes.length }));
         },
-        [message],
+        [message, t],
     );
 
     const maskEditImageNode = useCallback(
@@ -361,7 +363,7 @@ export function useCanvasNodeMediaActions({ state, tasks, interactions }: { stat
                 {
                     id: childId,
                     type: CanvasNodeType.Image,
-                    title: userPrompt.slice(0, 32) || "局部编辑结果",
+                    title: userPrompt.slice(0, 32) || t("defaults.maskEditResult"),
                     position: { x: node.position.x + node.width + 96, y: node.position.y },
                     width: node.width,
                     height: node.height,
@@ -377,7 +379,7 @@ export function useCanvasNodeMediaActions({ state, tasks, interactions }: { stat
                 await startAndCompleteImageTask(childId, generationConfig, prompt, [source], { id: `${node.id}-mask`, name: "mask.png", type: "image/png", dataUrl: payload.maskDataUrl }, controller);
             } catch (error) {
                 if (isGenerationCanceled(error)) return;
-                const errorDetails = error instanceof Error ? error.message : "局部修改失败";
+                const errorDetails = error instanceof Error ? error.message : t("generation.maskEditFailed");
                 message.error(errorDetails);
                 setNodes((prev) => prev.map((item) => (item.id === childId ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_ERROR, errorDetails, imageTask: undefined } } : item)));
             } finally {
@@ -385,7 +387,7 @@ export function useCanvasNodeMediaActions({ state, tasks, interactions }: { stat
                 setRunningNodeId(null);
             }
         },
-        [effectiveConfig, finishGenerationRequest, isAiConfigReady, message, openConfigDialog, startAndCompleteImageTask, startGenerationRequest],
+        [effectiveConfig, finishGenerationRequest, isAiConfigReady, message, openConfigDialog, startAndCompleteImageTask, startGenerationRequest, t],
     );
 
     const upscaleImageNode = useCallback(
@@ -435,14 +437,14 @@ export function useCanvasNodeMediaActions({ state, tasks, interactions }: { stat
                 await startAndCompleteImageTask(childId, generationConfig, prompt, [canvasNodeReferenceImage(node)], undefined, controller);
             } catch (error) {
                 if (isGenerationCanceled(error)) return;
-                const errorDetails = error instanceof Error ? error.message : "生成失败";
+                const errorDetails = error instanceof Error ? error.message : t("generation.failed");
                 setNodes((prev) => prev.map((item) => (item.id === childId ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_ERROR, errorDetails, imageTask: undefined } } : item)));
             } finally {
                 finishGenerationRequest(childId, controller);
                 setRunningNodeId(null);
             }
         },
-        [effectiveConfig, finishGenerationRequest, isAiConfigReady, openConfigDialog, startAndCompleteImageTask, startGenerationRequest],
+        [effectiveConfig, finishGenerationRequest, isAiConfigReady, openConfigDialog, startAndCompleteImageTask, startGenerationRequest, t],
     );
 
     const handleFontSizeChange = useCallback((nodeId: string, fontSize: number) => {

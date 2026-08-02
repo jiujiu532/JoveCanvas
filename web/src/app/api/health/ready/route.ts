@@ -20,7 +20,14 @@ export async function GET() {
             firstAdminRequired: install.firstAdminRequired,
             generationWorker,
         };
-        return NextResponse.json({ code: ready ? 0 : 503, data, msg: ready ? "服务已就绪" : "服务尚未就绪" }, { status: ready ? 200 : 503, headers: { "cache-control": "no-store" } });
+        return NextResponse.json(
+            {
+                code: ready ? 0 : 503,
+                data,
+                msg: ready ? await serverMessage("health.ready") : await serverMessage("health.notReady"),
+            },
+            { status: ready ? 200 : 503, headers: { "cache-control": "no-store" } },
+        );
     } catch (error) {
         console.error("Readiness check failed", error);
         return NextResponse.json({ code: 503, data: { ready: false }, msg: await serverMessage("health.notReady") }, { status: 503, headers: { "cache-control": "no-store" } });

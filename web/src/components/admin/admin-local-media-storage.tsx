@@ -4,6 +4,9 @@ import { App, Button, Checkbox, Image, Input, Modal, Pagination, Popconfirm, Sel
 import type { TableColumnsType } from "antd";
 import { Clock3, Download, Eye, File, FileAudio, Film, RefreshCw, Search, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
+
+type AdminTranslator = ReturnType<typeof useTranslations<"admin">>;
 
 import { AdminMediaTypeTabs } from "@/components/admin/admin-media-type-tabs";
 import { Panel, PanelHeader } from "@/components/admin/admin-panel";
@@ -15,6 +18,7 @@ import { imagePreviewUrl, originalMediaDownloadUrl } from "@/lib/media-image-url
 const PAGE_SIZE = 20;
 
 export function AdminLocalMediaStorage() {
+    const t = useTranslations("admin");
     const { message } = App.useApp();
     const [data, setData] = useState<LocalMediaStoragePayload>();
     const [loading, setLoading] = useState(true);
@@ -39,14 +43,14 @@ export function AdminLocalMediaStorage() {
             if (submittedSearch) query.set("search", submittedSearch);
             const response = await fetch(`/api/admin/generation-assets?${query}`, { cache: "no-store" });
             const payload = (await response.json().catch(() => ({}))) as { data?: LocalMediaStoragePayload; msg?: string; error?: string };
-            if (!response.ok || !payload.data) throw new Error(payload.msg || payload.error || "媒体文件加载失败");
+            if (!response.ok || !payload.data) throw new Error(payload.msg || payload.error || t("localMedia.loadFailed"));
             setData(payload.data);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "媒体文件加载失败");
+            message.error(error instanceof Error ? error.message : t("localMedia.loadFailed"));
         } finally {
             setLoading(false);
         }
-    }, [message, page, source, storageClass, submittedSearch, type]);
+    }, [message, page, source, storageClass, submittedSearch, t, type]);
 
     useEffect(() => {
         void load();
@@ -62,14 +66,14 @@ export function AdminLocalMediaStorage() {
         try {
             const response = await fetch("/api/admin/generation-assets", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids }) });
             const payload = (await response.json().catch(() => ({}))) as { data?: { deletedFiles?: number; blocked?: Array<{ referenceCount?: number }> }; msg?: string; error?: string };
-            if (!response.ok) throw new Error(payload.msg || payload.error || "媒体文件删除失败");
+            if (!response.ok) throw new Error(payload.msg || payload.error || t("localMedia.deleteFailed"));
             const blocked = payload.data?.blocked?.length || 0;
-            if (blocked) message.warning(`${blocked} 个文件仍被业务记录引用，已保留；其余文件已删除`);
-            else message.success(`已删除 ${payload.data?.deletedFiles || ids.length} 个媒体文件`);
+            if (blocked) message.warning(t("localMedia.deleteBlocked", { blocked }));
+            else message.success(t("localMedia.deleteSuccess", { count: payload.data?.deletedFiles || ids.length }));
             setSelectedIds((current) => current.filter((id) => !ids.includes(id)));
             await load();
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "媒体文件删除失败");
+            message.error(error instanceof Error ? error.message : t("localMedia.deleteFailed"));
         } finally {
             setDeletingId("");
         }
@@ -80,14 +84,14 @@ export function AdminLocalMediaStorage() {
         try {
             const response = await fetch("/api/admin/generation-assets", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ expired: true }) });
             const payload = (await response.json().catch(() => ({}))) as { data?: { deletedFiles?: number; blocked?: unknown[] }; msg?: string; error?: string };
-            if (!response.ok) throw new Error(payload.msg || payload.error || "过期文件清理失败");
+            if (!response.ok) throw new Error(payload.msg || payload.error || t("localMedia.cleanupFailed"));
             const blocked = payload.data?.blocked?.length || 0;
-            if (blocked) message.warning(`已清理 ${payload.data?.deletedFiles || 0} 个过期临时文件，${blocked} 个仍被业务数据引用并已保留`);
-            else message.success(`已清理 ${payload.data?.deletedFiles || 0} 个过期临时文件`);
+            if (blocked) message.warning(t("localMedia.cleanupBlocked", { deleted: payload.data?.deletedFiles || 0, blocked }));
+            else message.success(t("localMedia.cleanupSuccess", { count: payload.data?.deletedFiles || 0 }));
             setSelectedIds([]);
             await load();
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "过期文件清理失败");
+            message.error(error instanceof Error ? error.message : t("localMedia.cleanupFailed"));
         } finally {
             setCleaningExpired(false);
         }
@@ -96,7 +100,7 @@ export function AdminLocalMediaStorage() {
     const columns = useMemo<TableColumnsType<LocalMediaAsset>>(
         () => [
             {
-                title: "文件",
+                title: t("localMedia.table.file"),
                 render: (_, asset) => (
                     <div className="flex min-w-0 items-center gap-3">
                         <MediaThumbnail asset={asset} onPreview={setPreviewAsset} />
@@ -112,12 +116,12 @@ export function AdminLocalMediaStorage() {
                 ),
             },
             {
-                title: "归属与来源",
+                title: t("localMedia.table.ownerSource"),
                 width: 220,
                 render: (_, asset) => (
                     <div className="min-w-0 text-xs text-zinc-500">
                         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
-                            <span className="truncate text-zinc-800 dark:text-zinc-200">{asset.ownerDisplayName || asset.ownerUsername || (asset.ownerUserId ? "用户信息不可用" : "未登记用户")}</span>
+                            <span className="truncate text-zinc-800 dark:text-zinc-200">{asset.ownerDisplayName || asset.ownerUsername || (asset.ownerUserId ? t("localMedia.userUnavailable") : t("localMedia.table.unregisteredUser"))}</span>
                             <AdminAccountId accountId={asset.ownerAccountId} className="shrink-0" />
                         </div>
                         <div className="mt-1 truncate">{mediaSourceLabel(asset.source)}</div>
@@ -130,7 +134,7 @@ export function AdminLocalMediaStorage() {
                 ),
             },
             {
-                title: "存储目录",
+                title: t("localMedia.table.directory"),
                 dataIndex: "directory",
                 width: 280,
                 render: (value: string) => (
@@ -140,58 +144,58 @@ export function AdminLocalMediaStorage() {
                 ),
             },
             {
-                title: "分类",
+                title: t("localMedia.table.category"),
                 width: 120,
                 render: (_, asset) => (
                     <div className="space-y-1">
-                        <Tag color={asset.storageClass === "permanent" ? "blue" : "gold"}>{asset.storageClass === "permanent" ? "长期" : "临时"}</Tag>
-                        {asset.referenceCount ? <div className="text-xs text-zinc-500">引用 {asset.referenceCount}</div> : null}
+                        <Tag color={asset.storageClass === "permanent" ? "blue" : "gold"}>{asset.storageClass === "permanent" ? t("localMedia.table.permanent") : t("localMedia.table.temporary")}</Tag>
+                        {asset.referenceCount ? <div className="text-xs text-zinc-500">{t("localMedia.table.references", { count: asset.referenceCount })}</div> : null}
                     </div>
                 ),
             },
-            { title: "保留期限", width: 170, render: (_, asset) => <span className={asset.expiresAt && Date.parse(asset.expiresAt) <= Date.now() ? "text-red-600 dark:text-red-300" : "text-zinc-500 dark:text-zinc-400"}>{formatRetention(asset)}</span> },
-            { title: "写入时间", dataIndex: "createdAt", width: 180, render: (value: string) => formatTime(value) },
+            { title: t("localMedia.table.retention"), width: 170, render: (_, asset) => <span className={asset.expiresAt && Date.parse(asset.expiresAt) <= Date.now() ? "text-red-600 dark:text-red-300" : "text-zinc-500 dark:text-zinc-400"}>{formatRetention(asset, t)}</span> },
+            { title: t("localMedia.table.createdAt"), dataIndex: "createdAt", width: 180, render: (value: string) => formatTime(value) },
             {
-                title: "操作",
+                title: t("localMedia.table.actions"),
                 width: 86,
                 align: "right",
                 render: (_, asset) => (
                     <div className="flex justify-end gap-1">
-                        <Button type="text" shape="circle" aria-label="预览媒体文件" icon={<Eye className="size-4" />} onClick={() => setPreviewAsset(asset)} />
-                        <Popconfirm title="删除这个媒体文件？" description="仍被会话、项目或素材库引用时会自动保留。" okText="删除" cancelText="取消" onConfirm={() => void remove([asset.id])}>
-                            <Button danger type="text" shape="circle" aria-label="删除媒体文件" icon={<Trash2 className="size-4" />} loading={deletingId === asset.id} />
+                        <Button type="text" shape="circle" aria-label={t("localMedia.previewAria")} icon={<Eye className="size-4" />} onClick={() => setPreviewAsset(asset)} />
+                        <Popconfirm title={t("localMedia.deleteTitle")} description={t("localMedia.deleteDesc")} okText={t("localMedia.delete")} cancelText={t("localMedia.cancel")} onConfirm={() => void remove([asset.id])}>
+                            <Button danger type="text" shape="circle" aria-label={t("localMedia.deleteAria")} icon={<Trash2 className="size-4" />} loading={deletingId === asset.id} />
                         </Popconfirm>
                     </div>
                 ),
             },
         ],
-        [deletingId],
+        [deletingId, t],
     );
 
     const summary = data?.summary;
     return (
         <Panel>
             <PanelHeader
-                title="本地媒体文件"
-                description="临时文件保留 24 小时，长期文件保留到管理员删除。"
+                title={t("localMedia.title")}
+                description={t("localMedia.description")}
                 actions={
                     <>
-                        <Tooltip title="刷新">
-                            <Button aria-label="刷新媒体文件" className="!w-8 !px-0 sm:!w-auto sm:!px-3" icon={<RefreshCw className="size-4" />} loading={loading} onClick={() => void load()}>
-                                <span className="hidden sm:inline">刷新</span>
+                        <Tooltip title={t("localMedia.refresh")}>
+                            <Button aria-label={t("localMedia.refreshAria")} className="!w-8 !px-0 sm:!w-auto sm:!px-3" icon={<RefreshCw className="size-4" />} loading={loading} onClick={() => void load()}>
+                                <span className="hidden sm:inline">{t("localMedia.refresh")}</span>
                             </Button>
                         </Tooltip>
-                        <Popconfirm title="清理全部已过期且未被引用的临时文件？" okText="清理" cancelText="取消" onConfirm={() => void cleanupExpired()}>
-                            <Tooltip title="清理过期文件">
-                                <Button aria-label="清理过期文件" className="!w-8 !px-0 sm:!w-auto sm:!px-3" disabled={!summary?.expiredTemporaryFiles} icon={<Clock3 className="size-4" />} loading={cleaningExpired}>
-                                    <span className="hidden sm:inline">清理过期</span>
+                        <Popconfirm title={t("localMedia.cleanupConfirm")} okText={t("localMedia.cleanup")} cancelText={t("localMedia.cancel")} onConfirm={() => void cleanupExpired()}>
+                            <Tooltip title={t("localMedia.cleanupExpiredTooltip")}>
+                                <Button aria-label={t("localMedia.cleanupExpiredAria")} className="!w-8 !px-0 sm:!w-auto sm:!px-3" disabled={!summary?.expiredTemporaryFiles} icon={<Clock3 className="size-4" />} loading={cleaningExpired}>
+                                    <span className="hidden sm:inline">{t("localMedia.cleanupExpired")}</span>
                                 </Button>
                             </Tooltip>
                         </Popconfirm>
-                        <Popconfirm title={`删除选中的 ${selectedIds.length} 个媒体文件？`} description="仍被会话、项目或素材库引用的文件会自动保留。" okText="批量删除" cancelText="取消" onConfirm={() => void remove(selectedIds)}>
-                            <Tooltip title="批量删除">
-                                <Button danger aria-label="批量删除媒体文件" className="!w-8 !px-0 sm:!w-auto sm:!px-3" disabled={!selectedIds.length} loading={deletingId === "bulk"} icon={<Trash2 className="size-4" />}>
-                                    <span className="hidden sm:inline">批量删除</span>
+                        <Popconfirm title={t("localMedia.bulkDeleteTitle", { count: selectedIds.length })} description={t("localMedia.bulkDeleteDesc")} okText={t("localMedia.bulkDelete")} cancelText={t("localMedia.cancel")} onConfirm={() => void remove(selectedIds)}>
+                            <Tooltip title={t("localMedia.bulkDeleteTooltip")}>
+                                <Button danger aria-label={t("localMedia.bulkDeleteAria")} className="!w-8 !px-0 sm:!w-auto sm:!px-3" disabled={!selectedIds.length} loading={deletingId === "bulk"} icon={<Trash2 className="size-4" />}>
+                                    <span className="hidden sm:inline">{t("localMedia.bulkDelete")}</span>
                                 </Button>
                             </Tooltip>
                         </Popconfirm>
@@ -200,9 +204,9 @@ export function AdminLocalMediaStorage() {
             />
             <div className="p-4 sm:p-5">
                 <div className="grid overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-800 sm:grid-cols-3">
-                    <StorageMetric label="全部文件" files={summary?.totalFiles || 0} bytes={summary?.totalBytes || 0} />
-                    <StorageMetric label="临时文件" files={summary?.temporaryFiles || 0} bytes={summary?.temporaryBytes || 0} detail={`${summary?.expiredTemporaryFiles || 0} 个已过期`} />
-                    <StorageMetric label="长期文件" files={summary?.permanentFiles || 0} bytes={summary?.permanentBytes || 0} />
+                    <StorageMetric label={t("localMedia.metricAll")} files={summary?.totalFiles || 0} bytes={summary?.totalBytes || 0} />
+                    <StorageMetric label={t("localMedia.metricTemporary")} files={summary?.temporaryFiles || 0} bytes={summary?.temporaryBytes || 0} detail={t("localMedia.expiredCount", { count: summary?.expiredTemporaryFiles || 0 })} />
+                    <StorageMetric label={t("localMedia.metricPermanent")} files={summary?.permanentFiles || 0} bytes={summary?.permanentBytes || 0} />
                 </div>
 
                 <div className="mt-4">
@@ -217,7 +221,7 @@ export function AdminLocalMediaStorage() {
                         <Input
                             value={search}
                             allowClear
-                            placeholder="搜索文件名、用户、用户 ID 或关联 ID"
+                            placeholder={t("localMedia.searchPlaceholder")}
                             onChange={(event) => {
                                 const next = event.target.value;
                                 setSearch(next);
@@ -225,8 +229,8 @@ export function AdminLocalMediaStorage() {
                             }}
                             onPressEnter={(event) => applySearchFilter(event.currentTarget.value)}
                         />
-                        <Tooltip title="筛选">
-                            <Button aria-label="筛选本地媒体文件" className="!w-10 !px-0" icon={<Search className="size-4" />} onClick={() => applySearchFilter(search)} />
+                        <Tooltip title={t("localMedia.filter")}>
+                            <Button aria-label={t("localMedia.filterAria")} className="!w-10 !px-0" icon={<Search className="size-4" />} onClick={() => applySearchFilter(search)} />
                         </Tooltip>
                         <div className="col-span-2 min-w-0 xl:col-span-1">
                             <Select
@@ -244,10 +248,10 @@ export function AdminLocalMediaStorage() {
                                 className="w-full"
                                 value={storageClass || undefined}
                                 allowClear
-                                placeholder="存储期限"
+                                placeholder={t("localMedia.retentionPlaceholder")}
                                 options={[
-                                    { value: "temporary", label: "临时文件" },
-                                    { value: "permanent", label: "长期文件" },
+                                    { value: "temporary", label: t("localMedia.temporaryFiles") },
+                                    { value: "permanent", label: t("localMedia.permanentFiles") },
                                 ]}
                                 onChange={(value) => {
                                     setPage(1);
@@ -269,41 +273,41 @@ export function AdminLocalMediaStorage() {
                             setSelectedIds((current) => (event.target.checked ? Array.from(new Set([...current, ...(data?.items || []).map((asset) => asset.id)])) : current.filter((id) => !(data?.items || []).some((asset) => asset.id === id))))
                         }
                     >
-                        选择本页
+                        {t("localMedia.selectPage")}
                     </Checkbox>
                     {(data?.items || []).map((asset) => (
                         <div key={asset.id} className="flex min-w-0 items-center gap-3 rounded-md border border-zinc-200 p-3 dark:border-zinc-800">
-                            <Checkbox checked={selectedIds.includes(asset.id)} onChange={(event) => setSelectedIds((current) => (event.target.checked ? [...current, asset.id] : current.filter((id) => id !== asset.id)))} aria-label="选择媒体文件" />
+                            <Checkbox checked={selectedIds.includes(asset.id)} onChange={(event) => setSelectedIds((current) => (event.target.checked ? [...current, asset.id] : current.filter((id) => id !== asset.id)))} aria-label={t("localMedia.selectAria")} />
                             <MediaThumbnail asset={asset} onPreview={setPreviewAsset} />
                             <div className="min-w-0 flex-1">
                                 <div className="truncate text-sm font-medium">{asset.originalName || asset.name}</div>
                                 <div className="mt-1 text-xs text-zinc-500">
-                                    {asset.storageClass === "permanent" ? "长期" : "临时"} · {managedMediaTypeLabel(asset.type)} · {formatBytes(asset.bytes)}
+                                    {asset.storageClass === "permanent" ? t("localMedia.table.permanent") : t("localMedia.table.temporary")} · {managedMediaTypeLabel(asset.type)} · {formatBytes(asset.bytes)}
                                 </div>
                                 <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-zinc-500">
-                                    <span className="truncate">{asset.ownerDisplayName || asset.ownerUsername || (asset.ownerUserId ? "用户信息不可用" : "未登记用户")}</span>
+                                    <span className="truncate">{asset.ownerDisplayName || asset.ownerUsername || (asset.ownerUserId ? t("localMedia.userUnavailable") : t("localMedia.table.unregisteredUser"))}</span>
                                     <AdminAccountId accountId={asset.ownerAccountId} className="shrink-0" />
                                     <span className="truncate">{mediaSourceLabel(asset.source)}</span>
                                 </div>
                                 <div className="mt-1 truncate font-mono text-[11px] text-zinc-500">{asset.directory}</div>
-                                <div className="mt-1 text-xs text-zinc-500">{formatRetention(asset)}</div>
+                                <div className="mt-1 text-xs text-zinc-500">{formatRetention(asset, t)}</div>
                             </div>
-                            <Popconfirm title="删除这个媒体文件？" okText="删除" cancelText="取消" onConfirm={() => void remove([asset.id])}>
-                                <Button danger type="text" shape="circle" aria-label="删除媒体文件" icon={<Trash2 className="size-4" />} loading={deletingId === asset.id} />
+                            <Popconfirm title={t("localMedia.deleteTitle")} okText={t("localMedia.delete")} cancelText={t("localMedia.cancel")} onConfirm={() => void remove([asset.id])}>
+                                <Button danger type="text" shape="circle" aria-label={t("localMedia.deleteAria")} icon={<Trash2 className="size-4" />} loading={deletingId === asset.id} />
                             </Popconfirm>
                         </div>
                     ))}
-                    {!loading && !data?.items.length ? <div className="py-10 text-center text-sm text-zinc-500">暂无媒体文件</div> : null}
+                    {!loading && !data?.items.length ? <div className="py-10 text-center text-sm text-zinc-500">{t("localMedia.empty")}</div> : null}
                 </div>
                 <Pagination className="mt-4 justify-end" current={page} pageSize={PAGE_SIZE} total={data?.total || 0} showSizeChanger={false} onChange={setPage} />
             </div>
             <Modal
-                title={previewAsset?.originalName || previewAsset?.name || "媒体预览"}
+                title={previewAsset?.originalName || previewAsset?.name || t("localMedia.previewTitle")}
                 open={Boolean(previewAsset)}
                 footer={
                     previewAsset ? (
                         <Button icon={<Download className="size-4" />} href={originalDownloadUrl(previewAsset.url)} target="_blank">
-                            下载原文件
+                            {t("localMedia.downloadOriginal")}
                         </Button>
                     ) : null
                 }
@@ -319,11 +323,12 @@ export function AdminLocalMediaStorage() {
 }
 
 function MediaThumbnail({ asset, onPreview }: { asset: LocalMediaAsset; onPreview: (asset: LocalMediaAsset) => void }) {
+    const t = useTranslations("admin");
     return (
         <button
             type="button"
             className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-md border border-zinc-200 bg-zinc-50 text-zinc-500 hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-600 dark:hover:text-white"
-            aria-label={`预览${managedMediaTypeLabel(asset.type)}`}
+            aria-label={t("localMedia.previewTypeAria", { type: managedMediaTypeLabel(asset.type) })}
             onClick={() => onPreview(asset)}
         >
             {asset.type === "image" ? (
@@ -340,6 +345,7 @@ function MediaThumbnail({ asset, onPreview }: { asset: LocalMediaAsset; onPrevie
 }
 
 function MediaViewer({ asset }: { asset: LocalMediaAsset }) {
+    const t = useTranslations("admin");
     if (asset.type === "image")
         return (
             <div className="flex max-h-[70dvh] justify-center overflow-auto rounded-md bg-zinc-100 p-3 dark:bg-zinc-900">
@@ -357,7 +363,7 @@ function MediaViewer({ asset }: { asset: LocalMediaAsset }) {
     return (
         <div className="flex min-h-48 flex-col items-center justify-center gap-3 rounded-md bg-zinc-100 p-6 text-center dark:bg-zinc-900">
             <File className="size-10 text-zinc-400" />
-            <div className="text-sm text-zinc-500">附件不支持在线预览，请下载后查看</div>
+            <div className="text-sm text-zinc-500">{t("localMedia.attachmentNoPreview")}</div>
         </div>
     );
 }
@@ -375,13 +381,13 @@ function StorageMetric({ label, files, bytes, detail }: { label: string; files: 
     );
 }
 
-function formatRetention(asset: LocalMediaAsset) {
-    if (!asset.expiresAt) return "长期保留";
+function formatRetention(asset: LocalMediaAsset, t: AdminTranslator) {
+    if (!asset.expiresAt) return t("localMedia.retentionPermanent");
     const remaining = Date.parse(asset.expiresAt) - Date.now();
-    if (remaining <= 0) return "已过期";
+    if (remaining <= 0) return t("localMedia.retentionExpired");
     const hours = Math.floor(remaining / 3_600_000);
     const minutes = Math.max(1, Math.ceil((remaining % 3_600_000) / 60_000));
-    return hours ? `${hours} 小时 ${minutes} 分后过期` : `${minutes} 分后过期`;
+    return hours ? t("localMedia.expiresInHoursMinutes", { hours, minutes }) : t("localMedia.expiresInMinutes", { minutes });
 }
 
 function formatBytes(bytes: number) {

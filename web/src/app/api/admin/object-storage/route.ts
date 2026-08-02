@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import type { ObjectStorageSettingsUpdate } from "@/lib/object-storage-contract";
 import { getObjectStorageAdminSettings, saveObjectStorageAdminSettings } from "@/lib/server/object-storage-config";
 import { checkConfiguredObjectStorage } from "@/lib/server/object-storage-service";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,7 +50,14 @@ export async function PATCH(request: Request) {
         } satisfies ObjectStorageSettingsUpdate);
         return NextResponse.json({ code: 0, data, msg: await serverMessage("media.externalStorageSaved") }, { headers: { "Cache-Control": "private, no-store" } });
     } catch (error) {
-        return NextResponse.json({ code: 400, data: null, msg: error instanceof Error ? error.message : "外部存储配置保存失败" }, { status: 400 });
+        return NextResponse.json(
+            {
+                code: 400,
+                data: null,
+                msg: error instanceof Error ? await localizeErrorMessage(error) : await serverMessage("media.externalStorageSaveFailed"),
+            },
+            { status: 400 },
+        );
     }
 }
 

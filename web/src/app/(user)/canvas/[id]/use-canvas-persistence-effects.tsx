@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useLayoutEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import { isGenerationTaskNeedsReviewError } from "@/services/api/generation-task-state";
 import { CanvasNodeType, isCanvasImageNodeType } from "../types";
@@ -18,6 +19,7 @@ import type { CanvasPageState } from "./use-canvas-page-state";
 import type { CanvasTaskRuntime } from "./use-canvas-task-runtime";
 
 export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPageState; tasks: CanvasTaskRuntime }) {
+    const t = useTranslations("canvas");
     const {
         message,
         modal,
@@ -212,14 +214,14 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
             })
             .catch((error) => {
                 if (cancelled) return;
-                const text = error instanceof Error ? error.message : "画布项目加载失败";
-                if (text.includes("不存在")) router.replace("/canvas");
+                const text = error instanceof Error ? error.message : t("store.loadFailed");
+                if (text.includes("不存在") || text.toLowerCase().includes("not found")) router.replace("/canvas");
                 else message.error(text);
             });
         return () => {
             cancelled = true;
         };
-    }, [hydrated, hydratedUserId, loadProject, message, projectId, router, userId]);
+    }, [hydrated, hydratedUserId, loadProject, message, projectId, router, userId, t]);
 
     useEffect(() => {
         if (!projectLoaded) return;
@@ -234,7 +236,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
             void completeImageTask(node.id, generationConfig, task, controller, node.metadata?.prompt)
                 .catch((error) => {
                     if (isGenerationCanceled(error)) return;
-                    const errorDetails = error instanceof Error ? error.message : "图片生成失败";
+                    const errorDetails = error instanceof Error ? error.message : t("generation.imageFailed");
                     message.error(errorDetails);
                     if (isGenerationTaskNeedsReviewError(error)) {
                         deferReviewedTask(node.id, "imageTask", errorDetails);
@@ -248,7 +250,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
                     setRunningNodeId((current) => (current === node.id ? null : current));
                 });
         });
-    }, [completeImageTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest]);
+    }, [completeImageTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest, t]);
 
     useEffect(() => {
         if (!projectLoaded) return;
@@ -263,7 +265,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
             void completeVideoTask(node.id, generationConfig, task, controller, node.metadata?.prompt)
                 .catch((error) => {
                     if (isGenerationCanceled(error)) return;
-                    const errorDetails = error instanceof Error ? error.message : "视频生成失败";
+                    const errorDetails = error instanceof Error ? error.message : t("generation.videoFailed");
                     const failureKind = classifyCanvasVideoTaskFailure(error);
                     if (failureKind === "needs_review") {
                         message.error(errorDetails);
@@ -271,7 +273,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
                         return;
                     }
                     if (failureKind === "query_pending") {
-                        message.info("视频仍在后台生成，系统会继续查询原任务");
+                        message.info(t("generation.videoBackgroundPolling"));
                         deferVideoTask(node.id);
                         return;
                     }
@@ -284,7 +286,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
                     setRunningNodeId((current) => (current === node.id ? null : current));
                 });
         });
-    }, [completeVideoTask, deferVideoTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest]);
+    }, [completeVideoTask, deferVideoTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest, t]);
 
     useEffect(() => {
         if (!projectLoaded) return;
@@ -299,7 +301,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
             void completeTextTask(node.id, generationConfig, task, controller, node.metadata?.prompt)
                 .catch((error) => {
                     if (isGenerationCanceled(error)) return;
-                    const errorDetails = error instanceof Error ? error.message : "文本生成失败";
+                    const errorDetails = error instanceof Error ? error.message : t("generation.textFailed");
                     message.error(errorDetails);
                     if (isGenerationTaskNeedsReviewError(error)) {
                         deferReviewedTask(node.id, "textTask", errorDetails);
@@ -313,7 +315,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
                     setRunningNodeId((current) => (current === node.id ? null : current));
                 });
         });
-    }, [completeTextTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest]);
+    }, [completeTextTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest, t]);
 
     useEffect(() => {
         if (!projectLoaded) return;
@@ -328,7 +330,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
             void completeAudioTask(node.id, generationConfig, task, controller, node.metadata?.prompt)
                 .catch((error) => {
                     if (isGenerationCanceled(error)) return;
-                    const errorDetails = error instanceof Error ? error.message : "音频生成失败";
+                    const errorDetails = error instanceof Error ? error.message : t("generation.audioFailed");
                     message.error(errorDetails);
                     if (isGenerationTaskNeedsReviewError(error)) {
                         deferReviewedTask(node.id, "audioTask", errorDetails);
@@ -342,7 +344,7 @@ export function useCanvasPersistenceEffects({ state, tasks }: { state: CanvasPag
                     setRunningNodeId((current) => (current === node.id ? null : current));
                 });
         });
-    }, [completeAudioTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest]);
+    }, [completeAudioTask, effectiveConfig, finishGenerationRequest, message, nodes, projectLoaded, startGenerationRequest, t]);
 
     useEffect(() => {
         if (!projectLoaded || applyingHistoryRef.current || historyPausedRef.current) return;

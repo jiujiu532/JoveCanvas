@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Button, Drawer, Empty, Space, Tabs, Tag } from "antd";
 import { FlaskConical, RefreshCw } from "lucide-react";
 
@@ -28,21 +29,22 @@ type Props = {
 };
 
 export function AdminChannelDetailDrawer({ open, channel, settings, fetching, testingKey, healthResults, onClose, onChange, onDelete, onFetchModels, onTestHealth, onTestAll }: Props) {
+    const t = useTranslations("admin");
     if (!channel) return null;
     const entries = channelHealthEntries(channel.id, healthResults, channel.healthResults);
     const status = channelWorkspaceStatus(channel, healthResults);
     return (
-        <Drawer title={channel.name || "渠道详情"} size="large" open={open} destroyOnHidden onClose={onClose}>
+        <Drawer title={channel.name || t("channelDetail.title")} size="large" open={open} destroyOnHidden onClose={onClose}>
             <Tabs
                 items={[
                     {
                         key: "overview",
-                        label: "概览",
+                        label: t("channelDetail.overview"),
                         children: <ChannelOverview channel={channel} settings={settings} entries={entries} status={status} onFetchModels={onFetchModels} onTestAll={onTestAll} fetching={fetching} testing={testingKey === `${channel.id}:all`} />,
                     },
                     {
                         key: "config",
-                        label: "渠道配置",
+                        label: t("channelDetail.config"),
                         children: (
                             <SystemChannelEditor
                                 channel={channel}
@@ -60,8 +62,8 @@ export function AdminChannelDetailDrawer({ open, channel, settings, fetching, te
                             />
                         ),
                     },
-                    { key: "models", label: `上游模型 ${channel.models.length}`, children: <ChannelModels channel={channel} /> },
-                    { key: "validation", label: "能力验证", children: <ChannelValidation channel={channel} entries={entries} testingKey={testingKey} onTestHealth={onTestHealth} onTestAll={onTestAll} /> },
+                    { key: "models", label: t("channelDetail.models", { count: channel.models.length }), children: <ChannelModels channel={channel} /> },
+                    { key: "validation", label: t("channelDetail.validation"), children: <ChannelValidation channel={channel} entries={entries} testingKey={testingKey} onTestHealth={onTestHealth} onTestAll={onTestAll} /> },
                 ]}
             />
         </Drawer>
@@ -87,6 +89,7 @@ function ChannelOverview({
     fetching: boolean;
     testing: boolean;
 }) {
+    const t = useTranslations("admin");
     const capabilities = channelCapabilityLabels(channel);
     return (
         <div className="space-y-5">
@@ -100,23 +103,23 @@ function ChannelOverview({
                 </div>
                 <Space wrap>
                     <Button icon={<RefreshCw className="size-4" />} loading={fetching} onClick={onFetchModels}>
-                        同步模型
+                        {t("channelDetail.syncModels")}
                     </Button>
                     <Button type="primary" icon={<FlaskConical className="size-4" />} loading={testing} onClick={onTestAll}>
-                        检测渠道
+                        {t("channelDetail.testChannel")}
                     </Button>
                 </Space>
             </div>
             <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-                <OverviewValue label="Base URL" value={channel.baseUrl || "未配置"} />
-                <OverviewValue label="凭据" value={channelRequiresApiKey(channel) ? (channel.apiKey || channel.hasApiKey ? "已安全保存" : "未配置") : "无需凭据"} />
-                <OverviewValue label="协议" value={channelProtocolLabel(channel)} />
-                <OverviewValue label="上游模型" value={`${channel.models.length} 个`} />
-                <OverviewValue label="逻辑绑定" value={`${channelBindingCount(channel.id, settings)} 个`} />
-                <OverviewValue label="本次检测" value={entries.length ? `${entries.filter(({ result }) => result.ok).length}/${entries.length} 通过` : "尚未检测"} />
+                <OverviewValue label={t("channelDetail.baseUrl")} value={channel.baseUrl || t("channelDetail.notSet")} />
+                <OverviewValue label={t("channelDetail.credentials")} value={channelRequiresApiKey(channel) ? (channel.apiKey || channel.hasApiKey ? t("channelDetail.saved") : t("channelDetail.notSet")) : t("channelDetail.noCredentials")} />
+                <OverviewValue label={t("channelDetail.protocol")} value={channelProtocolLabel(channel)} />
+                <OverviewValue label={t("channelDetail.upstreamModels")} value={t("channelDetail.count", { count: channel.models.length })} />
+                <OverviewValue label={t("channelDetail.logicalBindings")} value={t("channelDetail.count", { count: channelBindingCount(channel.id, settings) })} />
+                <OverviewValue label={t("channelDetail.thisSession")} value={entries.length ? t("channelDetail.passed", { ok: entries.filter(({ result }) => result.ok).length, total: entries.length }) : t("channelDetail.notTested")} />
             </div>
             <div>
-                <div className="mb-2 text-sm font-semibold text-stone-950 dark:text-stone-100">逻辑模型绑定</div>
+                <div className="mb-2 text-sm font-semibold text-stone-950 dark:text-stone-100">{t("channelDetail.bindingsTitle")}</div>
                 <div className="divide-y divide-stone-200 border-y border-stone-200 dark:divide-stone-800 dark:border-stone-800">
                     {settings.logicalModels.flatMap((model) =>
                         model.bindings
@@ -128,7 +131,7 @@ function ChannelOverview({
                                 </div>
                             )),
                     )}
-                    {!channelBindingCount(channel.id, settings) ? <div className="py-8 text-center text-sm text-stone-500 dark:text-stone-400">尚未绑定逻辑模型</div> : null}
+                    {!channelBindingCount(channel.id, settings) ? <div className="py-8 text-center text-sm text-stone-500 dark:text-stone-400">{t("channelDetail.noBindings")}</div> : null}
                 </div>
             </div>
         </div>
@@ -136,6 +139,7 @@ function ChannelOverview({
 }
 
 function ChannelModels({ channel }: { channel: SystemModelChannel }) {
+    const t = useTranslations("admin");
     return (
         <div className="divide-y divide-stone-200 border-y border-stone-200 dark:divide-stone-800 dark:border-stone-800">
             {channel.models.map((model) => (
@@ -144,7 +148,7 @@ function ChannelModels({ channel }: { channel: SystemModelChannel }) {
                     <Tag className="m-0">{capabilityLabel(channelModelCapability(channel, model))}</Tag>
                 </div>
             ))}
-            {!channel.models.length ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="还没有上游模型" /> : null}
+            {!channel.models.length ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("channelDetail.noModels")} /> : null}
         </div>
     );
 }
@@ -162,17 +166,18 @@ function ChannelValidation({
     onTestHealth: (kind: ChannelHealthKind) => void;
     onTestAll: () => void;
 }) {
+    const t = useTranslations("admin");
     const kinds = channelHealthKinds(channel);
     return (
         <div>
             <div className="mb-4 flex flex-wrap justify-end gap-2">
                 {kinds.map((kind) => (
                     <Button key={kind} loading={testingKey === `${channel.id}:${kind}`} onClick={() => onTestHealth(kind)}>
-                        检测{healthKindLabel(kind)}
+                        {t("channelDetail.testKind", { kind: healthKindLabel(kind, t) })}
                     </Button>
                 ))}
                 <Button type="primary" icon={<FlaskConical className="size-4" />} loading={testingKey === `${channel.id}:all`} onClick={onTestAll}>
-                    全部检测
+                    {t("channelDetail.testAll")}
                 </Button>
             </div>
             <div className="divide-y divide-stone-200 border-y border-stone-200 dark:divide-stone-800 dark:border-stone-800">
@@ -180,14 +185,14 @@ function ChannelValidation({
                     <div key={key} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <div className="text-sm font-medium text-stone-900 dark:text-stone-100">
-                                {healthKindLabel(result.kind)} · {result.model || "未选择模型"}
+                                {healthKindLabel(result.kind)} · {result.model || t("channelDetail.modelUnset")}
                             </div>
-                            <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{result.ok ? result.protocol || "上游响应正常" : result.error || `HTTP ${result.status}`}</div>
+                            <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{result.ok ? result.protocol || t("channelDetail.upstreamOk") : result.error || `HTTP ${result.status}`}</div>
                         </div>
-                        <Tag color={result.ok ? "success" : "error"}>{result.ok ? "通过" : "失败"}</Tag>
+                        <Tag color={result.ok ? "success" : "error"}>{result.ok ? t("channelDetail.pass") : t("channelDetail.fail")}</Tag>
                     </div>
                 ))}
-                {!entries.length ? <div className="py-10 text-center text-sm text-stone-500 dark:text-stone-400">当前管理会话还没有检测记录</div> : null}
+                {!entries.length ? <div className="py-10 text-center text-sm text-stone-500 dark:text-stone-400">{t("channelDetail.noRecords")}</div> : null}
             </div>
         </div>
     );

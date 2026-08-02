@@ -160,7 +160,8 @@ export async function POST(request: Request) {
                 if (!response.ok || isProviderBusinessError(payload)) {
                     if (isModelCatalogUnsupported(response.status, payload) || [404, 405, 501].includes(response.status)) break;
                     modelFetchCooldowns.delete(cooldownKey);
-                    return NextResponse.json({ error: sanitizeProviderMessage(readProviderError(payload) || payload.msg || payload.error?.message || `拉取模型失败：${response.status}`, [apiKey]) }, { status: 502 });
+                    const providerMessage = readProviderError(payload) || payload.msg || payload.error?.message || (await serverMessage("admin.pullModelsFailed"));
+                    return NextResponse.json({ error: sanitizeProviderMessage(providerMessage, [apiKey]) }, { status: 502 });
                 }
                 catalogSucceeded = true;
                 const pageCatalog = parseModelCatalog(payload);
@@ -197,12 +198,17 @@ export async function POST(request: Request) {
             discoveredCount: discovered.length,
             totalCount: merged.length,
             catalogSupported: catalogSucceeded,
-            ...(!catalogSucceeded ? { warning: "上游未公开模型目录，已保留现有手工模型。" } : {}),
+            ...(!catalogSucceeded ? { warning: await serverMessage("admin.modelCatalogNotPublic") } : {}),
             ...(agnes ? { provider: "agnes", recommendedConfig: AGNES_RECOMMENDED_CONFIG } : {}),
         });
     } catch (error) {
         modelFetchCooldowns.delete(cooldownKey);
         console.error("Admin model fetch failed", sanitizeProviderMessage(error, [apiKey]));
-        return NextResponse.json({ error: isProviderTimeoutError(error) ? "拉取模型超时，请稍后重试" : "拉取模型失败，请检查接口地址和网络" }, { status: 502 });
+        return NextResponse.json(
+            {
+                error: isProviderTimeoutError(error) ? await serverMessage("admin.pullModelsTimeout") : await serverMessage("admin.pullModelsFailed"),
+            },
+            { status: 502 },
+        );
     }
 }

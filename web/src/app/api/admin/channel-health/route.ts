@@ -18,7 +18,7 @@ import { testText } from "./channel-health-text";
 import { testImage } from "./channel-health-image";
 import { testAudio } from "./channel-health-audio";
 import { testVideo } from "./channel-health-video";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -116,7 +116,13 @@ export async function POST(request: Request) {
     try {
         textProtocol = kind === "text" ? resolveTextProtocol({ model, apiFormat, advancedConfig, throughSystemProxy: false }) : undefined;
     } catch (error) {
-        const result = { ok: false, kind, model, status: 0, error: error instanceof Error ? error.message : "文本协议配置无效" } satisfies HealthResult;
+        const result = {
+            ok: false,
+            kind,
+            model,
+            status: 0,
+            error: error instanceof Error ? await localizeErrorMessage(error) : await serverMessage("admin.textProtocolInvalid"),
+        } satisfies HealthResult;
         await persistHealthResult(savedChannel?.id, result);
         return NextResponse.json({ result });
     }
@@ -152,7 +158,9 @@ export async function POST(request: Request) {
         await persistHealthResult(savedChannel?.id, result);
         return NextResponse.json({ result });
     } catch (error) {
-        const message = isProviderTimeoutError(error) ? "上游接口请求超时" : sanitizeProviderMessage(error instanceof Error ? error.message : "接口测试失败", [apiKey]);
+        const message = isProviderTimeoutError(error)
+            ? await serverMessage("admin.upstreamTimeout")
+            : sanitizeProviderMessage(error instanceof Error ? await localizeErrorMessage(error) : await serverMessage("admin.apiTestFailed"), [apiKey]);
         const result = { ok: false, kind, model, status: 0, error: message } satisfies HealthResult;
         await persistHealthResult(savedChannel?.id, result);
         return NextResponse.json({ result }, { status: 200 });

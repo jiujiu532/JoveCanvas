@@ -157,28 +157,45 @@ export async function POST(request: Request) {
                 return NextResponse.json({ task: publicTask(task) });
             } catch (error) {
                 lastError = error;
-                attempts = finishGenerationAttempt(attempts, started.attempt.attemptNo, { status: "failed", error: toSafeGenerationErrorMessage(error, "视频任务创建失败") });
+                const createFailedFallback = await serverMessage("tasks.videoCreateFailed");
+                attempts = finishGenerationAttempt(attempts, started.attempt.attemptNo, { status: "failed", error: await localizeSafeGenerationError(error, createFailedFallback) });
                 await updateVideoTask(localTask.id, { attempts });
                 if (error instanceof SafeCandidateFailure && index < channels.length - 1) continue;
-                const message = toSafeGenerationErrorMessage(error, "视频任务创建失败");
+                const message = await localizeSafeGenerationError(error, createFailedFallback);
                 if (!(error instanceof SafeCandidateFailure)) {
                     await scheduleGenerationTask("video", localTask.id, { executionPhase: "needs_review", nextPollAt: undefined, lastUpstreamStatus: "submission_outcome_unknown" });
-                    return NextResponse.json({ task: { ...publicTask({ ...localTask, attempts }), needsReview: true }, warning: `${message}；上游创建结果待确认，系统不会自动重复创建。` }, { status: 202 });
+                    return NextResponse.json({
+                        task: { ...publicTask({ ...localTask, attempts }), needsReview: true },
+                        warning: await serverMessage("tasks.videoCreatePendingConfirm", { message }),
+                    }, { status: 202 });
                 }
                 await transitionVideoTask(localTask, { status: "error", error: message, retryable: true });
                 await scheduleGenerationTask("video", localTask.id, { executionPhase: "completed", nextPollAt: undefined, lastUpstreamStatus: "create_failed" });
                 break;
             }
         }
-        if (!lastError && capabilityError) return NextResponse.json({ error: capabilityError instanceof Error ? capabilityError.message : "当前渠道不支持参考素材" }, { status: 400 });
+        if (!lastError && capabilityError) {
+            return NextResponse.json({
+                error: capabilityError instanceof Error ? await localizeErrorMessage(capabilityError) : await serverMessage("tasks.channelRefNotSupported"),
+            }, { status: 400 });
+        }
         if (localTask && lastError) {
-            const message = toSafeGenerationErrorMessage(lastError, "视频任务创建失败");
+            const message = await localizeSafeGenerationError(lastError, await serverMessage("tasks.videoCreateFailed"));
             await transitionVideoTask(localTask, { status: "error", error: message, retryable: lastError instanceof SafeCandidateFailure });
             await scheduleGenerationTask("video", localTask.id, { executionPhase: "completed", nextPollAt: undefined, lastUpstreamStatus: "create_failed" });
         }
-        return NextResponse.json({ error: toSafeGenerationErrorMessage(lastError, "视频任务创建失败"), canRetry: lastError instanceof SafeCandidateFailure }, { status: 502 });
+        return NextResponse.json({
+            error: await localizeSafeGenerationError(lastError, await serverMessage("tasks.videoCreateFailed")),
+            canRetry: lastError instanceof SafeCandidateFailure,
+        }, { status: 502 });
     });
     return response || NextResponse.json({ error: await serverMessage("tasks.videoConcurrencyLimit") }, { status: 429 });
+}
+
+async function localizeSafeGenerationError(error: unknown, fallback: string) {
+    const message = toSafeGenerationErrorMessage(error, fallback);
+    if (error instanceof Error && message === error.message) return localizeErrorMessage(error);
+    return localizeErrorMessage({ message });
 }
 
 function ratioValue(value: unknown) {

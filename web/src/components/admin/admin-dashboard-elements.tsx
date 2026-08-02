@@ -1,100 +1,18 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { App, Button, Checkbox, DatePicker, Form, Input, InputNumber, Modal, Pagination, Popconfirm, Segmented, Select, Space, Switch, Table, Tag } from "antd";
-import type { TableColumnsType } from "antd";
-import Link from "next/link";
-import { BillingOperations } from "@/app/admin/billing/components/billing-operations";
-import { GenerationOperationsClient } from "@/app/admin/generation-operations/components/generation-operations-client";
-import {
-    formatAdminLogDuration,
-    formatAdminLogTime,
-    formatGenerationLogModel,
-    GenerationLogAssetPreview,
-    GenerationLogDetail,
-    GenerationLogMobileCard,
-    generationKindLabel,
-    generationSourceLabel,
-    generationStatusClass,
-    generationStatusLabel,
-} from "@/components/admin/admin-generation-log";
-import { GenerationConcurrencyPanel, GenerationDefaultsPanel, localAgentReadiness } from "@/components/admin/admin-generation-settings";
-import type { AgentReadiness } from "@/components/admin/admin-generation-settings";
-import { AdminLocalMediaStorage } from "@/components/admin/admin-local-media-storage";
-import { QuotaRuleTable } from "@/components/admin/admin-quota-rules";
-import { AdminOverview, buildOperationsSummary } from "@/components/admin/admin-overview";
-import { AdminLogicalModelManager } from "@/components/admin/admin-logical-model-manager";
-import { Metric, Panel, PanelHeader } from "@/components/admin/admin-panel";
-import { AdminSectionNav, adminSections } from "@/components/admin/admin-section-nav";
-import type { AdminSectionKey } from "@/components/admin/admin-sections";
-import { UpdateCenterPanel } from "@/components/admin/admin-update-center";
-import { LabeledControl, SectionTitle, SettingInlineToggle, SettingToggle } from "@/components/admin/admin-settings-controls";
-import { SiteLogoPreview, SiteSettingStatus, SiteShowcasePreview, siteSocialItems } from "@/components/admin/admin-site-preview";
-import { createDefaultChannelAdvancedConfig, healthKindLabel, SystemChannelEditor } from "@/components/admin/admin-system-channel-editor";
-import type { ChannelHealthKind, ChannelHealthResult } from "@/components/admin/admin-system-channel-editor";
-import { formatAdminMoney, toNumberOrOne, toNumberOrZero, uniqueList } from "@/components/admin/admin-values";
-import {
-    ArrowRight,
-    Copy,
-    CreditCard,
-    CircleDollarSign,
-    Database,
-    Download,
-    ExternalLink,
-    Eye,
-    Gift,
-    Globe2,
-    Image as ImageIcon,
-    KeyRound,
-    Mail,
-    Menu,
-    PlugZap,
-    Plus,
-    ReceiptText,
-    RefreshCw,
-    Save,
-    Search,
-    Send,
-    ShieldCheck,
-    SlidersHorizontal,
-    Sparkles,
-    Trash2,
-    Upload,
-    UserCog,
-    UserRound,
-    WalletCards,
-} from "lucide-react";
-import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 import { nanoid } from "nanoid";
 import { applyChannelProtocol, channelProtocolDefinition, normalizeStrictProtocolModelConfig } from "@/lib/channel-protocol-registry";
 
 import { formatCreditAmount } from "@/constant/credits";
 import { AdminAccountId } from "@/components/admin/admin-user-identity";
-import { channelModelCapability, normalizeDefaultModelsConfig } from "@/lib/model-routing-config";
+import { createDefaultChannelAdvancedConfig } from "@/components/admin/admin-system-channel-editor";
+import type { ChannelHealthKind, ChannelHealthResult } from "@/components/admin/admin-system-channel-editor";
+import { channelModelCapability } from "@/lib/model-routing-config";
 import { normalizeModelId } from "@/lib/model-capability";
 import { resolveGlobalAiOpcPreset } from "@/lib/globalaiopc-catalog";
-import type {
-    AgentSkill,
-    AuthSettings,
-    CreatedCdkCode,
-    PublicAnnouncement,
-    PublicCdkCode,
-    PublicUser,
-    SiteFriendLink,
-    SiteShowcaseItem,
-    SiteSocialKey,
-    SystemChannelAdvancedConfig,
-    SystemChannelModelConfig,
-    SystemModelChannel,
-    UserRole,
-    UserStatus,
-} from "@/lib/auth/store";
-import type { GenerationAssetStats, StoredGenerationLog } from "@/lib/server/generation-log-store";
-import type { AdminSetupSummary } from "@/lib/server/admin-setup-status";
-import type { PaymentConfigSummary } from "@/lib/payment-config-types";
-import type { AdminBillingSummary } from "@/lib/admin-billing-types";
-import type { Prompt } from "@/services/api/prompts";
+import type { AuthSettings, CreatedCdkCode, PublicCdkCode, SystemChannelAdvancedConfig, SystemChannelModelConfig, SystemModelChannel } from "@/lib/auth/store";
 
 export const settingsStatusToneClass = {
     cyan: "bg-cyan-50 text-cyan-700 ring-cyan-100 dark:bg-cyan-950/45 dark:text-cyan-200 dark:ring-cyan-900/40",
@@ -157,8 +75,8 @@ export function FinanceMiniRow({ label, value }: { label: string; value: string 
     );
 }
 
-export function createSystemChannel(): SystemModelChannel {
-    return applyChannelProtocol({ id: nanoid(), name: "新接口", baseUrl: "", apiKey: "", apiFormat: "openai", models: [], enabled: false, advancedConfig: createDefaultChannelAdvancedConfig() }, "openai");
+export function createSystemChannel(name = "新接口"): SystemModelChannel {
+    return applyChannelProtocol({ id: nanoid(), name, baseUrl: "", apiKey: "", apiFormat: "openai", models: [], enabled: false, advancedConfig: createDefaultChannelAdvancedConfig() }, "openai");
 }
 
 export function suggestedChannelModels(channel: Pick<SystemModelChannel, "baseUrl" | "name">) {
@@ -245,7 +163,7 @@ export type AdminModelsResult = {
     globalAiOpcPresets?: SystemChannelAdvancedConfig["globalAiOpcPresets"];
 };
 
-export async function requestAdminModels(channel: SystemModelChannel): Promise<AdminModelsResult> {
+export async function requestAdminModels(channel: SystemModelChannel, fallbackError = "拉取模型失败"): Promise<AdminModelsResult> {
     const advanced = channel.advancedConfig;
     const response = await fetch("/api/admin/models", {
         method: "POST",
@@ -270,7 +188,7 @@ export async function requestAdminModels(channel: SystemModelChannel): Promise<A
         }),
     });
     const payload = (await response.json()) as AdminModelsResult & { error?: string };
-    if (!response.ok || !payload.models) throw new Error(payload.error || "拉取模型失败");
+    if (!response.ok || !payload.models) throw new Error(payload.error || fallbackError);
     return payload;
 }
 
@@ -308,12 +226,30 @@ export function isCdkExpired(code: PublicCdkCode) {
     return Boolean(code.expiresAt && Date.parse(code.expiresAt) <= Date.now());
 }
 
-export function cdkStatusLabel(code: PublicCdkCode) {
-    if (!code.code) return "明文缺失";
-    if (isCdkExpired(code)) return "已过期";
-    if (code.status !== "active") return "不可用";
-    if (code.redeemedCount >= code.maxRedemptions) return "已兑完";
-    return code.redeemedCount > 0 ? "部分兑换" : "未兑换";
+export type CdkStatusLabels = {
+    plainMissing: string;
+    expired: string;
+    unavailable: string;
+    exhausted: string;
+    partial: string;
+    unused: string;
+};
+
+const DEFAULT_CDK_STATUS_LABELS: CdkStatusLabels = {
+    plainMissing: "明文缺失",
+    expired: "已过期",
+    unavailable: "不可用",
+    exhausted: "已兑完",
+    partial: "部分兑换",
+    unused: "未兑换",
+};
+
+export function cdkStatusLabel(code: PublicCdkCode, labels: CdkStatusLabels = DEFAULT_CDK_STATUS_LABELS) {
+    if (!code.code) return labels.plainMissing;
+    if (isCdkExpired(code)) return labels.expired;
+    if (code.status !== "active") return labels.unavailable;
+    if (code.redeemedCount >= code.maxRedemptions) return labels.exhausted;
+    return code.redeemedCount > 0 ? labels.partial : labels.unused;
 }
 
 export function cdkStatusTone(code: PublicCdkCode) {
@@ -322,25 +258,56 @@ export function cdkStatusTone(code: PublicCdkCode) {
     return code.redeemedCount > 0 ? "blue" : "gold";
 }
 
-export function formatCreatedCdkExport(codes: CreatedCdkCode[]) {
+export type CdkExportLabels = {
+    title: string;
+    exportedAt: string;
+    count: string;
+    points: string;
+    maxRedemptions: string;
+    expiry: string;
+    longTerm: string;
+    note: string;
+    footer: string;
+};
+
+const DEFAULT_CDK_EXPORT_LABELS: CdkExportLabels = {
+    title: "{site} CDK 导出",
+    exportedAt: "导出时间：{time}",
+    count: "数量：{count}",
+    points: "积分：{points}",
+    maxRedemptions: "可兑换次数：{count}",
+    expiry: "有效期：{value}",
+    longTerm: "长期有效",
+    note: "备注：{note}",
+    footer: "说明：仅导出本次生成且可复制的明文 CDK。",
+};
+
+function fillTemplate(template: string, params: Record<string, string | number>) {
+    return template.replace(/\{(\w+)\}/g, (matched, name: string) => (name in params ? String(params[name]) : matched));
+}
+
+export function formatCreatedCdkExport(codes: CreatedCdkCode[], siteTitle = "JoveCanvas", labels: CdkExportLabels = DEFAULT_CDK_EXPORT_LABELS) {
+    const locale = labels.longTerm === DEFAULT_CDK_EXPORT_LABELS.longTerm ? "zh-CN" : undefined;
     const lines = [
-        "JoveCanvas CDK 导出",
-        `导出时间：${new Date().toLocaleString("zh-CN", { hour12: false })}`,
-        `数量：${codes.length}`,
+        fillTemplate(labels.title, { site: siteTitle }),
+        fillTemplate(labels.exportedAt, { time: new Date().toLocaleString(locale, { hour12: false }) }),
+        fillTemplate(labels.count, { count: codes.length }),
         "",
         ...codes.map((code, index) =>
             [
                 `${index + 1}. ${code.code}`,
-                `积分：${formatCreditAmount(code.points)}`,
-                `可兑换次数：${code.maxRedemptions}`,
-                `有效期：${code.expiresAt ? new Date(code.expiresAt).toLocaleString("zh-CN", { hour12: false }) : "长期有效"}`,
-                code.note ? `备注：${code.note}` : "",
+                fillTemplate(labels.points, { points: formatCreditAmount(code.points) }),
+                fillTemplate(labels.maxRedemptions, { count: code.maxRedemptions }),
+                fillTemplate(labels.expiry, {
+                    value: code.expiresAt ? new Date(code.expiresAt).toLocaleString(locale, { hour12: false }) : labels.longTerm,
+                }),
+                code.note ? fillTemplate(labels.note, { note: code.note }) : "",
             ]
                 .filter(Boolean)
                 .join(" | "),
         ),
         "",
-        "说明：仅导出本次生成且可复制的明文 CDK。",
+        labels.footer,
     ];
     return lines.join("\n");
 }
@@ -358,15 +325,16 @@ export function downloadTextFile(filename: string, text: string) {
 }
 
 export function CdkRedemptionDetail({ code }: { code: PublicCdkCode }) {
+    const t = useTranslations("admin");
     const redemptions = [...code.redemptions].sort((a, b) => Date.parse(b.redeemedAt) - Date.parse(a.redeemedAt));
     const visibleRedemptions = redemptions.slice(0, 20);
 
     return (
         <div className="rounded-lg border border-stone-200 bg-stone-50/80 p-3 dark:border-stone-800 dark:bg-stone-900/60">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">兑换明细</div>
+                <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("dashboardElements.redemption.title")}</div>
                 <div className="text-xs text-stone-500 dark:text-stone-400">
-                    共 {redemptions.length} 条{redemptions.length > visibleRedemptions.length ? "，展示最近 20 条" : ""}
+                    {redemptions.length > visibleRedemptions.length ? t("dashboardElements.redemption.totalCountTruncated", { count: redemptions.length }) : t("dashboardElements.redemption.totalCount", { count: redemptions.length })}
                 </div>
             </div>
             <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
@@ -377,7 +345,7 @@ export function CdkRedemptionDetail({ code }: { code: PublicCdkCode }) {
                             <span className="ml-1 font-normal text-stone-500 dark:text-stone-400">@{item.username}</span>
                         </div>
                         <AdminAccountId accountId={item.accountId} className="mt-0.5" />
-                        <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{new Date(item.redeemedAt).toLocaleString("zh-CN")}</div>
+                        <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{new Date(item.redeemedAt).toLocaleString()}</div>
                     </div>
                 ))}
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useDeferredValue, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Empty, Input, Popconfirm, Select, Space, Switch, Table, Tabs, Tag } from "antd";
 import type { TableColumnsType } from "antd";
 import { Blocks, FlaskConical, ListFilter, Plus, RefreshCw, Route, Search, Settings2, Trash2 } from "lucide-react";
@@ -42,6 +43,7 @@ type Props = {
 };
 
 export function AdminChannelWorkspace({ settings, fetchingModelId, testingChannelKey, healthResults, saving, onChange, onDeleteChannel, onFetchModels, onFetchAll, onTestHealth, onTestAll, onPersist }: Props) {
+    const t = useTranslations("admin");
     const [activeTab, setActiveTab] = useState("channels");
     const [query, setQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<ChannelWorkspaceStatus | "all">("all");
@@ -73,42 +75,42 @@ export function AdminChannelWorkspace({ settings, fetchingModelId, testingChanne
     const updateChannel = (id: string, patch: Partial<SystemModelChannel>) => onChange(updateChannelInWorkspace(settings, id, patch));
     const columns: TableColumnsType<SystemModelChannel> = [
         {
-            title: "渠道",
+            title: t("channelWorkspace.columns.channel"),
             key: "channel",
             render: (_, channel) => (
                 <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                        <span className="max-w-[240px] truncate font-medium text-stone-950 dark:text-stone-100">{channel.name || "未命名渠道"}</span>
+                        <span className="max-w-[240px] truncate font-medium text-stone-950 dark:text-stone-100">{channel.name || t("channelWorkspace.unnamed")}</span>
                         <ChannelStatusTag channel={channel} healthResults={healthResults} />
                     </div>
-                    <div className="mt-1 max-w-[320px] truncate text-xs text-stone-500 dark:text-stone-400">{channel.baseUrl || "未配置 Base URL"}</div>
+                    <div className="mt-1 max-w-[320px] truncate text-xs text-stone-500 dark:text-stone-400">{channel.baseUrl || t("channelWorkspace.baseUrlMissing")}</div>
                 </div>
             ),
         },
-        { title: "协议", key: "protocol", width: 190, render: (_, channel) => <span className="text-sm">{channelProtocolLabel(channel)}</span> },
-        { title: "模型", key: "models", width: 90, align: "center", render: (_, channel) => channel.models.length },
-        { title: "能力", key: "capabilities", width: 170, render: (_, channel) => <span className="text-xs text-stone-600 dark:text-stone-300">{channelCapabilityLabels(channel).join("、") || "待识别"}</span> },
-        { title: "绑定", key: "bindings", width: 80, align: "center", render: (_, channel) => channelBindingCount(channel.id, settings) },
+        { title: t("channelWorkspace.columns.protocol"), key: "protocol", width: 190, render: (_, channel) => <span className="text-sm">{channelProtocolLabel(channel)}</span> },
+        { title: t("channelWorkspace.columns.models"), key: "models", width: 90, align: "center", render: (_, channel) => channel.models.length },
+        { title: t("channelWorkspace.columns.capabilities"), key: "capabilities", width: 170, render: (_, channel) => <span className="text-xs text-stone-600 dark:text-stone-300">{channelCapabilityLabels(channel).join("、") || t("channelWorkspace.pendingDetect")}</span> },
+        { title: t("channelWorkspace.columns.bindings"), key: "bindings", width: 80, align: "center", render: (_, channel) => channelBindingCount(channel.id, settings) },
         {
-            title: "启用",
+            title: t("channelWorkspace.columns.enabled"),
             key: "enabled",
             width: 80,
             align: "center",
-            render: (_, channel) => <Switch size="small" checked={channel.enabled} aria-label={`${channel.name}启用状态`} onChange={(enabled) => updateChannel(channel.id, { enabled })} />,
+            render: (_, channel) => <Switch size="small" checked={channel.enabled} aria-label={t("channelWorkspace.enabledAria", { name: channel.name })} onChange={(enabled) => updateChannel(channel.id, { enabled })} />,
         },
         {
-            title: "操作",
+            title: t("channelWorkspace.columns.actions"),
             key: "actions",
             width: 260,
             render: (_, channel) => (
                 <Space size={4}>
                     <Button size="small" onClick={() => setDetailId(channel.id)}>
-                        查看
+                        {t("channelWorkspace.view")}
                     </Button>
-                    <Button size="small" icon={<RefreshCw className="size-3.5" />} loading={fetchingModelId === channel.id} aria-label={`同步 ${channel.name} 模型`} title="同步模型" onClick={() => void onFetchModels(channel)} />
-                    <Button size="small" icon={<FlaskConical className="size-3.5" />} loading={testingChannelKey === `${channel.id}:all`} aria-label={`检测 ${channel.name}`} title="检测渠道" onClick={() => void onTestAll(channel)} />
-                    <Popconfirm title="删除这个渠道？" description="关联逻辑模型绑定和失效默认值会同步清理。" okText="删除" cancelText="取消" onConfirm={() => onDeleteChannel(channel.id)}>
-                        <Button size="small" danger icon={<Trash2 className="size-3.5" />} aria-label={`删除 ${channel.name}`} title="删除渠道" />
+                    <Button size="small" icon={<RefreshCw className="size-3.5" />} loading={fetchingModelId === channel.id} aria-label={`同步 ${channel.name} 模型`} title={t("channelWorkspace.syncModelsTitle")} onClick={() => void onFetchModels(channel)} />
+                    <Button size="small" icon={<FlaskConical className="size-3.5" />} loading={testingChannelKey === `${channel.id}:all`} aria-label={`检测 ${channel.name}`} title={t("channelWorkspace.testChannelTitle")} onClick={() => void onTestAll(channel)} />
+                    <Popconfirm title={t("channelWorkspace.deleteTitle")} description={t("channelWorkspace.deleteDesc")} okText={t("channelWorkspace.delete")} cancelText={t("channelWorkspace.cancel")} onConfirm={() => onDeleteChannel(channel.id)}>
+                        <Button size="small" danger icon={<Trash2 className="size-3.5" />} aria-label={t("channelWorkspace.deleteAria", { name: channel.name })} title={t("channelWorkspace.deleteAria", { name: channel.name })} />
                     </Popconfirm>
                 </Space>
             ),
@@ -125,17 +127,17 @@ export function AdminChannelWorkspace({ settings, fetchingModelId, testingChanne
                 tabBarExtraContent={
                     <div className="hidden sm:flex sm:items-center sm:gap-2">
                         <Button icon={<RefreshCw className="size-4" />} loading={fetchingModelId === "all"} onClick={() => void onFetchAll()}>
-                            同步全部模型
+                            {t("channelWorkspace.syncAll")}
                         </Button>
                         <Button type="primary" icon={<Plus className="size-4" />} onClick={() => openWizard()}>
-                            接入新渠道
+                            {t("channelWorkspace.onboard")}
                         </Button>
                     </div>
                 }
                 items={[
                     {
                         key: "channels",
-                        label: <TabLabel icon={<Settings2 className="size-4" />} text="渠道管理" />,
+                        label: <TabLabel icon={<Settings2 className="size-4" />} text={t("channelWorkspace.tabs.manage")} />,
                         children: (
                             <ChannelList
                                 channels={visibleChannels}
@@ -159,21 +161,21 @@ export function AdminChannelWorkspace({ settings, fetchingModelId, testingChanne
                             />
                         ),
                     },
-                    { key: "protocols", label: <TabLabel icon={<Blocks className="size-4" />} text="协议中心" />, children: <ProtocolCenter settings={settings} onCreate={openWizard} onOpenChannel={setDetailId} /> },
+                    { key: "protocols", label: <TabLabel icon={<Blocks className="size-4" />} text={t("channelWorkspace.tabs.protocols")} />, children: <ProtocolCenter settings={settings} onCreate={openWizard} onOpenChannel={setDetailId} /> },
                     {
                         key: "logical",
-                        label: <TabLabel icon={<Route className="size-4" />} text="逻辑模型" />,
+                        label: <TabLabel icon={<Route className="size-4" />} text={t("channelWorkspace.tabs.logical")} />,
                         children: <AdminLogicalModelManager channels={settings.systemChannels} logicalModels={settings.logicalModels} defaultModels={settings.defaultModels} onChange={(routing) => onChange({ ...settings, ...routing })} />,
                     },
-                    { key: "validation", label: <TabLabel icon={<FlaskConical className="size-4" />} text="验证记录" />, children: <ValidationRecords settings={settings} healthResults={healthResults} onOpen={setDetailId} /> },
+                    { key: "validation", label: <TabLabel icon={<FlaskConical className="size-4" />} text={t("channelWorkspace.tabs.validation")} />, children: <ValidationRecords settings={settings} healthResults={healthResults} onOpen={setDetailId} /> },
                 ]}
             />
             <div className="mt-3 flex gap-2 sm:hidden">
                 <Button className="min-w-0 flex-1" icon={<RefreshCw className="size-4" />} loading={fetchingModelId === "all"} onClick={() => void onFetchAll()}>
-                    同步模型
+                    {t("channelWorkspace.syncModels")}
                 </Button>
                 <Button className="min-w-0 flex-1" type="primary" icon={<Plus className="size-4" />} onClick={() => openWizard()}>
-                    接入渠道
+                    {t("channelWorkspace.onboardShort")}
                 </Button>
             </div>
             <AdminChannelOnboardingDrawer
@@ -209,11 +211,12 @@ export function AdminChannelWorkspace({ settings, fetchingModelId, testingChanne
 }
 
 function ChannelMetrics({ enabled, total, healthy, protocols, readyDefaults }: { enabled: number; total: number; healthy: number; protocols: number; readyDefaults: number }) {
+    const t = useTranslations("admin");
     const metrics = [
-        { label: "启用渠道", value: `${enabled}/${total}` },
-        { label: "检测正常", value: String(healthy) },
-        { label: "使用协议", value: String(protocols) },
-        { label: "默认能力", value: `${readyDefaults}/4` },
+        { label: t("channelWorkspace.metrics.enabled"), value: `${enabled}/${total}` },
+        { label: t("channelWorkspace.metrics.healthy"), value: String(healthy) },
+        { label: t("channelWorkspace.metrics.protocols"), value: String(protocols) },
+        { label: t("channelWorkspace.metrics.defaults"), value: `${readyDefaults}/4` },
     ];
     return (
         <div className="grid grid-cols-2 border-b border-stone-200 sm:grid-cols-4 dark:border-stone-800">
@@ -266,28 +269,29 @@ function ChannelList({
     onFetch: (channel: SystemModelChannel) => void;
     onTest: (channel: SystemModelChannel) => void;
 }) {
+    const t = useTranslations("admin");
     return (
         <div>
             <div className="mb-3 flex min-w-0 flex-col gap-2 md:flex-row">
-                <Input allowClear className="min-w-0 flex-1" prefix={<Search className="size-4 text-stone-400" />} value={query} placeholder="搜索渠道、地址、协议或模型" onChange={(event) => onQuery(event.target.value)} />
+                <Input allowClear className="min-w-0 flex-1" prefix={<Search className="size-4 text-stone-400" />} value={query} placeholder={t("channelWorkspace.searchPlaceholder")} onChange={(event) => onQuery(event.target.value)} />
                 <div className="grid grid-cols-2 gap-2 md:flex md:shrink-0">
                     <div className="min-w-0 md:w-32">
                         <Select
                             className="w-full"
                             value={statusFilter}
                             options={[
-                                { label: "全部状态", value: "all" },
-                                { label: "正常", value: "healthy" },
-                                { label: "需检查", value: "warning" },
-                                { label: "待检测", value: "untested" },
-                                { label: "草稿", value: "draft" },
-                                { label: "已停用", value: "disabled" },
+                                { label: t("channelWorkspace.statusAll"), value: "all" },
+                                { label: t("channelWorkspace.statusHealthy"), value: "healthy" },
+                                { label: t("channelWorkspace.statusWarning"), value: "warning" },
+                                { label: t("channelWorkspace.statusUntested"), value: "untested" },
+                                { label: t("channelWorkspace.statusDraft"), value: "draft" },
+                                { label: t("channelWorkspace.statusDisabled"), value: "disabled" },
                             ]}
                             onChange={onStatus}
                         />
                     </div>
                     <div className="min-w-0 md:w-44">
-                        <Select className="w-full" value={protocolFilter} options={[{ label: "全部协议", value: "all" }, ...channelProtocolDefinitions.map((definition) => ({ label: definition.label, value: definition.id }))]} onChange={onProtocol} />
+                        <Select className="w-full" value={protocolFilter} options={[{ label: t("channelWorkspace.protocolAll"), value: "all" }, ...channelProtocolDefinitions.map((definition) => ({ label: definition.label, value: definition.id }))]} onChange={onProtocol} />
                     </div>
                 </div>
             </div>
@@ -308,21 +312,21 @@ function ChannelList({
                         <div className="flex min-w-0 items-start justify-between gap-2">
                             <div className="min-w-0">
                                 <div className="flex min-w-0 items-center gap-2">
-                                    <span className="truncate text-sm font-semibold text-stone-950 dark:text-stone-100">{channel.name || "未命名渠道"}</span>
+                                    <span className="truncate text-sm font-semibold text-stone-950 dark:text-stone-100">{channel.name || t("channelWorkspace.unnamed")}</span>
                                     <ChannelStatusTag channel={channel} healthResults={healthResults} />
                                 </div>
                                 <div className="mt-1 truncate text-xs text-stone-500 dark:text-stone-400">{channelProtocolLabel(channel)}</div>
                             </div>
-                            <Switch size="small" checked={channel.enabled} disabled aria-label={`${channel.name}当前启用状态`} />
+                            <Switch size="small" checked={channel.enabled} disabled aria-label={t("channelWorkspace.enabledStateAria", { name: channel.name })} />
                         </div>
                         <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-500 dark:text-stone-400">
-                            <span>{channel.models.length} 个模型</span>
-                            <span>{channelCapabilityLabels(channel).join("、") || "能力待识别"}</span>
-                            <span>{channelBindingCount(channel.id, settings)} 个绑定</span>
+                            <span>{t("channelWorkspace.modelCount", { count: channel.models.length })}</span>
+                            <span>{channelCapabilityLabels(channel).join("、") || t("channelWorkspace.capabilityPending")}</span>
+                            <span>{t("channelWorkspace.bindingCount", { count: channelBindingCount(channel.id, settings) })}</span>
                         </div>
                         <div className="mt-3 flex items-center gap-2 border-t border-stone-100 pt-3 dark:border-stone-900">
                             <Button size="small" className="min-w-0 flex-1" onClick={() => onOpen(channel.id)}>
-                                查看
+                                {t("channelWorkspace.view")}
                             </Button>
                             <Button size="small" icon={<RefreshCw className="size-3.5" />} loading={fetchingModelId === channel.id} aria-label={`同步 ${channel.name} 模型`} onClick={() => onFetch(channel)} />
                             <Button size="small" icon={<FlaskConical className="size-3.5" />} loading={testingChannelKey === `${channel.id}:all`} aria-label={`检测 ${channel.name}`} onClick={() => onTest(channel)} />
@@ -336,6 +340,7 @@ function ChannelList({
 }
 
 function ProtocolCenter({ settings, onCreate, onOpenChannel }: { settings: ChannelWorkspaceSettings; onCreate: (protocol?: SystemChannelProtocol) => void; onOpenChannel: (id: string) => void }) {
+    const t = useTranslations("admin");
     const definitions = channelProtocolDefinitions.filter((definition) => !["auto", "compatible"].includes(definition.id));
     const customChannels = settings.systemChannels.filter((channel) => channel.advancedConfig?.protocol === "custom");
     return (
@@ -407,6 +412,7 @@ function ProtocolCenter({ settings, onCreate, onOpenChannel }: { settings: Chann
 }
 
 function ValidationRecords({ settings, healthResults, onOpen }: { settings: ChannelWorkspaceSettings; healthResults: Record<string, ChannelHealthResult>; onOpen: (id: string) => void }) {
+    const t = useTranslations("admin");
     const records = settings.systemChannels.flatMap((channel) => channelHealthEntries(channel.id, healthResults, channel.healthResults).map((entry) => ({ ...entry, channel })));
     return (
         <div>
@@ -442,12 +448,13 @@ function ChannelStatusTag({ channel, healthResults }: { channel: SystemModelChan
 }
 
 function ChannelEmpty({ hasChannels, onCreate }: { hasChannels: boolean; onCreate: () => void }) {
+    const t = useTranslations("admin");
     return (
         <div className="py-10 text-center">
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={hasChannels ? "没有匹配的渠道" : "还没有模型渠道"} />
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={hasChannels ? t("channelWorkspace.noMatch") : t("channelWorkspace.noChannels")} />
             {!hasChannels ? (
                 <Button type="primary" icon={<Plus className="size-4" />} onClick={onCreate}>
-                    接入第一个渠道
+                    {t("channelWorkspace.onboardFirst")}
                 </Button>
             ) : null}
         </div>

@@ -11,5 +11,9 @@ export async function DELETE(request: Request) {
     const storageKeys = Array.isArray(body.storageKeys) ? body.storageKeys.filter((value): value is string => typeof value === "string" && Boolean(value.trim())).slice(0, 200) : [];
     if (!storageKeys.length) return NextResponse.json({ code: 0, data: { deletedFiles: 0, deletedBytes: 0, blocked: [] }, msg: await serverMessage("media.nothingToDelete") });
     const result = await deleteUserLocalMediaAssets(user.id, storageKeys);
-    return NextResponse.json({ code: 0, data: result, msg: result.blocked.length ? "部分媒体仍被业务数据引用，已保留服务器文件" : "媒体文件已删除" });
+    return NextResponse.json({
+        code: 0,
+        data: result,
+        msg: result.blocked.length ? await serverMessage("media.partialBlockedKept") : await serverMessage("media.deleted"),
+    });
 }

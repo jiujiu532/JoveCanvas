@@ -690,6 +690,23 @@ const KNOWN_ERROR_MESSAGE_ENTRIES: Array<[string, string]> = [
     ["邀请关系不存在", "billing.referralRelationshipNotFound"],
     ["邀请积分奖励金额无效", "billing.referralPointsRewardInvalid"],
     ["积分发放失败", "billing.pointsGrantFailed"],
+
+    // progressive map for remaining route-layer Chinese throws
+    ["当前渠道不支持参考素材", "tasks.channelRefNotSupported"],
+    ["剧本分析失败", "tasks.scriptAnalyzeFailed"],
+    ["没有可用的文本模型渠道", "tasks.noTextModelChannel"],
+    ["整集合成失败", "tasks.episodeComposeFailed"],
+    ["模型分页地址不允许访问内网或保留地址", "admin.modelPageUrlBlocked"],
+    ["接口测试失败", "admin.apiTestFailed"],
+    ["文本协议配置无效", "admin.textProtocolInvalid"],
+    ["视频接口请求失败", "tasks.videoRequestFailed"],
+    ["视频接口没有返回任务 ID", "tasks.videoNoTaskId"],
+    ["没有可用的视频创建接口", "tasks.noVideoCreateEndpoint"],
+    ["生成接口响应超时，请稍后重试或检查模型服务。", "tasks.generationTimeoutRetry"],
+    ["生成渠道暂时无法连接，请稍后重试或联系管理员。", "tasks.channelConnectFailed"],
+    ["参考素材暂时无法提交给当前生成渠道，请重新上传或稍后重试。", "tasks.refSubmitTemporarilyFailed"],
+    ["上游未公开模型目录，已保留现有手工模型。", "admin.modelCatalogNotPublic"],
+    ["媒体下载失败", "media.externalReadFailed"],
 ];
 
 const KNOWN_ERROR_MESSAGE_KEYS: Record<string, string> = Object.fromEntries(KNOWN_ERROR_MESSAGE_ENTRIES);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { App, Alert, Button, Checkbox, Drawer, Empty, Input, Select, Space, Switch, Tag } from "antd";
 import { ArrowLeft, Check, CircleDollarSign, FlaskConical, Link2, PlugZap, RefreshCw, Save, WandSparkles } from "lucide-react";
 import { nanoid } from "nanoid";
@@ -31,9 +32,17 @@ type Props = {
     onPersist: (settings: ChannelWorkspaceSettings, successText: string) => Promise<boolean>;
 };
 
-const steps = [{ title: "选择协议" }, { title: "连接上游" }, { title: "获取模型" }, { title: "验证能力" }, { title: "绑定模型" }, { title: "确认启用" }];
 
 export function AdminChannelOnboardingDrawer({ open, initialProtocol, settings, fetchingModelId, testingChannelKey, healthResults, saving, onClose, onChange, onFetchModels, onTestAll, onPersist }: Props) {
+    const t = useTranslations("admin");
+    const steps = [
+        { title: t("channelOnboarding.steps.protocol") },
+        { title: t("channelOnboarding.steps.connect") },
+        { title: t("channelOnboarding.steps.models") },
+        { title: t("channelOnboarding.steps.validate") },
+        { title: t("channelOnboarding.steps.bind") },
+        { title: t("channelOnboarding.steps.enable") },
+    ];
     const { message, modal } = App.useApp();
     const [step, setStep] = useState(0);
     const [selectedProtocol, setSelectedProtocol] = useState<SystemChannelProtocol>("openai");
@@ -66,7 +75,7 @@ export function AdminChannelOnboardingDrawer({ open, initialProtocol, settings, 
     };
     const beginChannel = () => {
         const definition = channelProtocolDefinition(selectedProtocol);
-        const next = applyChannelProtocol({ ...createSystemChannel(), name: `${definition.label} 渠道`, enabled: false }, selectedProtocol);
+        const next = applyChannelProtocol({ ...createSystemChannel(), name: t("channelOnboarding.channelSuffix", { label: definition.label }), enabled: false }, selectedProtocol);
         onChange({ ...settings, systemChannels: [...settings.systemChannels, next] });
         setDraftId(next.id);
         setStep(1);
@@ -79,10 +88,10 @@ export function AdminChannelOnboardingDrawer({ open, initialProtocol, settings, 
     const cancel = () => {
         if (!draftId) return onClose();
         modal.confirm({
-            title: "退出接入向导？",
-            content: "当前尚未保存的渠道草稿将被移除。",
-            okText: "退出并移除",
-            cancelText: "继续配置",
+            title: t("channelOnboarding.exitTitle"),
+            content: t("channelOnboarding.exitContent"),
+            okText: t("channelOnboarding.exitOk"),
+            cancelText: t("channelOnboarding.exitCancel"),
             okButtonProps: { danger: true },
             onOk: () => {
                 onChange(removeChannelFromWorkspace(settings, draftId));
@@ -94,28 +103,28 @@ export function AdminChannelOnboardingDrawer({ open, initialProtocol, settings, 
         if (!channel) return;
         const next = { ...settings, systemChannels: settings.systemChannels.map((item) => (item.id === channel.id ? { ...item, enabled: false } : item)) };
         onChange(next);
-        if (await onPersist(next, "渠道草稿已保存")) onClose();
+        if (await onPersist(next, t("channelOnboarding.draftSaved"))) onClose();
     };
     const enableChannel = async () => {
         if (!channel || !verified || !bound) return;
         const next = { ...settings, systemChannels: settings.systemChannels.map((item) => (item.id === channel.id ? { ...item, enabled: true } : item)) };
         onChange(next);
-        if (await onPersist(next, "渠道已启用")) onClose();
+        if (await onPersist(next, t("channelOnboarding.enabled"))) onClose();
     };
     const bindModel = () => {
-        if (!channel || !selectedUpstreamModel) return message.error("请选择上游模型");
+        if (!channel || !selectedUpstreamModel) return message.error(t("channelOnboarding.selectUpstream"));
         const capability = channelModelCapability(channel, selectedUpstreamModel);
         let logicalModels = settings.logicalModels;
         let logical: LogicalModel | undefined;
         if (selectedLogicalId) logical = logicalModels.find((item) => item.id === selectedLogicalId && item.capability === capability);
         else {
             const id = newLogicalId.trim();
-            if (!/^[a-z0-9][a-z0-9._-]*$/i.test(id)) return message.error("逻辑模型 ID 只能包含字母、数字、点、下划线和短横线");
-            if (logicalModels.some((item) => item.id.toLowerCase() === id.toLowerCase())) return message.error("逻辑模型 ID 已存在");
+            if (!/^[a-z0-9][a-z0-9._-]*$/i.test(id)) return message.error(t("channelOnboarding.idInvalid"));
+            if (logicalModels.some((item) => item.id.toLowerCase() === id.toLowerCase())) return message.error(t("channelOnboarding.idExists"));
             logical = { id, name: newLogicalName.trim() || id, capability, enabled: true, bindings: [] };
             logicalModels = [...logicalModels, logical];
         }
-        if (!logical) return message.error("请选择或创建逻辑模型");
+        if (!logical) return message.error(t("channelOnboarding.selectOrCreate"));
         const exists = logical.bindings.some((binding) => binding.channelId === channel.id && binding.upstreamModel === selectedUpstreamModel);
         const nextLogical = exists
             ? logical
@@ -127,12 +136,12 @@ export function AdminChannelOnboardingDrawer({ open, initialProtocol, settings, 
         const defaultModels = setAsDefault ? { ...settings.defaultModels, [defaultModelField(capability)]: nextLogical.id } : settings.defaultModels;
         onChange({ ...settings, logicalModels, defaultModels });
         setBindingDraft((current) => ({ ...current, logicalId: nextLogical.id, newLogicalId: "", newLogicalName: "" }));
-        message.success(exists ? "这个上游绑定已经存在" : "上游模型已绑定");
+        message.success(exists ? t("channelOnboarding.bindingExists") : t("channelOnboarding.bindingAdded"));
     };
 
     const renderStep = () => {
         if (step === 0) return <ProtocolSelection protocols={protocolOptions} selected={selectedProtocol} onSelect={setSelectedProtocol} />;
-        if (!channel) return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="渠道草稿不存在" />;
+        if (!channel) return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("channelOnboarding.draftMissing")} />;
         if (step === 1) return <ConnectionStep channel={channel} onChange={updateChannel} />;
         if (step === 2) return <ModelStep channel={channel} fetching={fetchingModelId === channel.id} onChange={updateChannel} onFetch={() => void onFetchModels(channel)} />;
         if (step === 3) return <ValidationStep channel={channel} entries={validations} testing={testingChannelKey === `${channel.id}:all`} onTest={() => void onTestAll(channel)} />;
@@ -161,7 +170,7 @@ export function AdminChannelOnboardingDrawer({ open, initialProtocol, settings, 
 
     return (
         <Drawer
-            title="接入新渠道"
+            title={t("channelOnboarding.title")}
             size="min(736px, 100vw)"
             open={open}
             destroyOnHidden
@@ -170,21 +179,21 @@ export function AdminChannelOnboardingDrawer({ open, initialProtocol, settings, 
             footer={
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <Button onClick={step === 0 ? cancel : step === 1 ? returnToProtocols : () => setStep((current) => current - 1)} icon={step ? <ArrowLeft className="size-4" /> : undefined}>
-                        {step ? "上一步" : "取消"}
+                        {step ? t("channelOnboarding.prev") : t("channelOnboarding.cancel")}
                     </Button>
                     <Space wrap>
                         {step > 0 ? (
                             <Button loading={saving} icon={<Save className="size-4" />} onClick={() => void saveDraft()}>
-                                保存草稿
+                                {t("channelOnboarding.saveDraft")}
                             </Button>
                         ) : null}
                         {step < steps.length - 1 ? (
                             <Button type="primary" disabled={nextDisabled} onClick={step === 0 ? beginChannel : () => setStep((current) => current + 1)}>
-                                {step === 0 ? "开始配置" : "下一步"}
+                                {step === 0 ? t("channelOnboarding.start") : t("channelOnboarding.next")}
                             </Button>
                         ) : (
                             <Button type="primary" loading={saving} disabled={!verified || !bound} icon={<Check className="size-4" />} onClick={() => void enableChannel()}>
-                                启用渠道
+                                {t("channelOnboarding.enable")}
                             </Button>
                         )}
                     </Space>
@@ -194,11 +203,11 @@ export function AdminChannelOnboardingDrawer({ open, initialProtocol, settings, 
             <div className="mb-5 md:hidden">
                 <div className="mb-2 flex items-center justify-between gap-3">
                     <span className="text-xs font-medium text-stone-500 dark:text-stone-400">
-                        步骤 {step + 1} / {steps.length}
+                        {t("channelOnboarding.stepOf", { current: step + 1, total: steps.length })}
                     </span>
                     <span className="text-sm font-semibold text-stone-950 dark:text-stone-100">{steps[step].title}</span>
                 </div>
-                <div className="grid grid-cols-6 gap-1" role="progressbar" aria-label={`接入进度：${steps[step].title}`} aria-valuemin={1} aria-valuemax={steps.length} aria-valuenow={step + 1}>
+                <div className="grid grid-cols-6 gap-1" role="progressbar" aria-label={t("channelOnboarding.progressAria", { title: steps[step].title })} aria-valuemin={1} aria-valuemax={steps.length} aria-valuenow={step + 1}>
                     {steps.map((item, index) => (
                         <span key={item.title} className={`h-1 rounded-full ${index < step ? "bg-emerald-500 dark:bg-emerald-400" : index === step ? "bg-stone-950 dark:bg-stone-100" : "bg-stone-200 dark:bg-stone-700"}`} aria-hidden />
                     ))}
@@ -211,9 +220,18 @@ export function AdminChannelOnboardingDrawer({ open, initialProtocol, settings, 
 }
 
 function OnboardingProgress({ current }: { current: number }) {
+    const t = useTranslations("admin");
+    const steps = [
+        { title: t("channelOnboarding.steps.protocol") },
+        { title: t("channelOnboarding.steps.connect") },
+        { title: t("channelOnboarding.steps.models") },
+        { title: t("channelOnboarding.steps.validate") },
+        { title: t("channelOnboarding.steps.bind") },
+        { title: t("channelOnboarding.steps.enable") },
+    ];
     return (
         <div className="mb-6 hidden md:block">
-            <ol className="flex min-w-0 items-center" aria-label={`接入进度：${steps[current].title}`}>
+            <ol className="flex min-w-0 items-center" aria-label={t("channelOnboarding.progressAria", { title: steps[current].title })}>
                 {steps.map((item, index) => {
                     const completed = index < current;
                     const active = index === current;
@@ -228,7 +246,7 @@ function OnboardingProgress({ current }: { current: number }) {
                                               ? "border-stone-950 bg-stone-950 text-white dark:border-stone-100 dark:bg-stone-100 dark:text-stone-950"
                                               : "border-stone-200 bg-stone-100 text-stone-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400"
                                     }`}
-                                    aria-label={completed ? `${item.title}已完成` : active ? `${item.title}进行中` : `${item.title}未开始`}
+                                    aria-label={completed ? t("channelOnboarding.completedAria", { title: item.title }) : active ? t("channelOnboarding.activeAria", { title: item.title }) : t("channelOnboarding.pendingAria", { title: item.title })}
                                 >
                                     {completed ? (
                                         <span className="inline-flex size-5.5 items-center justify-center rounded-full bg-emerald-600 text-white shadow-sm shadow-emerald-600/20 dark:bg-emerald-400 dark:text-emerald-950">
@@ -256,9 +274,10 @@ function OnboardingProgress({ current }: { current: number }) {
 }
 
 function ProtocolSelection({ protocols, selected, onSelect }: { protocols: ReturnType<typeof channelProtocolOptions>; selected: SystemChannelProtocol; onSelect: (protocol: SystemChannelProtocol) => void }) {
+    const t = useTranslations("admin");
     return (
         <div>
-            <div className="mb-3 text-sm font-semibold text-stone-950 dark:text-stone-100">选择上游协议</div>
+            <div className="mb-3 text-sm font-semibold text-stone-950 dark:text-stone-100">{t("channelOnboarding.selectProtocol")}</div>
             <div className="grid gap-2 sm:grid-cols-2">
                 {protocols.map((protocol) => {
                     const definition = channelProtocolDefinition(protocol.value);
@@ -295,6 +314,7 @@ function ProtocolSelection({ protocols, selected, onSelect }: { protocols: Retur
 }
 
 function ConnectionStep({ channel, onChange }: { channel: SystemModelChannel; onChange: (patch: Partial<SystemModelChannel>) => void }) {
+    const t = useTranslations("admin");
     const custom = channel.advancedConfig?.protocol === "custom";
     const authMode = resolveChannelAuthMode(channel.advancedConfig);
     const requiresApiKey = channelRequiresApiKey(channel);
@@ -302,35 +322,35 @@ function ConnectionStep({ channel, onChange }: { channel: SystemModelChannel; on
     return (
         <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
-                <LabeledControl label="渠道名称">
-                    <Input value={channel.name} placeholder="例如：生产主渠道" onChange={(event) => onChange({ name: event.target.value })} />
+                <LabeledControl label={t("channelOnboarding.channelName")}>
+                    <Input value={channel.name} placeholder={t("channelOnboarding.channelNamePlaceholder")} onChange={(event) => onChange({ name: event.target.value })} />
                 </LabeledControl>
                 <LabeledControl label="Base URL">
                     <Input value={channel.baseUrl} placeholder="https://api.example.com" onChange={(event) => onChange({ baseUrl: event.target.value })} />
                 </LabeledControl>
                 {custom ? (
-                    <LabeledControl label="鉴权方式">
-                        <Select className="w-full" value={authMode} options={authModeOptions} onChange={(value: SystemChannelAuthMode) => updateAuth({ authMode: value, ...(value !== "custom-header" ? { authHeader: "", authPrefix: "" } : {}) })} />
+                    <LabeledControl label={t("channelOnboarding.authMode")}>
+                        <Select className="w-full" value={authMode} options={authModeOptions(t)} onChange={(value: SystemChannelAuthMode) => updateAuth({ authMode: value, ...(value !== "custom-header" ? { authHeader: "", authPrefix: "" } : {}) })} />
                     </LabeledControl>
                 ) : null}
                 {custom && authMode === "custom-header" ? (
                     <>
-                        <LabeledControl label="鉴权 Header">
-                            <Input value={channel.advancedConfig?.authHeader} placeholder="例如 X-API-Key" onChange={(event) => updateAuth({ authHeader: event.target.value })} />
+                        <LabeledControl label={t("channelOnboarding.authHeader")}>
+                            <Input value={channel.advancedConfig?.authHeader} placeholder={t("channelOnboarding.authHeaderPlaceholder")} onChange={(event) => updateAuth({ authHeader: event.target.value })} />
                         </LabeledControl>
-                        <LabeledControl label="值前缀（可选）">
-                            <Input value={channel.advancedConfig?.authPrefix} placeholder="例如 Token" onChange={(event) => updateAuth({ authPrefix: event.target.value })} />
+                        <LabeledControl label={t("channelOnboarding.authPrefix")}>
+                            <Input value={channel.advancedConfig?.authPrefix} placeholder={t("channelOnboarding.authPrefixPlaceholder")} onChange={(event) => updateAuth({ authPrefix: event.target.value })} />
                         </LabeledControl>
                     </>
                 ) : null}
                 {requiresApiKey ? (
                     <div className="sm:col-span-2">
                         <LabeledControl label="API Key">
-                            <Input.Password value={channel.apiKey} autoComplete="off" placeholder="仅保存在服务端" onChange={(event) => onChange({ apiKey: event.target.value, clearApiKey: false })} />
+                            <Input.Password value={channel.apiKey} autoComplete="off" placeholder={t("channelOnboarding.apiKeyPlaceholder")} onChange={(event) => onChange({ apiKey: event.target.value, clearApiKey: false })} />
                         </LabeledControl>
                     </div>
                 ) : (
-                    <div className="sm:col-span-2 border-y border-stone-200 py-3 text-sm text-stone-600 dark:border-stone-800 dark:text-stone-300">当前协议无需 API Key，服务端不会发送鉴权请求头。</div>
+                    <div className="sm:col-span-2 border-y border-stone-200 py-3 text-sm text-stone-600 dark:border-stone-800 dark:text-stone-300">{t("channelOnboarding.noApiKey")}</div>
                 )}
             </div>
             {custom ? <AdminChannelProtocolSetup channel={channel} protocolLocked onChange={onChange} /> : <ProtocolLockedSummary channel={channel} />}
@@ -338,38 +358,42 @@ function ConnectionStep({ channel, onChange }: { channel: SystemModelChannel; on
     );
 }
 
-const authModeOptions: Array<{ label: string; value: SystemChannelAuthMode }> = [
-    { label: "无需鉴权", value: "none" },
-    { label: "Bearer Token", value: "bearer" },
-    { label: "X-API-Key", value: "x-api-key" },
-    { label: "自定义 Header", value: "custom-header" },
-];
+function authModeOptions(t: ReturnType<typeof useTranslations<"admin">>): Array<{ label: string; value: SystemChannelAuthMode }> {
+    return [
+        { label: t("channelOnboarding.authNone"), value: "none" },
+        { label: "Bearer Token", value: "bearer" },
+        { label: "X-API-Key", value: "x-api-key" },
+        { label: t("channelOnboarding.authCustom"), value: "custom-header" },
+    ];
+}
 
 function ProtocolLockedSummary({ channel }: { channel: SystemModelChannel }) {
+    const t = useTranslations("admin");
     const definition = channelProtocolDefinition(channel.advancedConfig?.protocol || "auto");
     return (
         <div className="border-y border-stone-200 py-3 dark:border-stone-800">
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                     <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{definition.label}</div>
-                    <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">内置协议参数由注册表固定，渠道只保存地址、凭据和模型。</div>
+                    <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{t("channelOnboarding.fixedParams")}</div>
                 </div>
-                <Tag className="m-0 !border-stone-300 !bg-stone-50 !text-stone-700 dark:!border-stone-700 dark:!bg-stone-900 dark:!text-stone-200">{definition.strict ? "严格协议" : "兼容协议"}</Tag>
+                <Tag className="m-0 !border-stone-300 !bg-stone-50 !text-stone-700 dark:!border-stone-700 dark:!bg-stone-900 dark:!text-stone-200">{definition.strict ? t("channelOnboarding.strict") : t("channelOnboarding.compatible")}</Tag>
             </div>
         </div>
     );
 }
 
 function ModelStep({ channel, fetching, onChange, onFetch }: { channel: SystemModelChannel; fetching: boolean; onChange: (patch: Partial<SystemModelChannel>) => void; onFetch: () => void }) {
+    const t = useTranslations("admin");
     return (
         <div>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 pb-3 dark:border-stone-800">
                 <div>
-                    <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">上游模型</div>
-                    <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">同步只会合并模型，不删除手工模型。</div>
+                    <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("channelOnboarding.upstreamModels")}</div>
+                    <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{t("channelOnboarding.syncHint")}</div>
                 </div>
                 <Button icon={<RefreshCw className="size-4" />} loading={fetching} onClick={onFetch}>
-                    同步模型
+                    {t("channelOnboarding.syncModels")}
                 </Button>
             </div>
             <LabeledControl label="模型列表">
@@ -389,6 +413,7 @@ function ModelStep({ channel, fetching, onChange, onFetch }: { channel: SystemMo
 }
 
 function ValidationStep({ channel, entries, testing, onTest }: { channel: SystemModelChannel; entries: ReturnType<typeof channelHealthEntries>; testing: boolean; onTest: () => void }) {
+    const t = useTranslations("admin");
     const kinds = channelHealthKinds(channel);
     return (
         <div>
@@ -460,6 +485,7 @@ function BindingStep({
     onSetAsDefault: (value: boolean) => void;
     onBind: () => void;
 }) {
+    const t = useTranslations("admin");
     const capability: LogicalModelCapability = selectedUpstreamModel ? channelModelCapability(channel, selectedUpstreamModel) : "text";
     const candidates = logicalModels.filter((model) => model.capability === capability);
     return (
@@ -508,6 +534,7 @@ function BindingStep({
 }
 
 function ReviewStep({ channel, settings, validations }: { channel: SystemModelChannel; settings: ChannelWorkspaceSettings; validations: ReturnType<typeof channelHealthEntries> }) {
+    const t = useTranslations("admin");
     const bindings = settings.logicalModels.flatMap((model) => model.bindings.filter((binding) => binding.channelId === channel.id).map((binding) => ({ logical: model, binding })));
     return (
         <div className="space-y-5">
@@ -540,6 +567,7 @@ function ReviewStep({ channel, settings, validations }: { channel: SystemModelCh
 }
 
 function ReviewValue({ label, value }: { label: string; value: string }) {
+    const t = useTranslations("admin");
     return (
         <div className="min-w-0">
             <div className="text-xs text-stone-500 dark:text-stone-400">{label}</div>

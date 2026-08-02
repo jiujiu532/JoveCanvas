@@ -441,7 +441,14 @@ export function useAdminDashboardTableModel({ state, data, settingsActions }: { 
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <span className="min-w-0 max-w-full truncate font-mono text-sm font-semibold text-stone-950 dark:text-stone-100">{code.code || "CDK"}</span>
                         <Tag className="m-0" color={cdkStatusTone(code)}>
-                            {cdkStatusLabel(code)}
+                            {cdkStatusLabel(code, {
+                                plainMissing: t("dashboardElements.cdkStatus.plainMissing"),
+                                expired: t("dashboardElements.cdkStatus.expired"),
+                                unavailable: t("dashboardElements.cdkStatus.unavailable"),
+                                exhausted: t("dashboardElements.cdkStatus.exhausted"),
+                                partial: t("dashboardElements.cdkStatus.partial"),
+                                unused: t("dashboardElements.cdkStatus.unused"),
+                            })}
                         </Tag>
                     </div>
                     <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone-500 dark:text-stone-400">

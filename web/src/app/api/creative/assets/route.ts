@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { CREATIVE_UPLOAD_MAX_BYTES } from "@/lib/creative-upload";
 import { CreativeRuntimeServiceError, uploadAssetForUser } from "@/lib/server/creative-runtime-service";
 import { readRequestBodyBytes, RequestBodyTooLargeError } from "@/lib/server/request-body-limit";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ code: 0, data: { asset }, msg: await serverMessage("media.assetUploaded") });
     } catch (error) {
         if (error instanceof RequestBodyTooLargeError) return NextResponse.json({ code: error.status, data: null, msg: await serverMessage("media.assetTooLarge20mb") }, { status: error.status });
-        if (error instanceof CreativeRuntimeServiceError) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
+        if (error instanceof CreativeRuntimeServiceError) return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });
         throw error;
     }
 }
