@@ -597,7 +597,7 @@
   },
   "billingPage": {
     "title": "Finance Wallet",
-    "description": "Manage top-up plans, payment config, order collection, refund flags, and basic reconciliation issues.",
+    "description": "Manage products, promotions, coupons, payment config, order collection, and refund reconciliation.",
     "backToAdmin": "Back to Admin"
   },
   "generationOps": {
@@ -627,7 +627,14 @@
       "active": "Running",
       "failed": "Failed",
       "avgDuration": "Avg Duration",
-      "pointsCost": "Points Used"
+      "pointsCost": "Points Used",
+      "success": "Success",
+      "totalDetail": "All generation records",
+      "activeDetail": "Queued and running tasks",
+      "successDetail": "Completed tasks",
+      "failedDetail": "Needs attention",
+      "avgDurationDetail": "Average across all tasks",
+      "pointsCostDetail": "Total deducted"
     },
     "searchPlaceholder": "Task, user, model, session, or project",
     "filter": "Filter",
@@ -670,6 +677,85 @@
       "zero": "0s",
       "seconds": "{count}s",
       "minutesSeconds": "{minutes}m {seconds}s"
+    },
+    "userUnavailable": "User info unavailable",
+    "reviewTask": "Take over task pending review",
+    "reviewFailed": "Failed to take over task",
+    "reviewSuccessFailed": "Task confirmed failed and closed",
+    "reviewSuccessContinue": "Task handed to background Worker",
+    "overviewTitle": "Operations Overview",
+    "overviewDescription": "Quick view of throughput, success rate, duration, and points usage.",
+    "refreshAria": "Refresh generation operations",
+    "agentPerfTitle": "Agent Stage Performance",
+    "agentPerfDescription": "Break down planning, first result, queue, upstream save, and review latency to find bottlenecks.",
+    "agentPerfSamples": "{count} samples",
+    "agentPerf": {
+      "planningP50": "Planning P50",
+      "planningP50Detail": "Typical planning latency",
+      "planningP95": "Planning P95",
+      "planningP95Detail": "Slow-request boundary",
+      "firstResultP50": "First result P50",
+      "firstResultP50Detail": "Typical first-result wait",
+      "firstResultP95": "First result P95",
+      "firstResultP95Detail": "Long-tail first-result wait",
+      "queueAverage": "Queue average",
+      "queueAverageDetail": "Scheduler wait",
+      "upstreamAverage": "Upstream & save",
+      "upstreamAverageDetail": "Generation and persist",
+      "reviewAverage": "Review average",
+      "reviewAverageDetail": "Background quality review"
+    },
+    "queueTitle": "Task Queue",
+    "queueDescription": "{count} records total. Filter by task, user, model, status, and entry surface.",
+    "searchAria": "Search generation tasks",
+    "query": "Search",
+    "typeFilterAria": "Filter by task type",
+    "statusFilterAria": "Filter by task status",
+    "surfaceFilterAria": "Filter by entry surface",
+    "loading": "Loading tasks…",
+    "channelHealthDescription": "Shows current bindings, runtime cool-down, and planning protocol. Manual probes make a real minimal request and may consume points.",
+    "planningSample": "Planning {protocol} · avg {latency} · {success} success / {failure} fail",
+    "noPlanningSample": "No planning samples yet",
+    "probeOk": "Probe OK {status}",
+    "probeError": "Probe failed",
+    "noChannels": "No channels available",
+    "reviewModalTitle": "Take over task pending review",
+    "reviewOkConfirmFailed": "Confirm and close task",
+    "reviewOkContinue": "Confirm and continue",
+    "reviewHint": "Create-request results could not be confirmed automatically. The system stopped retrying creates. Takeover only continues polling, saves existing results, or explicitly closes the task.",
+    "reviewAction": {
+      "resumeUpstream": "Enter task ID",
+      "provideResultText": "Enter text result",
+      "provideResultUrl": "Enter result URL",
+      "confirmFailed": "Confirm not created"
+    },
+    "reviewPlaceholder": {
+      "upstreamTaskId": "Paste upstream task ID",
+      "resultText": "Paste the final text from upstream",
+      "resultUrl": "Paste the finished asset URL or in-site media path",
+      "failReason": "Optional: reason for confirming failure"
+    },
+    "reviewTaskMeta": "Task {id} · {type} · phase {phase}",
+    "needsReview": "Needs review",
+    "card": {
+      "model": "Model",
+      "surface": "Entry",
+      "duration": "Duration",
+      "points": "Points",
+      "promptSummary": "Request summary"
+    },
+    "protocols": {
+      "custom": "Custom"
+    },
+    "phases": {
+      "created": "Created",
+      "submitting": "Submitting",
+      "submitted": "Submitted",
+      "polling": "Polling",
+      "result_ready": "Result ready",
+      "persisting": "Persisting",
+      "needs_review": "Needs review",
+      "completed": "Completed"
     }
   },
   "billingOps": {
@@ -739,7 +825,9 @@
       "actions": "Actions",
       "collect": "Collect",
       "close": "Close",
-      "refund": "Refund"
+      "refund": "Refund",
+      "userUnavailable": "User info unavailable",
+      "userUnbound": "No linked user"
     },
     "metrics": {
       "paidAmount": "Amount Received",
@@ -750,7 +838,7 @@
     "filter": {
       "title": "Operations Filters",
       "description": "The date range affects the summary; the order list can be filtered by status and keyword.",
-      "keywordPlaceholder": "Order no / product / payment id",
+      "keywordPlaceholder": "Order no / product / payment id / user ID",
       "query": "Search",
       "refresh": "Refresh"
     },
@@ -805,7 +893,11 @@
       "periodDays": "Validity Days",
       "periodDaysRequired": "Enter the number of days",
       "sortOrder": "Sort Order",
-      "enabled": "Listing Status"
+      "enabled": "Listing Status",
+      "promoActive": "Promo active",
+      "salePrice": "Promo {price}",
+      "listPrice": "List {price}",
+      "listPriceLabel": "List price"
     },
     "elements": {
       "reconciliationTitle": "Reconciliation Check",
@@ -864,7 +956,13 @@
       "setDone": "Set",
       "setPending": "Pending",
       "copied": "Copied",
-      "copyFailed": "Copy failed"
+      "copyFailed": "Copy failed",
+      "systemDefault": "System default",
+      "useSystemDefault": "Uses system default when empty",
+      "systemDefaultNote": "Leave empty to use the system default; fill only when you need a custom value.",
+      "asyncCallback": "Async notify",
+      "alipayFaceToFaceRouteDesc": "Face-to-face mode uses this site’s async notify URL automatically; no sync return URL is needed. Fill only when you need a custom notify domain.",
+      "routeSystemDefaultDesc": "These URLs default to the current site. Leave empty unless you need another domain or page."
     },
     "reconciliation": {
       "loadRecentFailed": "Failed to load recent reconciliation runs",
@@ -1760,7 +1858,8 @@
     "retentionPermanent": "Kept permanently",
     "retentionExpired": "Expired",
     "expiresInHoursMinutes": "Expires in {hours}h {minutes}m",
-    "expiresInMinutes": "Expires in {minutes}m"
+    "expiresInMinutes": "Expires in {minutes}m",
+    "userUnavailable": "User info unavailable"
   },
   "setup": {
     "steps": {

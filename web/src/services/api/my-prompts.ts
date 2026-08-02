@@ -1,7 +1,10 @@
 import type { Prompt, PromptListResponse } from "./prompts";
 
-export function listMyPrompts(input: { page: number; pageSize: number }) {
+export function listMyPrompts(input: { page: number; pageSize: number; preferLocale?: "zh" | "en" }) {
     const query = new URLSearchParams({ page: String(input.page), pageSize: String(input.pageSize) });
+    if (input.preferLocale === "zh" || input.preferLocale === "en") {
+        query.set("preferLocale", input.preferLocale);
+    }
     return request<PromptListResponse>(`/api/my-prompts?${query}`, { cache: "no-store" });
 }
 

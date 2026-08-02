@@ -597,7 +597,7 @@
   },
   "billingPage": {
     "title": "财务钱包",
-    "description": "管理充值套餐、支付配置、订单收款、退款标记和基础对账异常。",
+    "description": "管理套餐商品、限时促销、优惠券、支付配置、订单收款和退款对账。",
     "backToAdmin": "返回后台"
   },
   "generationOps": {
@@ -627,7 +627,14 @@
       "active": "执行中",
       "failed": "失败",
       "avgDuration": "平均耗时",
-      "pointsCost": "积分消耗"
+      "pointsCost": "积分消耗",
+      "success": "成功",
+      "totalDetail": "全部生成记录",
+      "activeDetail": "排队与运行任务",
+      "successDetail": "已完成任务",
+      "failedDetail": "需要关注",
+      "avgDurationDetail": "全部任务平均",
+      "pointsCostDetail": "累计扣减"
     },
     "searchPlaceholder": "任务、用户、模型、会话或项目",
     "filter": "筛选",
@@ -670,6 +677,85 @@
       "zero": "0 秒",
       "seconds": "{count} 秒",
       "minutesSeconds": "{minutes} 分 {seconds} 秒"
+    },
+    "userUnavailable": "用户信息不可用",
+    "reviewTask": "接管待确认任务",
+    "reviewFailed": "任务接管失败",
+    "reviewSuccessFailed": "任务已确认失败并结束",
+    "reviewSuccessContinue": "任务已交给后台 Worker 继续处理",
+    "overviewTitle": "运行概览",
+    "overviewDescription": "快速查看任务吞吐、成功率、耗时与积分消耗。",
+    "refreshAria": "刷新生成运维数据",
+    "agentPerfTitle": "Agent 分阶段性能",
+    "agentPerfDescription": "拆分规划、首个结果、排队、上游保存与复盘耗时，定位实际瓶颈。",
+    "agentPerfSamples": "{count} 次样本",
+    "agentPerf": {
+      "planningP50": "规划 P50",
+      "planningP50Detail": "典型规划耗时",
+      "planningP95": "规划 P95",
+      "planningP95Detail": "慢请求边界",
+      "firstResultP50": "首结果 P50",
+      "firstResultP50Detail": "典型首屏等待",
+      "firstResultP95": "首结果 P95",
+      "firstResultP95Detail": "长尾首屏等待",
+      "queueAverage": "排队平均",
+      "queueAverageDetail": "调度等待",
+      "upstreamAverage": "上游及保存",
+      "upstreamAverageDetail": "生成与落盘",
+      "reviewAverage": "复盘平均",
+      "reviewAverageDetail": "后台质量复盘"
+    },
+    "queueTitle": "任务队列",
+    "queueDescription": "共 {count} 条记录，可按任务、用户、模型、状态和创作入口定位问题。",
+    "searchAria": "搜索生成任务",
+    "query": "查询",
+    "typeFilterAria": "按任务类型筛选",
+    "statusFilterAria": "按任务状态筛选",
+    "surfaceFilterAria": "按创作入口筛选",
+    "loading": "正在加载任务…",
+    "channelHealthDescription": "展示当前绑定、运行时冷却与规划协议；手动探测会发起真实最小请求并可能消耗积分。",
+    "planningSample": "规划 {protocol} · 平均 {latency} · {success} 成功 / {failure} 失败",
+    "noPlanningSample": "暂无规划调用样本",
+    "probeOk": "探测正常 {status}",
+    "probeError": "探测异常",
+    "noChannels": "暂无可用渠道",
+    "reviewModalTitle": "接管待确认任务",
+    "reviewOkConfirmFailed": "确认结束任务",
+    "reviewOkContinue": "确认并继续",
+    "reviewHint": "创建请求结果无法自动确认。系统已停止重复创建，接管操作只会继续查询、保存已有结果或明确结束任务。",
+    "reviewAction": {
+      "resumeUpstream": "录入任务 ID",
+      "provideResultText": "录入文本结果",
+      "provideResultUrl": "录入结果地址",
+      "confirmFailed": "确认未创建"
+    },
+    "reviewPlaceholder": {
+      "upstreamTaskId": "粘贴上游任务 ID",
+      "resultText": "粘贴上游返回的最终文本",
+      "resultUrl": "粘贴上游成品 URL 或站内媒体地址",
+      "failReason": "可选：填写确认失败原因"
+    },
+    "reviewTaskMeta": "任务 {id} · {type} · 当前阶段 {phase}",
+    "needsReview": "待人工确认",
+    "card": {
+      "model": "模型",
+      "surface": "入口",
+      "duration": "耗时",
+      "points": "积分",
+      "promptSummary": "请求摘要"
+    },
+    "protocols": {
+      "custom": "自定义"
+    },
+    "phases": {
+      "created": "已创建",
+      "submitting": "提交中",
+      "submitted": "已提交",
+      "polling": "查询结果",
+      "result_ready": "结果待保存",
+      "persisting": "保存结果",
+      "needs_review": "待人工确认",
+      "completed": "已结束"
     }
   },
   "billingOps": {
@@ -739,7 +825,9 @@
       "actions": "操作",
       "collect": "收款",
       "close": "关单",
-      "refund": "退款"
+      "refund": "退款",
+      "userUnavailable": "用户信息不可用",
+      "userUnbound": "未绑定用户"
     },
     "metrics": {
       "paidAmount": "实收金额",
@@ -750,7 +838,7 @@
     "filter": {
       "title": "运营筛选",
       "description": "日期范围影响摘要；订单列表可按状态和关键词筛选。",
-      "keywordPlaceholder": "订单号 / 商品 / 支付单号",
+      "keywordPlaceholder": "订单号 / 商品 / 支付单号 / 用户 ID",
       "query": "查询",
       "refresh": "刷新"
     },
@@ -805,7 +893,11 @@
       "periodDays": "生效天数",
       "periodDaysRequired": "请填写天数",
       "sortOrder": "排序",
-      "enabled": "上架状态"
+      "enabled": "上架状态",
+      "promoActive": "活动进行中",
+      "salePrice": "活动价 {price}",
+      "listPrice": "日常价 {price}",
+      "listPriceLabel": "日常价"
     },
     "elements": {
       "reconciliationTitle": "对账检查",
@@ -864,7 +956,13 @@
       "setDone": "已设置",
       "setPending": "待设置",
       "copied": "已复制",
-      "copyFailed": "复制失败"
+      "copyFailed": "复制失败",
+      "systemDefault": "系统默认",
+      "useSystemDefault": "留空自动使用",
+      "systemDefaultNote": "留空时自动使用系统默认值，仅在需要自定义时填写。",
+      "asyncCallback": "异步回调",
+      "alipayFaceToFaceRouteDesc": "当面付自动使用本站异步通知地址，不需要同步返回地址；只有需要自定义通知域名时才填写。",
+      "routeSystemDefaultDesc": "这些地址默认使用当前网站的系统地址，无需填写；只有需要改成其他域名或页面时才覆盖。"
     },
     "reconciliation": {
       "loadRecentFailed": "加载最近对账记录失败",
@@ -1760,7 +1858,8 @@
     "retentionPermanent": "长期保留",
     "retentionExpired": "已过期",
     "expiresInHoursMinutes": "{hours} 小时 {minutes} 分后过期",
-    "expiresInMinutes": "{minutes} 分后过期"
+    "expiresInMinutes": "{minutes} 分后过期",
+    "userUnavailable": "用户信息不可用"
   },
   "setup": {
     "steps": {

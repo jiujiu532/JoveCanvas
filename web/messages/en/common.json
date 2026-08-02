@@ -7,5 +7,6 @@
     "save": "Save",
     "delete": "Delete",
     "loading": "Loading",
-    "empty": "No data yet"
+    "empty": "No data yet",
+    "imageUnavailable": "Image unavailable"
 }

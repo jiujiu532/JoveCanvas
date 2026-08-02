@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { App, Button, Input, Modal, Popconfirm, Tag } from "antd";
 import { RotateCcw, UserRoundX } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { AccountDeletionRequestStatus, AccountDeletionRequestView } from "@/lib/account-deletion-contract";
 import { getOwnAccountDeletionRequest, submitOwnAccountDeletionRequest, withdrawOwnAccountDeletionRequest } from "@/services/api/account-deletion";
@@ -19,6 +20,7 @@ export function AccountDeletionPanel() {
     const [submitting, setSubmitting] = useState(false);
     const [withdrawing, setWithdrawing] = useState(false);
 
+    const t = useTranslations("workspace.profile.deletion");
     useEffect(() => {
         void loadRequest();
     }, []);
@@ -28,7 +30,7 @@ export function AccountDeletionPanel() {
         try {
             setRequest(await getOwnAccountDeletionRequest());
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "注销申请状态加载失败");
+            message.error(error instanceof Error ? error.message : t("loadFailed"));
         } finally {
             setLoading(false);
         }
@@ -42,9 +44,9 @@ export function AccountDeletionPanel() {
             setModalOpen(false);
             setCurrentPassword("");
             setNote("");
-            message.success("注销申请已提交");
+            message.success(t("submitSuccess"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "注销申请提交失败");
+            message.error(error instanceof Error ? error.message : t("submitFailed"));
         } finally {
             setSubmitting(false);
         }
@@ -54,9 +56,9 @@ export function AccountDeletionPanel() {
         setWithdrawing(true);
         try {
             setRequest(await withdrawOwnAccountDeletionRequest());
-            message.success("注销申请已撤回");
+            message.success(t("withdrawSuccess"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "注销申请撤回失败");
+            message.error(error instanceof Error ? error.message : t("withdrawFailed"));
         } finally {
             setWithdrawing(false);
         }
@@ -70,10 +72,10 @@ export function AccountDeletionPanel() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-sm font-semibold text-stone-950 dark:text-white">账号注销</h3>
-                        {request ? <Tag color={statusColor(request.status)}>{statusLabel(request.status)}</Tag> : null}
+                        <h3 className="text-sm font-semibold text-stone-950 dark:text-white">{t("title")}</h3>
+                        {request ? <Tag color={statusColor(request.status)}>{statusLabel(request.status, t)}</Tag> : null}
                     </div>
-                    <p className="mt-1 max-w-xl text-sm leading-6 text-stone-500 dark:text-stone-400">提交后由管理员人工核验。受理只代表进入注销处理，不会立即删除订单、支付记录或仍需保留的数据。</p>
+                    <p className="mt-1 max-w-xl text-sm leading-6 text-stone-500 dark:text-stone-400">{t("description")}</p>
                     {request ? (
                         <div className="mt-3 space-y-1 text-xs leading-5 text-stone-500 dark:text-stone-400">
                             <div>申请时间：{formatTime(request.requestedAt)}</div>
@@ -83,24 +85,24 @@ export function AccountDeletionPanel() {
                 </div>
                 <div className="flex shrink-0 flex-wrap gap-2">
                     {pending ? (
-                        <Popconfirm title="撤回注销申请？" description="撤回后账号继续正常使用，之后仍可重新提交。" okText="撤回" cancelText="取消" onConfirm={() => void withdrawRequest()}>
+                        <Popconfirm title={t("withdrawConfirmTitle")} description={t("withdrawConfirmDesc")} okText={t("withdrawOk")} cancelText={t("cancel")} onConfirm={() => void withdrawRequest()}>
                             <Button className={profileSecondaryButtonClass} loading={withdrawing} icon={<RotateCcw className="size-4" />}>
                                 撤回申请
                             </Button>
                         </Popconfirm>
                     ) : (
                         <Button danger className={profileDangerButtonClass} disabled={loading || accepted} icon={<UserRoundX className="size-4" />} onClick={() => setModalOpen(true)}>
-                            {accepted ? "已进入处理" : "申请注销"}
+                            {accepted ? t("processing") : t("requestButton")}
                         </Button>
                     )}
                 </div>
             </div>
 
             <Modal
-                title="申请注销账号"
+                title={t("modalTitle")}
                 open={modalOpen}
-                okText="提交申请"
-                cancelText="取消"
+                okText={t("submitButton")}
+                cancelText={t("cancel")}
                 okButtonProps={{ danger: true, disabled: !currentPassword.trim() }}
                 confirmLoading={submitting}
                 mask={{ closable: !submitting }}
@@ -118,12 +120,12 @@ export function AccountDeletionPanel() {
                         管理员会核对创作数据、媒体引用和订单保留要求。正式执行前可能需要进一步身份复核。
                     </div>
                     <label className="block space-y-2">
-                        <span className="text-sm font-medium text-stone-700 dark:text-stone-200">当前密码</span>
-                        <Input.Password value={currentPassword} autoComplete="current-password" placeholder="用于确认是本人操作" onChange={(event) => setCurrentPassword(event.target.value)} />
+                        <span className="text-sm font-medium text-stone-700 dark:text-stone-200">{t("currentPassword")}</span>
+                        <Input.Password value={currentPassword} autoComplete="current-password" placeholder={t("passwordPlaceholder")} onChange={(event) => setCurrentPassword(event.target.value)} />
                     </label>
                     <label className="block space-y-2">
-                        <span className="text-sm font-medium text-stone-700 dark:text-stone-200">补充说明（选填）</span>
-                        <Input.TextArea value={note} maxLength={500} rows={3} showCount placeholder="可填写注销原因或需要管理员注意的事项" onChange={(event) => setNote(event.target.value)} />
+                        <span className="text-sm font-medium text-stone-700 dark:text-stone-200">{t("noteLabel")}</span>
+                        <Input.TextArea value={note} maxLength={500} rows={3} showCount placeholder={t("notePlaceholder")} onChange={(event) => setNote(event.target.value)} />
                     </label>
                 </div>
             </Modal>
@@ -131,11 +133,11 @@ export function AccountDeletionPanel() {
     );
 }
 
-function statusLabel(status: AccountDeletionRequestStatus) {
-    if (status === "pending") return "待处理";
-    if (status === "accepted") return "已受理";
-    if (status === "rejected") return "已拒绝";
-    return "已撤回";
+function statusLabel(status: AccountDeletionRequestStatus, t: (key: string) => string) {
+    if (status === "pending") return t("statusPending");
+    if (status === "accepted") return t("statusAccepted");
+    if (status === "rejected") return t("statusRejected");
+    return t("statusWithdrawn");
 }
 
 function statusColor(status: AccountDeletionRequestStatus) {

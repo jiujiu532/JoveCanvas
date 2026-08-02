@@ -4,14 +4,15 @@ import { readJsonBody } from "@/lib/auth/request";
 import { getCurrentUser } from "@/lib/auth/session";
 import { AccountDeletionRequestError, reviewAccountDeletionRequest } from "@/lib/server/account-deletion-request-service";
 import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-log-store";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ code: 403, data: null, msg: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ code: 403, data: null, msg: await serverMessage("common.adminRequired") }, { status: 403 });
 
     let action: "accepted" | "rejected" | undefined;
     let reviewNote = "";
@@ -39,6 +40,6 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         });
         if (error instanceof AccountDeletionRequestError) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
         console.error("Account deletion request review failed", error);
-        return NextResponse.json({ code: 500, data: null, msg: "注销申请处理失败" }, { status: 500 });
+        return NextResponse.json({ code: 500, data: null, msg: await serverMessage("auth.deletionRequestFailed") }, { status: 500 });
     }
 }

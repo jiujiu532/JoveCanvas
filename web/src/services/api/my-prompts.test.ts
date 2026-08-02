@@ -13,6 +13,14 @@ describe("my prompts api", () => {
         expect(fetchMock).toHaveBeenCalledWith("/api/my-prompts?page=2&pageSize=8", { cache: "no-store" });
     });
 
+    it("forwards preferLocale when provided", async () => {
+        const fetchMock = vi.fn().mockResolvedValue(Response.json({ items: [], tags: [], categories: [], total: 0 }));
+        vi.stubGlobal("fetch", fetchMock);
+
+        await listMyPrompts({ page: 1, pageSize: 8, preferLocale: "en" });
+        expect(fetchMock).toHaveBeenCalledWith("/api/my-prompts?page=1&pageSize=8&preferLocale=en", { cache: "no-store" });
+    });
+
     it("creates and deletes through the user prompt routes", async () => {
         const prompt = { id: "prompt-one", title: "标题", prompt: "内容" };
         const fetchMock = vi

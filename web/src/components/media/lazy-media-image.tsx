@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { SiteLogo } from "@/components/layout/site-logo";
 import { cn } from "@/lib/utils";
@@ -11,7 +12,7 @@ export function LazyMediaImage({
     alt,
     containerClassName,
     imageClassName,
-    errorLabel = "图片不可用",
+    errorLabel,
     placeholderSrc,
     loading = "lazy",
 }: {
@@ -23,6 +24,8 @@ export function LazyMediaImage({
     placeholderSrc?: string;
     loading?: "eager" | "lazy";
 }) {
+    const t = useTranslations("common");
+    const resolvedErrorLabel = errorLabel ?? t("imageUnavailable");
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
     const [placeholderReady, setPlaceholderReady] = useState(false);
     const logoUrl = usePublicSessionStore((state) => state.payload?.settings?.site?.logoUrl) || "/logo.svg";
@@ -39,10 +42,10 @@ export function LazyMediaImage({
                 </span>
             ) : null}
             {status === "error" && !placeholderReady ? (
-                <span className="absolute inset-0 grid min-h-20 place-items-center text-muted-foreground" role="img" aria-label={errorLabel}>
+                <span className="absolute inset-0 grid min-h-20 place-items-center text-muted-foreground" role="img" aria-label={resolvedErrorLabel}>
                     <span className="flex flex-col items-center gap-1.5 text-xs">
                         <SiteLogo logoUrl={logoUrl} className="size-7 opacity-45" />
-                        {errorLabel}
+                        {resolvedErrorLabel}
                     </span>
                 </span>
             ) : null}
