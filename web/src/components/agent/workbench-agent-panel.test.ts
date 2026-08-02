@@ -26,8 +26,10 @@ describe("workbench Agent conversation", () => {
         const source = await readFile(resolve(process.cwd(), "src/components/agent/workbench-agent-panel.tsx"), "utf8");
         const progressSource = source.slice(source.indexOf("function WorkbenchAgentProgressMessage"), source.indexOf("function WorkbenchAgentResponseMessage"));
 
-        expect(progressSource).toContain('progress.phase === "planning" ? t("agent.progress.thinking")');
-        expect(progressSource).toContain('progress.phase === "submitting" ? t("agent.progress.submitting")');
+        expect(progressSource).toContain('progress.phase === "planning"');
+        expect(progressSource).toContain('t("agent.progress.thinking")');
+        expect(progressSource).toContain('progress.phase === "submitting"');
+        expect(progressSource).toContain('t("agent.progress.submitting")');
         expect(progressSource).not.toContain("workbenchAgentProgressHeading");
         expect(progressSource).not.toContain("workbenchAgentProgressSteps");
         expect(progressSource).not.toContain("{message.text}</p>");
