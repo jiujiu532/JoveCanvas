@@ -1,1899 +1,1640 @@
 {
-  "assets": {
-    "title": "My Assets",
-    "subtitle": "Save frequently used text, images, videos, and audio, and search quickly by type, title, and tags.",
-    "searchPlaceholder": "Search title, content, tags, or source",
-    "typeLabel": "Type",
-    "kindAll": "All",
-    "kindText": "Text",
-    "kindImage": "Image",
-    "kindVideo": "Video",
-    "kindAudio": "Audio",
-    "exportButton": "Export assets",
-    "importButton": "Import assets",
-    "importing": "Importing",
-    "addButton": "New asset",
-    "emptyTitle": "No assets found",
-    "emptyDescription": "Adjust the filters, or add a new asset.",
-    "editModalTitle": "Edit asset",
-    "createModalTitle": "New asset",
-    "save": "Save",
-    "cancel": "Cancel",
-    "fieldType": "Type",
-    "fieldTitle": "Title",
-    "titleRequired": "Please enter a title",
-    "titlePlaceholder": "Give the asset a name that's easy to search for",
-    "fieldCover": "Cover URL",
-    "coverPlaceholder": "Paste an image URL, or upload a local cover",
-    "upload": "Upload",
-    "fieldTags": "Tags",
-    "tagsPlaceholder": "Enter a tag and press Enter",
-    "fieldSource": "Source",
-    "sourcePlaceholder": "Manual / Canvas / Prompt library",
-    "fieldNote": "Note",
-    "notePlaceholder": "Optional",
-    "fieldContent": "Text content",
-    "contentRequired": "Please enter text content",
-    "contentPlaceholder": "Save prompts, descriptions, reference text, and other text assets",
-    "contentLabelWithKind": "{kind} content",
-    "chooseFileWithKind": "Choose {kind} file",
-    "selectFileRequired": "Please select a {kind} file",
-    "selectFormatRequired": "Please select a {kind} format file",
-    "noFileSelected": "No file selected",
-    "preview": "Preview",
-    "noCover": "No cover",
-    "unnamedAsset": "Untitled asset",
-    "noTag": "No tags",
-    "cardNoTag": "No tags",
-    "deleteModalTitle": "Delete asset",
-    "deleteConfirm": "Delete \"{title}\"? It will be removed from My Assets.",
-    "delete": "Delete",
-    "manualAdd": "Manual",
-    "assetUpdated": "Asset updated",
-    "assetSaved": "Asset saved",
-    "assetSaveFailed": "Failed to save asset",
-    "textCopied": "Text copied",
-    "noAssetsToExport": "No assets to export",
-    "exportZipName": "my-assets.zip",
-    "importedCount": "Imported {count} assets",
-    "importFailed": "Import failed, please select a valid asset package",
-    "assetDeleted": "Asset deleted",
-    "assetDeleteFailed": "Failed to delete asset",
-    "assetDetailTitle": "Asset details",
-    "noSource": "No source",
-    "view": "View",
-    "edit": "Edit",
-    "copy": "Copy",
-    "download": "Download",
-    "content": "Content",
-    "copyText": "Copy text",
-    "downloadVideo": "Download video",
-    "downloadAudio": "Download audio",
-    "downloadImage": "Download image",
-    "unknownDuration": "Unknown duration",
-    "publish": "Publish",
-    "publishWork": "Publish work",
-    "publishAria": "Publish {title}",
-    "viewWithTitle": "View {title}",
-    "copyWithTitle": "Copy {title}",
-    "downloadWithTitle": "Download {title}",
-    "noTags": "No tags",
-    "noteLabel": "Note",
-    "itemCount": "{count} assets",
-    "loading": "Loading assets",
-    "reload": "Reload",
-    "exportFailed": "Failed to export assets",
-    "loadFailed": "Failed to load assets",
-    "invalidPackage": "This is not an asset package for this app",
-    "managedHint": "Manage reusable content across your creative workflows"
-  },
-  "prompts": {
-    "title": "Prompt Library",
-    "subtitle": "{total} prompts total. Search by title, tags, and category to find inspiration.",
-    "searchPlaceholder": "Search by title",
-    "categoryAriaLabel": "Prompt category",
-    "tagAriaLabel": "Prompt tag",
-    "categoryLabel": "Category",
-    "tagLabel": "Tag",
-    "currentFilter": "Filters",
-    "filterAll": "All",
-    "searchFilterLabel": "Search: {keyword}",
-    "matchCount": "{total} matches",
-    "fetchFailed": "Failed to load prompts",
-    "addedToAssets": "Added to My Assets",
-    "assetSaveFailed": "Failed to save asset",
-    "addToMyAssets": "Add to My Assets",
-    "promptCopied": "Prompt copied",
-    "emptyTitle": "No matching prompts found",
-    "emptyDescription": "Try clearing the search term, or switch category and tags.",
-    "loadingMore": "Loading...",
-    "scrollForMore": "Keep scrolling to load more",
-    "reachedEnd": "You've reached the end",
-    "subtitlePlain": "Browse public prompts, copy them, or save them to your assets.",
-    "totalCount": "{total} total",
-    "clearFilters": "Clear",
-    "clearFiltersAria": "Clear prompt filters"
-  },
-  "billing": {
-    "result": {
-      "confirming": "Confirming payment result…",
-      "successTitle": "Payment successful",
-      "canceledTitle": "Payment canceled",
-      "pendingTitle": "Confirming payment result",
-      "successDesc": "Your plan benefits and points have been updated.",
-      "canceledDesc": "The order has been canceled. You can choose a plan and payment method again.",
-      "pendingDesc": "The payment callback may be slightly delayed. Check the order history for the latest status.",
-      "missingOrderId": "Payment result is missing the order number",
-      "loadFailed": "Failed to load payment result",
-      "orderNoLabel": "Order No.",
-      "statusLabel": "Status",
-      "statusPaid": "Paid",
-      "statusCanceled": "Canceled",
-      "statusPending": "Pending",
-      "backToBilling": "Back to Billing",
-      "viewOrders": "View order history"
+    "assets": {
+        "title": "My Assets",
+        "subtitle": "Save frequently used text, images, videos, and audio, and search quickly by type, title, and tags.",
+        "searchPlaceholder": "Search title, content, tags, or source",
+        "typeLabel": "Type",
+        "kindAll": "All",
+        "kindText": "Text",
+        "kindImage": "Image",
+        "kindVideo": "Video",
+        "kindAudio": "Audio",
+        "exportButton": "Export assets",
+        "importButton": "Import assets",
+        "importing": "Importing",
+        "addButton": "New asset",
+        "emptyTitle": "No assets found",
+        "emptyDescription": "Adjust the filters, or add a new asset.",
+        "editModalTitle": "Edit asset",
+        "createModalTitle": "New asset",
+        "save": "Save",
+        "cancel": "Cancel",
+        "fieldType": "Type",
+        "fieldTitle": "Title",
+        "titleRequired": "Please enter a title",
+        "titlePlaceholder": "Give the asset a name that's easy to search for",
+        "fieldCover": "Cover URL",
+        "coverPlaceholder": "Paste an image URL, or upload a local cover",
+        "upload": "Upload",
+        "fieldTags": "Tags",
+        "tagsPlaceholder": "Enter a tag and press Enter",
+        "fieldSource": "Source",
+        "sourcePlaceholder": "Manual / Canvas / Prompt library",
+        "fieldNote": "Note",
+        "notePlaceholder": "Optional",
+        "fieldContent": "Text content",
+        "contentRequired": "Please enter text content",
+        "contentPlaceholder": "Save prompts, descriptions, reference text, and other text assets",
+        "contentLabelWithKind": "{kind} content",
+        "chooseFileWithKind": "Choose {kind} file",
+        "selectFileRequired": "Please select a {kind} file",
+        "selectFormatRequired": "Please select a {kind} format file",
+        "noFileSelected": "No file selected",
+        "preview": "Preview",
+        "noCover": "No cover",
+        "unnamedAsset": "Untitled asset",
+        "noTag": "No tags",
+        "cardNoTag": "No tags",
+        "deleteModalTitle": "Delete asset",
+        "deleteConfirm": "Delete \"{title}\"? It will be removed from My Assets.",
+        "delete": "Delete",
+        "manualAdd": "Manual",
+        "assetUpdated": "Asset updated",
+        "assetSaved": "Asset saved",
+        "assetSaveFailed": "Failed to save asset",
+        "textCopied": "Text copied",
+        "noAssetsToExport": "No assets to export",
+        "exportZipName": "my-assets.zip",
+        "importedCount": "Imported {count} assets",
+        "importFailed": "Import failed, please select a valid asset package",
+        "assetDeleted": "Asset deleted",
+        "assetDeleteFailed": "Failed to delete asset",
+        "assetDetailTitle": "Asset details",
+        "noSource": "No source",
+        "view": "View",
+        "edit": "Edit",
+        "copy": "Copy",
+        "download": "Download",
+        "content": "Content",
+        "copyText": "Copy text",
+        "downloadVideo": "Download video",
+        "downloadAudio": "Download audio",
+        "downloadImage": "Download image",
+        "unknownDuration": "Unknown duration",
+        "publish": "Publish",
+        "publishWork": "Publish work",
+        "publishAria": "Publish {title}",
+        "viewWithTitle": "View {title}",
+        "copyWithTitle": "Copy {title}",
+        "downloadWithTitle": "Download {title}",
+        "noTags": "No tags",
+        "noteLabel": "Note",
+        "itemCount": "{count} assets",
+        "loading": "Loading assets",
+        "reload": "Reload",
+        "exportFailed": "Failed to export assets",
+        "loadFailed": "Failed to load assets",
+        "invalidPackage": "This is not an asset package for this app",
+        "managedHint": "Manage reusable content across your creative workflows"
     },
-    "checkout": {
-      "providerStripeDesc": "International cards and digital wallets",
-      "providerAlipay": "Alipay",
-      "providerAlipayDesc": "Alipay web payment",
-      "providerWechat": "WeChat Pay",
-      "providerWechatDesc": "WeChat QR code payment",
-      "providerPayplyDesc": "Custom payment interface",
-      "providerManual": "Manual confirmation",
-      "providerManualDesc": "Offline transfer or manual activation",
-      "loadFailed": "Failed to load payment information",
-      "createOrderFailed": "Failed to create payment order",
-      "popupBlocked": "The browser blocked the payment window. Please allow pop-ups and retry.",
-      "needManualConfirm": "This order requires manual confirmation by an admin",
-      "productNotFound": "This plan doesn't exist or is no longer available",
-      "backToPlans": "Back to Plans",
-      "securityBadge": "{brand} secure checkout",
-      "checkoutStepsAriaLabel": "Checkout steps",
-      "tabOrderDetail": "Order details",
-      "tabPaymentMethod": "Payment method",
-      "payTodayLabel": "Due today",
-      "unitPriceLabel": "Unit price",
-      "quantityLabel": "Quantity",
-      "pointsRecharge": "Points",
-      "pointsCreative": "Creative points",
-      "pointsValue": "{amount} points",
-      "periodLabel": "Validity period",
-      "periodOneTime": "One-time credit",
-      "periodDays": "{days} days",
-      "periodLongTerm": "Lifetime",
-      "orderNote": "You can check the status in your profile after the order is created; your plan and points update automatically after payment.",
-      "currentOrderLabel": "Current order",
-      "amountDueLabel": "Amount due",
-      "choosePaymentMethod": "Choose a payment method",
-      "secureEncryption": "Secure encryption",
-      "quantityHint": "Points and benefits accrue based on quantity",
-      "decreaseQuantity": "Decrease quantity",
-      "decreaseQuantityTitle": "Decrease quantity",
-      "increaseQuantity": "Increase quantity",
-      "increaseQuantityTitle": "Increase quantity",
-      "confirmAndPay": "Confirm order and pay",
-      "payHint": "This only creates a payment order; benefits activate after successful payment.",
-      "orderCreated": "Payment order created",
-      "orderNoDisplay": "Order No. {orderNo}",
-      "copyPaymentInfo": "Copy payment info",
-      "paymentInfoCopied": "Payment info copied",
-      "viewOrderInstructions": "View order instructions",
-      "goToPay": "Go to pay",
-      "backToProfileOrders": "Back to profile to view orders",
-      "couponsLoadFailed": "Failed to load coupons",
-      "quoteLoadFailed": "Failed to load checkout price",
-      "paymentInfoCopiedPaste": "Payment info copied. Paste it into your browser to open.",
-      "popupBlockedCopied": "The browser blocked the payment window. Payment info has been copied.",
-      "paymentUrlInvalid": "The payment URL is invalid or could not be opened. Copy the payment info and open it manually.",
-      "listPriceLabel": "List price",
-      "promotionDiscountLabel": "Promotion",
-      "couponLabel": "Coupon",
-      "availableCouponCount": "{count} available",
-      "selectCouponAria": "Select coupon",
-      "couponFallback": "Coupon",
-      "loading": "Loading",
-      "select": "Select",
-      "quoteRecalculating": "Recalculating amount due...",
-      "quoteErrorRetry": "{error}. Please refresh and try again.",
-      "pickCouponTitle": "Select a coupon",
-      "refreshCouponsAria": "Refresh coupons",
-      "noCouponOption": "Don't use a coupon",
-      "noCouponDetail": "Pay the current promotional price",
-      "noCouponsAvailable": "No coupons available",
-      "ruleUnavailable": "Rule unavailable",
-      "fixedDiscount": "−¥{amount}",
-      "percentDiscount": "{percent}% off",
-      "openingPaymentTitle": "Opening payment",
-      "openingPaymentBody": "Opening the payment page, please wait..."
+    "prompts": {
+        "title": "Prompt Library",
+        "subtitle": "{total} prompts total. Search by title, tags, and category to find inspiration.",
+        "searchPlaceholder": "Search by title",
+        "categoryAriaLabel": "Prompt category",
+        "tagAriaLabel": "Prompt tag",
+        "categoryLabel": "Category",
+        "tagLabel": "Tag",
+        "currentFilter": "Filters",
+        "filterAll": "All",
+        "searchFilterLabel": "Search: {keyword}",
+        "matchCount": "{total} matches",
+        "fetchFailed": "Failed to load prompts",
+        "addedToAssets": "Added to My Assets",
+        "assetSaveFailed": "Failed to save asset",
+        "addToMyAssets": "Add to My Assets",
+        "promptCopied": "Prompt copied",
+        "emptyTitle": "No matching prompts found",
+        "emptyDescription": "Try clearing the search term, or switch category and tags.",
+        "loadingMore": "Loading...",
+        "scrollForMore": "Keep scrolling to load more",
+        "reachedEnd": "You've reached the end",
+        "subtitlePlain": "Browse public prompts, copy them, or save them to your assets.",
+        "totalCount": "{total} total",
+        "clearFilters": "Clear",
+        "clearFiltersAria": "Clear prompt filters"
+    },
+    "billing": {
+        "result": {
+            "confirming": "Confirming payment result…",
+            "successTitle": "Payment successful",
+            "canceledTitle": "Payment canceled",
+            "pendingTitle": "Confirming payment result",
+            "successDesc": "Your plan benefits and points have been updated.",
+            "canceledDesc": "The order has been canceled. You can choose a plan and payment method again.",
+            "pendingDesc": "The payment callback may be slightly delayed. Check the order history for the latest status.",
+            "missingOrderId": "Payment result is missing the order number",
+            "loadFailed": "Failed to load payment result",
+            "orderNoLabel": "Order No.",
+            "statusLabel": "Status",
+            "statusPaid": "Paid",
+            "statusCanceled": "Canceled",
+            "statusPending": "Pending",
+            "backToBilling": "Back to Billing",
+            "viewOrders": "View order history"
+        },
+        "checkout": {
+            "providerStripeDesc": "International cards and digital wallets",
+            "providerAlipay": "Alipay",
+            "providerAlipayDesc": "Alipay web payment",
+            "providerWechat": "WeChat Pay",
+            "providerWechatDesc": "WeChat QR code payment",
+            "providerPayplyDesc": "Custom payment interface",
+            "providerManual": "Manual confirmation",
+            "providerManualDesc": "Offline transfer or manual activation",
+            "loadFailed": "Failed to load payment information",
+            "createOrderFailed": "Failed to create payment order",
+            "popupBlocked": "The browser blocked the payment window. Please allow pop-ups and retry.",
+            "needManualConfirm": "This order requires manual confirmation by an admin",
+            "productNotFound": "This plan doesn't exist or is no longer available",
+            "backToPlans": "Back to Plans",
+            "securityBadge": "{brand} secure checkout",
+            "checkoutStepsAriaLabel": "Checkout steps",
+            "tabOrderDetail": "Order details",
+            "tabPaymentMethod": "Payment method",
+            "payTodayLabel": "Due today",
+            "unitPriceLabel": "Unit price",
+            "quantityLabel": "Quantity",
+            "pointsRecharge": "Points",
+            "pointsCreative": "Creative points",
+            "pointsValue": "{amount} points",
+            "periodLabel": "Validity period",
+            "periodOneTime": "One-time credit",
+            "periodDays": "{days} days",
+            "periodLongTerm": "Lifetime",
+            "orderNote": "You can check the status in your profile after the order is created; your plan and points update automatically after payment.",
+            "currentOrderLabel": "Current order",
+            "amountDueLabel": "Amount due",
+            "choosePaymentMethod": "Choose a payment method",
+            "secureEncryption": "Secure encryption",
+            "quantityHint": "Points and benefits accrue based on quantity",
+            "decreaseQuantity": "Decrease quantity",
+            "decreaseQuantityTitle": "Decrease quantity",
+            "increaseQuantity": "Increase quantity",
+            "increaseQuantityTitle": "Increase quantity",
+            "confirmAndPay": "Confirm order and pay",
+            "payHint": "This only creates a payment order; benefits activate after successful payment.",
+            "orderCreated": "Payment order created",
+            "orderNoDisplay": "Order No. {orderNo}",
+            "copyPaymentInfo": "Copy payment info",
+            "paymentInfoCopied": "Payment info copied",
+            "viewOrderInstructions": "View order instructions",
+            "goToPay": "Go to pay",
+            "backToProfileOrders": "Back to profile to view orders",
+            "couponsLoadFailed": "Failed to load coupons",
+            "quoteLoadFailed": "Failed to load checkout price",
+            "paymentInfoCopiedPaste": "Payment info copied. Paste it into your browser to open.",
+            "popupBlockedCopied": "The browser blocked the payment window. Payment info has been copied.",
+            "paymentUrlInvalid": "The payment URL is invalid or could not be opened. Copy the payment info and open it manually.",
+            "listPriceLabel": "List price",
+            "promotionDiscountLabel": "Promotion",
+            "couponLabel": "Coupon",
+            "availableCouponCount": "{count} available",
+            "selectCouponAria": "Select coupon",
+            "couponFallback": "Coupon",
+            "loading": "Loading",
+            "select": "Select",
+            "quoteRecalculating": "Recalculating amount due...",
+            "quoteErrorRetry": "{error}. Please refresh and try again.",
+            "pickCouponTitle": "Select a coupon",
+            "refreshCouponsAria": "Refresh coupons",
+            "noCouponOption": "Don't use a coupon",
+            "noCouponDetail": "Pay the current promotional price",
+            "noCouponsAvailable": "No coupons available",
+            "ruleUnavailable": "Rule unavailable",
+            "fixedDiscount": "−¥{amount}",
+            "percentDiscount": "{percent}% off",
+            "openingPaymentTitle": "Opening payment",
+            "openingPaymentBody": "Opening the payment page, please wait..."
+        }
+    },
+    "create": {
+        "allConversations": "All conversations →",
+        "attachmentUploadFailed": "Failed to upload attachment",
+        "attachmentsUploaded": "Uploaded {count} attachments",
+        "cancelTaskFailed": "Failed to stop the task",
+        "continueCreating": "Continue creating",
+        "continueCreatingHint": "Return to a recent conversation to keep refining",
+        "conversationDeleteFailed": "Failed to delete conversation",
+        "conversationDeleted": "Conversation deleted",
+        "conversationsDeletedCount": "Deleted {count} conversations",
+        "createEntrySwitched": "The create entry has changed, please try again",
+        "createRequestFailed": "Create request failed",
+        "creationHistory": "Creation history",
+        "fileTooLarge": "{name} exceeds 20MB",
+        "heroSubtitle": "Start from one idea",
+        "heroTitle": "What do you want to create today?",
+        "loadingRecent": "Loading recent creations...",
+        "loadingSkills": "Loading creative Skills...",
+        "messageRefilled": "Message refilled. Edit and send again.",
+        "newConversation": "New conversation",
+        "newConversationTitle": "New conversation",
+        "noConversationsYet": "Conversations will appear here after your first creation",
+        "openConversationFailed": "Failed to open conversation",
+        "overviewLoadFailed": "Failed to load workbench overview",
+        "partialDeleteFailed": "Some conversations failed to delete, please retry",
+        "projectCreateFailed": "Failed to create project",
+        "promptRequired": "Please describe what you want to create first",
+        "recordNotAgentWorkbench": "This record is not from the creative Agent workbench",
+        "regeneratingFailedTask": "Regenerating the failed task…",
+        "restoreConversationFailed": "Failed to restore conversation",
+        "retryTaskFailed": "Failed to retry task",
+        "titleUpdateFailed": "Failed to update title",
+        "titleUpdated": "Title updated",
+        "understandingRequest": "Understanding your request",
+        "unsupportedFileFormat": "{name} is not a supported image, video, or audio format",
+        "useSkill": "Use {name} Skill",
+        "composer": {
+            "addAttachment": "Add attachment",
+            "autoMatchBySmartPlanning": "Matched automatically by smart planning",
+            "capabilityAudio": "Audio",
+            "capabilityImage": "Image",
+            "capabilityVideo": "Video",
+            "categoryAll": "All",
+            "categoryCanvas": "Canvas",
+            "categoryDrama": "Drama",
+            "categoryEdit": "Edit",
+            "categoryImage": "Image",
+            "categoryVideo": "Video",
+            "chooseCreativeSkill": "Choose a creative Skill",
+            "clearSelectionRestoreSmart": "Clear selection and restore smart planning",
+            "closeAutoSmartPlanning": "Turn off automatic smart planning",
+            "disabled": "Off",
+            "enabled": "On",
+            "generationModel": "Generation model",
+            "inputPlaceholder": "Describe your idea, or add reference assets",
+            "loadingEllipsis": "Loading...",
+            "modelCapabilityHint": "{capability} model · can generate with other models",
+            "noModelsForCapability": "No available {capability} models configured",
+            "noSkillsAvailable": "No Skills available",
+            "noSkillsInCategory": "No Skills available in this category",
+            "openAutoSmartPlanning": "Turn on automatic smart planning",
+            "removeAttachmentWithName": "Remove {name}",
+            "removeSkill": "Remove Skill",
+            "removeSkillWithName": "Remove Skill {name}",
+            "scrollLeftSkillCategories": "Scroll left for more Skill categories",
+            "scrollRightSkillCategories": "Scroll right for more Skill categories",
+            "selectGenerationModel": "Select generation model",
+            "selectedModelsCount": "{count} models selected",
+            "send": "Send",
+            "skillCategoriesAriaLabel": "Skill categories, swipe to see more",
+            "smartPlanningOff": "Smart planning: Off",
+            "smartPlanningOffAria": "Smart planning is off, click to turn on",
+            "smartPlanningOn": "Smart planning: On",
+            "smartPlanningOnAria": "Smart planning is on, click to turn off",
+            "stopGeneration": "Stop generation",
+            "uploading": "Uploading"
+        },
+        "conversationList": {
+            "batchDelete": "Delete selected",
+            "batchManage": "Manage",
+            "cancel": "Cancel",
+            "cancelEdit": "Cancel edit",
+            "conversationCount": "{count} conversations",
+            "conversationTitle": "Conversation title",
+            "delete": "Delete",
+            "deleteConfirmDescription": "This removes the conversation from history. Messages and generation records in it will no longer appear.",
+            "deleteCountConfirmTitle": "Delete {count} conversations?",
+            "deleteOneConfirmTitle": "Delete this conversation?",
+            "exitManage": "Exit manage",
+            "loadMoreConversations": "Load more conversations",
+            "loadingEllipsis": "Loading...",
+            "manageConversation": "Manage conversation",
+            "manageItem": "Manage {title}",
+            "newConversation": "New conversation",
+            "noConversations": "No conversations yet",
+            "rename": "Rename",
+            "saveTitle": "Save title",
+            "selectAll": "Select all",
+            "selectItem": "Select {title}",
+            "selectedCount": "{count} selected"
+        },
+        "overview": {
+            "allProjects": "All projects",
+            "canvasProject": "Canvas project",
+            "continueEditing": "Continue editing",
+            "createFirstCanvasProject": "Create your first Canvas project to continue here",
+            "imageGeneration": "Image generation",
+            "justNow": "Just now",
+            "loadingCanvasProjects": "Loading canvas projects...",
+            "loadingOverview": "Loading workbench overview",
+            "loadingRecentGenerations": "Loading recent generations...",
+            "loadingRunningTasks": "Loading running tasks...",
+            "noRecentGenerations": "Image and video results will appear here after generation",
+            "noRunningTasks": "No running tasks",
+            "nodeConnectionCount": "{nodes} nodes · {connections} connections",
+            "projectsAndTasks": "Projects and tasks",
+            "projectsAndTasksHint": "Return to recent projects, or check tasks still running",
+            "recentGenerations": "Recent generations",
+            "recentGenerationsHint": "Click an image or video to preview it larger",
+            "recentlyEdited": "Recently edited · {time}",
+            "retryLoading": "Reload",
+            "runningAt": "{time} · Running",
+            "runningTasks": "Running tasks",
+            "untitledProject": "Untitled project",
+            "videoGeneration": "Video generation",
+            "viewAssetLibrary": "View asset library",
+            "referenceToAgent": "Add to Agent"
+        },
+        "messages": {
+            "userFallback": "User",
+            "loadingConversation": "Loading conversation...",
+            "loadOlderMessages": "Load earlier messages",
+            "retryTaskTitle": "Retry “{title}”",
+            "retryTaskAria": "Retry {title}",
+            "canvasProject": "Canvas project",
+            "dramaProject": "Drama project",
+            "handoffAssetsReady": "{count} assets handed off to {label}",
+            "openProject": "Open",
+            "retry": "Retry",
+            "createProject": "Create project",
+            "generatedAudio": "Generated audio",
+            "generatedVideo": "Generated video",
+            "generatedImage": "Generated image",
+            "referenced": "Referenced",
+            "referenceAsset": "Reference asset",
+            "copyMessage": "Copy message",
+            "messageCopied": "Message copied",
+            "referenceStripAria": "References for this turn",
+            "confirmRetryHint": "Retry only after you confirm",
+            "unreference": "Unreference",
+            "unreferenceAsset": "Remove from references",
+            "reanalyze": "Re-analyze",
+            "reanalyzeAria": "Re-analyze this request",
+            "retrySubmissionTitle": "Resubmit this request",
+            "retrySubmissionAria": "Retry this creation request",
+            "kindVideo": "Video",
+            "kindAudio": "Audio",
+            "referenceImageAlt": "Reference image",
+            "downloadVideo": "Download video",
+            "downloadImage": "Download image"
+        },
+        "promptFilledFromWork": "Work prompt filled in",
+        "promptFilledFromPublic": "Public prompt filled in",
+        "referenceReadFailed": "Failed to read reference media",
+        "referenceFormatUnsupported": "This media format is not supported as a reference",
+        "referencedToAgent": "Added to the Agent composer",
+        "referenceImportFailed": "Failed to import reference",
+        "reanalyzeFailed": "Failed to re-analyze",
+        "retryRequestFailed": "Failed to retry request",
+        "messageAndAssetsRefilled": "Message and references restored — edit and resend",
+        "heroTitleWithSite": "{title} Creative Agent",
+        "recentGenerations": "Recent generations",
+        "viewAssets": "View assets",
+        "projectsAndTasks": "Projects & tasks",
+        "allProjects": "All projects",
+        "canvasProject": "Canvas project",
+        "recentEdit": "Recently edited",
+        "nodeConnectionCount": "{nodes} nodes · {connections} connections",
+        "continueEdit": "Continue editing",
+        "referenceToAgentAria": "Reference in Agent",
+        "referenceToAgentTitle": "Reference in Agent",
+        "runningSuffix": "Running",
+        "reread": "Reload",
+        "selectAll": "Select all",
+        "conversationCount": "{count} conversations",
+        "loadMoreConversations": "Load more conversations",
+        "selectedCount": "{count} selected",
+        "batchDelete": "Delete selected",
+        "uploading": "Uploading",
+        "noModelsForCapability": "No available {capability} models configured",
+        "modelCanParallel": "{capability} model · can run with other models",
+        "clearSelectionRestorePlanning": "Clear selection and restore smart planning",
+        "inspirationTitle": "Inspiration",
+        "viewAll": "View all →",
+        "inspirationCategoriesAria": "Inspiration categories",
+        "categoryAll": "All",
+        "loadingInspiration": "Loading inspiration works...",
+        "reloadInspiration": "Reload",
+        "inspirationListAria": "Inspiration works",
+        "inspirationEmpty": "No public works in this category yet",
+        "inspirationLoadFailed": "Failed to load inspiration works",
+        "usePrompt": "Use prompt",
+        "copyPrompt": "Copy prompt",
+        "useImage": "Use image",
+        "promptCopied": "Prompt copied",
+        "copyFailed": "Copy failed. Open the work detail and copy manually.",
+        "viewWorkAria": "View work: {title}",
+        "videoWorkTitle": "Video work",
+        "viewAuthorAria": "View {name} profile",
+        "anonymousAuthor": "Anonymous",
+        "visitsTitle": "Views",
+        "useWorkAria": "Use work: {title}",
+        "resubmitting": "Resubmitting creation request",
+        "reanalyzing": "Re-analyzing and running this request…",
+        "inspirationAll": "All",
+        "ack": {
+            "kindVideo": "video",
+            "kindImage": "image",
+            "kindAudio": "audio",
+            "kindRequest": "creative request",
+            "canvasWithRefs": "Got it. I will handle this {kind} based on the currently selected assets.",
+            "canvasPlain": "Got it. I will handle this {kind} with the current canvas.",
+            "dramaWithRefs": "Got it. I will continue creating with the current drama project and references.",
+            "dramaPlain": "Got it. I will continue creating with the current drama project.",
+            "chatWithRefs": "Got it. I will complete this {kind} using the current references.",
+            "chatWithSize": "Got it. I will complete this image creation at {size}.",
+            "chatPlain": "Got it. I will handle this {kind} based on your request."
+        }
+    },
+    "image": {
+        "addedToMyAssets": "Added to My Assets",
+        "addedToReferences": "Added to reference images",
+        "addToAssets": "Add to assets",
+        "addToReferences": "Add as reference",
+        "agentBusy": "Agent is handling the current request, please wait",
+        "assistantSubtitle": "Image creation assistant",
+        "backgroundTasksContinue": "Background generation will keep running. Check progress in history.",
+        "cancel": "Cancel",
+        "cleanupMissingCount": "Clean missing {count}",
+        "clipboardButton": "Clipboard",
+        "clipboardImagesReadCount": "Read {count} reference images",
+        "composerSummary": "{size} · {count} images",
+        "contactAdminForModel": "Ask an admin to configure an available image model",
+        "conversationCreateFailed": "Failed to create creative conversation",
+        "conversationLoadFailed": "Failed to load the full conversation; showing this generation record",
+        "currentUserRunning": "Running for this user {active}/{limit}",
+        "delete": "Delete",
+        "deleteLogsConfirm": "Delete the selected {count} generation records?",
+        "deleteLogsModalTitle": "Delete generation records",
+        "download": "Download",
+        "emptyResultsDescription": "After a generation completes, results stay here by time.",
+        "emptyResultsTitle": "No generated images yet",
+        "failCount": "Failed {count}",
+        "generate": "Generate",
+        "generateAriaLabel": "Start generation, costs {cost} points",
+        "generationFailed": "Generation failed",
+        "generationHistory": "Generation history",
+        "historyRecordOpened": "Opened this historical generation record. You can continue editing or regenerate.",
+        "imageCountUnit": "{count} images",
+        "imageGenerated": "Image generated",
+        "imageLost": "Image missing",
+        "imageRegenerated": "Image regenerated",
+        "imageUnavailableAsset": "Image unavailable, cannot add to assets",
+        "imageUnavailableDownload": "Image unavailable, cannot download",
+        "imageUnavailableReference": "Image unavailable, cannot add as reference",
+        "imageWorkbenchSource": "Image workbench",
+        "logsDeletedCount": "Deleted {count} generation records",
+        "messageRefilled": "Message refilled. Edit and send again.",
+        "missingImagesCleanedCount": "Cleaned {count} missing images",
+        "modelLabel": "Model",
+        "noClipboardImage": "No readable image in the clipboard",
+        "onlyTextOrImageAssets": "Image workbench only supports text or image assets",
+        "partialCleanupFailed": "Record removed, but some linked resources failed to delete. Please retry later.",
+        "pendingCount": "Generating {count}",
+        "promptPlaceholder": "What should we create today? Paste text or images directly.",
+        "promptRequired": "Please enter an image prompt",
+        "queuedForGeneration": "Added to this user's generation queue",
+        "referenceImages": "Reference images",
+        "removeReferenceImage": "Remove reference image",
+        "requestCancelled": "Request canceled",
+        "resultAltWithIndex": "Generated result {index}",
+        "resultTitleWithIndex": "Generated result {index}",
+        "resultsCleanupPartialFailed": "Results removed from the current record, but some linked resources failed to clean up. Please retry later.",
+        "resultsDeletedCount": "Deleted {count} results",
+        "resultsTitle": "Generation results",
+        "retry": "Retry",
+        "runningCount": "Running {active}/{limit}",
+        "selectAll": "Select all",
+        "smartPlanningRequired": "Smart planning is off for the image workbench. Choose an image model first.",
+        "startGeneration": "Start generation",
+        "stopAgentAriaLabel": "Stop Agent and cancel this generation",
+        "successCount": "Succeeded {count}",
+        "taskFailedText": "This task failed.",
+        "taskPendingText": "This task is still generating.",
+        "uploadButton": "Upload",
+        "uploading": "Uploading",
+        "referenceUploadFailed": "Reference image upload failed",
+        "retryUploadAria": "Retry uploading reference image: {name}",
+        "clickRetry": "Tap to retry",
+        "originalReferenceUnavailable": "Original reference is unavailable. Please choose the file again.",
+        "sheetCount": "{count} images",
+        "deleteSelectedCount": "Delete{count}",
+        "cleanupMissingPlain": "Clean missing {count}",
+        "runningPlain": "Running {active}/{limit}",
+        "successPlain": "Success {count}",
+        "failPlain": "Failed {count}",
+        "pendingPlain": "Generating {count}",
+        "resultNotSaved": "Result was not saved to the server. Please retry.",
+        "imageGenerating": "Generating image",
+        "imageFailed": "Image generation failed",
+        "imageCompleted": "Image generation completed",
+        "historyTaskFailed": "This task failed.",
+        "historyTaskPending": "This task is still generating.",
+        "historyOpened": "Opened this generation history. You can keep editing or regenerate.",
+        "retryUpload": "Retry",
+        "deleteCount": "Delete{count}",
+        "statusSuccess": "Succeeded",
+        "statusPending": "Generating",
+        "statusFailed": "Failed",
+        "untitled": "Untitled"
+    },
+    "video": {
+        "addedToMyAssets": "Added to My Assets",
+        "addToAssets": "Add to assets",
+        "agentBusy": "Agent is handling the current request, please wait",
+        "assistantSubtitle": "Video creation assistant",
+        "audioSettings": "Audio settings",
+        "backgroundTasksContinue": "Background generation will keep running. Check progress in history.",
+        "cancel": "Cancel",
+        "clipboardButton": "Clipboard",
+        "clipboardImagesReadCount": "Read {count} reference images",
+        "composerSummary": "{size} · {seconds}s",
+        "concurrencyLimitReached": "This user has reached the video concurrency limit. Please try again later.",
+        "contactAdminForModel": "Ask an admin to configure an available video model",
+        "conversationCreateFailed": "Failed to create creative conversation",
+        "currentUserRunning": "Running for this user {active}/{limit}",
+        "delete": "Delete",
+        "deleteLogsConfirm": "Delete the selected {count} generation records?",
+        "deleteLogsModalTitle": "Delete generation records",
+        "download": "Download",
+        "emptyAudioHint": "No reference audio yet. Up to 3 files, mp3/wav, 15MB each.",
+        "emptyImageHint": "No reference images yet. Up to 9 images.",
+        "emptyResultsDescription": "After a generation completes, results stay here by time.",
+        "emptyResultsTitle": "No generated videos yet",
+        "emptyVideoHint": "No reference videos yet. Up to 3 videos.",
+        "failureCreateHint": "The request failed before a generation task was created.",
+        "failureCreateTitle": "Task creation failed",
+        "failureDefaultHint": "Check the model, quota, and provider response.",
+        "failureDefaultTitle": "Generation failed",
+        "failurePollHint": "The task was submitted, but polling the provider status failed.",
+        "failurePollTitle": "Task polling failed",
+        "failureUpstreamHint": "The task was created, but the upstream generation stage failed.",
+        "failureUpstreamTitle": "Upstream generation failed",
+        "generate": "Generate",
+        "generateAriaLabel": "Start generation, costs {cost} points",
+        "generationFailed": "Generation failed",
+        "generationHistory": "Generation history",
+        "ignoredAudioOversize": "Ignored reference audio larger than 15MB",
+        "ignoredImageOversize": "Ignored reference images larger than 30MB",
+        "ignoredUnsupportedReference": "Ignored unsupported reference media. Use images, mp4/mov video, or mp3/wav audio.",
+        "ignoredVideoOversize": "Ignored reference videos larger than 50MB",
+        "logsDeletedCount": "Deleted {count} generation records",
+        "messageRefilled": "Message refilled. Edit and send again.",
+        "modelLabel": "Model",
+        "noClipboardImage": "No readable image in the clipboard",
+        "originalTaskMissing": "Original task record not found, cannot retry",
+        "partialCleanupFailed": "Record removed, but some linked resources failed to delete. Please retry later.",
+        "promptPlaceholder": "What should we create today? Paste text or media directly.",
+        "promptRequired": "Please enter a video prompt",
+        "referenceAudio": "Reference audio",
+        "referenceImages": "Reference images",
+        "referenceVideos": "Reference videos",
+        "removeReferenceAudio": "Remove reference audio",
+        "removeReferenceImage": "Remove reference image",
+        "removeReferenceVideo": "Remove reference video",
+        "resultTitle": "Generated video",
+        "resultsTitle": "Generation results",
+        "retry": "Retry",
+        "runningCount": "Running {active}/{limit}",
+        "selectAll": "Select all",
+        "smartPlanningRequired": "Smart planning is off for the video workbench. Choose a video model first.",
+        "startGeneration": "Start generation",
+        "statusFailed": "Failed",
+        "statusPending": "Generating",
+        "statusSuccess": "Succeeded",
+        "stopAgentAriaLabel": "Stop Agent and cancel this generation",
+        "timeoutError": "Video generation timed out. Please try again later.",
+        "uploadButton": "Upload",
+        "videoGenerated": "Video generated",
+        "videoWorkbenchSource": "Video workbench",
+        "taskFailedText": "This task failed.",
+        "taskPendingText": "This task is still generating.",
+        "historyRecordOpened": "Opened this historical generation record. You can continue editing or regenerate.",
+        "ignoredAudioDuration": "Ignored reference audio outside the duration limits: each clip must be 2-15 seconds, and total duration cannot exceed 15 seconds",
+        "untitled": "Untitled",
+        "videoGenerationCompleted": "Video generation completed",
+        "videoGenerationFailed": "Video generation failed",
+        "videoGenerationPending": "Video generation in progress",
+        "conversationLoadFailed": "Failed to load the full conversation; showing this generation record",
+        "unknownError": "Unknown error",
+        "resultsDeletedCount": "Deleted {count} results",
+        "uploading": "Uploading",
+        "deleteSelectedCount": "Delete{count}",
+        "runningPlain": "Running {active}/{limit}",
+        "historyTaskFailed": "This task failed.",
+        "historyTaskPending": "This task is still generating.",
+        "historyOpened": "Opened this generation history. You can keep editing or regenerate.",
+        "videoGenerating": "Generating video",
+        "videoFailed": "Video generation failed",
+        "videoCompleted": "Video generation completed",
+        "originalTaskContinues": "The original video task is still being polled in the background. No need to recreate it.",
+        "errorNotConfirmedNoRecreate": "This error is not confirmed as upstream. The system will not recreate the task.",
+        "stillGeneratingContinue": "Video is still generating in the background. The system will keep polling the original task.",
+        "warningContinueQuery": "{message}. The system will keep polling the original video task.",
+        "referenceUploadFailed": "Reference image upload failed",
+        "retryUpload": "Retry",
+        "retryUploadAria": "Retry uploading reference image: {name}",
+        "deleteCount": "Delete{count}",
+        "cleanupMissingCount": "Clean up missing {count}"
+    },
+    "profile": {
+        "title": "Profile",
+        "subtitle": "Manage your profile, plan purchases, orders, usage history, and points in one place.",
+        "refresh": "Refresh",
+        "refreshRecords": "Refresh records",
+        "planShort": "Plan",
+        "buyPlan": "Buy plan",
+        "metricPlan": "Current plan",
+        "metricPlanNotLoaded": "Not loaded",
+        "metricPoints": "Points balance",
+        "metricPointsValue": "{amount} points",
+        "metricPointsDetail": "Today {daily} · Permanent {permanent}",
+        "metricOrders": "Top-up orders",
+        "metricOrdersValue": "{count} orders",
+        "metricPointsFlow": "Points history",
+        "metricPointsFlowValue": "{count} records",
+        "navAria": "Profile sections",
+        "currentSection": "Current section",
+        "switchSectionAria": "Switch profile section",
+        "sections": {
+            "overview": {
+                "label": "Overview",
+                "description": "View your current plan, points balance, recent orders, and recent points history.",
+                "shortDescription": "Asset summary"
+            },
+            "profile": {
+                "label": "Profile",
+                "description": "Manage your login username, display name, and linked email.",
+                "shortDescription": "Profile & email"
+            },
+            "billing": {
+                "label": "Plans",
+                "description": "Choose a plan in your profile, then continue to the secure checkout page to pay.",
+                "shortDescription": "Buy plan"
+            },
+            "orders": {
+                "label": "Orders",
+                "description": "View all top-up orders, payment status, and activation results.",
+                "shortDescription": "Payment status"
+            },
+            "consume": {
+                "label": "Usage",
+                "description": "View model calls, generation tasks, and API usage deductions.",
+                "shortDescription": "Points spent"
+            },
+            "points": {
+                "label": "Points history",
+                "description": "View daily points, top-up credits, refund returns, and admin adjustments.",
+                "shortDescription": "Balance history"
+            },
+            "security": {
+                "label": "Security",
+                "description": "Change your login password. You will need to sign in again after changing it.",
+                "shortDescription": "Password"
+            },
+            "coupons": {
+                "label": "My coupons",
+                "description": "Claim coupons and review available, locked, used, and expired ones.",
+                "shortDescription": "Claim & status"
+            },
+            "referrals": {
+                "label": "Referrals",
+                "description": "Copy invite codes and links, and track signup, first-order, and reward progress.",
+                "shortDescription": "Invites & rewards"
+            }
+        },
+        "billingCenterTitle": "Plans",
+        "billingCenterDesc": "Choose a plan that matches your creation volume. Checkout opens a separate secure payment page.",
+        "availablePlans": "Available plans",
+        "availablePlansDesc": "Price, points, and validity stay in sync with products listed in the admin console.",
+        "plansCount": "{count} plans",
+        "emptyProductsTitle": "No plans listed yet",
+        "emptyProductsDesc": "Plans will appear here after an admin lists products.",
+        "recentPointsTitle": "Recent points history",
+        "recentPointsDesc": "Shows recent points changes. See more in the points history section.",
+        "recentOrdersTitle": "Recent orders",
+        "recentOrdersDesc": "Shows recent top-up orders. Benefits activate automatically or after admin confirmation.",
+        "profilePanelTitle": "Profile",
+        "profilePanelDesc": "Update your avatar, display name, and bio.",
+        "ordersPanelTitle": "Orders",
+        "ordersPanelDesc": "View top-up orders, payment channels, order status, and plan activation results.",
+        "consumePanelTitle": "Usage",
+        "consumePanelDesc": "Shows recent points spent on model calls, generation tasks, and API usage.",
+        "pointsPanelTitle": "Points history",
+        "pointsPanelDesc": "Daily points, top-up credits, admin adjustments, and failed refunds all appear here.",
+        "securityPanelTitle": "Security",
+        "securityPanelDesc": "Changing your password signs you out of the current session. Sign in again afterwards.",
+        "emptyPointsTitle": "No points history yet",
+        "emptyPointsDesc": "Daily points, top-ups, and model usage will appear here.",
+        "emptyPointsDescAlt": "Points changes are recorded here over time.",
+        "emptyConsumeTitle": "No usage records yet",
+        "emptyConsumeDesc": "Model calls and generation tasks will appear here after usage.",
+        "emptyOrdersTitle": "No orders yet",
+        "emptyOrdersDesc": "Orders will appear here after you purchase a plan.",
+        "emailBound": "Linked email",
+        "emailUnbound": "No email linked",
+        "emailUnboundHint": "Link an email to recover your password and receive verification codes.",
+        "usernameLabel": "Username",
+        "displayNameLabel": "Display name",
+        "changeEmailLabel": "Change email",
+        "bindEmailLabel": "Link email",
+        "emailCodeLabel": "Email verification code",
+        "emailCodeRequiredPlaceholder": "Required when changing email",
+        "emailCodeOptionalPlaceholder": "Not needed if email is unchanged",
+        "getEmailCode": "Get code",
+        "saveProfile": "Save profile",
+        "balanceAfter": "Balance {amount}",
+        "pointTypeConsume": "Model usage",
+        "pointTypeRefund": "Usage refund",
+        "pointTypeCredit": "Points top-up",
+        "pointTypeAdjust": "Admin adjustment",
+        "orderStatusPending": "Pending payment",
+        "orderStatusPaid": "Activated",
+        "orderStatusRefunding": "Refund in progress",
+        "orderStatusClosed": "Closed",
+        "orderStatusCanceled": "Canceled",
+        "orderStatusRefunded": "Refunded",
+        "saveProfileFailed": "Failed to save profile",
+        "saveProfileSuccess": "Profile saved",
+        "emailUnchanged": "Email is unchanged, no verification code needed",
+        "codeSendFailed": "Failed to send verification code",
+        "codeSendSuccess": "Verification code sent. Check your email.",
+        "passwordChangeFailed": "Failed to change password",
+        "passwordChangeSuccess": "Password changed. Please sign in again.",
+        "exportSuccess": "Personal data exported",
+        "exportFailed": "Failed to export personal data",
+        "currentPassword": "Current password",
+        "newPassword": "New password",
+        "passwordMinPlaceholder": "At least 8 characters",
+        "changePasswordAndRelogin": "Change password and sign in again",
+        "personalDataTitle": "Personal data",
+        "personalDataDesc": "Export account, points, orders, and creation records. Media files and security credentials are not included in the JSON.",
+        "exportMyData": "Export my data",
+        "productsLoadFailed": "Failed to load plans",
+        "ordersLoadFailed": "Failed to load orders",
+        "pointsLoadFailed": "Failed to load points history",
+        "consumeLoadFailed": "Failed to load usage records",
+        "deletion": {
+            "loadFailed": "Failed to load account deletion request status",
+            "submitSuccess": "Account deletion request submitted",
+            "submitFailed": "Failed to submit account deletion request",
+            "withdrawSuccess": "Account deletion request withdrawn",
+            "withdrawFailed": "Failed to withdraw account deletion request",
+            "title": "Account deletion",
+            "description": "An admin will review your request manually. Acceptance only starts the process and does not immediately delete orders, payment records, or data that must be retained.",
+            "requestedAt": "Requested at: {time}",
+            "reviewNote": "Review note: {note}",
+            "withdrawConfirmTitle": "Withdraw deletion request?",
+            "withdrawConfirmDesc": "Your account will continue to work normally, and you can submit another request later.",
+            "withdrawOk": "Withdraw",
+            "cancel": "Cancel",
+            "withdrawButton": "Withdraw request",
+            "processing": "In progress",
+            "requestButton": "Request deletion",
+            "modalTitle": "Request account deletion",
+            "submitButton": "Submit request",
+            "modalWarning": "Admins will check creation data, media references, and order retention requirements. Further identity verification may be needed before final execution.",
+            "passwordPlaceholder": "Used to confirm this is you",
+            "noteLabel": "Additional notes (optional)",
+            "notePlaceholder": "You may describe the reason or anything admins should know",
+            "statusPending": "Pending",
+            "statusAccepted": "Accepted",
+            "statusRejected": "Rejected",
+            "statusWithdrawn": "Withdrawn",
+            "currentPassword": "Current password"
+        },
+        "couponsLoadFailed": "Failed to load coupons",
+        "couponWallet": {
+            "title": "My coupons",
+            "description": "Claim and review coupons usable at plan checkout. Final discounts follow the server quote on the checkout page.",
+            "refresh": "Refresh",
+            "codePlaceholder": "Enter coupon claim code",
+            "claim": "Claim coupon",
+            "claimShort": "Claim",
+            "claimSuccess": "Coupon claimed",
+            "claimFailed": "Failed to claim coupon",
+            "claimable": "Available to claim",
+            "campaignCount": "{count} campaigns",
+            "minAmount": "Min. spend ¥{amount}",
+            "noMinimum": "No minimum spend",
+            "until": "Until {date}",
+            "ownedTitle": "Claimed coupons",
+            "ownedCount": "{count} total",
+            "couponFallback": "Coupon",
+            "expiresAt": "Expires {date}",
+            "stackWithPromotion": "Stacks with promos",
+            "emptyTitle": "No coupons yet",
+            "emptyDescription": "Claimed codes and open campaigns will show up here.",
+            "statusAvailable": "Available",
+            "statusLocked": "Locked by order",
+            "statusRedeemed": "Used",
+            "statusExpired": "Expired",
+            "statusRevoked": "Revoked"
+        },
+        "referralCenter": {
+            "title": "Referrals",
+            "description": "Share your invite link. Rewards unlock after the new user completes a valid first payment and the cooling-off period.",
+            "unavailableDescription": "The referral center is temporarily unavailable. Please try again later.",
+            "reload": "Reload",
+            "refresh": "Refresh",
+            "loadFailed": "Failed to load referral center",
+            "myCode": "My invite code",
+            "programActive": "Campaign live",
+            "programInactive": "Campaign off",
+            "riskNote": "Self-invites, circular invites, and rebinding after signup are blocked. Suspicious relationships pause settlement for manual review.",
+            "copyCode": "Copy code",
+            "copyLink": "Copy link",
+            "codeCopied": "Invite code copied",
+            "linkCopied": "Invite link copied",
+            "metricClicks": "Link visits",
+            "metricRegistrations": "Signups",
+            "metricQualified": "First orders",
+            "metricSettled": "Rewards paid",
+            "inviterReward": "Inviter reward",
+            "inviteeReward": "Invitee reward",
+            "inviteeCoupon": "New-user coupon",
+            "pointsValue": "{amount} points",
+            "settlementRule": "Settlement rules",
+            "settlementValue": "Paid ≥ ¥{amount} · {days}-day cooling-off",
+            "progressTitle": "Invite progress",
+            "progressDescription": "Only masked nicknames and risk status are shown. Invitee privacy stays private.",
+            "progressEmpty": "No successful invitee signups yet",
+            "rewardsTitle": "Reward history",
+            "rewardsDescription": "Track pending, paid, revoked, and manual-review rewards.",
+            "rewardsEmpty": "No referral rewards yet",
+            "rewardInviter": "Inviter reward",
+            "rewardInvitee": "Invitee reward",
+            "rewardCoupon": "Coupon",
+            "riskClear": "Clear",
+            "riskReview": "In review",
+            "riskFrozen": "Frozen",
+            "riskRejected": "Rejected",
+            "rewardPending": "Pending",
+            "rewardSettled": "Paid",
+            "rewardRevoked": "Revoked",
+            "rewardReversalPending": "Revocation review",
+            "rewardRejected": "Rejected"
+        },
+        "avatarTitle": "Profile photo",
+        "avatarHint": "PNG, JPG, or WebP, max 5MB",
+        "avatarAlt": "Current profile photo",
+        "selectAvatarAria": "Choose profile photo",
+        "changeAvatar": "Change photo",
+        "avatarInvalidType": "Please choose a PNG, JPG, or WebP image",
+        "avatarTooLarge": "Profile photo must be 5MB or smaller",
+        "avatarUpdateFailed": "Failed to update profile photo",
+        "avatarUpdated": "Profile photo updated",
+        "userFallback": "User",
+        "bioLabel": "Bio",
+        "bioPlaceholder": "Describe your creative focus, strengths, or preferred styles",
+        "saveEmail": "Save email",
+        "emailPlaceholder": "Enter email address",
+        "emailUpdateFailed": "Failed to update email",
+        "emailUpdated": "Email updated",
+        "loginPasswordTitle": "Login password",
+        "loginPasswordDesc": "After changing the password you will be signed out and must sign in again with the new password.",
+        "accountSecurityTitle": "Account & security",
+        "accountSecurityDesc": "Manage linked email, login password, and personal data.",
+        "profilePanelDescAlt": "Update avatar, display name, and bio."
+    },
+    "help": {
+        "eyebrow": "User Help Center",
+        "title": "From action to delivery, follow the real creation flow",
+        "subtitle": "Pick a task to view the full flow, step-by-step actions, result handling, and FAQs.",
+        "searchPlaceholder": "Search features, buttons, or questions",
+        "searchAria": "Search help content",
+        "searchResultsAria": "Help search results",
+        "searchResultsTitle": "Search results",
+        "resultCount": "{count} items",
+        "emptySearch": "No matching tutorials found. Try searching for “canvas”, “reference image”, “order”, or “download”.",
+        "categoriesAria": "Help categories",
+        "selectTutorial": "Choose a tutorial",
+        "flowTitle": "Full flow",
+        "flowDescription": "Review the stages first, then move into the detailed steps.",
+        "stepsTitle": "Detailed guide",
+        "stepsDescription": "Complete the steps in order. Each step includes checklist items.",
+        "faqTitle": "FAQ",
+        "faqDescription": "Handle issues based on the real status of the current feature.",
+        "flowAria": "Operation flow",
+        "articles": {
+            "start": {
+                "label": "Quick start",
+                "title": "Start creating from one idea",
+                "summary": "For first-time use, start with the creative Agent. It understands goals, reference assets, and delivery format, then routes work to image, video, canvas, or short-drama capabilities.",
+                "routeLabel": "Open creative Agent",
+                "keywords": ["start", "beginner", "create", "flow", "result", "download"],
+                "outcomes": ["Know which entry to start from", "Understand smart planning vs manual models", "Preview, download, and reuse results"],
+                "flow": [
+                    {
+                        "title": "Describe the goal",
+                        "detail": "Explain what to make, who it is for, and where it will be used"
+                    },
+                    {
+                        "title": "Add references",
+                        "detail": "Upload people, products, style images, or existing assets"
+                    },
+                    {
+                        "title": "Confirm the plan",
+                        "detail": "Keep smart planning on, or choose Skills and models"
+                    },
+                    {
+                        "title": "Review results",
+                        "detail": "Preview media, download it, or reuse it in the next round"
+                    }
+                ],
+                "steps": [
+                    {
+                        "title": "Write a complete goal",
+                        "description": "Do not only write a style word. At least add subject, use case, frame or shot requirements, and the final content you want.",
+                        "checklist": ["Subject: person, product, scene, or story", "Use case: e-commerce, social, short drama, pitch, or personal work", "Constraints: size, duration, count, text, brand colors, and details that must stay"],
+                        "tip": "If you are unsure about parameters, keep smart planning on so the Agent first gives a verifiable selection summary."
+                    },
+                    {
+                        "title": "Add references when consistency matters",
+                        "description": "Use the attachment entry to upload images or reuse existing assets. Faces, product looks, logos, and established styles should be provided before sending.",
+                        "checklist": ["People consistency: clear frontal face or character sheet", "Product consistency: multi-angle product or white-background shots", "Style consistency: choose one to three closest reference images"]
+                    },
+                    {
+                        "title": "Choose how to execute",
+                        "description": "Smart planning matches executable models and parameters by default. Only turn it off and pick one or more models when you already know the model differences.",
+                        "checklist": ["Skills are execution capabilities and do not inject a fixed prompt into the input box", "Manual model selection turns smart planning off", "Clearing manual models restores smart planning"]
+                    },
+                    {
+                        "title": "Handle generated results",
+                        "description": "Click images or videos to preview them. The asset actions support download and reuse, so you can continue with revisions, extended shots, or matching content.",
+                        "checklist": ["Zoom in first to check people, text, edges, and motion continuity", "Download results you are happy with", "For follow-ups, reference the asset and describe the next change"]
+                    }
+                ],
+                "faqs": [
+                    {
+                        "question": "I do not know whether to choose image, video, or canvas. What should I do?",
+                        "answer": "Describe the final use case in the creative Agent. Keep smart planning on so the system can infer the delivery type and summarize the choice."
+                    },
+                    {
+                        "question": "Can I keep editing after generation?",
+                        "answer": "Yes. Preview the result, then use the reference-asset action under the result to continue the conversation. Switch to a specialized workbench when you need precise parameters."
+                    }
+                ]
+            },
+            "agent": {
+                "label": "Creative Agent",
+                "title": "Use Agent from brief to delivery",
+                "summary": "Best for one-line requests, multi-asset packages, and continuous work across image, video, canvas, and short drama. Conversations and results are saved in server sessions.",
+                "routeLabel": "Open Agent workbench",
+                "keywords": ["agent", "chat", "skill", "model", "smart planning", "attachment", "history", "pause"],
+                "outcomes": ["Choose Skills and smart planning", "Manage conversations and history", "Iterate on generated results"],
+                "flow": [
+                    {
+                        "title": "Enter the request",
+                        "detail": "Describe goal, audience, use case, and deliverables"
+                    },
+                    {
+                        "title": "Choose capabilities",
+                        "detail": "Add Skills, reference assets, or manual models as needed"
+                    },
+                    {
+                        "title": "Agent planning",
+                        "detail": "Review direction, models, parameters, and product rationale"
+                    },
+                    {
+                        "title": "Run tasks",
+                        "detail": "Generate inside the chat and keep task status visible"
+                    },
+                    {
+                        "title": "Iterate",
+                        "detail": "Reference results, add constraints, or edit the original message"
+                    }
+                ],
+                "steps": [
+                    {
+                        "title": "Shape an executable request",
+                        "description": "Use natural language to describe the final delivery. Complex work can be listed, but do not split it into model parameters yourself.",
+                        "checklist": [
+                            "Goal: for example a product launch asset set",
+                            "Delivery: for example one hero visual, three detail images, and one short video",
+                            "Consistency: people, products, and colors that must be reused",
+                            "Acceptance criteria: what counts as done"
+                        ]
+                    },
+                    {
+                        "title": "Add Skills, references, and models",
+                        "description": "Skills sit on the left of the input and become removable cards when selected. The bulb controls smart planning; the model button supports multi-select executable models.",
+                        "checklist": ["Only choose a Skill when the task needs that capability", "Keep smart planning on by default", "Select at most six models for manual comparison", "Confirm reference assets appear in the input before sending"]
+                    },
+                    {
+                        "title": "Read the Agent selection summary",
+                        "description": "The Agent first explains the creative direction and why it chose the current models and parameters. If the direction is wrong, add constraints early instead of waiting for the full wrong batch.",
+                        "checklist": ["Check whether subject and use case were understood", "Check delivery count and format", "Check whether references were used", "Check whether model and aspect ratio fit the task"]
+                    },
+                    {
+                        "title": "Manage messages and sessions",
+                        "description": "User messages support copy and edit; re-editing continues with the new request. History is used to open, rename, select, and delete server sessions.",
+                        "checklist": ["Copy: reuse a full request", "Edit: fix the original request and run again", "New chat: start an unrelated project", "History: restore previous context and results"]
+                    },
+                    {
+                        "title": "Preview, download, and reference media",
+                        "description": "Click media to open a large preview. Download sits under the asset; reference brings the current result back into the input for the next change.",
+                        "checklist": ["Preview before deciding to download", "When referencing, say what to keep and what to change", "Move to the image or video workbench for specialized parameters"]
+                    }
+                ],
+                "faqs": [
+                    {
+                        "question": "Will a Skill automatically rewrite my input?",
+                        "answer": "No. Selected Skills are submitted as execution capabilities and shown as cards above the input; your original text stays unchanged."
+                    },
+                    {
+                        "question": "Why does smart planning turn off after I pick models?",
+                        "answer": "Manual models mean you explicitly set the execution scope, so automatic matching turns off. Clear the model selection to restore smart planning."
+                    }
+                ]
+            },
+            "image": {
+                "label": "Image workbench",
+                "title": "Generate, refine, and reuse images",
+                "summary": "The image workbench is for single or batch image tasks that need clear control over aspect ratio, count, quality, and reference images.",
+                "routeLabel": "Open image workbench",
+                "keywords": ["image", "generate", "reference", "aspect ratio", "count", "quality", "history", "download"],
+                "outcomes": ["Use reference images", "Confirm image parameters", "Continue from historical results"],
+                "flow": [
+                    {
+                        "title": "Describe the frame",
+                        "detail": "Subject, environment, composition, lighting, and use case"
+                    },
+                    {
+                        "title": "Provide references",
+                        "detail": "People, products, style, or a previous result"
+                    },
+                    {
+                        "title": "Confirm parameters",
+                        "detail": "Model, aspect ratio, quality, and generation count"
+                    },
+                    {
+                        "title": "Review generation",
+                        "detail": "Check Agent decisions and task progress"
+                    },
+                    {
+                        "title": "Reuse results",
+                        "detail": "Preview, download, reference, or keep refining"
+                    }
+                ],
+                "steps": [
+                    {
+                        "title": "Choose text-to-image or reference-image flow",
+                        "description": "Describe the frame directly when there is no fixed subject. Add reference images first when people, products, or composition must stay consistent.",
+                        "checklist": ["People references should be clear and unobstructed", "Product references should keep real proportions and key structure", "Style references should not conflict with subject references"]
+                    },
+                    {
+                        "title": "Let the Agent plan first",
+                        "description": "After you enter a request, the Agent decides whether it is a normal single image or a batch task, then matches models and parameters.",
+                        "checklist": ["Check whether the recommended aspect ratio fits the placement", "Check whether the count is enough for comparison", "Check whether text, logos, or reserved blank space are needed"]
+                    },
+                    {
+                        "title": "Adjust generation parameters as needed",
+                        "description": "Settings show the current model, size, quality, and count. On mobile the parameter panel scrolls vertically, so no horizontal dragging is needed.",
+                        "checklist": ["Social square posts often use 1:1", "Covers and banners prefer landscape", "People posters and vertical content prefer portrait", "Higher batch counts usually cost more points"]
+                    },
+                    {
+                        "title": "Inspect and handle results",
+                        "description": "After generation, click an image to preview and check subject consistency, text, hands, edges, and materials.",
+                        "checklist": ["Happy with it: download", "Direction is right but details are weak: reference the result and continue refining", "Direction is wrong: fix the goal or references in the request"]
+                    }
+                ],
+                "faqs": [
+                    {
+                        "question": "Why was my reference image not used?",
+                        "answer": "Confirm the reference already appears in the input area, and explicitly say what people, product, or composition to keep. If you only upload without stating the purpose, the Agent may treat it as a style reference."
+                    },
+                    {
+                        "question": "Where is image history?",
+                        "answer": "The workbench history area shows this user's server generation records. Opening a historical result lets you preview, download, or use it as the next reference."
+                    }
+                ]
+            },
+            "video": {
+                "label": "Video workbench",
+                "title": "Create text-to-video and image-to-video",
+                "summary": "The video workbench controls first-frame references, camera motion, duration, aspect ratio, and audio options for single-shot clips and image animation.",
+                "routeLabel": "Open video workbench",
+                "keywords": ["video", "image-to-video", "text-to-video", "first frame", "duration", "camera", "audio", "download"],
+                "outcomes": ["Distinguish text-to-video and image-to-video", "Describe camera and motion", "Handle failures and download results"],
+                "flow": [
+                    {
+                        "title": "Choose a starting point",
+                        "detail": "Create from text only, or add an image as the first frame"
+                    },
+                    {
+                        "title": "Describe motion",
+                        "detail": "Subject action, camera, pacing, and what must not change"
+                    },
+                    {
+                        "title": "Confirm settings",
+                        "detail": "Model, duration, aspect ratio, quality, and audio"
+                    },
+                    {
+                        "title": "Wait for the task",
+                        "detail": "Watch submit, generation, and normalization progress"
+                    },
+                    {
+                        "title": "Review the clip",
+                        "detail": "Play the preview, download, or reference for follow-up work"
+                    }
+                ],
+                "steps": [
+                    {
+                        "title": "Decide whether to use a first-frame image",
+                        "description": "Use image-to-video when a specific person, product, or composition must stay. Use text-to-video when the camera can be freer.",
+                        "checklist": ["First-frame ratio should be close to the target video ratio", "Avoid blurry or heavily cropped images", "For image-to-video, clearly say which elements must stay unchanged"]
+                    },
+                    {
+                        "title": "Describe action and camera separately",
+                        "description": "First say what the subject does, then how the camera moves, and finally pacing, lighting, and forbidden changes.",
+                        "checklist": [
+                            "Subject action: turn, walk, expression, or product motion",
+                            "Camera: push-in, pull-out, orbit, follow, or locked-off",
+                            "Pacing: slow, natural, fast, or staged",
+                            "Stability: no face morphing, deformation, drifting text, or extra objects"
+                        ]
+                    },
+                    {
+                        "title": "Confirm duration, aspect ratio, and audio",
+                        "description": "The settings panel shows current video parameters. Audio is collapsed by default; expand it only when sound is needed.",
+                        "checklist": ["Choose mobile-friendly ratios for vertical content", "Longer durations need clearer shot changes", "Keep audio off when sound is not needed", "Manual models only show currently enabled executable channels"]
+                    },
+                    {
+                        "title": "Handle task status",
+                        "description": "Video generation usually takes longer than images. Pausing the chat stops the current Agent flow; when a task fails, adjust the input from the error and retry.",
+                        "checklist": ["Do not repeatedly submit the same request", "On failure, first check model, references, and duration hints", "Play the full video before downloading a success"]
+                    }
+                ],
+                "faqs": [
+                    {
+                        "question": "Why is the model list empty?",
+                        "answer": "The frontend only shows currently executable video models. If none are available, the page clearly says no enabled video capability is configured."
+                    },
+                    {
+                        "question": "What if the generated duration does not match settings?",
+                        "answer": "The server normalizes results to the target duration. If normalization is impossible, the task fails explicitly instead of registering media with the wrong duration as success."
+                    }
+                ]
+            },
+            "canvas": {
+                "label": "My Canvas",
+                "title": "Connect a full creation flow with nodes",
+                "summary": "Canvas is for putting text, images, video, audio, and panoramas into one project, then organizing references, generation, and follow-up edits through connections.",
+                "routeLabel": "Open My Canvas",
+                "keywords": ["canvas", "node", "connect", "double-click", "panorama", "immersive", "import", "agent"],
+                "outcomes": ["Create and connect nodes", "Use Canvas Agent", "Generate and inspect panoramas immersively"],
+                "flow": [
+                    {
+                        "title": "Create a project",
+                        "detail": "Start a new project or continue an existing one from the canvas list"
+                    },
+                    {
+                        "title": "Add nodes",
+                        "detail": "Double-click empty space or choose a type from the connection menu"
+                    },
+                    {
+                        "title": "Organize references",
+                        "detail": "Connect text, image, video, and audio nodes"
+                    },
+                    {
+                        "title": "Generate and edit",
+                        "detail": "Use Agent or node tools to run tasks"
+                    },
+                    {
+                        "title": "Review delivery",
+                        "detail": "Preview, download, copy prompts, or keep connecting"
+                    }
+                ],
+                "steps": [
+                    {
+                        "title": "Create nodes and organize space",
+                        "description": "After entering a project, double-click empty canvas space to create a node, or pick the next node type from an existing node's connection entry.",
+                        "checklist": ["Text nodes: store prompts, scripts, and notes", "Image nodes: import or generate images", "Video and audio nodes: organize media results", "Panorama nodes: generate 2:1 environment panoramas"]
+                    },
+                    {
+                        "title": "Use connections for reference relationships",
+                        "description": "Connect reference nodes to the target node. The target input can use @ to mention connected assets, and numbering is refreshed from current connections before sending.",
+                        "checklist": ["Connect first, then generate from the target node", "Before deleting a connection, confirm later nodes no longer need that reference", "Arrange complex projects from upstream references to downstream results"]
+                    },
+                    {
+                        "title": "Use Canvas Agent",
+                        "description": "The top-right Agent panel supports current project context, Skills, smart planning, and multi-model selection, and can create or update nodes from a request.",
+                        "checklist": ["Say whether to add or modify existing nodes", "Select current nodes or assets when references are needed", "Check the Agent plan and target node type", "Pausing the chat stops the current execution flow"]
+                    },
+                    {
+                        "title": "Generate and inspect panorama nodes",
+                        "description": "Select a panorama node, enter an environment description, and the system generates a 2:1 equirectangular result. Successful results support drag-based immersive viewing inside the node.",
+                        "checklist": [
+                            "Recommended size is 2048×1024",
+                            "Describe the horizon and scene center clearly",
+                            "Avoid normal banners, fisheye circles, and obvious seams",
+                            "After generation, drag the view to check left-right continuity and top/ground integrity"
+                        ]
+                    },
+                    {
+                        "title": "Use node result tools",
+                        "description": "Select or hover a media node to preview, download, copy prompts, edit locally, upscale, or continue generation through connections.",
+                        "checklist": ["Download important results first", "Copy prompts to review parameters later", "Keep the original node before generating again so versions can be compared"]
+                    }
+                ],
+                "faqs": [
+                    {
+                        "question": "Why is there no asset in the @ list?",
+                        "answer": "Only images or text already connected to the current target node appear in the mention list. Create the connection first, then open the input and choose it."
+                    },
+                    {
+                        "question": "Why can't a panorama be viewed immersively?",
+                        "answer": "Panorama assets need a near 2:1 ratio and must be registered as panorama nodes. Ordinary image nodes do not switch to the panorama viewer even if they are very wide."
+                    }
+                ]
+            },
+            "drama": {
+                "label": "Short drama projects",
+                "title": "Move from synopsis to a deliverable short drama",
+                "summary": "The drama workspace organizes script structure, characters and scenes, storyboard review, shot generation, voiceover, subtitles, and final export by project.",
+                "routeLabel": "Open short drama projects",
+                "keywords": ["drama", "script", "character", "scene", "storyboard", "shot", "voiceover", "subtitle", "export", "version"],
+                "outcomes": ["Understand the full drama pipeline", "Review content before batch generation", "Save versions and export subtitles or finals"],
+                "flow": [
+                    {
+                        "title": "Create the project",
+                        "detail": "Fill in project goals, audience, and story direction"
+                    },
+                    {
+                        "title": "Extract structure",
+                        "detail": "Agent organizes script, characters, scenes, and episodes"
+                    },
+                    {
+                        "title": "Review content",
+                        "detail": "Confirm shots, dialogue, subtitles, and visual plans"
+                    },
+                    {
+                        "title": "Batch production",
+                        "detail": "Generate storyboards, shot videos, and voiceover"
+                    },
+                    {
+                        "title": "Compose and export",
+                        "detail": "Adjust subtitle timing and output the final or draft package"
+                    }
+                ],
+                "steps": [
+                    {
+                        "title": "Create a project with a clear production goal",
+                        "description": "Create a project from the drama list and first clarify genre, audience, platform, duration, and episode count. Existing story text can be given directly to the drama Agent.",
+                        "checklist": ["Target duration per episode", "Main characters and relationships", "Conflict and ending direction", "Platform aspect ratio and content limits"]
+                    },
+                    {
+                        "title": "Extract structure with Agent",
+                        "description": "The Agent turns input into an editable project structure rather than only returning chat text. After generation, check characters, scenes, episodes, and shots one by one.",
+                        "checklist": ["Keep character names and looks unique", "Avoid duplicate scene meanings", "Each episode needs a clear beginning, middle, and end", "Shot dialogue and subtitles must match the story"]
+                    },
+                    {
+                        "title": "Review content before batch generation",
+                        "description": "In content review, correct shot order, framing, action, dialogue, and visual prompts. Only enter production after the full visual plan is confirmed.",
+                        "checklist": ["Can the shot finish within the target duration", "Are character and scene references correct", "Is dialogue suitable for voiceover", "Do subtitles need to differ from dialogue"],
+                        "tip": "Save a version before batch generation so later rework can restore quickly."
+                    },
+                    {
+                        "title": "Generate storyboards, shots, and voiceover",
+                        "description": "You can generate shot by shot or batch unfinished items. The project queue submits in order to avoid creating too many concurrent tasks.",
+                        "checklist": [
+                            "Finish storyboard images before generating video shots",
+                            "Retry failed shots instead of creating the same task again",
+                            "Generate voiceover only for shots with dialogue",
+                            "You can cancel the current task during generation"
+                        ]
+                    },
+                    {
+                        "title": "Handle subtitles, versions, and export",
+                        "description": "Check each line on the subtitle timeline and export SRT if needed. Compose the episode only after all shots and required voiceovers are ready. Projects also support version history and Jianying draft export.",
+                        "checklist": ["Check whether subtitles exceed shot duration", "Save current changes before restoring a version", "Play the full final once after composition", "Export a Jianying ZIP draft when further editing is needed"]
+                    }
+                ],
+                "faqs": [
+                    {
+                        "question": "Why can't I generate the final directly?",
+                        "answer": "Final composition depends on reviewed shot videos, required voiceovers, and subtitle timing. The page points out unfinished production stages so missing assets are not composed."
+                    },
+                    {
+                        "question": "Will regenerating overwrite the old version?",
+                        "answer": "A project snapshot is saved before critical regenerations, and you can also save versions manually. Open version history and restore a specific version when you need to roll back."
+                    }
+                ]
+            },
+            "assets": {
+                "label": "My Assets",
+                "title": "Organize and reuse creative assets",
+                "summary": "The asset library stores this user's text, images, video, and audio. Search by type, title, tags, and source, then reuse them in canvas and creation flows.",
+                "routeLabel": "Open My Assets",
+                "keywords": ["assets", "upload", "tags", "search", "preview", "download", "reference"],
+                "outcomes": ["Add and organize assets", "Preview and download", "Reference assets in other creation flows"],
+                "flow": [
+                    {
+                        "title": "Collect assets",
+                        "detail": "Upload files, add URLs, or save generation results"
+                    },
+                    {
+                        "title": "Add metadata",
+                        "detail": "Fill in title, source, and searchable tags"
+                    },
+                    {
+                        "title": "Search and preview",
+                        "detail": "Filter by type, keyword, and tags"
+                    },
+                    {
+                        "title": "Reuse and deliver",
+                        "detail": "Copy text, download media, or insert into canvas"
+                    }
+                ],
+                "steps": [
+                    {
+                        "title": "Add the correct asset type",
+                        "description": "The new-asset dialog supports text, image, video, and audio. Choose the type first, then fill content or upload a file.",
+                        "checklist": [
+                            "Write titles that stay searchable later",
+                            "Record whether the source is upload, generation, or project",
+                            "Use stable tags such as person, product, project, or style",
+                            "Do not save secrets or private information as text assets"
+                        ]
+                    },
+                    {
+                        "title": "Preview, edit, and download",
+                        "description": "Asset cards provide preview and management actions. Text can be copied, media can be downloaded, and title, tags, and source can still be edited.",
+                        "checklist": ["Open preview before downloading", "Editing only changes the asset record and does not auto-update historical projects that already referenced it", "Before deleting, confirm no project still depends on the asset"]
+                    },
+                    {
+                        "title": "Reference assets while creating",
+                        "description": "Agent results can be referenced directly; Canvas asset pickers load the current user's assets when first opened.",
+                        "checklist": ["Confirm the asset card appears in the input after referencing", "Say whether the asset is for subject, style, or first frame", "Use clear tags in large projects to keep search efficient"]
+                    }
+                ],
+                "faqs": [
+                    {
+                        "question": "Why are assets not shown right after opening?",
+                        "answer": "Assets load from the server for the current user. The first open shows a compact loading state; if loading fails, use the retry action on the page."
+                    },
+                    {
+                        "question": "Will deleting an asset break projects?",
+                        "answer": "The server checks references from creative sessions, Canvas, drama, and generation records. Media still in use is not deleted directly, so projects do not end up with missing files."
+                    }
+                ]
+            },
+            "prompts": {
+                "label": "Prompts",
+                "title": "Find, save, and reuse prompts",
+                "summary": "The public prompt library is for structure and inspiration; My Prompts is for personal templates. Both support copy, and personal prompts are added through a modal.",
+                "routeLabel": "Open prompt library",
+                "keywords": ["prompt", "category", "tag", "search", "copy", "add prompt", "my prompts"],
+                "outcomes": ["Filter public prompts", "Save personal templates", "Know the difference between prompts and Skills"],
+                "flow": [
+                    {
+                        "title": "Search for inspiration",
+                        "detail": "Filter public content by title, category, and tags"
+                    },
+                    {
+                        "title": "Open details",
+                        "detail": "Confirm structure and suitable scenarios"
+                    },
+                    {
+                        "title": "Copy and rewrite",
+                        "detail": "Replace subject, use case, style, and constraints"
+                    },
+                    {
+                        "title": "Save a template",
+                        "detail": "Record a personal version in the My Prompts modal"
+                    }
+                ],
+                "steps": [
+                    {
+                        "title": "Narrow the range with categories and tags",
+                        "description": "Public prompts can be many. Choose a category first, then use tags and keywords. Mobile uses dropdown filters instead of horizontal scrolling.",
+                        "checklist": ["First choose a category by image, video, or other use", "Continue with industry, style, and subject tags", "Open details before copying the full content"]
+                    },
+                    {
+                        "title": "Rewrite examples into your own request",
+                        "description": "Public prompts are structural references, not ready-to-submit final text. Replace placeholders and add real subjects, references, and delivery limits.",
+                        "checklist": [
+                            "Replace brand, person, product, and scene",
+                            "Remove style words that do not fit the current project",
+                            "Add aspect ratio, count, duration, and forbidden items",
+                            "If references matter, actually add assets in the creation input"
+                        ]
+                    },
+                    {
+                        "title": "Save to My Prompts",
+                        "description": "Open My Prompts, click Add Prompt, and fill in title, category, tags, body, and notes.",
+                        "checklist": ["Titles should describe use case, not arbitrary numbers", "Keep categories and tags consistent", "Use notes for usage scenarios or replacement rules", "List actions support copying and editing saved prompts"]
+                    }
+                ],
+                "faqs": [
+                    {
+                        "question": "What is the difference between a prompt and a Skill?",
+                        "answer": "A prompt is the text you give the model. A Skill is an Agent execution capability. Choosing a Skill does not auto-fill fixed text into the input box."
+                    },
+                    {
+                        "question": "Why is adding a prompt a modal instead of a permanent form?",
+                        "answer": "Add uses a modal so the list page stays focused on search and management. After save or cancel, you return to the original list position."
+                    }
+                ]
+            },
+            "account": {
+                "label": "Account & purchases",
+                "title": "Manage plans, points, and orders",
+                "summary": "Open Profile from the avatar menu to view the current plan, points balance, profile, plan purchase, orders, usage history, points ledger, and account security.",
+                "routeLabel": "Open Profile",
+                "keywords": ["profile", "plan", "points", "daily free points", "purchase", "payment", "order", "password"],
+                "outcomes": ["Know each profile section", "Complete a plan purchase", "Check points and order status"],
+                "flow": [
+                    {
+                        "title": "Choose a product",
+                        "detail": "Open Plans in Profile and compare benefits"
+                    },
+                    {
+                        "title": "Confirm the order",
+                        "detail": "Choose quantity and payment method, then verify amount and points"
+                    },
+                    {
+                        "title": "Complete payment",
+                        "detail": "Continue on the secure checkout page by channel"
+                    },
+                    {
+                        "title": "Verify benefits",
+                        "detail": "Return to orders, plan, and points history to confirm the result"
+                    }
+                ],
+                "steps": [
+                    {
+                        "title": "Enter Profile from the avatar menu",
+                        "description": "The top-right avatar menu keeps the Profile entry. The sidebar help entry no longer jumps to personal details again.",
+                        "checklist": ["Overview: plan, balance, and recent records", "Profile: display name and email", "Security: change password", "Orders and points sections: check every change"]
+                    },
+                    {
+                        "title": "Choose and purchase a plan",
+                        "description": "In Plans, click upgrade or buy, compare price/points/benefits in the plan modal first, then enter the independent secure payment page.",
+                        "checklist": ["Confirm plan name and benefits", "Confirm purchase quantity", "Confirm payment method and total amount", "Benefits activate only after successful payment"]
+                    },
+                    {
+                        "title": "Check payment and points results",
+                        "description": "After payment, return to Profile and check order status. Credited points, plan changes, usage deductions, and failed refunds appear in their own records.",
+                        "checklist": [
+                            "Orders: pending, paid, canceled, or manual confirmation",
+                            "Points history: balance increases and adjustments",
+                            "Usage: generation tasks and model-call deductions",
+                            "If results are delayed, refresh records first and do not pay the same order twice"
+                        ]
+                    }
+                ],
+                "faqs": [
+                    {
+                        "question": "Why is plan upgrade a modal, but payment is not?",
+                        "answer": "Plan comparison should stay fast, so it uses an in-workbench modal. When amount, quantity, and payment channel are involved, checkout moves to a dedicated secure page so the full order can be reviewed."
+                    },
+                    {
+                        "question": "What if the order is paid but benefits have not changed yet?",
+                        "answer": "Refresh status in order history first. Some payment callbacks may lag slightly, and manual channels need order confirmation. Do not create multiple orders for the same need."
+                    }
+                ]
+            },
+            "troubleshooting": {
+                "label": "FAQ",
+                "title": "Troubleshoot loading, generation, and display issues",
+                "summary": "When a page is blank, data loads slowly, models cannot be selected, or media will not open, first locate the broken stage and avoid resubmitting or double-charging.",
+                "keywords": ["issue", "loading", "failure", "blank", "model", "media", "preview", "retry"],
+                "outcomes": ["Tell page issues from task issues", "Know when to retry", "Avoid creating generation or payment requests twice"],
+                "flow": [
+                    {
+                        "title": "Confirm the page",
+                        "detail": "Refresh the current page and check login state"
+                    },
+                    {
+                        "title": "Locate the stage",
+                        "detail": "Separate data loading, planning, submit, and generation failures"
+                    },
+                    {
+                        "title": "Read the message",
+                        "detail": "Adjust based on page errors and task status"
+                    },
+                    {
+                        "title": "Retry safely",
+                        "detail": "Only retry failed items, not successful requests"
+                    }
+                ],
+                "steps": [
+                    {
+                        "title": "Page data stays empty for a long time",
+                        "description": "First check network and login state, then use in-page refresh or retry. Do not switch around and repeatedly click create while loading.",
+                        "checklist": ["Look for an explicit error message", "Reopen the current section", "Use the matching retry button for assets, projects, or history failures", "If still empty, confirm the current account really has data"]
+                    },
+                    {
+                        "title": "Models or Skills cannot be selected",
+                        "description": "Lists only show currently executable capabilities. Skills are also filtered by workspace, so different pages may show different options.",
+                        "checklist": ["Keep smart planning on to use default capabilities", "Do not type model names manually when the list is empty", "Skills that do not match the current workspace are hidden"]
+                    },
+                    {
+                        "title": "Images or videos cannot preview",
+                        "description": "Prefer opening the media itself for preview, then try download. Historical media needs a valid server URL and current-user permission.",
+                        "checklist": ["Confirm the task already succeeded", "Confirm media is not still processing", "Reopen history to refresh the access URL", "Do not share expired temporary links as long-term asset URLs"]
+                    },
+                    {
+                        "title": "Retry after generation or payment failure",
+                        "description": "Only retry clearly failed tasks or unpaid orders. Do not resubmit successful tasks or pay the same order again.",
+                        "checklist": [
+                            "Record the error shown on the page",
+                            "On generation failure, adjust parameters or references first",
+                            "On payment failure, continue the original order instead of creating a new one",
+                            "If balance looks wrong, check points history and usage records"
+                        ]
+                    }
+                ],
+                "faqs": [
+                    {
+                        "question": "Will refreshing the page lose projects?",
+                        "answer": "Creative sessions, Canvas, assets, drama, and generation records are saved on the server per signed-in user. Page refresh reloads them and does not rely on the browser to store large business data."
+                    },
+                    {
+                        "question": "When should I create a task again?",
+                        "answer": "Only create a new one when the original task clearly failed, was canceled, or the request has changed. Resubmitting while a task is still running increases wait time and points risk."
+                    }
+                ]
+            }
+        }
+    },
+    "me": {
+        "summaryLoadFailed": "Failed to load profile summary",
+        "likedLoadFailed": "Failed to load liked works",
+        "loadMoreFailed": "Failed to load more works",
+        "homeLinkCopied": "Profile link copied",
+        "profileUpdateFailed": "Failed to update profile",
+        "profileUpdated": "Profile updated",
+        "editProfileAria": "Edit profile",
+        "editProfileTitle": "Edit profile",
+        "statsAria": "Profile stats",
+        "metricWorks": "Works",
+        "metricLiked": "Likes",
+        "metricFollowing": "Following",
+        "metricFollowers": "Followers",
+        "shareHome": "Share profile",
+        "homeNotPublic": "Profile not public yet",
+        "copyPublicLinkTitle": "Copy public profile link",
+        "publishFirstToShare": "Publish a work with your profile identity to share this page",
+        "worksSectionAria": "Profile works",
+        "tabsAria": "Profile content",
+        "tabPublished": "Published",
+        "tabLikes": "Liked",
+        "emptyPublishedTitle": "No public works yet",
+        "emptyPublishedDesc": "Works published under your profile identity appear here after review.",
+        "publishWork": "Publish work",
+        "emptyLikesTitle": "No liked works yet",
+        "emptyLikesDesc": "Public works you like in the gallery appear here. Only you can see this list.",
+        "browseGallery": "Browse gallery",
+        "loadMore": "Load more",
+        "editModalTitle": "Edit profile",
+        "save": "Save",
+        "cancel": "Cancel",
+        "displayNameLabel": "Display name",
+        "displayNamePlaceholder": "Enter the name shown on your profile",
+        "bioLabel": "Bio",
+        "bioPlaceholder": "Describe your creative focus, strengths, or preferred styles",
+        "activity": {
+            "followingTitle": "Following",
+            "followingEmptyTitle": "Not following anyone yet",
+            "followingEmptyDesc": "Creators you follow from work pages or profiles appear here.",
+            "followersTitle": "Followers",
+            "followersEmptyTitle": "No followers yet",
+            "followersEmptyDesc": "People who follow you appear here.",
+            "likesTitle": "Liked works",
+            "likesEmptyTitle": "No liked works yet",
+            "likesEmptyDesc": "Public works you liked in the gallery appear here.",
+            "loadFailed": "Failed to load community activity",
+            "unfollowed": "Unfollowed",
+            "unfollowFailed": "Failed to unfollow",
+            "unliked": "Like removed",
+            "unlikeFailed": "Failed to remove like",
+            "blockTitle": "Block {name}",
+            "blockContent": "Blocking removes the follow relationship both ways. Neither of you can follow again.",
+            "blockOk": "Block",
+            "cancel": "Cancel",
+            "blocked": "User blocked",
+            "blockFailed": "Failed to block user",
+            "modalFallbackTitle": "Community activity",
+            "followerCount": "{count} followers",
+            "followingTime": "Followed at",
+            "followerTime": "Followed you at",
+            "unfollow": "Unfollow",
+            "block": "Block",
+            "anonymousAuthor": "Anonymous",
+            "likedAt": "Liked {time}",
+            "unlike": "Unlike"
+        }
+    },
+    "agentRun": {
+        "receivedWithReferences": "Got it. I will complete this {media} using the current references.",
+        "receivedWithoutReferences": "Got it. I will complete this {media} based on your request.",
+        "recreatingTask": "Recreating the generation task.",
+        "taskGenerating": "The {media} task is generating. Progress and results will stay visible in the workspace.",
+        "taskCreateFailed": "Failed to create the {media} task. Check the model and parameters.",
+        "stoppedNoTask": "You stopped this Agent turn. No generation task was created.",
+        "planningIncomplete": "Planning did not finish. No generation task was created.",
+        "taskNotQueued": "The task was not created and did not enter the {media} queue.",
+        "reasonPrefix": "Reason: {message}",
+        "reasonUnknown": "Reason: unknown error",
+        "hintTextModel": "Confirm the default text model is enabled with a bound channel key in admin settings, then resend the request.",
+        "hintVideoModel": "Confirm the video logical model and upstream channel are available in admin settings, or switch to an available video model and retry.",
+        "hintReference": "Re-upload references, switch to an available channel, or choose a no-reference plan / plan-only option.",
+        "hintGeneric": "Adjust the request and retry. If it keeps failing, check admin model channels, quota, and concurrency settings.",
+        "mediaImage": "image generation",
+        "mediaVideo": "video generation"
     }
-  },
-  "create": {
-    "allConversations": "All conversations →",
-    "attachmentUploadFailed": "Failed to upload attachment",
-    "attachmentsUploaded": "Uploaded {count} attachments",
-    "cancelTaskFailed": "Failed to stop the task",
-    "continueCreating": "Continue creating",
-    "continueCreatingHint": "Return to a recent conversation to keep refining",
-    "conversationDeleteFailed": "Failed to delete conversation",
-    "conversationDeleted": "Conversation deleted",
-    "conversationsDeletedCount": "Deleted {count} conversations",
-    "createEntrySwitched": "The create entry has changed, please try again",
-    "createRequestFailed": "Create request failed",
-    "creationHistory": "Creation history",
-    "fileTooLarge": "{name} exceeds 20MB",
-    "heroSubtitle": "Start from one idea",
-    "heroTitle": "What do you want to create today?",
-    "loadingRecent": "Loading recent creations...",
-    "loadingSkills": "Loading creative Skills...",
-    "messageRefilled": "Message refilled. Edit and send again.",
-    "newConversation": "New conversation",
-    "newConversationTitle": "New conversation",
-    "noConversationsYet": "Conversations will appear here after your first creation",
-    "openConversationFailed": "Failed to open conversation",
-    "overviewLoadFailed": "Failed to load workbench overview",
-    "partialDeleteFailed": "Some conversations failed to delete, please retry",
-    "projectCreateFailed": "Failed to create project",
-    "promptRequired": "Please describe what you want to create first",
-    "recordNotAgentWorkbench": "This record is not from the creative Agent workbench",
-    "regeneratingFailedTask": "Regenerating the failed task…",
-    "restoreConversationFailed": "Failed to restore conversation",
-    "retryTaskFailed": "Failed to retry task",
-    "titleUpdateFailed": "Failed to update title",
-    "titleUpdated": "Title updated",
-    "understandingRequest": "Understanding your request",
-    "unsupportedFileFormat": "{name} is not a supported image, video, or audio format",
-    "useSkill": "Use {name} Skill",
-    "composer": {
-      "addAttachment": "Add attachment",
-      "autoMatchBySmartPlanning": "Matched automatically by smart planning",
-      "capabilityAudio": "Audio",
-      "capabilityImage": "Image",
-      "capabilityVideo": "Video",
-      "categoryAll": "All",
-      "categoryCanvas": "Canvas",
-      "categoryDrama": "Drama",
-      "categoryEdit": "Edit",
-      "categoryImage": "Image",
-      "categoryVideo": "Video",
-      "chooseCreativeSkill": "Choose a creative Skill",
-      "clearSelectionRestoreSmart": "Clear selection and restore smart planning",
-      "closeAutoSmartPlanning": "Turn off automatic smart planning",
-      "disabled": "Off",
-      "enabled": "On",
-      "generationModel": "Generation model",
-      "inputPlaceholder": "Describe your idea, or add reference assets",
-      "loadingEllipsis": "Loading...",
-      "modelCapabilityHint": "{capability} model · can generate with other models",
-      "noModelsForCapability": "No available {capability} models configured",
-      "noSkillsAvailable": "No Skills available",
-      "noSkillsInCategory": "No Skills available in this category",
-      "openAutoSmartPlanning": "Turn on automatic smart planning",
-      "removeAttachmentWithName": "Remove {name}",
-      "removeSkill": "Remove Skill",
-      "removeSkillWithName": "Remove Skill {name}",
-      "scrollLeftSkillCategories": "Scroll left for more Skill categories",
-      "scrollRightSkillCategories": "Scroll right for more Skill categories",
-      "selectGenerationModel": "Select generation model",
-      "selectedModelsCount": "{count} models selected",
-      "send": "Send",
-      "skillCategoriesAriaLabel": "Skill categories, swipe to see more",
-      "smartPlanningOff": "Smart planning: Off",
-      "smartPlanningOffAria": "Smart planning is off, click to turn on",
-      "smartPlanningOn": "Smart planning: On",
-      "smartPlanningOnAria": "Smart planning is on, click to turn off",
-      "stopGeneration": "Stop generation",
-      "uploading": "Uploading"
-    },
-    "conversationList": {
-      "batchDelete": "Delete selected",
-      "batchManage": "Manage",
-      "cancel": "Cancel",
-      "cancelEdit": "Cancel edit",
-      "conversationCount": "{count} conversations",
-      "conversationTitle": "Conversation title",
-      "delete": "Delete",
-      "deleteConfirmDescription": "This removes the conversation from history. Messages and generation records in it will no longer appear.",
-      "deleteCountConfirmTitle": "Delete {count} conversations?",
-      "deleteOneConfirmTitle": "Delete this conversation?",
-      "exitManage": "Exit manage",
-      "loadMoreConversations": "Load more conversations",
-      "loadingEllipsis": "Loading...",
-      "manageConversation": "Manage conversation",
-      "manageItem": "Manage {title}",
-      "newConversation": "New conversation",
-      "noConversations": "No conversations yet",
-      "rename": "Rename",
-      "saveTitle": "Save title",
-      "selectAll": "Select all",
-      "selectItem": "Select {title}",
-      "selectedCount": "{count} selected"
-    },
-    "overview": {
-      "allProjects": "All projects",
-      "canvasProject": "Canvas project",
-      "continueEditing": "Continue editing",
-      "createFirstCanvasProject": "Create your first Canvas project to continue here",
-      "imageGeneration": "Image generation",
-      "justNow": "Just now",
-      "loadingCanvasProjects": "Loading canvas projects...",
-      "loadingOverview": "Loading workbench overview",
-      "loadingRecentGenerations": "Loading recent generations...",
-      "loadingRunningTasks": "Loading running tasks...",
-      "noRecentGenerations": "Image and video results will appear here after generation",
-      "noRunningTasks": "No running tasks",
-      "nodeConnectionCount": "{nodes} nodes · {connections} connections",
-      "projectsAndTasks": "Projects and tasks",
-      "projectsAndTasksHint": "Return to recent projects, or check tasks still running",
-      "recentGenerations": "Recent generations",
-      "recentGenerationsHint": "Click an image or video to preview it larger",
-      "recentlyEdited": "Recently edited · {time}",
-      "retryLoading": "Reload",
-      "runningAt": "{time} · Running",
-      "runningTasks": "Running tasks",
-      "untitledProject": "Untitled project",
-      "videoGeneration": "Video generation",
-      "viewAssetLibrary": "View asset library",
-      "referenceToAgent": "Add to Agent"
-    },
-    "messages": {
-      "userFallback": "User",
-      "loadingConversation": "Loading conversation...",
-      "loadOlderMessages": "Load earlier messages",
-      "retryTaskTitle": "Retry “{title}”",
-      "retryTaskAria": "Retry {title}",
-      "canvasProject": "Canvas project",
-      "dramaProject": "Drama project",
-      "handoffAssetsReady": "{count} assets handed off to {label}",
-      "openProject": "Open",
-      "retry": "Retry",
-      "createProject": "Create project",
-      "generatedAudio": "Generated audio",
-      "generatedVideo": "Generated video",
-      "generatedImage": "Generated image",
-      "referenced": "Referenced",
-      "referenceAsset": "Reference asset",
-      "copyMessage": "Copy message",
-      "messageCopied": "Message copied",
-      "referenceStripAria": "References for this turn",
-      "confirmRetryHint": "Retry only after you confirm",
-      "unreference": "Unreference",
-      "unreferenceAsset": "Remove from references",
-      "reanalyze": "Re-analyze",
-      "reanalyzeAria": "Re-analyze this request",
-      "retrySubmissionTitle": "Resubmit this request",
-      "retrySubmissionAria": "Retry this creation request",
-      "kindVideo": "Video",
-      "kindAudio": "Audio",
-      "referenceImageAlt": "Reference image",
-      "downloadVideo": "Download video",
-      "downloadImage": "Download image"
-    },
-    "promptFilledFromWork": "Work prompt filled in",
-    "promptFilledFromPublic": "Public prompt filled in",
-    "referenceReadFailed": "Failed to read reference media",
-    "referenceFormatUnsupported": "This media format is not supported as a reference",
-    "referencedToAgent": "Added to the Agent composer",
-    "referenceImportFailed": "Failed to import reference",
-    "reanalyzeFailed": "Failed to re-analyze",
-    "retryRequestFailed": "Failed to retry request",
-    "messageAndAssetsRefilled": "Message and references restored — edit and resend",
-    "heroTitleWithSite": "{title} Creative Agent",
-    "recentGenerations": "Recent generations",
-    "viewAssets": "View assets",
-    "projectsAndTasks": "Projects & tasks",
-    "allProjects": "All projects",
-    "canvasProject": "Canvas project",
-    "recentEdit": "Recently edited",
-    "nodeConnectionCount": "{nodes} nodes · {connections} connections",
-    "continueEdit": "Continue editing",
-    "referenceToAgentAria": "Reference in Agent",
-    "referenceToAgentTitle": "Reference in Agent",
-    "runningSuffix": "Running",
-    "reread": "Reload",
-    "selectAll": "Select all",
-    "conversationCount": "{count} conversations",
-    "loadMoreConversations": "Load more conversations",
-    "selectedCount": "{count} selected",
-    "batchDelete": "Delete selected",
-    "uploading": "Uploading",
-    "noModelsForCapability": "No available {capability} models configured",
-    "modelCanParallel": "{capability} model · can run with other models",
-    "clearSelectionRestorePlanning": "Clear selection and restore smart planning",
-    "inspirationTitle": "Inspiration",
-    "viewAll": "View all →",
-    "inspirationCategoriesAria": "Inspiration categories",
-    "categoryAll": "All",
-    "loadingInspiration": "Loading inspiration works...",
-    "reloadInspiration": "Reload",
-    "inspirationListAria": "Inspiration works",
-    "inspirationEmpty": "No public works in this category yet",
-    "inspirationLoadFailed": "Failed to load inspiration works",
-    "usePrompt": "Use prompt",
-    "copyPrompt": "Copy prompt",
-    "useImage": "Use image",
-    "promptCopied": "Prompt copied",
-    "copyFailed": "Copy failed. Open the work detail and copy manually.",
-    "viewWorkAria": "View work: {title}",
-    "videoWorkTitle": "Video work",
-    "viewAuthorAria": "View {name} profile",
-    "anonymousAuthor": "Anonymous",
-    "visitsTitle": "Views",
-    "useWorkAria": "Use work: {title}",
-    "resubmitting": "Resubmitting creation request",
-    "reanalyzing": "Re-analyzing and running this request…",
-    "inspirationAll": "All"
-  },
-  "image": {
-    "addedToMyAssets": "Added to My Assets",
-    "addedToReferences": "Added to reference images",
-    "addToAssets": "Add to assets",
-    "addToReferences": "Add as reference",
-    "agentBusy": "Agent is handling the current request, please wait",
-    "assistantSubtitle": "Image creation assistant",
-    "backgroundTasksContinue": "Background generation will keep running. Check progress in history.",
-    "cancel": "Cancel",
-    "cleanupMissingCount": "Clean missing {count}",
-    "clipboardButton": "Clipboard",
-    "clipboardImagesReadCount": "Read {count} reference images",
-    "composerSummary": "{size} · {count} images",
-    "contactAdminForModel": "Ask an admin to configure an available image model",
-    "conversationCreateFailed": "Failed to create creative conversation",
-    "conversationLoadFailed": "Failed to load the full conversation; showing this generation record",
-    "currentUserRunning": "Running for this user {active}/{limit}",
-    "delete": "Delete",
-    "deleteLogsConfirm": "Delete the selected {count} generation records?",
-    "deleteLogsModalTitle": "Delete generation records",
-    "download": "Download",
-    "emptyResultsDescription": "After a generation completes, results stay here by time.",
-    "emptyResultsTitle": "No generated images yet",
-    "failCount": "Failed {count}",
-    "generate": "Generate",
-    "generateAriaLabel": "Start generation, costs {cost} points",
-    "generationFailed": "Generation failed",
-    "generationHistory": "Generation history",
-    "historyRecordOpened": "Opened this historical generation record. You can continue editing or regenerate.",
-    "imageCountUnit": "{count} images",
-    "imageGenerated": "Image generated",
-    "imageLost": "Image missing",
-    "imageRegenerated": "Image regenerated",
-    "imageUnavailableAsset": "Image unavailable, cannot add to assets",
-    "imageUnavailableDownload": "Image unavailable, cannot download",
-    "imageUnavailableReference": "Image unavailable, cannot add as reference",
-    "imageWorkbenchSource": "Image workbench",
-    "logsDeletedCount": "Deleted {count} generation records",
-    "messageRefilled": "Message refilled. Edit and send again.",
-    "missingImagesCleanedCount": "Cleaned {count} missing images",
-    "modelLabel": "Model",
-    "noClipboardImage": "No readable image in the clipboard",
-    "onlyTextOrImageAssets": "Image workbench only supports text or image assets",
-    "partialCleanupFailed": "Record removed, but some linked resources failed to delete. Please retry later.",
-    "pendingCount": "Generating {count}",
-    "promptPlaceholder": "What should we create today? Paste text or images directly.",
-    "promptRequired": "Please enter an image prompt",
-    "queuedForGeneration": "Added to this user's generation queue",
-    "referenceImages": "Reference images",
-    "removeReferenceImage": "Remove reference image",
-    "requestCancelled": "Request canceled",
-    "resultAltWithIndex": "Generated result {index}",
-    "resultTitleWithIndex": "Generated result {index}",
-    "resultsCleanupPartialFailed": "Results removed from the current record, but some linked resources failed to clean up. Please retry later.",
-    "resultsDeletedCount": "Deleted {count} results",
-    "resultsTitle": "Generation results",
-    "retry": "Retry",
-    "runningCount": "Running {active}/{limit}",
-    "selectAll": "Select all",
-    "smartPlanningRequired": "Smart planning is off for the image workbench. Choose an image model first.",
-    "startGeneration": "Start generation",
-    "stopAgentAriaLabel": "Stop Agent and cancel this generation",
-    "successCount": "Succeeded {count}",
-    "taskFailedText": "This task failed.",
-    "taskPendingText": "This task is still generating.",
-    "uploadButton": "Upload",
-    "uploading": "Uploading",
-    "referenceUploadFailed": "Reference image upload failed",
-    "retryUploadAria": "Retry uploading reference image: {name}",
-    "clickRetry": "Tap to retry",
-    "originalReferenceUnavailable": "Original reference is unavailable. Please choose the file again.",
-    "sheetCount": "{count} images",
-    "deleteSelectedCount": "Delete{count}",
-    "cleanupMissingPlain": "Clean missing {count}",
-    "runningPlain": "Running {active}/{limit}",
-    "successPlain": "Success {count}",
-    "failPlain": "Failed {count}",
-    "pendingPlain": "Generating {count}",
-    "resultNotSaved": "Result was not saved to the server. Please retry.",
-    "imageGenerating": "Generating image",
-    "imageFailed": "Image generation failed",
-    "imageCompleted": "Image generation completed",
-    "historyTaskFailed": "This task failed.",
-    "historyTaskPending": "This task is still generating.",
-    "historyOpened": "Opened this generation history. You can keep editing or regenerate.",
-    "retryUpload": "Retry",
-    "deleteCount": "Delete{count}",
-    "statusSuccess": "Succeeded",
-    "statusPending": "Generating",
-    "statusFailed": "Failed",
-    "untitled": "Untitled"
-  },
-  "video": {
-    "addedToMyAssets": "Added to My Assets",
-    "addToAssets": "Add to assets",
-    "agentBusy": "Agent is handling the current request, please wait",
-    "assistantSubtitle": "Video creation assistant",
-    "audioSettings": "Audio settings",
-    "backgroundTasksContinue": "Background generation will keep running. Check progress in history.",
-    "cancel": "Cancel",
-    "clipboardButton": "Clipboard",
-    "clipboardImagesReadCount": "Read {count} reference images",
-    "composerSummary": "{size} · {seconds}s",
-    "concurrencyLimitReached": "This user has reached the video concurrency limit. Please try again later.",
-    "contactAdminForModel": "Ask an admin to configure an available video model",
-    "conversationCreateFailed": "Failed to create creative conversation",
-    "currentUserRunning": "Running for this user {active}/{limit}",
-    "delete": "Delete",
-    "deleteLogsConfirm": "Delete the selected {count} generation records?",
-    "deleteLogsModalTitle": "Delete generation records",
-    "download": "Download",
-    "emptyAudioHint": "No reference audio yet. Up to 3 files, mp3/wav, 15MB each.",
-    "emptyImageHint": "No reference images yet. Up to 9 images.",
-    "emptyResultsDescription": "After a generation completes, results stay here by time.",
-    "emptyResultsTitle": "No generated videos yet",
-    "emptyVideoHint": "No reference videos yet. Up to 3 videos.",
-    "failureCreateHint": "The request failed before a generation task was created.",
-    "failureCreateTitle": "Task creation failed",
-    "failureDefaultHint": "Check the model, quota, and provider response.",
-    "failureDefaultTitle": "Generation failed",
-    "failurePollHint": "The task was submitted, but polling the provider status failed.",
-    "failurePollTitle": "Task polling failed",
-    "failureUpstreamHint": "The task was created, but the upstream generation stage failed.",
-    "failureUpstreamTitle": "Upstream generation failed",
-    "generate": "Generate",
-    "generateAriaLabel": "Start generation, costs {cost} points",
-    "generationFailed": "Generation failed",
-    "generationHistory": "Generation history",
-    "ignoredAudioOversize": "Ignored reference audio larger than 15MB",
-    "ignoredImageOversize": "Ignored reference images larger than 30MB",
-    "ignoredUnsupportedReference": "Ignored unsupported reference media. Use images, mp4/mov video, or mp3/wav audio.",
-    "ignoredVideoOversize": "Ignored reference videos larger than 50MB",
-    "logsDeletedCount": "Deleted {count} generation records",
-    "messageRefilled": "Message refilled. Edit and send again.",
-    "modelLabel": "Model",
-    "noClipboardImage": "No readable image in the clipboard",
-    "originalTaskMissing": "Original task record not found, cannot retry",
-    "partialCleanupFailed": "Record removed, but some linked resources failed to delete. Please retry later.",
-    "promptPlaceholder": "What should we create today? Paste text or media directly.",
-    "promptRequired": "Please enter a video prompt",
-    "referenceAudio": "Reference audio",
-    "referenceImages": "Reference images",
-    "referenceVideos": "Reference videos",
-    "removeReferenceAudio": "Remove reference audio",
-    "removeReferenceImage": "Remove reference image",
-    "removeReferenceVideo": "Remove reference video",
-    "resultTitle": "Generated video",
-    "resultsTitle": "Generation results",
-    "retry": "Retry",
-    "runningCount": "Running {active}/{limit}",
-    "selectAll": "Select all",
-    "smartPlanningRequired": "Smart planning is off for the video workbench. Choose a video model first.",
-    "startGeneration": "Start generation",
-    "statusFailed": "Failed",
-    "statusPending": "Generating",
-    "statusSuccess": "Succeeded",
-    "stopAgentAriaLabel": "Stop Agent and cancel this generation",
-    "timeoutError": "Video generation timed out. Please try again later.",
-    "uploadButton": "Upload",
-    "videoGenerated": "Video generated",
-    "videoWorkbenchSource": "Video workbench",
-    "taskFailedText": "This task failed.",
-    "taskPendingText": "This task is still generating.",
-    "historyRecordOpened": "Opened this historical generation record. You can continue editing or regenerate.",
-    "ignoredAudioDuration": "Ignored reference audio outside the duration limits: each clip must be 2-15 seconds, and total duration cannot exceed 15 seconds",
-    "untitled": "Untitled",
-    "videoGenerationCompleted": "Video generation completed",
-    "videoGenerationFailed": "Video generation failed",
-    "videoGenerationPending": "Video generation in progress",
-    "conversationLoadFailed": "Failed to load the full conversation; showing this generation record",
-    "unknownError": "Unknown error",
-    "resultsDeletedCount": "Deleted {count} results",
-    "uploading": "Uploading",
-    "deleteSelectedCount": "Delete{count}",
-    "runningPlain": "Running {active}/{limit}",
-    "historyTaskFailed": "This task failed.",
-    "historyTaskPending": "This task is still generating.",
-    "historyOpened": "Opened this generation history. You can keep editing or regenerate.",
-    "videoGenerating": "Generating video",
-    "videoFailed": "Video generation failed",
-    "videoCompleted": "Video generation completed",
-    "originalTaskContinues": "The original video task is still being polled in the background. No need to recreate it.",
-    "errorNotConfirmedNoRecreate": "This error is not confirmed as upstream. The system will not recreate the task.",
-    "stillGeneratingContinue": "Video is still generating in the background. The system will keep polling the original task.",
-    "warningContinueQuery": "{message}. The system will keep polling the original video task.",
-    "referenceUploadFailed": "Reference image upload failed",
-    "retryUpload": "Retry",
-    "retryUploadAria": "Retry uploading reference image: {name}",
-    "deleteCount": "Delete{count}",
-    "cleanupMissingCount": "Clean up missing {count}"
-  },
-  "profile": {
-    "title": "Profile",
-    "subtitle": "Manage your profile, plan purchases, orders, usage history, and points in one place.",
-    "refresh": "Refresh",
-    "refreshRecords": "Refresh records",
-    "planShort": "Plan",
-    "buyPlan": "Buy plan",
-    "metricPlan": "Current plan",
-    "metricPlanNotLoaded": "Not loaded",
-    "metricPoints": "Points balance",
-    "metricPointsValue": "{amount} points",
-    "metricPointsDetail": "Today {daily} · Permanent {permanent}",
-    "metricOrders": "Top-up orders",
-    "metricOrdersValue": "{count} orders",
-    "metricPointsFlow": "Points history",
-    "metricPointsFlowValue": "{count} records",
-    "navAria": "Profile sections",
-    "currentSection": "Current section",
-    "switchSectionAria": "Switch profile section",
-    "sections": {
-      "overview": {
-        "label": "Overview",
-        "description": "View your current plan, points balance, recent orders, and recent points history.",
-        "shortDescription": "Asset summary"
-      },
-      "profile": {
-        "label": "Profile",
-        "description": "Manage your login username, display name, and linked email.",
-        "shortDescription": "Profile & email"
-      },
-      "billing": {
-        "label": "Plans",
-        "description": "Choose a plan in your profile, then continue to the secure checkout page to pay.",
-        "shortDescription": "Buy plan"
-      },
-      "orders": {
-        "label": "Orders",
-        "description": "View all top-up orders, payment status, and activation results.",
-        "shortDescription": "Payment status"
-      },
-      "consume": {
-        "label": "Usage",
-        "description": "View model calls, generation tasks, and API usage deductions.",
-        "shortDescription": "Points spent"
-      },
-      "points": {
-        "label": "Points history",
-        "description": "View daily points, top-up credits, refund returns, and admin adjustments.",
-        "shortDescription": "Balance history"
-      },
-      "security": {
-        "label": "Security",
-        "description": "Change your login password. You will need to sign in again after changing it.",
-        "shortDescription": "Password"
-      },
-      "coupons": {
-        "label": "My coupons",
-        "description": "Claim coupons and review available, locked, used, and expired ones.",
-        "shortDescription": "Claim & status"
-      },
-      "referrals": {
-        "label": "Referrals",
-        "description": "Copy invite codes and links, and track signup, first-order, and reward progress.",
-        "shortDescription": "Invites & rewards"
-      }
-    },
-    "billingCenterTitle": "Plans",
-    "billingCenterDesc": "Choose a plan that matches your creation volume. Checkout opens a separate secure payment page.",
-    "availablePlans": "Available plans",
-    "availablePlansDesc": "Price, points, and validity stay in sync with products listed in the admin console.",
-    "plansCount": "{count} plans",
-    "emptyProductsTitle": "No plans listed yet",
-    "emptyProductsDesc": "Plans will appear here after an admin lists products.",
-    "recentPointsTitle": "Recent points history",
-    "recentPointsDesc": "Shows recent points changes. See more in the points history section.",
-    "recentOrdersTitle": "Recent orders",
-    "recentOrdersDesc": "Shows recent top-up orders. Benefits activate automatically or after admin confirmation.",
-    "profilePanelTitle": "Profile",
-    "profilePanelDesc": "Update your avatar, display name, and bio.",
-    "ordersPanelTitle": "Orders",
-    "ordersPanelDesc": "View top-up orders, payment channels, order status, and plan activation results.",
-    "consumePanelTitle": "Usage",
-    "consumePanelDesc": "Shows recent points spent on model calls, generation tasks, and API usage.",
-    "pointsPanelTitle": "Points history",
-    "pointsPanelDesc": "Daily points, top-up credits, admin adjustments, and failed refunds all appear here.",
-    "securityPanelTitle": "Security",
-    "securityPanelDesc": "Changing your password signs you out of the current session. Sign in again afterwards.",
-    "emptyPointsTitle": "No points history yet",
-    "emptyPointsDesc": "Daily points, top-ups, and model usage will appear here.",
-    "emptyPointsDescAlt": "Points changes are recorded here over time.",
-    "emptyConsumeTitle": "No usage records yet",
-    "emptyConsumeDesc": "Model calls and generation tasks will appear here after usage.",
-    "emptyOrdersTitle": "No orders yet",
-    "emptyOrdersDesc": "Orders will appear here after you purchase a plan.",
-    "emailBound": "Linked email",
-    "emailUnbound": "No email linked",
-    "emailUnboundHint": "Link an email to recover your password and receive verification codes.",
-    "usernameLabel": "Username",
-    "displayNameLabel": "Display name",
-    "changeEmailLabel": "Change email",
-    "bindEmailLabel": "Link email",
-    "emailCodeLabel": "Email verification code",
-    "emailCodeRequiredPlaceholder": "Required when changing email",
-    "emailCodeOptionalPlaceholder": "Not needed if email is unchanged",
-    "getEmailCode": "Get code",
-    "saveProfile": "Save profile",
-    "balanceAfter": "Balance {amount}",
-    "pointTypeConsume": "Model usage",
-    "pointTypeRefund": "Usage refund",
-    "pointTypeCredit": "Points top-up",
-    "pointTypeAdjust": "Admin adjustment",
-    "orderStatusPending": "Pending payment",
-    "orderStatusPaid": "Activated",
-    "orderStatusRefunding": "Refund in progress",
-    "orderStatusClosed": "Closed",
-    "orderStatusCanceled": "Canceled",
-    "orderStatusRefunded": "Refunded",
-    "saveProfileFailed": "Failed to save profile",
-    "saveProfileSuccess": "Profile saved",
-    "emailUnchanged": "Email is unchanged, no verification code needed",
-    "codeSendFailed": "Failed to send verification code",
-    "codeSendSuccess": "Verification code sent. Check your email.",
-    "passwordChangeFailed": "Failed to change password",
-    "passwordChangeSuccess": "Password changed. Please sign in again.",
-    "exportSuccess": "Personal data exported",
-    "exportFailed": "Failed to export personal data",
-    "currentPassword": "Current password",
-    "newPassword": "New password",
-    "passwordMinPlaceholder": "At least 8 characters",
-    "changePasswordAndRelogin": "Change password and sign in again",
-    "personalDataTitle": "Personal data",
-    "personalDataDesc": "Export account, points, orders, and creation records. Media files and security credentials are not included in the JSON.",
-    "exportMyData": "Export my data",
-    "productsLoadFailed": "Failed to load plans",
-    "ordersLoadFailed": "Failed to load orders",
-    "pointsLoadFailed": "Failed to load points history",
-    "consumeLoadFailed": "Failed to load usage records",
-    "deletion": {
-      "loadFailed": "Failed to load account deletion request status",
-      "submitSuccess": "Account deletion request submitted",
-      "submitFailed": "Failed to submit account deletion request",
-      "withdrawSuccess": "Account deletion request withdrawn",
-      "withdrawFailed": "Failed to withdraw account deletion request",
-      "title": "Account deletion",
-      "description": "An admin will review your request manually. Acceptance only starts the process and does not immediately delete orders, payment records, or data that must be retained.",
-      "requestedAt": "Requested at: {time}",
-      "reviewNote": "Review note: {note}",
-      "withdrawConfirmTitle": "Withdraw deletion request?",
-      "withdrawConfirmDesc": "Your account will continue to work normally, and you can submit another request later.",
-      "withdrawOk": "Withdraw",
-      "cancel": "Cancel",
-      "withdrawButton": "Withdraw request",
-      "processing": "In progress",
-      "requestButton": "Request deletion",
-      "modalTitle": "Request account deletion",
-      "submitButton": "Submit request",
-      "modalWarning": "Admins will check creation data, media references, and order retention requirements. Further identity verification may be needed before final execution.",
-      "passwordPlaceholder": "Used to confirm this is you",
-      "noteLabel": "Additional notes (optional)",
-      "notePlaceholder": "You may describe the reason or anything admins should know",
-      "statusPending": "Pending",
-      "statusAccepted": "Accepted",
-      "statusRejected": "Rejected",
-      "statusWithdrawn": "Withdrawn",
-      "currentPassword": "Current password"
-    },
-    "couponsLoadFailed": "Failed to load coupons",
-    "couponWallet": {
-      "title": "My coupons",
-      "description": "Claim and review coupons usable at plan checkout. Final discounts follow the server quote on the checkout page.",
-      "refresh": "Refresh",
-      "codePlaceholder": "Enter coupon claim code",
-      "claim": "Claim coupon",
-      "claimShort": "Claim",
-      "claimSuccess": "Coupon claimed",
-      "claimFailed": "Failed to claim coupon",
-      "claimable": "Available to claim",
-      "campaignCount": "{count} campaigns",
-      "minAmount": "Min. spend ¥{amount}",
-      "noMinimum": "No minimum spend",
-      "until": "Until {date}",
-      "ownedTitle": "Claimed coupons",
-      "ownedCount": "{count} total",
-      "couponFallback": "Coupon",
-      "expiresAt": "Expires {date}",
-      "stackWithPromotion": "Stacks with promos",
-      "emptyTitle": "No coupons yet",
-      "emptyDescription": "Claimed codes and open campaigns will show up here.",
-      "statusAvailable": "Available",
-      "statusLocked": "Locked by order",
-      "statusRedeemed": "Used",
-      "statusExpired": "Expired",
-      "statusRevoked": "Revoked"
-    },
-    "referralCenter": {
-      "title": "Referrals",
-      "description": "Share your invite link. Rewards unlock after the new user completes a valid first payment and the cooling-off period.",
-      "unavailableDescription": "The referral center is temporarily unavailable. Please try again later.",
-      "reload": "Reload",
-      "refresh": "Refresh",
-      "loadFailed": "Failed to load referral center",
-      "myCode": "My invite code",
-      "programActive": "Campaign live",
-      "programInactive": "Campaign off",
-      "riskNote": "Self-invites, circular invites, and rebinding after signup are blocked. Suspicious relationships pause settlement for manual review.",
-      "copyCode": "Copy code",
-      "copyLink": "Copy link",
-      "codeCopied": "Invite code copied",
-      "linkCopied": "Invite link copied",
-      "metricClicks": "Link visits",
-      "metricRegistrations": "Signups",
-      "metricQualified": "First orders",
-      "metricSettled": "Rewards paid",
-      "inviterReward": "Inviter reward",
-      "inviteeReward": "Invitee reward",
-      "inviteeCoupon": "New-user coupon",
-      "pointsValue": "{amount} points",
-      "settlementRule": "Settlement rules",
-      "settlementValue": "Paid ≥ ¥{amount} · {days}-day cooling-off",
-      "progressTitle": "Invite progress",
-      "progressDescription": "Only masked nicknames and risk status are shown. Invitee privacy stays private.",
-      "progressEmpty": "No successful invitee signups yet",
-      "rewardsTitle": "Reward history",
-      "rewardsDescription": "Track pending, paid, revoked, and manual-review rewards.",
-      "rewardsEmpty": "No referral rewards yet",
-      "rewardInviter": "Inviter reward",
-      "rewardInvitee": "Invitee reward",
-      "rewardCoupon": "Coupon",
-      "riskClear": "Clear",
-      "riskReview": "In review",
-      "riskFrozen": "Frozen",
-      "riskRejected": "Rejected",
-      "rewardPending": "Pending",
-      "rewardSettled": "Paid",
-      "rewardRevoked": "Revoked",
-      "rewardReversalPending": "Revocation review",
-      "rewardRejected": "Rejected"
-    },
-    "avatarTitle": "Profile photo",
-    "avatarHint": "PNG, JPG, or WebP, max 5MB",
-    "avatarAlt": "Current profile photo",
-    "selectAvatarAria": "Choose profile photo",
-    "changeAvatar": "Change photo",
-    "avatarInvalidType": "Please choose a PNG, JPG, or WebP image",
-    "avatarTooLarge": "Profile photo must be 5MB or smaller",
-    "avatarUpdateFailed": "Failed to update profile photo",
-    "avatarUpdated": "Profile photo updated",
-    "userFallback": "User",
-    "bioLabel": "Bio",
-    "bioPlaceholder": "Describe your creative focus, strengths, or preferred styles",
-    "saveEmail": "Save email",
-    "emailPlaceholder": "Enter email address",
-    "emailUpdateFailed": "Failed to update email",
-    "emailUpdated": "Email updated",
-    "loginPasswordTitle": "Login password",
-    "loginPasswordDesc": "After changing the password you will be signed out and must sign in again with the new password.",
-    "accountSecurityTitle": "Account & security",
-    "accountSecurityDesc": "Manage linked email, login password, and personal data.",
-    "profilePanelDescAlt": "Update avatar, display name, and bio."
-  },
-  "help": {
-    "eyebrow": "User Help Center",
-    "title": "From action to delivery, follow the real creation flow",
-    "subtitle": "Pick a task to view the full flow, step-by-step actions, result handling, and FAQs.",
-    "searchPlaceholder": "Search features, buttons, or questions",
-    "searchAria": "Search help content",
-    "searchResultsAria": "Help search results",
-    "searchResultsTitle": "Search results",
-    "resultCount": "{count} items",
-    "emptySearch": "No matching tutorials found. Try searching for “canvas”, “reference image”, “order”, or “download”.",
-    "categoriesAria": "Help categories",
-    "selectTutorial": "Choose a tutorial",
-    "flowTitle": "Full flow",
-    "flowDescription": "Review the stages first, then move into the detailed steps.",
-    "stepsTitle": "Detailed guide",
-    "stepsDescription": "Complete the steps in order. Each step includes checklist items.",
-    "faqTitle": "FAQ",
-    "faqDescription": "Handle issues based on the real status of the current feature.",
-    "flowAria": "Operation flow",
-    "articles": {
-      "start": {
-        "label": "Quick start",
-        "title": "Start creating from one idea",
-        "summary": "For first-time use, start with the creative Agent. It understands goals, reference assets, and delivery format, then routes work to image, video, canvas, or short-drama capabilities.",
-        "routeLabel": "Open creative Agent",
-        "keywords": [
-          "start",
-          "beginner",
-          "create",
-          "flow",
-          "result",
-          "download"
-        ],
-        "outcomes": [
-          "Know which entry to start from",
-          "Understand smart planning vs manual models",
-          "Preview, download, and reuse results"
-        ],
-        "flow": [
-          {
-            "title": "Describe the goal",
-            "detail": "Explain what to make, who it is for, and where it will be used"
-          },
-          {
-            "title": "Add references",
-            "detail": "Upload people, products, style images, or existing assets"
-          },
-          {
-            "title": "Confirm the plan",
-            "detail": "Keep smart planning on, or choose Skills and models"
-          },
-          {
-            "title": "Review results",
-            "detail": "Preview media, download it, or reuse it in the next round"
-          }
-        ],
-        "steps": [
-          {
-            "title": "Write a complete goal",
-            "description": "Do not only write a style word. At least add subject, use case, frame or shot requirements, and the final content you want.",
-            "checklist": [
-              "Subject: person, product, scene, or story",
-              "Use case: e-commerce, social, short drama, pitch, or personal work",
-              "Constraints: size, duration, count, text, brand colors, and details that must stay"
-            ],
-            "tip": "If you are unsure about parameters, keep smart planning on so the Agent first gives a verifiable selection summary."
-          },
-          {
-            "title": "Add references when consistency matters",
-            "description": "Use the attachment entry to upload images or reuse existing assets. Faces, product looks, logos, and established styles should be provided before sending.",
-            "checklist": [
-              "People consistency: clear frontal face or character sheet",
-              "Product consistency: multi-angle product or white-background shots",
-              "Style consistency: choose one to three closest reference images"
-            ]
-          },
-          {
-            "title": "Choose how to execute",
-            "description": "Smart planning matches executable models and parameters by default. Only turn it off and pick one or more models when you already know the model differences.",
-            "checklist": [
-              "Skills are execution capabilities and do not inject a fixed prompt into the input box",
-              "Manual model selection turns smart planning off",
-              "Clearing manual models restores smart planning"
-            ]
-          },
-          {
-            "title": "Handle generated results",
-            "description": "Click images or videos to preview them. The asset actions support download and reuse, so you can continue with revisions, extended shots, or matching content.",
-            "checklist": [
-              "Zoom in first to check people, text, edges, and motion continuity",
-              "Download results you are happy with",
-              "For follow-ups, reference the asset and describe the next change"
-            ]
-          }
-        ],
-        "faqs": [
-          {
-            "question": "I do not know whether to choose image, video, or canvas. What should I do?",
-            "answer": "Describe the final use case in the creative Agent. Keep smart planning on so the system can infer the delivery type and summarize the choice."
-          },
-          {
-            "question": "Can I keep editing after generation?",
-            "answer": "Yes. Preview the result, then use the reference-asset action under the result to continue the conversation. Switch to a specialized workbench when you need precise parameters."
-          }
-        ]
-      },
-      "agent": {
-        "label": "Creative Agent",
-        "title": "Use Agent from brief to delivery",
-        "summary": "Best for one-line requests, multi-asset packages, and continuous work across image, video, canvas, and short drama. Conversations and results are saved in server sessions.",
-        "routeLabel": "Open Agent workbench",
-        "keywords": [
-          "agent",
-          "chat",
-          "skill",
-          "model",
-          "smart planning",
-          "attachment",
-          "history",
-          "pause"
-        ],
-        "outcomes": [
-          "Choose Skills and smart planning",
-          "Manage conversations and history",
-          "Iterate on generated results"
-        ],
-        "flow": [
-          {
-            "title": "Enter the request",
-            "detail": "Describe goal, audience, use case, and deliverables"
-          },
-          {
-            "title": "Choose capabilities",
-            "detail": "Add Skills, reference assets, or manual models as needed"
-          },
-          {
-            "title": "Agent planning",
-            "detail": "Review direction, models, parameters, and product rationale"
-          },
-          {
-            "title": "Run tasks",
-            "detail": "Generate inside the chat and keep task status visible"
-          },
-          {
-            "title": "Iterate",
-            "detail": "Reference results, add constraints, or edit the original message"
-          }
-        ],
-        "steps": [
-          {
-            "title": "Shape an executable request",
-            "description": "Use natural language to describe the final delivery. Complex work can be listed, but do not split it into model parameters yourself.",
-            "checklist": [
-              "Goal: for example a product launch asset set",
-              "Delivery: for example one hero visual, three detail images, and one short video",
-              "Consistency: people, products, and colors that must be reused",
-              "Acceptance criteria: what counts as done"
-            ]
-          },
-          {
-            "title": "Add Skills, references, and models",
-            "description": "Skills sit on the left of the input and become removable cards when selected. The bulb controls smart planning; the model button supports multi-select executable models.",
-            "checklist": [
-              "Only choose a Skill when the task needs that capability",
-              "Keep smart planning on by default",
-              "Select at most six models for manual comparison",
-              "Confirm reference assets appear in the input before sending"
-            ]
-          },
-          {
-            "title": "Read the Agent selection summary",
-            "description": "The Agent first explains the creative direction and why it chose the current models and parameters. If the direction is wrong, add constraints early instead of waiting for the full wrong batch.",
-            "checklist": [
-              "Check whether subject and use case were understood",
-              "Check delivery count and format",
-              "Check whether references were used",
-              "Check whether model and aspect ratio fit the task"
-            ]
-          },
-          {
-            "title": "Manage messages and sessions",
-            "description": "User messages support copy and edit; re-editing continues with the new request. History is used to open, rename, select, and delete server sessions.",
-            "checklist": [
-              "Copy: reuse a full request",
-              "Edit: fix the original request and run again",
-              "New chat: start an unrelated project",
-              "History: restore previous context and results"
-            ]
-          },
-          {
-            "title": "Preview, download, and reference media",
-            "description": "Click media to open a large preview. Download sits under the asset; reference brings the current result back into the input for the next change.",
-            "checklist": [
-              "Preview before deciding to download",
-              "When referencing, say what to keep and what to change",
-              "Move to the image or video workbench for specialized parameters"
-            ]
-          }
-        ],
-        "faqs": [
-          {
-            "question": "Will a Skill automatically rewrite my input?",
-            "answer": "No. Selected Skills are submitted as execution capabilities and shown as cards above the input; your original text stays unchanged."
-          },
-          {
-            "question": "Why does smart planning turn off after I pick models?",
-            "answer": "Manual models mean you explicitly set the execution scope, so automatic matching turns off. Clear the model selection to restore smart planning."
-          }
-        ]
-      },
-      "image": {
-        "label": "Image workbench",
-        "title": "Generate, refine, and reuse images",
-        "summary": "The image workbench is for single or batch image tasks that need clear control over aspect ratio, count, quality, and reference images.",
-        "routeLabel": "Open image workbench",
-        "keywords": [
-          "image",
-          "generate",
-          "reference",
-          "aspect ratio",
-          "count",
-          "quality",
-          "history",
-          "download"
-        ],
-        "outcomes": [
-          "Use reference images",
-          "Confirm image parameters",
-          "Continue from historical results"
-        ],
-        "flow": [
-          {
-            "title": "Describe the frame",
-            "detail": "Subject, environment, composition, lighting, and use case"
-          },
-          {
-            "title": "Provide references",
-            "detail": "People, products, style, or a previous result"
-          },
-          {
-            "title": "Confirm parameters",
-            "detail": "Model, aspect ratio, quality, and generation count"
-          },
-          {
-            "title": "Review generation",
-            "detail": "Check Agent decisions and task progress"
-          },
-          {
-            "title": "Reuse results",
-            "detail": "Preview, download, reference, or keep refining"
-          }
-        ],
-        "steps": [
-          {
-            "title": "Choose text-to-image or reference-image flow",
-            "description": "Describe the frame directly when there is no fixed subject. Add reference images first when people, products, or composition must stay consistent.",
-            "checklist": [
-              "People references should be clear and unobstructed",
-              "Product references should keep real proportions and key structure",
-              "Style references should not conflict with subject references"
-            ]
-          },
-          {
-            "title": "Let the Agent plan first",
-            "description": "After you enter a request, the Agent decides whether it is a normal single image or a batch task, then matches models and parameters.",
-            "checklist": [
-              "Check whether the recommended aspect ratio fits the placement",
-              "Check whether the count is enough for comparison",
-              "Check whether text, logos, or reserved blank space are needed"
-            ]
-          },
-          {
-            "title": "Adjust generation parameters as needed",
-            "description": "Settings show the current model, size, quality, and count. On mobile the parameter panel scrolls vertically, so no horizontal dragging is needed.",
-            "checklist": [
-              "Social square posts often use 1:1",
-              "Covers and banners prefer landscape",
-              "People posters and vertical content prefer portrait",
-              "Higher batch counts usually cost more points"
-            ]
-          },
-          {
-            "title": "Inspect and handle results",
-            "description": "After generation, click an image to preview and check subject consistency, text, hands, edges, and materials.",
-            "checklist": [
-              "Happy with it: download",
-              "Direction is right but details are weak: reference the result and continue refining",
-              "Direction is wrong: fix the goal or references in the request"
-            ]
-          }
-        ],
-        "faqs": [
-          {
-            "question": "Why was my reference image not used?",
-            "answer": "Confirm the reference already appears in the input area, and explicitly say what people, product, or composition to keep. If you only upload without stating the purpose, the Agent may treat it as a style reference."
-          },
-          {
-            "question": "Where is image history?",
-            "answer": "The workbench history area shows this user's server generation records. Opening a historical result lets you preview, download, or use it as the next reference."
-          }
-        ]
-      },
-      "video": {
-        "label": "Video workbench",
-        "title": "Create text-to-video and image-to-video",
-        "summary": "The video workbench controls first-frame references, camera motion, duration, aspect ratio, and audio options for single-shot clips and image animation.",
-        "routeLabel": "Open video workbench",
-        "keywords": [
-          "video",
-          "image-to-video",
-          "text-to-video",
-          "first frame",
-          "duration",
-          "camera",
-          "audio",
-          "download"
-        ],
-        "outcomes": [
-          "Distinguish text-to-video and image-to-video",
-          "Describe camera and motion",
-          "Handle failures and download results"
-        ],
-        "flow": [
-          {
-            "title": "Choose a starting point",
-            "detail": "Create from text only, or add an image as the first frame"
-          },
-          {
-            "title": "Describe motion",
-            "detail": "Subject action, camera, pacing, and what must not change"
-          },
-          {
-            "title": "Confirm settings",
-            "detail": "Model, duration, aspect ratio, quality, and audio"
-          },
-          {
-            "title": "Wait for the task",
-            "detail": "Watch submit, generation, and normalization progress"
-          },
-          {
-            "title": "Review the clip",
-            "detail": "Play the preview, download, or reference for follow-up work"
-          }
-        ],
-        "steps": [
-          {
-            "title": "Decide whether to use a first-frame image",
-            "description": "Use image-to-video when a specific person, product, or composition must stay. Use text-to-video when the camera can be freer.",
-            "checklist": [
-              "First-frame ratio should be close to the target video ratio",
-              "Avoid blurry or heavily cropped images",
-              "For image-to-video, clearly say which elements must stay unchanged"
-            ]
-          },
-          {
-            "title": "Describe action and camera separately",
-            "description": "First say what the subject does, then how the camera moves, and finally pacing, lighting, and forbidden changes.",
-            "checklist": [
-              "Subject action: turn, walk, expression, or product motion",
-              "Camera: push-in, pull-out, orbit, follow, or locked-off",
-              "Pacing: slow, natural, fast, or staged",
-              "Stability: no face morphing, deformation, drifting text, or extra objects"
-            ]
-          },
-          {
-            "title": "Confirm duration, aspect ratio, and audio",
-            "description": "The settings panel shows current video parameters. Audio is collapsed by default; expand it only when sound is needed.",
-            "checklist": [
-              "Choose mobile-friendly ratios for vertical content",
-              "Longer durations need clearer shot changes",
-              "Keep audio off when sound is not needed",
-              "Manual models only show currently enabled executable channels"
-            ]
-          },
-          {
-            "title": "Handle task status",
-            "description": "Video generation usually takes longer than images. Pausing the chat stops the current Agent flow; when a task fails, adjust the input from the error and retry.",
-            "checklist": [
-              "Do not repeatedly submit the same request",
-              "On failure, first check model, references, and duration hints",
-              "Play the full video before downloading a success"
-            ]
-          }
-        ],
-        "faqs": [
-          {
-            "question": "Why is the model list empty?",
-            "answer": "The frontend only shows currently executable video models. If none are available, the page clearly says no enabled video capability is configured."
-          },
-          {
-            "question": "What if the generated duration does not match settings?",
-            "answer": "The server normalizes results to the target duration. If normalization is impossible, the task fails explicitly instead of registering media with the wrong duration as success."
-          }
-        ]
-      },
-      "canvas": {
-        "label": "My Canvas",
-        "title": "Connect a full creation flow with nodes",
-        "summary": "Canvas is for putting text, images, video, audio, and panoramas into one project, then organizing references, generation, and follow-up edits through connections.",
-        "routeLabel": "Open My Canvas",
-        "keywords": [
-          "canvas",
-          "node",
-          "connect",
-          "double-click",
-          "panorama",
-          "immersive",
-          "import",
-          "agent"
-        ],
-        "outcomes": [
-          "Create and connect nodes",
-          "Use Canvas Agent",
-          "Generate and inspect panoramas immersively"
-        ],
-        "flow": [
-          {
-            "title": "Create a project",
-            "detail": "Start a new project or continue an existing one from the canvas list"
-          },
-          {
-            "title": "Add nodes",
-            "detail": "Double-click empty space or choose a type from the connection menu"
-          },
-          {
-            "title": "Organize references",
-            "detail": "Connect text, image, video, and audio nodes"
-          },
-          {
-            "title": "Generate and edit",
-            "detail": "Use Agent or node tools to run tasks"
-          },
-          {
-            "title": "Review delivery",
-            "detail": "Preview, download, copy prompts, or keep connecting"
-          }
-        ],
-        "steps": [
-          {
-            "title": "Create nodes and organize space",
-            "description": "After entering a project, double-click empty canvas space to create a node, or pick the next node type from an existing node's connection entry.",
-            "checklist": [
-              "Text nodes: store prompts, scripts, and notes",
-              "Image nodes: import or generate images",
-              "Video and audio nodes: organize media results",
-              "Panorama nodes: generate 2:1 environment panoramas"
-            ]
-          },
-          {
-            "title": "Use connections for reference relationships",
-            "description": "Connect reference nodes to the target node. The target input can use @ to mention connected assets, and numbering is refreshed from current connections before sending.",
-            "checklist": [
-              "Connect first, then generate from the target node",
-              "Before deleting a connection, confirm later nodes no longer need that reference",
-              "Arrange complex projects from upstream references to downstream results"
-            ]
-          },
-          {
-            "title": "Use Canvas Agent",
-            "description": "The top-right Agent panel supports current project context, Skills, smart planning, and multi-model selection, and can create or update nodes from a request.",
-            "checklist": [
-              "Say whether to add or modify existing nodes",
-              "Select current nodes or assets when references are needed",
-              "Check the Agent plan and target node type",
-              "Pausing the chat stops the current execution flow"
-            ]
-          },
-          {
-            "title": "Generate and inspect panorama nodes",
-            "description": "Select a panorama node, enter an environment description, and the system generates a 2:1 equirectangular result. Successful results support drag-based immersive viewing inside the node.",
-            "checklist": [
-              "Recommended size is 2048×1024",
-              "Describe the horizon and scene center clearly",
-              "Avoid normal banners, fisheye circles, and obvious seams",
-              "After generation, drag the view to check left-right continuity and top/ground integrity"
-            ]
-          },
-          {
-            "title": "Use node result tools",
-            "description": "Select or hover a media node to preview, download, copy prompts, edit locally, upscale, or continue generation through connections.",
-            "checklist": [
-              "Download important results first",
-              "Copy prompts to review parameters later",
-              "Keep the original node before generating again so versions can be compared"
-            ]
-          }
-        ],
-        "faqs": [
-          {
-            "question": "Why is there no asset in the @ list?",
-            "answer": "Only images or text already connected to the current target node appear in the mention list. Create the connection first, then open the input and choose it."
-          },
-          {
-            "question": "Why can't a panorama be viewed immersively?",
-            "answer": "Panorama assets need a near 2:1 ratio and must be registered as panorama nodes. Ordinary image nodes do not switch to the panorama viewer even if they are very wide."
-          }
-        ]
-      },
-      "drama": {
-        "label": "Short drama projects",
-        "title": "Move from synopsis to a deliverable short drama",
-        "summary": "The drama workspace organizes script structure, characters and scenes, storyboard review, shot generation, voiceover, subtitles, and final export by project.",
-        "routeLabel": "Open short drama projects",
-        "keywords": [
-          "drama",
-          "script",
-          "character",
-          "scene",
-          "storyboard",
-          "shot",
-          "voiceover",
-          "subtitle",
-          "export",
-          "version"
-        ],
-        "outcomes": [
-          "Understand the full drama pipeline",
-          "Review content before batch generation",
-          "Save versions and export subtitles or finals"
-        ],
-        "flow": [
-          {
-            "title": "Create the project",
-            "detail": "Fill in project goals, audience, and story direction"
-          },
-          {
-            "title": "Extract structure",
-            "detail": "Agent organizes script, characters, scenes, and episodes"
-          },
-          {
-            "title": "Review content",
-            "detail": "Confirm shots, dialogue, subtitles, and visual plans"
-          },
-          {
-            "title": "Batch production",
-            "detail": "Generate storyboards, shot videos, and voiceover"
-          },
-          {
-            "title": "Compose and export",
-            "detail": "Adjust subtitle timing and output the final or draft package"
-          }
-        ],
-        "steps": [
-          {
-            "title": "Create a project with a clear production goal",
-            "description": "Create a project from the drama list and first clarify genre, audience, platform, duration, and episode count. Existing story text can be given directly to the drama Agent.",
-            "checklist": [
-              "Target duration per episode",
-              "Main characters and relationships",
-              "Conflict and ending direction",
-              "Platform aspect ratio and content limits"
-            ]
-          },
-          {
-            "title": "Extract structure with Agent",
-            "description": "The Agent turns input into an editable project structure rather than only returning chat text. After generation, check characters, scenes, episodes, and shots one by one.",
-            "checklist": [
-              "Keep character names and looks unique",
-              "Avoid duplicate scene meanings",
-              "Each episode needs a clear beginning, middle, and end",
-              "Shot dialogue and subtitles must match the story"
-            ]
-          },
-          {
-            "title": "Review content before batch generation",
-            "description": "In content review, correct shot order, framing, action, dialogue, and visual prompts. Only enter production after the full visual plan is confirmed.",
-            "checklist": [
-              "Can the shot finish within the target duration",
-              "Are character and scene references correct",
-              "Is dialogue suitable for voiceover",
-              "Do subtitles need to differ from dialogue"
-            ],
-            "tip": "Save a version before batch generation so later rework can restore quickly."
-          },
-          {
-            "title": "Generate storyboards, shots, and voiceover",
-            "description": "You can generate shot by shot or batch unfinished items. The project queue submits in order to avoid creating too many concurrent tasks.",
-            "checklist": [
-              "Finish storyboard images before generating video shots",
-              "Retry failed shots instead of creating the same task again",
-              "Generate voiceover only for shots with dialogue",
-              "You can cancel the current task during generation"
-            ]
-          },
-          {
-            "title": "Handle subtitles, versions, and export",
-            "description": "Check each line on the subtitle timeline and export SRT if needed. Compose the episode only after all shots and required voiceovers are ready. Projects also support version history and Jianying draft export.",
-            "checklist": [
-              "Check whether subtitles exceed shot duration",
-              "Save current changes before restoring a version",
-              "Play the full final once after composition",
-              "Export a Jianying ZIP draft when further editing is needed"
-            ]
-          }
-        ],
-        "faqs": [
-          {
-            "question": "Why can't I generate the final directly?",
-            "answer": "Final composition depends on reviewed shot videos, required voiceovers, and subtitle timing. The page points out unfinished production stages so missing assets are not composed."
-          },
-          {
-            "question": "Will regenerating overwrite the old version?",
-            "answer": "A project snapshot is saved before critical regenerations, and you can also save versions manually. Open version history and restore a specific version when you need to roll back."
-          }
-        ]
-      },
-      "assets": {
-        "label": "My Assets",
-        "title": "Organize and reuse creative assets",
-        "summary": "The asset library stores this user's text, images, video, and audio. Search by type, title, tags, and source, then reuse them in canvas and creation flows.",
-        "routeLabel": "Open My Assets",
-        "keywords": [
-          "assets",
-          "upload",
-          "tags",
-          "search",
-          "preview",
-          "download",
-          "reference"
-        ],
-        "outcomes": [
-          "Add and organize assets",
-          "Preview and download",
-          "Reference assets in other creation flows"
-        ],
-        "flow": [
-          {
-            "title": "Collect assets",
-            "detail": "Upload files, add URLs, or save generation results"
-          },
-          {
-            "title": "Add metadata",
-            "detail": "Fill in title, source, and searchable tags"
-          },
-          {
-            "title": "Search and preview",
-            "detail": "Filter by type, keyword, and tags"
-          },
-          {
-            "title": "Reuse and deliver",
-            "detail": "Copy text, download media, or insert into canvas"
-          }
-        ],
-        "steps": [
-          {
-            "title": "Add the correct asset type",
-            "description": "The new-asset dialog supports text, image, video, and audio. Choose the type first, then fill content or upload a file.",
-            "checklist": [
-              "Write titles that stay searchable later",
-              "Record whether the source is upload, generation, or project",
-              "Use stable tags such as person, product, project, or style",
-              "Do not save secrets or private information as text assets"
-            ]
-          },
-          {
-            "title": "Preview, edit, and download",
-            "description": "Asset cards provide preview and management actions. Text can be copied, media can be downloaded, and title, tags, and source can still be edited.",
-            "checklist": [
-              "Open preview before downloading",
-              "Editing only changes the asset record and does not auto-update historical projects that already referenced it",
-              "Before deleting, confirm no project still depends on the asset"
-            ]
-          },
-          {
-            "title": "Reference assets while creating",
-            "description": "Agent results can be referenced directly; Canvas asset pickers load the current user's assets when first opened.",
-            "checklist": [
-              "Confirm the asset card appears in the input after referencing",
-              "Say whether the asset is for subject, style, or first frame",
-              "Use clear tags in large projects to keep search efficient"
-            ]
-          }
-        ],
-        "faqs": [
-          {
-            "question": "Why are assets not shown right after opening?",
-            "answer": "Assets load from the server for the current user. The first open shows a compact loading state; if loading fails, use the retry action on the page."
-          },
-          {
-            "question": "Will deleting an asset break projects?",
-            "answer": "The server checks references from creative sessions, Canvas, drama, and generation records. Media still in use is not deleted directly, so projects do not end up with missing files."
-          }
-        ]
-      },
-      "prompts": {
-        "label": "Prompts",
-        "title": "Find, save, and reuse prompts",
-        "summary": "The public prompt library is for structure and inspiration; My Prompts is for personal templates. Both support copy, and personal prompts are added through a modal.",
-        "routeLabel": "Open prompt library",
-        "keywords": [
-          "prompt",
-          "category",
-          "tag",
-          "search",
-          "copy",
-          "add prompt",
-          "my prompts"
-        ],
-        "outcomes": [
-          "Filter public prompts",
-          "Save personal templates",
-          "Know the difference between prompts and Skills"
-        ],
-        "flow": [
-          {
-            "title": "Search for inspiration",
-            "detail": "Filter public content by title, category, and tags"
-          },
-          {
-            "title": "Open details",
-            "detail": "Confirm structure and suitable scenarios"
-          },
-          {
-            "title": "Copy and rewrite",
-            "detail": "Replace subject, use case, style, and constraints"
-          },
-          {
-            "title": "Save a template",
-            "detail": "Record a personal version in the My Prompts modal"
-          }
-        ],
-        "steps": [
-          {
-            "title": "Narrow the range with categories and tags",
-            "description": "Public prompts can be many. Choose a category first, then use tags and keywords. Mobile uses dropdown filters instead of horizontal scrolling.",
-            "checklist": [
-              "First choose a category by image, video, or other use",
-              "Continue with industry, style, and subject tags",
-              "Open details before copying the full content"
-            ]
-          },
-          {
-            "title": "Rewrite examples into your own request",
-            "description": "Public prompts are structural references, not ready-to-submit final text. Replace placeholders and add real subjects, references, and delivery limits.",
-            "checklist": [
-              "Replace brand, person, product, and scene",
-              "Remove style words that do not fit the current project",
-              "Add aspect ratio, count, duration, and forbidden items",
-              "If references matter, actually add assets in the creation input"
-            ]
-          },
-          {
-            "title": "Save to My Prompts",
-            "description": "Open My Prompts, click Add Prompt, and fill in title, category, tags, body, and notes.",
-            "checklist": [
-              "Titles should describe use case, not arbitrary numbers",
-              "Keep categories and tags consistent",
-              "Use notes for usage scenarios or replacement rules",
-              "List actions support copying and editing saved prompts"
-            ]
-          }
-        ],
-        "faqs": [
-          {
-            "question": "What is the difference between a prompt and a Skill?",
-            "answer": "A prompt is the text you give the model. A Skill is an Agent execution capability. Choosing a Skill does not auto-fill fixed text into the input box."
-          },
-          {
-            "question": "Why is adding a prompt a modal instead of a permanent form?",
-            "answer": "Add uses a modal so the list page stays focused on search and management. After save or cancel, you return to the original list position."
-          }
-        ]
-      },
-      "account": {
-        "label": "Account & purchases",
-        "title": "Manage plans, points, and orders",
-        "summary": "Open Profile from the avatar menu to view the current plan, points balance, profile, plan purchase, orders, usage history, points ledger, and account security.",
-        "routeLabel": "Open Profile",
-        "keywords": [
-          "profile",
-          "plan",
-          "points",
-          "daily free points",
-          "purchase",
-          "payment",
-          "order",
-          "password"
-        ],
-        "outcomes": [
-          "Know each profile section",
-          "Complete a plan purchase",
-          "Check points and order status"
-        ],
-        "flow": [
-          {
-            "title": "Choose a product",
-            "detail": "Open Plans in Profile and compare benefits"
-          },
-          {
-            "title": "Confirm the order",
-            "detail": "Choose quantity and payment method, then verify amount and points"
-          },
-          {
-            "title": "Complete payment",
-            "detail": "Continue on the secure checkout page by channel"
-          },
-          {
-            "title": "Verify benefits",
-            "detail": "Return to orders, plan, and points history to confirm the result"
-          }
-        ],
-        "steps": [
-          {
-            "title": "Enter Profile from the avatar menu",
-            "description": "The top-right avatar menu keeps the Profile entry. The sidebar help entry no longer jumps to personal details again.",
-            "checklist": [
-              "Overview: plan, balance, and recent records",
-              "Profile: display name and email",
-              "Security: change password",
-              "Orders and points sections: check every change"
-            ]
-          },
-          {
-            "title": "Choose and purchase a plan",
-            "description": "In Plans, click upgrade or buy, compare price/points/benefits in the plan modal first, then enter the independent secure payment page.",
-            "checklist": [
-              "Confirm plan name and benefits",
-              "Confirm purchase quantity",
-              "Confirm payment method and total amount",
-              "Benefits activate only after successful payment"
-            ]
-          },
-          {
-            "title": "Check payment and points results",
-            "description": "After payment, return to Profile and check order status. Credited points, plan changes, usage deductions, and failed refunds appear in their own records.",
-            "checklist": [
-              "Orders: pending, paid, canceled, or manual confirmation",
-              "Points history: balance increases and adjustments",
-              "Usage: generation tasks and model-call deductions",
-              "If results are delayed, refresh records first and do not pay the same order twice"
-            ]
-          }
-        ],
-        "faqs": [
-          {
-            "question": "Why is plan upgrade a modal, but payment is not?",
-            "answer": "Plan comparison should stay fast, so it uses an in-workbench modal. When amount, quantity, and payment channel are involved, checkout moves to a dedicated secure page so the full order can be reviewed."
-          },
-          {
-            "question": "What if the order is paid but benefits have not changed yet?",
-            "answer": "Refresh status in order history first. Some payment callbacks may lag slightly, and manual channels need order confirmation. Do not create multiple orders for the same need."
-          }
-        ]
-      },
-      "troubleshooting": {
-        "label": "FAQ",
-        "title": "Troubleshoot loading, generation, and display issues",
-        "summary": "When a page is blank, data loads slowly, models cannot be selected, or media will not open, first locate the broken stage and avoid resubmitting or double-charging.",
-        "keywords": [
-          "issue",
-          "loading",
-          "failure",
-          "blank",
-          "model",
-          "media",
-          "preview",
-          "retry"
-        ],
-        "outcomes": [
-          "Tell page issues from task issues",
-          "Know when to retry",
-          "Avoid creating generation or payment requests twice"
-        ],
-        "flow": [
-          {
-            "title": "Confirm the page",
-            "detail": "Refresh the current page and check login state"
-          },
-          {
-            "title": "Locate the stage",
-            "detail": "Separate data loading, planning, submit, and generation failures"
-          },
-          {
-            "title": "Read the message",
-            "detail": "Adjust based on page errors and task status"
-          },
-          {
-            "title": "Retry safely",
-            "detail": "Only retry failed items, not successful requests"
-          }
-        ],
-        "steps": [
-          {
-            "title": "Page data stays empty for a long time",
-            "description": "First check network and login state, then use in-page refresh or retry. Do not switch around and repeatedly click create while loading.",
-            "checklist": [
-              "Look for an explicit error message",
-              "Reopen the current section",
-              "Use the matching retry button for assets, projects, or history failures",
-              "If still empty, confirm the current account really has data"
-            ]
-          },
-          {
-            "title": "Models or Skills cannot be selected",
-            "description": "Lists only show currently executable capabilities. Skills are also filtered by workspace, so different pages may show different options.",
-            "checklist": [
-              "Keep smart planning on to use default capabilities",
-              "Do not type model names manually when the list is empty",
-              "Skills that do not match the current workspace are hidden"
-            ]
-          },
-          {
-            "title": "Images or videos cannot preview",
-            "description": "Prefer opening the media itself for preview, then try download. Historical media needs a valid server URL and current-user permission.",
-            "checklist": [
-              "Confirm the task already succeeded",
-              "Confirm media is not still processing",
-              "Reopen history to refresh the access URL",
-              "Do not share expired temporary links as long-term asset URLs"
-            ]
-          },
-          {
-            "title": "Retry after generation or payment failure",
-            "description": "Only retry clearly failed tasks or unpaid orders. Do not resubmit successful tasks or pay the same order again.",
-            "checklist": [
-              "Record the error shown on the page",
-              "On generation failure, adjust parameters or references first",
-              "On payment failure, continue the original order instead of creating a new one",
-              "If balance looks wrong, check points history and usage records"
-            ]
-          }
-        ],
-        "faqs": [
-          {
-            "question": "Will refreshing the page lose projects?",
-            "answer": "Creative sessions, Canvas, assets, drama, and generation records are saved on the server per signed-in user. Page refresh reloads them and does not rely on the browser to store large business data."
-          },
-          {
-            "question": "When should I create a task again?",
-            "answer": "Only create a new one when the original task clearly failed, was canceled, or the request has changed. Resubmitting while a task is still running increases wait time and points risk."
-          }
-        ]
-      }
-    }
-  },
-  "me": {
-    "summaryLoadFailed": "Failed to load profile summary",
-    "likedLoadFailed": "Failed to load liked works",
-    "loadMoreFailed": "Failed to load more works",
-    "homeLinkCopied": "Profile link copied",
-    "profileUpdateFailed": "Failed to update profile",
-    "profileUpdated": "Profile updated",
-    "editProfileAria": "Edit profile",
-    "editProfileTitle": "Edit profile",
-    "statsAria": "Profile stats",
-    "metricWorks": "Works",
-    "metricLiked": "Likes",
-    "metricFollowing": "Following",
-    "metricFollowers": "Followers",
-    "shareHome": "Share profile",
-    "homeNotPublic": "Profile not public yet",
-    "copyPublicLinkTitle": "Copy public profile link",
-    "publishFirstToShare": "Publish a work with your profile identity to share this page",
-    "worksSectionAria": "Profile works",
-    "tabsAria": "Profile content",
-    "tabPublished": "Published",
-    "tabLikes": "Liked",
-    "emptyPublishedTitle": "No public works yet",
-    "emptyPublishedDesc": "Works published under your profile identity appear here after review.",
-    "publishWork": "Publish work",
-    "emptyLikesTitle": "No liked works yet",
-    "emptyLikesDesc": "Public works you like in the gallery appear here. Only you can see this list.",
-    "browseGallery": "Browse gallery",
-    "loadMore": "Load more",
-    "editModalTitle": "Edit profile",
-    "save": "Save",
-    "cancel": "Cancel",
-    "displayNameLabel": "Display name",
-    "displayNamePlaceholder": "Enter the name shown on your profile",
-    "bioLabel": "Bio",
-    "bioPlaceholder": "Describe your creative focus, strengths, or preferred styles",
-    "activity": {
-      "followingTitle": "Following",
-      "followingEmptyTitle": "Not following anyone yet",
-      "followingEmptyDesc": "Creators you follow from work pages or profiles appear here.",
-      "followersTitle": "Followers",
-      "followersEmptyTitle": "No followers yet",
-      "followersEmptyDesc": "People who follow you appear here.",
-      "likesTitle": "Liked works",
-      "likesEmptyTitle": "No liked works yet",
-      "likesEmptyDesc": "Public works you liked in the gallery appear here.",
-      "loadFailed": "Failed to load community activity",
-      "unfollowed": "Unfollowed",
-      "unfollowFailed": "Failed to unfollow",
-      "unliked": "Like removed",
-      "unlikeFailed": "Failed to remove like",
-      "blockTitle": "Block {name}",
-      "blockContent": "Blocking removes the follow relationship both ways. Neither of you can follow again.",
-      "blockOk": "Block",
-      "cancel": "Cancel",
-      "blocked": "User blocked",
-      "blockFailed": "Failed to block user",
-      "modalFallbackTitle": "Community activity",
-      "followerCount": "{count} followers",
-      "followingTime": "Followed at",
-      "followerTime": "Followed you at",
-      "unfollow": "Unfollow",
-      "block": "Block",
-      "anonymousAuthor": "Anonymous",
-      "likedAt": "Liked {time}",
-      "unlike": "Unlike"
-    }
-  },
-  "agentRun": {
-    "receivedWithReferences": "Got it. I will complete this {media} using the current references.",
-    "receivedWithoutReferences": "Got it. I will complete this {media} based on your request.",
-    "recreatingTask": "Recreating the generation task.",
-    "taskGenerating": "The {media} task is generating. Progress and results will stay visible in the workspace.",
-    "taskCreateFailed": "Failed to create the {media} task. Check the model and parameters.",
-    "stoppedNoTask": "You stopped this Agent turn. No generation task was created.",
-    "planningIncomplete": "Planning did not finish. No generation task was created.",
-    "taskNotQueued": "The task was not created and did not enter the {media} queue.",
-    "reasonPrefix": "Reason: {message}",
-    "reasonUnknown": "Reason: unknown error",
-    "hintTextModel": "Confirm the default text model is enabled with a bound channel key in admin settings, then resend the request.",
-    "hintVideoModel": "Confirm the video logical model and upstream channel are available in admin settings, or switch to an available video model and retry.",
-    "hintReference": "Re-upload references, switch to an available channel, or choose a no-reference plan / plan-only option.",
-    "hintGeneric": "Adjust the request and retry. If it keeps failing, check admin model channels, quota, and concurrency settings.",
-    "mediaImage": "image generation",
-    "mediaVideo": "video generation"
-  }
 }

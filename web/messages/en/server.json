@@ -601,7 +601,20 @@
         "selectImageModel": "Please select an available image model first",
         "selectVideoModel": "Please select an available video model first",
         "onlyPlanFailedCanRetryAll": "Only plan-stage failures can be fully retried",
-        "concurrencyLimit": "At most {limit} Agent tasks can run at the same time"
+        "concurrencyLimit": "At most {limit} Agent tasks can run at the same time",
+        "ack": {
+            "kindVideo": "video",
+            "kindImage": "image",
+            "kindAudio": "audio",
+            "kindRequest": "creative request",
+            "canvasWithRefs": "Got it. I will handle this {kind} based on the currently selected assets.",
+            "canvasPlain": "Got it. I will handle this {kind} with the current canvas.",
+            "dramaWithRefs": "Got it. I will continue creating with the current drama project and references.",
+            "dramaPlain": "Got it. I will continue creating with the current drama project.",
+            "chatWithRefs": "Got it. I will complete this {kind} using the current references.",
+            "chatWithSize": "Got it. I will complete this image creation at {size}.",
+            "chatPlain": "Got it. I will handle this {kind} based on your request."
+        }
     },
     "security": {
         "ssrfBlockedUrl": "API URL may not target private or reserved addresses",

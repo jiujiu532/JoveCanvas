@@ -127,7 +127,13 @@
         "interactionsEmptyTitle": "No activity yet",
         "interactionsEmptyDesc": "Likes and follows will show up here",
         "markAllRead": "Mark all as read",
-        "systemNotification": "System notification"
+        "systemNotification": "System notification",
+        "relativeTime": {
+            "justNow": "Just now",
+            "minutesAgo": "{count}m ago",
+            "hoursAgo": "{count}h ago",
+            "daysAgo": "{count}d ago"
+        }
     },
     "announcementPopup": {
         "gotIt": "Got it",

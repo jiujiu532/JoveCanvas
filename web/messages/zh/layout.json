@@ -127,7 +127,13 @@
         "interactionsEmptyTitle": "暂时没有互动通知",
         "interactionsEmptyDesc": "点赞和关注会显示在这里",
         "markAllRead": "全部设为已读",
-        "systemNotification": "系统通知"
+        "systemNotification": "系统通知",
+        "relativeTime": {
+            "justNow": "刚刚",
+            "minutesAgo": "{count} 分钟前",
+            "hoursAgo": "{count} 小时前",
+            "daysAgo": "{count} 天前"
+        }
     },
     "announcementPopup": {
         "gotIt": "我知道了",

@@ -22,7 +22,7 @@ import {
     type CreativeAgentRun,
 } from "@/services/api/creative";
 import { getMaterializedCreativeProject, materializeCreativeProjectHandoff, type MaterializedCreativeProject } from "@/services/creative-project-handoff";
-import { agentRequirementAcknowledgement } from "@/lib/agent-requirement-acknowledgement";
+import { agentRequirementAcknowledgement, agentRequirementAcknowledgementLabelsFromT } from "@/lib/agent-requirement-acknowledgement";
 
 type PendingCreateSubmission = {
     clientRequestId: string;
@@ -38,6 +38,7 @@ type PendingCreateSubmission = {
 
 export function useCreateAgent() {
     const t = useTranslations("workspace.create");
+    const acknowledgementLabels = agentRequirementAcknowledgementLabelsFromT(useTranslations("workspace.create.ack"));
     const streamRef = useRef<(() => void) | null>(null);
     const conversationGenerationRef = useRef(0);
     const activeConversationRef = useRef<string | undefined>(undefined);
@@ -374,7 +375,7 @@ export function useCreateAgent() {
                     sequence: sequence + 1,
                     role: "assistant",
                     status: "running",
-                    content: agentRequirementAcknowledgement(content, "chat", assetIds.length > 0),
+                    content: agentRequirementAcknowledgement(content, "chat", assetIds.length > 0, acknowledgementLabels),
                     metadata: {},
                     createdAt: now,
                     updatedAt: now,
@@ -383,7 +384,7 @@ export function useCreateAgent() {
             setSelectedAssetIds((current) => current.filter((id) => !assetIds.includes(id)));
             return executeSubmission(snapshot);
         },
-        [conversationId, executeSubmission, messages, selectedAssetIds, sending, stopWatching],
+        [acknowledgementLabels, conversationId, executeSubmission, messages, selectedAssetIds, sending, stopWatching],
     );
 
     const retrySubmission = useCallback(

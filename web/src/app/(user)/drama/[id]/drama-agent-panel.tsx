@@ -24,7 +24,7 @@ import { useCreativeAgentOptions } from "@/hooks/use-creative-agent-options";
 import { controlCreativeAgentRun, createCreativeAgentRun, createCreativeConversation, listCreativeAssets, listCreativeMessages, uploadCreativeAsset, watchCreativeAgentRun } from "@/services/api/creative";
 import { usePublicSessionStore } from "@/stores/use-public-session-store";
 import { useDramaStore } from "../stores/use-drama-store";
-import { agentRequirementAcknowledgement } from "@/lib/agent-requirement-acknowledgement";
+import { agentRequirementAcknowledgement, agentRequirementAcknowledgementLabelsFromT } from "@/lib/agent-requirement-acknowledgement";
 
 type PendingDramaSubmission = {
     clientRequestId: string;
@@ -58,6 +58,7 @@ export function DramaAgentPanel({ project, episode, onConversationChange }: { pr
 
 function DramaAgentContent({ project, episode, onConversationChange }: { project: DramaProject; episode: DramaEpisode; onConversationChange: (conversationId: string) => void }) {
     const t = useTranslations("drama");
+    const acknowledgementLabels = agentRequirementAcknowledgementLabelsFromT(useTranslations("drama.agent.ack"));
     const formatLabels = agentMessageFormatLabelsFromT(useTranslations("layout"));
     const { message } = App.useApp();
     const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { logoUrl: "/logo.svg" };
@@ -232,7 +233,7 @@ function DramaAgentContent({ project, episode, onConversationChange }: { project
                 sequence: sequence + 1,
                 role: "assistant",
                 status: "running",
-                content: agentRequirementAcknowledgement(content, "drama", assetIds.length > 0),
+                content: agentRequirementAcknowledgement(content, "drama", assetIds.length > 0, acknowledgementLabels),
                 metadata: {},
                 createdAt: now,
                 updatedAt: now,
@@ -507,13 +508,37 @@ function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[
             updateAsset(project.id, visualKind, selected.id, { references, primaryReferenceId: reference.id, referenceImageUrl: reference.url, referenceStorageKey: reference.storageKey });
             message.success(t("agent.visualAsset.addedToExisting", { name: selected.name }));
         } else if (visualKind === "characters") {
-            addCharacter(project.id, { name, description: t("agent.visualAsset.autoDescription"), profile: emptyAssetProfile(), references: [reference], primaryReferenceId: reference.id, referenceImageUrl: reference.url, referenceStorageKey: reference.storageKey });
+            addCharacter(project.id, {
+                name,
+                description: t("agent.visualAsset.autoDescription"),
+                profile: emptyAssetProfile(),
+                references: [reference],
+                primaryReferenceId: reference.id,
+                referenceImageUrl: reference.url,
+                referenceStorageKey: reference.storageKey,
+            });
             message.success(t("agent.visualAsset.createdCharacter", { name }));
         } else if (visualKind === "scenes") {
-            addScene(project.id, { name, description: t("agent.visualAsset.autoDescription"), profile: emptyAssetProfile(), references: [reference], primaryReferenceId: reference.id, referenceImageUrl: reference.url, referenceStorageKey: reference.storageKey });
+            addScene(project.id, {
+                name,
+                description: t("agent.visualAsset.autoDescription"),
+                profile: emptyAssetProfile(),
+                references: [reference],
+                primaryReferenceId: reference.id,
+                referenceImageUrl: reference.url,
+                referenceStorageKey: reference.storageKey,
+            });
             message.success(t("agent.visualAsset.createdScene", { name }));
         } else if (visualKind === "props") {
-            addProp(project.id, { name, description: t("agent.visualAsset.autoDescription"), profile: emptyAssetProfile(), references: [reference], primaryReferenceId: reference.id, referenceImageUrl: reference.url, referenceStorageKey: reference.storageKey });
+            addProp(project.id, {
+                name,
+                description: t("agent.visualAsset.autoDescription"),
+                profile: emptyAssetProfile(),
+                references: [reference],
+                primaryReferenceId: reference.id,
+                referenceImageUrl: reference.url,
+                referenceStorageKey: reference.storageKey,
+            });
             message.success(t("agent.visualAsset.createdProp", { name }));
         } else {
             addClue(project.id, {
@@ -543,7 +568,12 @@ function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[
                         if (!url) return null;
                         return (
                             <div key={asset.id} className="min-w-0">
-                                <AgentMediaPreview type={asset.type} url={url} title={asset.title || t("agent.generatedMediaFallback")} className={asset.type === "image" ? "max-h-64 rounded-md" : asset.type === "video" ? "aspect-video rounded-md" : undefined} />
+                                <AgentMediaPreview
+                                    type={asset.type}
+                                    url={url}
+                                    title={asset.title || t("agent.generatedMediaFallback")}
+                                    className={asset.type === "image" ? "max-h-64 rounded-md" : asset.type === "video" ? "aspect-video rounded-md" : undefined}
+                                />
                                 {asset.type === "image" ? (
                                     <div className="mt-2 flex min-w-0 items-center rounded-lg border border-border/70 bg-muted/30 p-1">
                                         <Button
@@ -572,7 +602,18 @@ function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[
                         );
                     })}
             </div>
-            <Modal title={t("agent.referenceModal.title")} open={Boolean(referenceAsset)} width={420} centered destroyOnHidden okText={t("agent.referenceModal.ok")} cancelText={tc("cancel")} okButtonProps={{ disabled: !shotId }} onCancel={() => setReferenceAsset(undefined)} onOk={applyReference}>
+            <Modal
+                title={t("agent.referenceModal.title")}
+                open={Boolean(referenceAsset)}
+                width={420}
+                centered
+                destroyOnHidden
+                okText={t("agent.referenceModal.ok")}
+                cancelText={tc("cancel")}
+                okButtonProps={{ disabled: !shotId }}
+                onCancel={() => setReferenceAsset(undefined)}
+                onOk={applyReference}
+            >
                 <div className="grid gap-4 pt-2">
                     <label className="grid gap-1.5 text-sm">
                         <span className="font-medium">{t("agent.referenceModal.targetShotLabel")}</span>
@@ -696,8 +737,6 @@ function dramaSnapshot(project: DramaProject, episode: DramaEpisode) {
 function agentAssetDownloads(assets: CreativeAsset[], t: (key: string) => string): AgentMediaDownload[] {
     return assets.flatMap((asset) => {
         const url = asset.serverUrl || asset.remoteUrl || "";
-        return url && (asset.type === "image" || asset.type === "video")
-            ? [{ type: asset.type, url, title: asset.title || t(asset.type === "video" ? "agent.downloadFallback.video" : "agent.downloadFallback.image"), mimeType: asset.mimeType }]
-            : [];
+        return url && (asset.type === "image" || asset.type === "video") ? [{ type: asset.type, url, title: asset.title || t(asset.type === "video" ? "agent.downloadFallback.video" : "agent.downloadFallback.image"), mimeType: asset.mimeType }] : [];
     });
 }

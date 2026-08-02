@@ -5,16 +5,26 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Bell, CheckCheck, ChevronDown, Heart, Megaphone, RotateCcw, X } from "lucide-react";
 import { Modal } from "antd";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { useAnnouncementReadState } from "@/hooks/use-announcement-read-state";
 import { useAnnouncements } from "@/hooks/use-announcements";
 import { useInteractionNotifications } from "@/hooks/use-interaction-notifications";
-import { formatAnnouncementTime } from "@/lib/announcement-notifications";
+import { formatAnnouncementTime, type AnnouncementTimeLabels } from "@/lib/announcement-notifications";
 import { cn } from "@/lib/utils";
 import type { PublicAnnouncement } from "@/services/api/announcements";
 import type { InteractionNotification } from "@/services/api/work-community";
 import { useUserStore } from "@/stores/use-user-store";
+
+function useAnnouncementTimeLabels(): AnnouncementTimeLabels {
+    const t = useTranslations("layout.announcementCenter.relativeTime");
+    return {
+        justNow: t("justNow"),
+        minutesAgo: t("minutesAgo"),
+        hoursAgo: t("hoursAgo"),
+        daysAgo: t("daysAgo"),
+    };
+}
 
 export function AnnouncementNotificationCenter({ compact, buttonClassName, buttonStyle, onOpen }: { compact: boolean; buttonClassName: string; buttonStyle?: CSSProperties; onOpen?: () => void }) {
     const t = useTranslations("layout");
@@ -268,6 +278,8 @@ function AnnouncementPanel({
 
 function InteractionRow({ item, onClose, onRead }: { item: InteractionNotification; onClose: () => void; onRead: (id: string) => void }) {
     const t = useTranslations("layout");
+    const locale = useLocale();
+    const timeLabels = useAnnouncementTimeLabels();
     return (
         <Link
             href={item.targetPath}
@@ -281,13 +293,15 @@ function InteractionRow({ item, onClose, onRead }: { item: InteractionNotificati
             <div className="min-w-0 pl-5">
                 <div className="text-sm font-semibold leading-5 text-[#343b44] dark:text-[#eef1f4]">{item.summary}</div>
                 <p className="mt-1 truncate text-xs text-[#6f7884] dark:text-[#a7afb9]">{item.actor?.displayName || item.actor?.username || t("announcementCenter.systemNotification")}</p>
-                <time className="mt-1.5 block text-[11px] text-[#9aa2ad] dark:text-[#737d89]">{formatAnnouncementTime(item.createdAt)}</time>
+                <time className="mt-1.5 block text-[11px] text-[#9aa2ad] dark:text-[#737d89]">{formatAnnouncementTime(item.createdAt, Date.now(), timeLabels, locale)}</time>
             </div>
         </Link>
     );
 }
 
 function AnnouncementRow({ announcement, expanded, unread, onExpand }: { announcement: PublicAnnouncement; expanded: boolean; unread: boolean; onExpand: () => void }) {
+    const locale = useLocale();
+    const timeLabels = useAnnouncementTimeLabels();
     return (
         <button type="button" className="group relative block w-full px-4 py-3.5 text-left transition hover:bg-[#f7f8fa] dark:hover:bg-[#1d2127]" onClick={onExpand} aria-expanded={expanded}>
             <span className={cn("absolute left-4 top-[19px] size-2 rounded-full ring-4 ring-white dark:ring-[#15181d]", unread ? "bg-[#66758e] dark:bg-[#d8dee8]" : "bg-[#cbd0d6] dark:bg-[#4b535e]")} aria-hidden="true" />
@@ -297,7 +311,7 @@ function AnnouncementRow({ announcement, expanded, unread, onExpand }: { announc
                     <ChevronDown className={cn("mt-0.5 size-3.5 shrink-0 text-[#9aa2ad] transition", expanded && "rotate-180")} />
                 </div>
                 <p className={cn("mt-1 whitespace-pre-wrap text-xs leading-5 text-[#6f7884] dark:text-[#a7afb9]", expanded ? "" : "line-clamp-2")}>{announcement.content}</p>
-                <time className="mt-1.5 block text-[11px] text-[#9aa2ad] dark:text-[#737d89]">{formatAnnouncementTime(announcement.createdAt)}</time>
+                <time className="mt-1.5 block text-[11px] text-[#9aa2ad] dark:text-[#737d89]">{formatAnnouncementTime(announcement.createdAt, Date.now(), timeLabels, locale)}</time>
             </div>
         </button>
     );

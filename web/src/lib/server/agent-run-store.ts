@@ -5,7 +5,8 @@ import { extractImageSizeFromPrompt } from "@/lib/image-size";
 import { createCreativeRunBundle, getCreativeRunByClientRequestId, mutateCreativeRun } from "./creative-runtime-store";
 import { getStoredGenerationTask, listStoredGenerationTasks } from "./generation-task-store";
 import { cancelledRunCanvasOps, taskCanvasEventOps } from "./agent-run-canvas-ops";
-import { agentRequirementAcknowledgement } from "@/lib/agent-requirement-acknowledgement";
+import { agentRequirementAcknowledgement, agentRequirementAcknowledgementLabelsFromT } from "@/lib/agent-requirement-acknowledgement";
+import { getServerMessages } from "@/lib/server/server-messages";
 import { agentTaskCompletionMessage } from "./agent-run-messages";
 
 export type AgentRunStatus = "planning" | "running" | "paused" | "completed" | "failed" | "cancelled";
@@ -95,6 +96,8 @@ const TTL = 365 * 24 * 60 * 60 * 1000;
 export async function createAgentRun(userId: string, input: CreativeRunRequest) {
     const now = Date.now();
     const conversationId = input.conversationId || `conversation-${nanoid()}`;
+    const t = await getServerMessages();
+    const acknowledgementLabels = agentRequirementAcknowledgementLabelsFromT((key) => t(`agent.ack.${key}`));
     const run: AgentRun = {
         id: `agent-${nanoid()}`,
         userId,
@@ -124,7 +127,7 @@ export async function createAgentRun(userId: string, input: CreativeRunRequest) 
         prompt: input.prompt,
         title: input.prompt.slice(0, 48),
         assetIds: input.assetIds,
-        acknowledgement: agentRequirementAcknowledgement(input.prompt, input.surface, input.assetIds.length > 0 || selectedCanvasNodeIds(input.snapshot).length > 0),
+        acknowledgement: agentRequirementAcknowledgement(input.prompt, input.surface, input.assetIds.length > 0 || selectedCanvasNodeIds(input.snapshot).length > 0, acknowledgementLabels),
         ttlMs: TTL,
     });
 }

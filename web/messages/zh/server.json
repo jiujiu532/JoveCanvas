@@ -601,7 +601,20 @@
         "selectImageModel": "请先选择一个可用的图片模型",
         "selectVideoModel": "请先选择一个可用的视频模型",
         "onlyPlanFailedCanRetryAll": "只有规划阶段失败的任务可以整体重试",
-        "concurrencyLimit": "当前最多同时运行 {limit} 个 Agent 任务"
+        "concurrencyLimit": "当前最多同时运行 {limit} 个 Agent 任务",
+        "ack": {
+            "kindVideo": "视频",
+            "kindImage": "图片",
+            "kindAudio": "音频",
+            "kindRequest": "创作需求",
+            "canvasWithRefs": "收到，我会基于当前选中素材处理这次{kind}。",
+            "canvasPlain": "收到，我会结合当前画布处理这次{kind}。",
+            "dramaWithRefs": "收到，我会结合当前短剧项目与参考素材继续创作。",
+            "dramaPlain": "收到，我会结合当前短剧项目继续创作。",
+            "chatWithRefs": "收到，我会根据当前参考素材完成这次{kind}。",
+            "chatWithSize": "收到，我会按 {size} 尺寸完成这次图片创作。",
+            "chatPlain": "收到，我会按你的要求处理这次{kind}。"
+        }
     },
     "security": {
         "ssrfBlockedUrl": "接口地址不允许访问内网或保留地址",
