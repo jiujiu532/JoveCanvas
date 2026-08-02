@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getPublicUsersByIds } from "@/lib/auth/store";
 import { deleteExternalStorageFiles, listExternalStorageFiles } from "@/lib/server/object-storage-service";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -47,24 +48,24 @@ export async function DELETE(request: Request) {
     if (denied) return denied;
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     if (!body || typeof body !== "object" || Array.isArray(body)) {
-        return NextResponse.json({ code: 400, data: null, msg: "请求体格式无效" }, { status: 400 });
+        return NextResponse.json({ code: 400, data: null, msg: await serverMessage("common.invalidJsonBody") }, { status: 400 });
     }
     if ("keys" in body && !Array.isArray(body.keys)) {
-        return NextResponse.json({ code: 400, data: null, msg: "keys 必须是字符串数组" }, { status: 400 });
+        return NextResponse.json({ code: 400, data: null, msg: await serverMessage("admin.keysMustBeStringArray") }, { status: 400 });
     }
     const keys = Array.isArray(body.keys) ? body.keys.filter((key): key is string => typeof key === "string" && key.trim().length > 0) : [];
-    if (!keys.length) return NextResponse.json({ code: 400, data: null, msg: "请选择要删除的对象" }, { status: 400 });
+    if (!keys.length) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("media.selectObjectsToDelete") }, { status: 400 });
     try {
         const data = await deleteExternalStorageFiles(keys);
         return NextResponse.json({ code: 0, data, msg: data.blocked.length ? "部分对象仍被业务记录引用，未执行删除" : "外部存储对象已删除" });
     } catch (error) {
         console.error("Object storage delete failed", error);
-        return NextResponse.json({ code: 500, data: null, msg: "外部存储对象删除失败" }, { status: 500 });
+        return NextResponse.json({ code: 500, data: null, msg: await serverMessage("media.externalObjectDeleteFailed") }, { status: 500 });
     }
 }
 
 async function requireAdmin() {
     const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
-    return user.role === "admin" ? null : NextResponse.json({ code: 403, data: null, msg: "需要管理员权限" }, { status: 403 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    return user.role === "admin" ? null : NextResponse.json({ code: 403, data: null, msg: await serverMessage("common.adminRequired") }, { status: 403 });
 }

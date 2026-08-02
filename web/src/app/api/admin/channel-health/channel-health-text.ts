@@ -3,6 +3,7 @@ import { channelProtocolDefinition, protocolAuthHeaders } from "@/lib/channel-pr
 import { buildProviderRequest, isProviderBusinessError, readProviderString } from "@/lib/server/provider-task-config";
 import type { ResolvedTextProtocol } from "@/lib/server/text-protocol-resolver";
 import { failed, HEALTH_REQUEST_TIMEOUT_MS, pointsInfo, readPayload, textProtocolUrl, type HealthResult } from "./channel-health-helpers";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export async function testText(baseUrl: string, apiKey: string, model: string, channelProtocol: SystemChannelProtocol, advanced: SystemChannelAdvancedConfig, protocol: ResolvedTextProtocol): Promise<HealthResult> {
     const prompt = "Reply exactly OK.";
@@ -31,7 +32,7 @@ export async function testText(baseUrl: string, apiKey: string, model: string, c
         protocol.kind === "gemini" ? "candidates[0].content.parts[0].text" : protocol.kind === "claude" ? "content[0].text" : protocol.kind === "responses" ? "output_text" : protocol.kind === "custom" ? protocol.resultField : "choices[0].message.content";
     const content = readProviderString(payload, resultField, ["output_text", "text", "content", "response", "result"]);
     const taskId = readProviderString(payload, undefined, ["task_id", "taskId", "id", "job_id", "jobId", "request_id", "requestId"]);
-    if (!content && !taskId) return { ok: false, kind: "text", model, status: response.status, protocolKey: channelProtocol, error: `文本接口成功，但没有按 ${resultField || "配置结果字段"} 返回内容或任务 ID` };
+    if (!content && !taskId) return { ok: false, kind: "text", model, status: response.status, protocolKey: channelProtocol, error: await serverMessage("admin.textSuccessNoContentOrTaskId", { field: resultField || "配置结果字段" }) };
     const definition = channelProtocolDefinition(channelProtocol);
     return {
         ok: true,

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { App, Button, DatePicker, Form, Input, InputNumber, Modal, Select, Segmented, Space, Switch, Table, Tag } from "antd";
@@ -18,22 +20,6 @@ import { PromotionCampaignPanel } from "./promotion-campaign-panel";
 type BillingTab = "orders" | "products" | "promotions" | "coupons" | "payments";
 
 const PAGE_SIZE = 20;
-const tabOptions: Array<{ label: string; value: BillingTab }> = [
-    { label: "订单运营", value: "orders" },
-    { label: "套餐商品", value: "products" },
-    { label: "促销活动", value: "promotions" },
-    { label: "优惠券", value: "coupons" },
-    { label: "支付配置", value: "payments" },
-];
-const statusOptions: Array<{ label: string; value: BillingOrderStatus | "" }> = [
-    { label: "全部状态", value: "" },
-    { label: "待支付", value: "pending" },
-    { label: "已支付", value: "paid" },
-    { label: "已关闭", value: "closed" },
-    { label: "已取消", value: "canceled" },
-    { label: "已退款", value: "refunded" },
-    { label: "退款处理中", value: "refunding" },
-];
 
 type ProductFormValue = {
     id?: string;
@@ -93,6 +79,29 @@ import {
 } from "./billing-operation-elements";
 
 export function BillingOperations({ initialTab = "orders", initialPaymentConfig, embedded = false, hideTabs = false }: { initialTab?: BillingTab; initialPaymentConfig?: PaymentConfigSummary; embedded?: boolean; hideTabs?: boolean }) {
+    const t = useTranslations("admin");
+    const tabOptions = useMemo(
+        () => [
+            { label: t("billingOps.tabs.orders"), value: "orders" as const },
+            { label: t("billingOps.tabs.products"), value: "products" as const },
+            { label: t("billingOps.tabs.promotions"), value: "promotions" as const },
+            { label: t("billingOps.tabs.coupons"), value: "coupons" as const },
+            { label: t("billingOps.tabs.payments"), value: "payments" as const },
+        ],
+        [t],
+    );
+    const statusOptions = useMemo(
+        () => [
+            { label: t("billingOps.status.all"), value: "" as const },
+            { label: t("billingOps.status.pending"), value: "pending" as const },
+            { label: t("billingOps.status.paid"), value: "paid" as const },
+            { label: t("billingOps.status.closed"), value: "closed" as const },
+            { label: t("billingOps.status.canceled"), value: "canceled" as const },
+            { label: t("billingOps.status.refunded"), value: "refunded" as const },
+            { label: t("billingOps.status.refunding"), value: "refunding" as const },
+        ],
+        [t],
+    );
     const { message, modal } = App.useApp();
     const [productForm] = Form.useForm<ProductFormValue>();
     const [activeTab, setActiveTab] = useState<BillingTab>(initialTab);
@@ -438,10 +447,10 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
             {activeTab === "orders" ? (
                 <>
                     <section className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        <Metric title="实收金额" value={formatMoney(summary?.orders.paidAmountCents || 0)} icon={<CircleDollarSign className="size-4" />} tone="emerald" />
-                        <Metric title="待支付金额" value={formatMoney(summary?.orders.pendingAmountCents || 0)} icon={<WalletCards className="size-4" />} tone="amber" />
-                        <Metric title="已支付订单" value={summary?.orders.paid || 0} icon={<ReceiptText className="size-4" />} tone="blue" />
-                        <Metric title="对账异常" value={reconciliationIssues} icon={<AlertTriangle className="size-4" />} tone={reconciliationIssues ? "rose" : "slate"} />
+                        <Metric title={t("billingOps.metrics.paidAmount")} value={formatMoney(summary?.orders.paidAmountCents || 0)} icon={<CircleDollarSign className="size-4" />} tone="emerald" />
+                        <Metric title={t("billingOps.metrics.pendingAmount")} value={formatMoney(summary?.orders.pendingAmountCents || 0)} icon={<WalletCards className="size-4" />} tone="amber" />
+                        <Metric title={t("billingOps.metrics.paidOrders")} value={summary?.orders.paid || 0} icon={<ReceiptText className="size-4" />} tone="blue" />
+                        <Metric title={t("billingOps.metrics.reconciliationIssues")} value={reconciliationIssues} icon={<AlertTriangle className="size-4" />} tone={reconciliationIssues ? "rose" : "slate"} />
                     </section>
 
                     <section

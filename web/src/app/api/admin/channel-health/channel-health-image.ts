@@ -3,6 +3,7 @@ import { buildGlobalAiOpcImageRequest, type GlobalAiOpcPreset } from "@/lib/glob
 import { isProviderBusinessError } from "@/lib/server/provider-task-config";
 import { sanitizeProviderMessage } from "@/lib/server/admin-channel-config";
 import { apiUrl, errorMessage, failed, findStringByKeys, HEALTH_REQUEST_TIMEOUT_MS, isQingyanHealthTarget, isSub2ApiHealthTarget, jsonHeaders, pointsInfo, readPayload, VIDEO_HEALTH_REFERENCE_IMAGE, type HealthResult } from "./channel-health-helpers";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export async function testImage(baseUrl: string, apiKey: string, model: string, globalPreset: GlobalAiOpcPreset | undefined, protocol: SystemChannelProtocol, advanced: SystemChannelAdvancedConfig): Promise<HealthResult> {
     if (globalPreset?.capability === "image") {
@@ -67,7 +68,7 @@ export async function testImage(baseUrl: string, apiKey: string, model: string, 
         if (responseFormat === "url" && /response[_ -]?format|url|unsupported|not supported|invalid|not implemented/i.test(message)) continue;
         return failed("image", model, response.status, payload, apiKey);
     }
-    return { ok: false, kind: "image", model, status: 0, error: "图片测试失败" };
+    return { ok: false, kind: "image", model, status: 0, error: await serverMessage("admin.imageTestFailed") };
 }
 
 export async function withImageEditHealth(
@@ -101,7 +102,7 @@ export async function testImageEdit(
             cache: "no-store",
             signal: AbortSignal.timeout(HEALTH_REQUEST_TIMEOUT_MS),
         });
-        return imageEditHealthResult(response, await readPayload(response), apiKey);
+        return await imageEditHealthResult(response, await readPayload(response), apiKey);
     }
 
     if (protocol === "sub2api" || isSub2ApiHealthTarget(baseUrl) || isQingyanHealthTarget(baseUrl)) {
@@ -122,7 +123,7 @@ export async function testImageEdit(
             cache: "no-store",
             signal: AbortSignal.timeout(HEALTH_REQUEST_TIMEOUT_MS),
         });
-        return imageEditHealthResult(response, await readPayload(response), apiKey);
+        return await imageEditHealthResult(response, await readPayload(response), apiKey);
     }
 
     const formData = new FormData();
@@ -139,15 +140,15 @@ export async function testImageEdit(
         cache: "no-store",
         signal: AbortSignal.timeout(HEALTH_REQUEST_TIMEOUT_MS),
     });
-    return imageEditHealthResult(response, await readPayload(response), apiKey);
+    return await imageEditHealthResult(response, await readPayload(response), apiKey);
 }
 
-export function imageEditHealthResult(response: Response, payload: unknown, apiKey: string): NonNullable<HealthResult["referenceImageTest"]> {
+export async function imageEditHealthResult(response: Response, payload: unknown, apiKey: string): Promise<NonNullable<HealthResult["referenceImageTest"]>> {
     if (!response.ok || isProviderBusinessError(payload)) return { ok: false, status: response.status, error: sanitizeProviderMessage(errorMessage(payload, `图生图测试失败，状态码 ${response.status}`), [apiKey]) };
     const taskId = findStringByKeys(payload, ["task_id", "taskId", "id", "job_id", "jobId", "request_id", "requestId"]);
     const remoteUrl = findStringByKeys(payload, ["url", "image_url", "imageUrl", "result_url", "resultUrl"]);
     const inlineImage = findStringByKeys(payload, ["b64_json", "base64"]);
-    if (!taskId && !remoteUrl && !inlineImage) return { ok: false, status: response.status, error: "图生图接口成功，但没有返回图片或任务 ID" };
+    if (!taskId && !remoteUrl && !inlineImage) return { ok: false, status: response.status, error: await serverMessage("admin.imageEditNoResult") };
     return { ok: true, status: response.status, taskId: taskId || undefined, remoteUrl: remoteUrl || undefined };
 }
 

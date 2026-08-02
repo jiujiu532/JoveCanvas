@@ -4,6 +4,7 @@ import { isSeedanceVideoModelName } from "@/lib/model-capability";
 import { isQingyanProvider } from "@/lib/provider-compatibility";
 import { isProviderBusinessError } from "@/lib/server/provider-task-config";
 import { apiUrl, errorMessage, failed, findStringByKeys, HEALTH_REQUEST_TIMEOUT_MS, jsonHeaders, pointsInfo, readPayload, VIDEO_HEALTH_REFERENCE_IMAGE, type HealthResult } from "./channel-health-helpers";
+import { serverMessage } from "@/lib/server/server-messages";
 
 const GLOBAL_AIOPC_VIDEO_CREATE_PATH = "/videos/videos";
 const SEEDANCE_VIDEO_CREATE_PATH = "/contents/generations/tasks";
@@ -122,7 +123,7 @@ export async function testVideoPayloads(baseUrl: string, apiKey: string, model: 
             return failed("video", model, response.status, data, apiKey);
         }
     }
-    return { ok: false, kind: "video", model, status: 0, error: "视频测试失败：所有兼容路径都不可用" };
+    return { ok: false, kind: "video", model, status: 0, error: await serverMessage("admin.videoTestAllPathsFailed") };
 }
 
 function videoHealthPaths(baseUrl: string, model: string) {

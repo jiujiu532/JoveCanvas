@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft, ReceiptText } from "lucide-react";
 
 import { AuthUserHydrator } from "@/components/auth/auth-user-hydrator";
@@ -29,7 +30,7 @@ export default async function AdminBillingPage({ searchParams }: AdminBillingPag
     const currentUser = access.user;
     if (currentUser.role !== "admin") redirect("/");
 
-    const paymentConfig = await getPaymentConfigSummary(await resolveRequestOrigin());
+    const [paymentConfig, t] = await Promise.all([getPaymentConfigSummary(await resolveRequestOrigin()), getTranslations("admin.billingPage")]);
 
     return (
         <AuthUserHydrator
@@ -55,7 +56,7 @@ export default async function AdminBillingPage({ searchParams }: AdminBillingPag
                             <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-stone-950 text-white dark:bg-stone-100 dark:text-stone-950">
                                 <ArrowLeft className="size-4" />
                             </span>
-                            <span className="truncate">财务钱包</span>
+                            <span className="truncate">{t("title")}</span>
                         </Link>
                         <UserStatusActions initialUser={currentUser} />
                     </div>
@@ -68,8 +69,8 @@ export default async function AdminBillingPage({ searchParams }: AdminBillingPag
                                 <ReceiptText className="size-5" />
                             </span>
                             <div className="min-w-0">
-                                <h1 className="text-2xl font-semibold tracking-normal text-stone-950 dark:text-stone-100">财务钱包</h1>
-                                <p className="mt-1.5 max-w-2xl text-sm leading-6 text-stone-500 dark:text-stone-400">管理套餐商品、限时促销、优惠券、支付配置、订单收款和退款对账。</p>
+                                <h1 className="text-2xl font-semibold tracking-normal text-stone-950 dark:text-stone-100">{t("title")}</h1>
+                                <p className="mt-1.5 max-w-2xl text-sm leading-6 text-stone-500 dark:text-stone-400">{t("description")}</p>
                             </div>
                         </div>
                         <Link
@@ -77,7 +78,7 @@ export default async function AdminBillingPage({ searchParams }: AdminBillingPag
                             className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-stone-200 px-3 text-sm font-medium text-stone-700 transition hover:bg-stone-50 dark:border-stone-800 dark:text-stone-200 dark:hover:bg-stone-900"
                         >
                             <ArrowLeft className="size-4" />
-                            返回后台
+                            {t("backToAdmin")}
                         </Link>
                     </div>
 

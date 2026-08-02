@@ -18,6 +18,7 @@ import { testText } from "./channel-health-text";
 import { testImage } from "./channel-health-image";
 import { testAudio } from "./channel-health-audio";
 import { testVideo } from "./channel-health-video";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -58,14 +59,14 @@ const healthCooldowns = (globalCooldownStore.__vozebProChannelHealthCooldowns ??
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     const [body, settings] = await Promise.all([readJsonBody<HealthPayload>(request), getAuthSettings()]);
     const { baseUrl, apiKey, savedChannel } = resolveAdminChannelCredentials(settings, body);
     const model = typeof body.model === "string" ? body.model.trim() : "";
     const kind = body.kind === "image" || body.kind === "video" || body.kind === "audio" || body.kind === "text" ? body.kind : "";
-    if (!baseUrl || !model || !kind) return NextResponse.json({ error: "请填写 Base URL、API Key，并选择要测试的模型" }, { status: 400 });
+    if (!baseUrl || !model || !kind) return NextResponse.json({ error: await serverMessage("admin.fillChannelTestFields") }, { status: 400 });
     const channelAdvanced = {
         ...(savedChannel?.advancedConfig || {}),
         ...(body.protocol !== undefined ? { protocol: body.protocol } : {}),
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
     )!;
     const protocol = advancedConfig.protocol || requestedProtocol;
     advancedConfig.authMode = resolveChannelAuthMode(advancedConfig);
-    if (!apiKey && advancedConfig.authMode !== "none") return NextResponse.json({ error: "请填写 Base URL、API Key，并选择要测试的模型" }, { status: 400 });
+    if (!apiKey && advancedConfig.authMode !== "none") return NextResponse.json({ error: await serverMessage("admin.fillChannelTestFields") }, { status: 400 });
     const catalogPresets = resolveGlobalAiOpcCatalogPresets(baseUrl, advancedConfig);
     const globalPreset = resolveGlobalAiOpcPreset({ protocol: "globalaiopc", globalAiOpcPresets: catalogPresets.map((preset) => preset.id) }, model);
     const providerBaseUrl = globalPreset?.baseUrl || baseUrl;
@@ -125,14 +126,14 @@ export async function POST(request: Request) {
           ? literalChannelHealthUrl(providerBaseUrl, advancedConfig.createPath)
           : apiUrl(providerBaseUrl, "/models");
     if (!(await isSafeOutboundUrl(healthUrl))) {
-        const result = { ok: false, kind, model, status: 0, error: "Base URL 不允许访问内网或保留地址" } satisfies HealthResult;
+        const result = { ok: false, kind, model, status: 0, error: await serverMessage("common.baseUrlPrivateBlocked") } satisfies HealthResult;
         await persistHealthResult(savedChannel?.id, result);
         return NextResponse.json({ result }, { status: 200 });
     }
 
     const cooldownKey = `${currentUser.id}:${baseUrl.toLowerCase()}:${kind}`;
     const waitMs = (healthCooldowns.get(cooldownKey) || 0) - Date.now();
-    if (waitMs > 0) return NextResponse.json({ error: `接口测试过于频繁，请 ${Math.ceil(waitMs / 1000)} 秒后再试` }, { status: 429 });
+    if (waitMs > 0) return NextResponse.json({ error: await serverMessage("common.rateLimitedWithSeconds", { feature: await serverMessage("features.apiTest"), seconds: Math.ceil(waitMs / 1000) }) }, { status: 429 });
     healthCooldowns.set(cooldownKey, Date.now() + HEALTH_COOLDOWN_MS);
 
     try {
