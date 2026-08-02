@@ -482,7 +482,10 @@
         "noAdminInImport": "导入的用户数据库里没有可用管理员账号，为避免锁死后台已取消导入",
         "formatInvalid": "备份文件格式不正确",
         "authImportUnsafe": "认证备份不能安全导入",
-        "authDataUnavailable": "当前服务器认证数据不可用，不能安全导入用户备份"
+        "authDataUnavailable": "当前服务器认证数据不可用，不能安全导入用户备份",
+        "promptsFormatInvalid": "公共提示词备份格式不正确",
+        "generationLogsFormatInvalid": "生成日志备份格式不正确",
+        "accountDeletionFormatInvalid": "注销申请备份格式不正确"
     },
     "admin": {
         "fillChannelTestFields": "请填写 Base URL、API Key，并选择要测试的模型",
@@ -625,7 +628,9 @@
         "titleMustBeString": "title 必须是字符串",
         "updatedAtMustBeString": "updatedAt 必须是字符串",
         "viewportMustBeObject": "viewport 必须是对象",
-        "projectNotFound": "画布项目不存在"
+        "projectNotFound": "画布项目不存在",
+        "projectTooLarge": "画布项目数据过大",
+        "projectAlreadyExists": "画布项目已存在"
     },
     "creative": {
         "sessionCreated": "创作会话已创建",

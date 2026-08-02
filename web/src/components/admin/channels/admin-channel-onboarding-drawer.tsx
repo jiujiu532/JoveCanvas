@@ -68,14 +68,24 @@ export function AdminChannelOnboardingDrawer({ open, initialProtocol, settings, 
         if (!selectedUpstreamModel && channel?.models.length) setBindingDraft(switchChannelBindingUpstream(channel.models[0]));
     }, [channel?.models, selectedUpstreamModel]);
 
-    const protocolOptions = useMemo(() => channelProtocolOptions().filter((item) => !["auto", "compatible"].includes(item.value)), []);
+    const protocolOptions = useMemo(
+        () =>
+            channelProtocolOptions()
+                .filter((item) => !["auto", "compatible"].includes(item.value))
+                .map((item) => ({
+                    ...item,
+                    label: t(`channelEditor.protocols.${item.value}.label`),
+                    description: t(`channelEditor.protocols.${item.value}.description`),
+                })),
+        [t],
+    );
     const updateChannel = (patch: Partial<SystemModelChannel>) => {
         if (!draftId) return;
         onChange({ ...settings, systemChannels: settings.systemChannels.map((item) => (item.id === draftId ? { ...item, ...patch } : item)) });
     };
     const beginChannel = () => {
         const definition = channelProtocolDefinition(selectedProtocol);
-        const next = applyChannelProtocol({ ...createSystemChannel(), name: t("channelOnboarding.channelSuffix", { label: definition.label }), enabled: false }, selectedProtocol);
+        const next = applyChannelProtocol({ ...createSystemChannel(), name: t("channelOnboarding.channelSuffix", { label: t(`channelEditor.protocols.${definition.id}.label`) }), enabled: false }, selectedProtocol);
         onChange({ ...settings, systemChannels: [...settings.systemChannels, next] });
         setDraftId(next.id);
         setStep(1);
@@ -273,7 +283,15 @@ function OnboardingProgress({ current }: { current: number }) {
     );
 }
 
-function ProtocolSelection({ protocols, selected, onSelect }: { protocols: ReturnType<typeof channelProtocolOptions>; selected: SystemChannelProtocol; onSelect: (protocol: SystemChannelProtocol) => void }) {
+function ProtocolSelection({
+    protocols,
+    selected,
+    onSelect,
+}: {
+    protocols: Array<{ value: SystemChannelProtocol; label: string; description: string }>;
+    selected: SystemChannelProtocol;
+    onSelect: (protocol: SystemChannelProtocol) => void;
+}) {
     const t = useTranslations("admin");
     return (
         <div>
@@ -379,7 +397,7 @@ function ProtocolLockedSummary({ channel }: { channel: SystemModelChannel }) {
         <div className="border-y border-stone-200 py-3 dark:border-stone-800">
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                    <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{definition.label}</div>
+                    <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t(`channelEditor.protocols.${definition.id}.label`)}</div>
                     <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{t("channelOnboarding.fixedParams")}</div>
                 </div>
                 <Tag className="m-0 !border-stone-300 !bg-stone-50 !text-stone-700 dark:!border-stone-700 dark:!bg-stone-900 dark:!text-stone-200">{definition.strict ? t("channelOnboarding.strict") : t("channelOnboarding.compatible")}</Tag>
@@ -570,7 +588,7 @@ function ReviewStep({ channel, settings, validations }: { channel: SystemModelCh
         <div className="space-y-5">
             <div className="grid gap-x-6 gap-y-4 border-y border-stone-200 py-4 sm:grid-cols-2 dark:border-stone-800">
                 <ReviewValue label={t("channelOnboarding.channel")} value={channel.name} />
-                <ReviewValue label={t("channelOnboarding.protocol")} value={channelProtocolDefinition(channel.advancedConfig?.protocol || "auto").label} />
+                <ReviewValue label={t("channelOnboarding.protocol")} value={t(`channelEditor.protocols.${channel.advancedConfig?.protocol || "auto"}.label`)} />
                 <ReviewValue label="Base URL" value={channel.baseUrl} />
                 <ReviewValue label={t("channelOnboarding.upstreamModel")} value={t("channelOnboarding.upstreamModelCount", { count: channel.models.length })} />
                 <ReviewValue label={t("channelOnboarding.capabilityCheck")} value={t("channelOnboarding.passCount", { ok: validations.filter(({ result }) => result.ok).length, total: Math.max(validations.length, 1) })} />

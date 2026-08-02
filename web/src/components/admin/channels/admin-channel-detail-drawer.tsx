@@ -102,7 +102,7 @@ function ChannelOverview({
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-4 dark:border-stone-800">
                 <div className="flex flex-wrap items-center gap-2">
                     <ChannelStatusBadge status={status} />
-                    <Tag>{channelProtocolLabel(channel)}</Tag>
+                    <Tag>{channelProtocolLabel(channel, t)}</Tag>
                     {capabilities.map((capability) => (
                         <Tag key={capability}>{capability}</Tag>
                     ))}
@@ -119,7 +119,7 @@ function ChannelOverview({
             <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
                 <OverviewValue label={t("channelDetail.baseUrl")} value={channel.baseUrl || t("channelDetail.notSet")} />
                 <OverviewValue label={t("channelDetail.credentials")} value={channelRequiresApiKey(channel) ? (channel.apiKey || channel.hasApiKey ? t("channelDetail.saved") : t("channelDetail.notSet")) : t("channelDetail.noCredentials")} />
-                <OverviewValue label={t("channelDetail.protocol")} value={channelProtocolLabel(channel)} />
+                <OverviewValue label={t("channelDetail.protocol")} value={channelProtocolLabel(channel, t)} />
                 <OverviewValue label={t("channelDetail.upstreamModels")} value={t("channelDetail.count", { count: channel.models.length })} />
                 <OverviewValue label={t("channelDetail.logicalBindings")} value={t("channelDetail.count", { count: channelBindingCount(channel.id, settings) })} />
                 <OverviewValue label={t("channelDetail.thisSession")} value={entries.length ? t("channelDetail.passed", { ok: entries.filter(({ result }) => result.ok).length, total: entries.length }) : t("channelDetail.notTested")} />

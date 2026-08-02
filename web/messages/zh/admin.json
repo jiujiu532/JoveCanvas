@@ -1498,9 +1498,54 @@
     },
     "channelEditor": {
         "protocols": {
-            "auto": "自动",
-            "qingyan": "青衍智影",
-            "compatible": "通用兼容"
+            "openai": {
+                "label": "OpenAI",
+                "description": "OpenAI 官方及严格兼容接口，支持文本、图片、视频和语音。"
+            },
+            "seedance": {
+                "label": "Seedance 2.0 / SD2",
+                "description": "Seedance 2.0 多模态视频协议。SD2 在这里不表示 Stable Diffusion。"
+            },
+            "stable-diffusion": {
+                "label": "Stable Diffusion（SD）",
+                "description": "Automatic1111 / Forge WebUI 图片协议；与 Seedance 2.0（SD2）视频协议完全独立。"
+            },
+            "volcengine-video": {
+                "label": "火山方舟视频",
+                "description": "火山方舟视频生成协议，仅配置视频模型与文生视频、图生视频任务路径。"
+            },
+            "sub2api": {
+                "label": "sub2api",
+                "description": "sub2api 聚合接口；文本沿用 OpenAI，图生图严格使用 image_urls 字符串数组。"
+            },
+            "newapi": {
+                "label": "New API",
+                "description": "New API 聚合网关，按 OpenAI 路径调用并保留独立协议身份。"
+            },
+            "seedance-special": {
+                "label": "Seedance 2.0 特价版",
+                "description": "按特价版接口文档固定模型、参数、素材与轮询路径。"
+            },
+            "custom": {
+                "label": "自定义协议",
+                "description": "通过文档 URL、cURL 和请求/响应示例生成可复核的声明式协议。"
+            },
+            "qingyan": {
+                "label": "青衍智影",
+                "description": "保留现有青衍图片与视频兼容适配。"
+            },
+            "globalaiopc": {
+                "label": "GlobalAiOpc",
+                "description": "按现有 GlobalAiOpc 模型预设执行文本、图片与视频请求。"
+            },
+            "compatible": {
+                "label": "通用兼容",
+                "description": "保留旧版兼容模式；新接口优先使用自定义协议并完成测试。"
+            },
+            "auto": {
+                "label": "自动识别（旧配置）",
+                "description": "仅用于已有渠道过渡；新增渠道应明确选择协议。"
+            }
         },
         "publicReferenceRule": "参考素材使用可被上游访问的公网 URL；由服务器在提交前生成受控访问地址。",
         "pasteExampleRequired": "请粘贴上游 cURL、请求 JSON 或返回示例",

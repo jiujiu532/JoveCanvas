@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth/session";
 import { canvasProjectError, createCanvasProjectForUser, deleteCanvasProjectsForUser, listCanvasProjectsForUser } from "@/lib/server/canvas-project-service";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export async function GET() {
     const user = await getCurrentUser();
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ code: 0, data: { project }, msg: await serverMessage("canvas.projectCreated") });
     } catch (error) {
         const known = canvasProjectError(error);
-        if (known) return NextResponse.json({ code: known.status, data: null, msg: known.message }, { status: known.status });
+        if (known) return NextResponse.json({ code: known.status, data: null, msg: await localizeErrorMessage(known) }, { status: known.status });
         throw error;
     }
 }

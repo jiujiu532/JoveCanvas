@@ -1,7 +1,7 @@
 import type { LogicalModelCapability, SystemDefaultModels, SystemModelChannel } from "@/lib/auth/store";
 import type { ChannelHealthResult } from "@/components/admin/admin-system-channel-editor";
 import { channelDetectedCapabilities, normalizeDefaultModelsConfig } from "@/lib/model-routing-config";
-import { channelProtocolDefinition } from "@/lib/channel-protocol-registry";
+import { channelProtocolDefinition, channelProtocolOptions } from "@/lib/channel-protocol-registry";
 
 export type ChannelWorkspaceSettings = {
     systemChannels: SystemModelChannel[];
@@ -44,8 +44,26 @@ export function channelCapabilityLabels(channel: SystemModelChannel, labels?: Ca
     return Array.from(channelDetectedCapabilities(channel)).map((capability) => map[capability]);
 }
 
-export function channelProtocolLabel(channel: SystemModelChannel) {
-    return channelProtocolDefinition(channel.advancedConfig?.protocol || "auto").label;
+export function channelProtocolLabel(channel: SystemModelChannel, t?: (key: string) => string) {
+    const protocol = channel.advancedConfig?.protocol || "auto";
+    if (t) return t(`channelEditor.protocols.${protocol}.label`);
+    return channelProtocolDefinition(protocol).label;
+}
+
+export function channelProtocolUiOptions(t: (key: string) => string) {
+    return channelProtocolOptions().map((item) => ({
+        ...item,
+        label: t(`channelEditor.protocols.${item.value}.label`),
+        description: t(`channelEditor.protocols.${item.value}.description`),
+    }));
+}
+
+export function channelProtocolUiLabel(protocol: string, t: (key: string) => string) {
+    return t(`channelEditor.protocols.${protocol}.label`);
+}
+
+export function channelProtocolUiDescription(protocol: string, t: (key: string) => string) {
+    return t(`channelEditor.protocols.${protocol}.description`);
 }
 
 export function channelHealthEntries(channelId: string, healthResults: Record<string, ChannelHealthResult>, persistedResults?: SystemModelChannel["healthResults"]) {

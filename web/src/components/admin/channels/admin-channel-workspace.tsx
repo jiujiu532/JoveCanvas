@@ -93,7 +93,7 @@ export function AdminChannelWorkspace({ settings, fetchingModelId, testingChanne
                 </div>
             ),
         },
-        { title: t("channelWorkspace.columns.protocol"), key: "protocol", width: 190, render: (_, channel) => <span className="text-sm">{channelProtocolLabel(channel)}</span> },
+        { title: t("channelWorkspace.columns.protocol"), key: "protocol", width: 190, render: (_, channel) => <span className="text-sm">{channelProtocolLabel(channel, t)}</span> },
         { title: t("channelWorkspace.columns.models"), key: "models", width: 90, align: "center", render: (_, channel) => channel.models.length },
         { title: t("channelWorkspace.columns.capabilities"), key: "capabilities", width: 170, render: (_, channel) => <span className="text-xs text-stone-600 dark:text-stone-300">{channelCapabilityLabels(channel, capabilityLabels).join(" / ") || t("channelWorkspace.pendingDetect")}</span> },
         { title: t("channelWorkspace.columns.bindings"), key: "bindings", width: 80, align: "center", render: (_, channel) => channelBindingCount(channel.id, settings) },
@@ -297,7 +297,7 @@ function ChannelList({
                         />
                     </div>
                     <div className="min-w-0 md:w-44">
-                        <Select className="w-full" value={protocolFilter} options={[{ label: t("channelWorkspace.protocolAll"), value: "all" }, ...channelProtocolDefinitions.map((definition) => ({ label: definition.label, value: definition.id }))]} onChange={onProtocol} />
+                        <Select className="w-full" value={protocolFilter} options={[{ label: t("channelWorkspace.protocolAll"), value: "all" }, ...channelProtocolDefinitions.map((definition) => ({ label: t(`channelEditor.protocols.${definition.id}.label`), value: definition.id }))]} onChange={onProtocol} />
                     </div>
                 </div>
             </div>
@@ -321,7 +321,7 @@ function ChannelList({
                                     <span className="truncate text-sm font-semibold text-stone-950 dark:text-stone-100">{channel.name || t("channelWorkspace.unnamed")}</span>
                                     <ChannelStatusTag channel={channel} healthResults={healthResults} />
                                 </div>
-                                <div className="mt-1 truncate text-xs text-stone-500 dark:text-stone-400">{channelProtocolLabel(channel)}</div>
+                                <div className="mt-1 truncate text-xs text-stone-500 dark:text-stone-400">{channelProtocolLabel(channel, t)}</div>
                             </div>
                             <Switch size="small" checked={channel.enabled} disabled aria-label={t("channelWorkspace.enabledStateAria", { name: channel.name })} />
                         </div>
@@ -369,11 +369,11 @@ function ProtocolCenter({ settings, onCreate, onOpenChannel }: { settings: Chann
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <span className="text-sm font-semibold text-stone-950 dark:text-stone-100">{definition.label}</span>
+                                            <span className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t(`channelEditor.protocols.${definition.id}.label`)}</span>
                                             <Tag className="m-0">{t("channelWorkspace.builtIn")}</Tag>
                                             {definition.strict ? <Tag className="m-0 !border-stone-300 !bg-stone-50 !text-stone-700 dark:!border-stone-700 dark:!bg-stone-900 dark:!text-stone-200">{t("channelWorkspace.strict")}</Tag> : null}
                                         </div>
-                                        <div className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">{definition.description}</div>
+                                        <div className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">{t(`channelEditor.protocols.${definition.id}.description`)}</div>
                                     </div>
                                     <Button size="small" onClick={() => onCreate(definition.id)}>
                                         {t("channelWorkspace.connect")}
@@ -448,7 +448,7 @@ function ValidationRecords({ settings, healthResults, onOpen }: { settings: Chan
                                 })}
                             </div>
                             <div className="mt-1 truncate text-xs text-stone-500 dark:text-stone-400">
-                                {result.model || t("channelWorkspace.modelUnset")} · {result.protocol || channelProtocolLabel(channel)}
+                                {result.model || t("channelWorkspace.modelUnset")} · {result.protocol || channelProtocolLabel(channel, t)}
                             </div>
                         </div>
                         <div className="flex shrink-0 items-center gap-2 px-2">

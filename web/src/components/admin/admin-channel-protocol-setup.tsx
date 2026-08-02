@@ -111,8 +111,8 @@ export function AdminChannelProtocolSetup({ channel, protocolLocked = false, onC
                             optionLabelProp="label"
                             options={channelProtocolOptions().map((item) => ({
                                 value: item.value,
-                                label: item.label,
-                                title: item.description,
+                                label: t(`channelEditor.protocols.${item.value}.label`),
+                                title: t(`channelEditor.protocols.${item.value}.description`),
                             }))}
                             optionRender={(option) => (
                                 <div className="py-1">
@@ -125,7 +125,7 @@ export function AdminChannelProtocolSetup({ channel, protocolLocked = false, onC
                     </LabeledControl>
                     <div className="min-w-0 pb-0.5 text-xs leading-5 text-stone-500 dark:text-stone-400">
                         <div>
-                            {t("protocolSetup.protocolLine", { label: definition.label })}
+                            {t("protocolSetup.protocolLine", { label: t(`channelEditor.protocols.${definition.id}.label`) })}
                             {detectedCapabilities.size
                                 ? t("protocolSetup.detectedCapabilities", {
                                       labels: Array.from(detectedCapabilities)

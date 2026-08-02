@@ -20,7 +20,6 @@ import { applyModelProtocol, channelConnectionReady, channelProtocolDefinition, 
 export type ChannelHealthKind = SharedChannelHealthKind;
 export type ChannelHealthResult = SharedChannelHealthResult;
 
-const protocolOptions = channelProtocolOptions().map(({ value, label }) => ({ value, label }));
 const ALL_GLOBAL_AIOPC_PRESETS = "__all_globalaiopc_presets__";
 const modelCapabilityOptionValues: LogicalModelCapability[] = ["text", "image", "video", "audio"];
 
@@ -406,7 +405,8 @@ export function SystemChannelEditor({
 function ModelRouteConfigEditor({ channel, advanced, onChange }: { channel: SystemModelChannel; advanced: SystemChannelAdvancedConfig; onChange: (patch: Partial<SystemChannelAdvancedConfig>) => void }) {
     const t = useTranslations("admin");
     const modelCapabilityOptions = modelCapabilityOptionValues.map((value) => ({ value, label: t(`channelEditor.kinds.${value}` as never) }));
-    
+    const protocolOptions = channelProtocolOptions().map(({ value }) => ({ value, label: t(`channelEditor.protocols.${value}.label`) }));
+
     const [selected, setSelected] = useState("");
     const models = channel.models;
     const selectedModel = models.some((model) => normalizeModelId(model) === normalizeModelId(selected)) ? models.find((model) => normalizeModelId(model) === normalizeModelId(selected)) || "" : models[0] || "";

@@ -482,7 +482,10 @@
         "noAdminInImport": "Imported user database has no active admin. Import cancelled to avoid locking out the console",
         "formatInvalid": "Backup file format is invalid",
         "authImportUnsafe": "Auth backup cannot be imported safely",
-        "authDataUnavailable": "Server auth data is unavailable; cannot safely import a user backup"
+        "authDataUnavailable": "Server auth data is unavailable; cannot safely import a user backup",
+        "promptsFormatInvalid": "Public prompts backup format is invalid",
+        "generationLogsFormatInvalid": "Generation logs backup format is invalid",
+        "accountDeletionFormatInvalid": "Account deletion requests backup format is invalid"
     },
     "admin": {
         "fillChannelTestFields": "Please fill Base URL, API Key, and select a model to test",
@@ -625,7 +628,9 @@
         "titleMustBeString": "title must be a string",
         "updatedAtMustBeString": "updatedAt must be a string",
         "viewportMustBeObject": "viewport must be an object",
-        "projectNotFound": "Canvas project not found"
+        "projectNotFound": "Canvas project not found",
+        "projectTooLarge": "Canvas project data is too large",
+        "projectAlreadyExists": "Canvas project already exists"
     },
     "creative": {
         "sessionCreated": "Creative session created",

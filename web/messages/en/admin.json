@@ -1498,9 +1498,54 @@
     },
     "channelEditor": {
         "protocols": {
-            "auto": "Auto",
-            "qingyan": "Qingyan Vision",
-            "compatible": "Generic Compatible"
+            "openai": {
+                "label": "OpenAI",
+                "description": "Official OpenAI and strict-compatible APIs for text, image, video, and audio."
+            },
+            "seedance": {
+                "label": "Seedance 2.0 / SD2",
+                "description": "Seedance 2.0 multimodal video protocol. SD2 here does not mean Stable Diffusion."
+            },
+            "stable-diffusion": {
+                "label": "Stable Diffusion (SD)",
+                "description": "Automatic1111 / Forge WebUI image protocol; fully separate from Seedance 2.0 (SD2) video."
+            },
+            "volcengine-video": {
+                "label": "Volcengine Ark Video",
+                "description": "Volcengine Ark video generation protocol for video models and text/image-to-video paths."
+            },
+            "sub2api": {
+                "label": "sub2api",
+                "description": "sub2api gateway; text follows OpenAI, image-to-image requires image_urls string arrays."
+            },
+            "newapi": {
+                "label": "New API",
+                "description": "New API gateway using OpenAI-style paths with a distinct protocol identity."
+            },
+            "seedance-special": {
+                "label": "Seedance 2.0 Special Pricing",
+                "description": "Fixed models, parameters, assets, and polling paths per special-pricing docs."
+            },
+            "custom": {
+                "label": "Custom Protocol",
+                "description": "Build a reviewable declarative protocol from docs URL, cURL, and request/response samples."
+            },
+            "qingyan": {
+                "label": "Qingyan Vision",
+                "description": "Existing Qingyan image and video compatibility adapters."
+            },
+            "globalaiopc": {
+                "label": "GlobalAiOpc",
+                "description": "Run text, image, and video requests with existing GlobalAiOpc model presets."
+            },
+            "compatible": {
+                "label": "Generic Compatible",
+                "description": "Legacy compatibility mode; prefer custom protocol and tests for new integrations."
+            },
+            "auto": {
+                "label": "Auto-detect (legacy)",
+                "description": "For existing channels only; new channels should pick an explicit protocol."
+            }
         },
         "publicReferenceRule": "Reference media must use a public URL the upstream can access; the server generates a controlled access URL before submit.",
         "pasteExampleRequired": "Paste an upstream cURL, request JSON, or response example",
