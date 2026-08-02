@@ -16,7 +16,7 @@ describe("Drama project Agent references", () => {
 
         expect(source).toContain("clientRequestId: submission.clientRequestId");
         expect(source).toContain("failedSubmissionsRef.current.get(assistantMessageId)");
-        expect(source).toContain('aria-label="重试本次项目 Agent 请求"');
+        expect(source).toContain('aria-label={t("agent.retryAria")}');
         expect(source).toContain("metadata: { assetIds }");
         expect(source).toMatch(/messageAssetIds\(message\)\s*\.filter/);
     });

@@ -12,7 +12,8 @@ import type { AgentMediaDownload } from "@/components/agent/agent-media-download
 import { CreativeAgentControls, CreativeAgentSkillCard, type CreativeAgentModelOption } from "@/components/agent/creative-agent-controls";
 import { AgentMessageActions } from "@/components/agent/agent-message-actions";
 import { AgentMarkdown } from "@/components/agent/agent-markdown";
-import { formatAgentMessageText, friendlyAgentError } from "@/components/agent/agent-message-format";
+import { agentMessageFormatLabelsFromT, formatAgentMessageText, friendlyAgentError } from "@/components/agent/agent-message-format";
+import { useTranslations } from "next-intl";
 import { AgentMediaPreview } from "@/components/agent/agent-media-preview";
 import { clipboardImageFiles } from "@/lib/clipboard-image-files";
 import type { CreativeAsset, CreativeMessage } from "@/lib/creative-runtime-contract";
@@ -38,6 +39,7 @@ type PendingDramaSubmission = {
 };
 
 export function DramaAgentPanel({ project, episode, onConversationChange }: { project: DramaProject; episode: DramaEpisode; onConversationChange: (conversationId: string) => void }) {
+    const t = useTranslations("drama");
     const [mobileOpen, setMobileOpen] = useState(false);
     return (
         <>
@@ -46,8 +48,8 @@ export function DramaAgentPanel({ project, episode, onConversationChange }: { pr
                     <DramaAgentContent project={project} episode={episode} onConversationChange={onConversationChange} />
                 </div>
             </aside>
-            <Button type="primary" shape="circle" className="!fixed !bottom-20 !right-4 !z-30 !size-11 sm:!bottom-4 xl:!hidden" icon={<MessageSquareText className="size-4.5" />} aria-label="打开短剧项目 Agent" onClick={() => setMobileOpen(true)} />
-            <Drawer title="项目 Agent" placement="right" width="min(100vw, 420px)" open={mobileOpen} destroyOnHidden onClose={() => setMobileOpen(false)} styles={{ body: { padding: 0 } }}>
+            <Button type="primary" shape="circle" className="!fixed !bottom-20 !right-4 !z-30 !size-11 sm:!bottom-4 xl:!hidden" icon={<MessageSquareText className="size-4.5" />} aria-label={t("agent.openMobileAria")} onClick={() => setMobileOpen(true)} />
+            <Drawer title={t("agent.title")} placement="right" width="min(100vw, 420px)" open={mobileOpen} destroyOnHidden onClose={() => setMobileOpen(false)} styles={{ body: { padding: 0 } }}>
                 {mobileOpen ? <DramaAgentContent project={project} episode={episode} onConversationChange={onConversationChange} /> : null}
             </Drawer>
         </>
@@ -55,6 +57,8 @@ export function DramaAgentPanel({ project, episode, onConversationChange }: { pr
 }
 
 function DramaAgentContent({ project, episode, onConversationChange }: { project: DramaProject; episode: DramaEpisode; onConversationChange: (conversationId: string) => void }) {
+    const t = useTranslations("drama");
+    const formatLabels = agentMessageFormatLabelsFromT(useTranslations("layout"));
     const { message } = App.useApp();
     const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { logoUrl: "/logo.svg" };
     const { skills, skillsLoading, models } = useCreativeAgentOptions("drama");
@@ -113,7 +117,7 @@ function DramaAgentContent({ project, episode, onConversationChange }: { project
 
     const ensureConversation = async () => {
         if (activeConversationIdRef.current) return activeConversationIdRef.current;
-        const conversation = await createCreativeConversation({ surface: "drama", source: "drama", projectId: project.id, title: `${project.title || "短剧"} Agent` });
+        const conversation = await createCreativeConversation({ surface: "drama", source: "drama", projectId: project.id, title: t("agent.conversationTitle", { title: project.title || t("agent.fallbackProjectTitle") }) });
         activeConversationIdRef.current = conversation.id;
         onConversationChange(conversation.id);
         return conversation.id;
@@ -121,9 +125,9 @@ function DramaAgentContent({ project, episode, onConversationChange }: { project
 
     const uploadImages = async (files: File[]) => {
         const unsupported = files.find((file) => !isCreativeUploadMimeType(file.type) || !file.type.startsWith("image/"));
-        if (unsupported) return message.error(`${unsupported.name} 不是支持的图片格式`);
+        if (unsupported) return message.error(t("agent.upload.unsupportedFormat", { name: unsupported.name }));
         const oversized = files.find((file) => file.size > CREATIVE_UPLOAD_MAX_BYTES);
-        if (oversized) return message.error(`${oversized.name} 超过 20MB`);
+        if (oversized) return message.error(t("agent.upload.tooLarge", { name: oversized.name }));
         if (!files.length || uploading) return;
         setUploading(true);
         try {
@@ -132,9 +136,9 @@ function DramaAgentContent({ project, episode, onConversationChange }: { project
             for (const file of files.slice(0, 6)) uploaded.push(await uploadCreativeAsset(conversationId, file));
             setAssets((current) => [...current, ...uploaded.filter((asset) => !current.some((item) => item.id === asset.id))]);
             setSelectedAssetIds((current) => Array.from(new Set([...current, ...uploaded.map((asset) => asset.id)])).slice(-20));
-            message.success(`已上传 ${uploaded.length} 张参考图`);
+            message.success(t("agent.upload.success", { count: uploaded.length }));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "参考图上传失败");
+            message.error(error instanceof Error ? error.message : t("agent.upload.failed"));
         } finally {
             setUploading(false);
         }
@@ -188,7 +192,7 @@ function DramaAgentContent({ project, episode, onConversationChange }: { project
             return true;
         } catch (error) {
             failedSubmissionsRef.current.set(submission.temporaryAssistantId, submission);
-            const content = friendlyAgentError(error, "项目 Agent 请求失败，请稍后重试。");
+            const content = friendlyAgentError(error, t("agent.requestFailed"), formatLabels);
             setMessages((current) => current.map((item) => (item.id === submission.temporaryAssistantId ? { ...item, content, status: "failed", updatedAt: Date.now() } : item)));
             setSending(false);
             submittingRef.current = false;
@@ -244,7 +248,7 @@ function DramaAgentContent({ project, episode, onConversationChange }: { project
         if (!submission || sending || submittingRef.current) return false;
         submittingRef.current = true;
         setSending(true);
-        setMessages((current) => current.map((item) => (item.id === assistantMessageId ? { ...item, content: "正在重新提交创作请求", status: "running", updatedAt: Date.now() } : item)));
+        setMessages((current) => current.map((item) => (item.id === assistantMessageId ? { ...item, content: t("agent.resubmitting"), status: "running", updatedAt: Date.now() } : item)));
         return executeSubmission(submission);
     };
 
@@ -266,24 +270,24 @@ function DramaAgentContent({ project, episode, onConversationChange }: { project
             <div className="shrink-0 border-b border-border px-4 py-3.5">
                 <div className="flex min-w-0 items-center gap-2 font-medium">
                     <SiteLogo logoUrl={site.logoUrl} className="size-5" />
-                    <span className="truncate">项目 Agent</span>
+                    <span className="truncate">{t("agent.title")}</span>
                 </div>
-                <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">理解当前集剧本、角色、场景和镜头资产</p>
+                <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">{t("agent.subtitle")}</p>
             </div>
             <div className="min-h-0 min-w-0 flex-1 space-y-3 overflow-x-hidden overflow-y-auto px-4 py-4">
-                {loading ? <div className="py-5 text-center text-sm text-muted-foreground sm:py-8">正在读取项目对话...</div> : null}
+                {loading ? <div className="py-5 text-center text-sm text-muted-foreground sm:py-8">{t("agent.loadingConversation")}</div> : null}
                 {!loading && !messages.length ? (
                     <div className="flex min-h-40 flex-col items-center justify-center gap-2 px-4 text-center text-muted-foreground">
                         <span className="grid size-9 place-items-center rounded-md border border-border bg-muted/35">
                             <MessageSquareText className="size-4" />
                         </span>
-                        <span className="text-sm font-medium text-foreground">暂无项目对话</span>
+                        <span className="text-sm font-medium text-foreground">{t("agent.emptyConversation")}</span>
                     </div>
                 ) : null}
                 {messages.map((message) => {
                     const referencedAssets = message.role === "user" ? messageAssetIds(message).flatMap((id) => assetById.get(id) || []) : [];
                     const messageAssets = [...(assetsByRun.get(message.id) || []), ...(message.runId ? assetsByRun.get(message.runId) || [] : [])].filter((asset, index, list) => list.findIndex((item) => item.id === asset.id) === index);
-                    const displayContent = formatAgentMessageText(message.content);
+                    const displayContent = formatAgentMessageText(message.content, formatLabels);
                     return (
                         <div key={message.id} className={`group/message min-w-0 ${message.role === "user" ? "pl-8 text-right" : "pr-2"}`}>
                             {referencedAssets.length ? <DramaMessageReferences assets={referencedAssets} /> : null}
@@ -299,15 +303,15 @@ function DramaAgentContent({ project, episode, onConversationChange }: { project
                                     className="!mt-1 !h-7 !px-1.5 !text-xs !text-red-600 hover:!bg-red-50 hover:!text-red-700 dark:!text-red-300 dark:hover:!bg-red-950/30 dark:hover:!text-red-200"
                                     icon={<RotateCcw className="size-3.5" />}
                                     onClick={() => void retrySubmission(message.id)}
-                                    aria-label="重试本次项目 Agent 请求"
+                                    aria-label={t("agent.retryAria")}
                                 >
-                                    重试
+                                    {t("agent.retryButton")}
                                 </Button>
                             ) : null}
                             {message.status !== "running" ? (
                                 <AgentMessageActions
                                     text={displayContent}
-                                    downloads={agentAssetDownloads(messageAssets)}
+                                    downloads={agentAssetDownloads(messageAssets, t)}
                                     onEdit={
                                         message.role === "user" && !sending
                                             ? (text) => {
@@ -337,12 +341,12 @@ function DramaAgentContent({ project, episode, onConversationChange }: { project
                             const url = asset.serverUrl || asset.remoteUrl || "";
                             return (
                                 <div key={asset.id} className="group relative size-14 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
-                                    {url ? <AgentMediaPreview type="image" url={url} title={asset.title || "参考图"} className="size-full" /> : <ImagePlus className="m-auto size-4 text-muted-foreground" />}
+                                    {url ? <AgentMediaPreview type="image" url={url} title={asset.title || t("agent.referenceImageFallback")} className="size-full" /> : <ImagePlus className="m-auto size-4 text-muted-foreground" />}
                                     <button
                                         type="button"
                                         className="absolute right-1 top-1 z-10 grid size-5 place-items-center rounded bg-background/90 text-muted-foreground shadow-sm hover:text-foreground"
                                         onClick={() => setSelectedAssetIds((current) => current.filter((id) => id !== asset.id))}
-                                        aria-label={`移除参考图：${asset.title}`}
+                                        aria-label={t("agent.removeReferenceAria", { title: asset.title })}
                                     >
                                         <X className="size-3" />
                                     </button>
@@ -355,7 +359,7 @@ function DramaAgentContent({ project, episode, onConversationChange }: { project
                     ref={inputRef}
                     value={prompt}
                     autoSize={{ minRows: 2, maxRows: 5 }}
-                    placeholder="告诉 Agent 下一步要做什么"
+                    placeholder={t("agent.inputPlaceholder")}
                     disabled={sending}
                     variant="borderless"
                     className="!min-w-0 !bg-transparent !px-2 !shadow-none"
@@ -386,7 +390,7 @@ function DramaAgentContent({ project, episode, onConversationChange }: { project
                                 event.target.value = "";
                             }}
                         />
-                        <Button type="text" shape="circle" className="!size-8 !min-w-8" icon={<ImagePlus className="size-4" />} loading={uploading} disabled={sending} onClick={() => fileInputRef.current?.click()} aria-label="上传参考图" />
+                        <Button type="text" shape="circle" className="!size-8 !min-w-8" icon={<ImagePlus className="size-4" />} loading={uploading} disabled={sending} onClick={() => fileInputRef.current?.click()} aria-label={t("agent.uploadAria")} />
                         <CreativeAgentControls
                             compact
                             skills={skills}
@@ -402,9 +406,9 @@ function DramaAgentContent({ project, episode, onConversationChange }: { project
                         />
                     </div>
                     {sending && runId ? (
-                        <Button danger shape="circle" icon={<Square className="size-3.5" />} onClick={() => void controlCreativeAgentRun(runId, "cancel")} aria-label="停止项目 Agent" />
+                        <Button danger shape="circle" icon={<Square className="size-3.5" />} onClick={() => void controlCreativeAgentRun(runId, "cancel")} aria-label={t("agent.stopAria")} />
                     ) : (
-                        <Button type="primary" shape="circle" icon={<Send className="size-3.5" />} disabled={!prompt.trim() || uploading} onClick={() => void submit()} aria-label="发送给项目 Agent" />
+                        <Button type="primary" shape="circle" icon={<Send className="size-3.5" />} disabled={!prompt.trim() || uploading} onClick={() => void submit()} aria-label={t("agent.sendAria")} />
                     )}
                 </div>
             </div>
@@ -413,15 +417,16 @@ function DramaAgentContent({ project, episode, onConversationChange }: { project
 }
 
 function DramaMessageReferences({ assets }: { assets: CreativeAsset[] }) {
+    const t = useTranslations("drama");
     let imageIndex = 0;
     return (
-        <div className="mb-1.5 flex max-w-full flex-wrap justify-end gap-1.5" aria-label="本轮参考素材">
+        <div className="mb-1.5 flex max-w-full flex-wrap justify-end gap-1.5" aria-label={t("agent.roundReferencesAria")}>
             {assets.flatMap((asset) => {
                 const url = asset.serverUrl || asset.remoteUrl || "";
                 if (asset.type !== "image" || !url) return [];
                 return (
-                    <div key={asset.id} className="relative size-16 shrink-0 overflow-hidden rounded-lg border border-border bg-muted" title={asset.title || "参考图"}>
-                        <AgentMediaPreview type="image" url={url} title={asset.title || "参考图"} className="size-full" />
+                    <div key={asset.id} className="relative size-16 shrink-0 overflow-hidden rounded-lg border border-border bg-muted" title={asset.title || t("agent.referenceImageFallback")}>
+                        <AgentMediaPreview type="image" url={url} title={asset.title || t("agent.referenceImageFallback")} className="size-full" />
                         <span className="absolute left-1 top-1 rounded bg-black/65 px-1 py-0.5 text-[9px] font-medium leading-none text-white">{imageReferenceLabel(imageIndex++)}</span>
                     </div>
                 );
@@ -437,6 +442,8 @@ function messageAssetIds(message: CreativeMessage) {
 
 function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[]; project: DramaProject; episode: DramaEpisode }) {
     const { message } = App.useApp();
+    const t = useTranslations("drama");
+    const tc = useTranslations("common");
     const updateShot = useDramaStore((state) => state.updateShot);
     const updateAsset = useDramaStore((state) => state.updateAsset);
     const addCharacter = useDramaStore((state) => state.addCharacter);
@@ -476,7 +483,7 @@ function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[
             audioUrl: undefined,
         });
         setReferenceAsset(undefined);
-        message.success(`已引用为${shot.title}的${frameKind === "start" ? "起始帧" : "结束帧"}`);
+        message.success(t("agent.reference.appliedSuccess", { title: shot.title, frame: frameKind === "start" ? t("storyboard.startFrame") : t("storyboard.endFrame") }));
     };
 
     const applyVisualAsset = () => {
@@ -488,30 +495,30 @@ function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[
             url,
             storageKey: sourceAsset.storageKey,
             source: "generated",
-            label: sourceAsset.title || "Agent 生成图",
+            label: sourceAsset.title || t("agent.visualAsset.generatedImageFallback"),
             width: sourceAsset.width,
             height: sourceAsset.height,
             createdAt: new Date().toISOString(),
         };
         const selected = project[visualKind].find((item) => item.id === visualAssetId);
-        const name = newVisualAssetName.trim() || sourceAsset.title.trim() || `${visualKind === "characters" ? "角色" : visualKind === "scenes" ? "场景" : visualKind === "props" ? "道具" : "线索"}参考`;
+        const name = newVisualAssetName.trim() || sourceAsset.title.trim() || t("agent.visualAsset.referenceNameFallback", { kind: t(`agent.visualAssetKinds.${visualKind}`) });
         if (selected) {
             const references = [...(selected.references || []), reference].slice(-12);
             updateAsset(project.id, visualKind, selected.id, { references, primaryReferenceId: reference.id, referenceImageUrl: reference.url, referenceStorageKey: reference.storageKey });
-            message.success(`已加入${selected.name}的视觉参考图`);
+            message.success(t("agent.visualAsset.addedToExisting", { name: selected.name }));
         } else if (visualKind === "characters") {
-            addCharacter(project.id, { name, description: "来自项目 Agent 的视觉参考", profile: emptyAssetProfile(), references: [reference], primaryReferenceId: reference.id, referenceImageUrl: reference.url, referenceStorageKey: reference.storageKey });
-            message.success(`已创建角色“${name}”并加入参考图`);
+            addCharacter(project.id, { name, description: t("agent.visualAsset.autoDescription"), profile: emptyAssetProfile(), references: [reference], primaryReferenceId: reference.id, referenceImageUrl: reference.url, referenceStorageKey: reference.storageKey });
+            message.success(t("agent.visualAsset.createdCharacter", { name }));
         } else if (visualKind === "scenes") {
-            addScene(project.id, { name, description: "来自项目 Agent 的视觉参考", profile: emptyAssetProfile(), references: [reference], primaryReferenceId: reference.id, referenceImageUrl: reference.url, referenceStorageKey: reference.storageKey });
-            message.success(`已创建场景“${name}”并加入参考图`);
+            addScene(project.id, { name, description: t("agent.visualAsset.autoDescription"), profile: emptyAssetProfile(), references: [reference], primaryReferenceId: reference.id, referenceImageUrl: reference.url, referenceStorageKey: reference.storageKey });
+            message.success(t("agent.visualAsset.createdScene", { name }));
         } else if (visualKind === "props") {
-            addProp(project.id, { name, description: "来自项目 Agent 的视觉参考", profile: emptyAssetProfile(), references: [reference], primaryReferenceId: reference.id, referenceImageUrl: reference.url, referenceStorageKey: reference.storageKey });
-            message.success(`已创建道具“${name}”并加入参考图`);
+            addProp(project.id, { name, description: t("agent.visualAsset.autoDescription"), profile: emptyAssetProfile(), references: [reference], primaryReferenceId: reference.id, referenceImageUrl: reference.url, referenceStorageKey: reference.storageKey });
+            message.success(t("agent.visualAsset.createdProp", { name }));
         } else {
             addClue(project.id, {
                 name,
-                description: "来自项目 Agent 的视觉参考",
+                description: t("agent.visualAsset.autoDescription"),
                 payoff: "",
                 profile: emptyAssetProfile(),
                 references: [reference],
@@ -519,7 +526,7 @@ function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[
                 referenceImageUrl: reference.url,
                 referenceStorageKey: reference.storageKey,
             });
-            message.success(`已创建线索“${name}”并加入参考图`);
+            message.success(t("agent.visualAsset.createdClue", { name }));
         }
         setVisualAsset(undefined);
         setVisualAssetId("");
@@ -536,7 +543,7 @@ function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[
                         if (!url) return null;
                         return (
                             <div key={asset.id} className="min-w-0">
-                                <AgentMediaPreview type={asset.type} url={url} title={asset.title || "Agent 生成媒体"} className={asset.type === "image" ? "max-h-64 rounded-md" : asset.type === "video" ? "aspect-video rounded-md" : undefined} />
+                                <AgentMediaPreview type={asset.type} url={url} title={asset.title || t("agent.generatedMediaFallback")} className={asset.type === "image" ? "max-h-64 rounded-md" : asset.type === "video" ? "aspect-video rounded-md" : undefined} />
                                 {asset.type === "image" ? (
                                     <div className="mt-2 flex min-w-0 items-center rounded-lg border border-border/70 bg-muted/30 p-1">
                                         <Button
@@ -547,7 +554,7 @@ function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[
                                             disabled={!episode.shots.length}
                                             onClick={() => setReferenceAsset(asset)}
                                         >
-                                            引用到分镜
+                                            {t("agent.referenceToShotButton")}
                                         </Button>
                                         <span className="h-4 w-px shrink-0 bg-border" />
                                         <Button
@@ -557,7 +564,7 @@ function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[
                                             icon={<ImagePlus className="size-3.5" />}
                                             onClick={() => setVisualAsset(asset)}
                                         >
-                                            加入视觉资产
+                                            {t("agent.addToVisualAssetButton")}
                                         </Button>
                                     </div>
                                 ) : null}
@@ -565,41 +572,41 @@ function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[
                         );
                     })}
             </div>
-            <Modal title="引用图片到分镜" open={Boolean(referenceAsset)} width={420} centered destroyOnHidden okText="确认引用" cancelText="取消" okButtonProps={{ disabled: !shotId }} onCancel={() => setReferenceAsset(undefined)} onOk={applyReference}>
+            <Modal title={t("agent.referenceModal.title")} open={Boolean(referenceAsset)} width={420} centered destroyOnHidden okText={t("agent.referenceModal.ok")} cancelText={tc("cancel")} okButtonProps={{ disabled: !shotId }} onCancel={() => setReferenceAsset(undefined)} onOk={applyReference}>
                 <div className="grid gap-4 pt-2">
                     <label className="grid gap-1.5 text-sm">
-                        <span className="font-medium">目标镜头</span>
+                        <span className="font-medium">{t("agent.referenceModal.targetShotLabel")}</span>
                         <Select
                             value={shotId || undefined}
-                            placeholder="选择要引用的镜头"
+                            placeholder={t("agent.referenceModal.targetShotPlaceholder")}
                             optionFilterProp="label"
                             options={episode.shots.map((shot) => ({ value: shot.id, label: `${String(shot.order).padStart(2, "0")} · ${shot.title}` }))}
                             onChange={setShotId}
                         />
                     </label>
                     <label className="grid gap-1.5 text-sm">
-                        <span className="font-medium">引用位置</span>
+                        <span className="font-medium">{t("agent.referenceModal.positionLabel")}</span>
                         <Segmented
                             block
                             value={frameKind}
                             options={[
-                                { label: "起始帧", value: "start" },
-                                { label: "结束帧", value: "end" },
+                                { label: t("storyboard.startFrame"), value: "start" },
+                                { label: t("storyboard.endFrame"), value: "end" },
                             ]}
                             onChange={(value) => setFrameKind(value as "start" | "end")}
                         />
                     </label>
-                    <p className="text-xs leading-5 text-muted-foreground">引用后会替换该位置现有图片；如镜头已有视频，需要重新生成以应用新画面。</p>
+                    <p className="text-xs leading-5 text-muted-foreground">{t("agent.referenceModal.hint")}</p>
                 </div>
             </Modal>
             <Modal
-                title="加入视觉资产"
+                title={t("agent.visualAssetModal.title")}
                 open={Boolean(visualAsset)}
                 width={460}
                 centered
                 destroyOnHidden
-                okText="保存到视觉资产"
-                cancelText="取消"
+                okText={t("agent.visualAssetModal.ok")}
+                cancelText={tc("cancel")}
                 okButtonProps={{ disabled: !visualAsset || (!visualAssetId && !newVisualAssetName.trim()) }}
                 onCancel={() => {
                     setVisualAsset(undefined);
@@ -609,13 +616,13 @@ function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[
                 onOk={applyVisualAsset}
             >
                 <div className="grid gap-4 pt-2">
-                    <p className="text-sm leading-6 text-muted-foreground">这张 Agent 图片会直接保存为角色、场景、道具或线索的参考图，不需要下载后重新上传。</p>
+                    <p className="text-sm leading-6 text-muted-foreground">{t("agent.visualAssetModal.hint")}</p>
                     <label className="grid gap-1.5 text-sm">
-                        <span className="font-medium">资产类型</span>
+                        <span className="font-medium">{t("agent.visualAssetModal.kindLabel")}</span>
                         <Segmented
                             block
                             value={visualKind}
-                            options={visualAssetKinds.map((item) => ({ label: item.label, value: item.value }))}
+                            options={visualAssetKinds.map((item) => ({ label: t(item.labelKey), value: item.value }))}
                             onChange={(value) => {
                                 setVisualKind(value as VisualAssetKind);
                                 setVisualAssetId("");
@@ -623,11 +630,11 @@ function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[
                         />
                     </label>
                     <label className="grid gap-1.5 text-sm">
-                        <span className="font-medium">加入已有资产</span>
+                        <span className="font-medium">{t("agent.visualAssetModal.existingLabel")}</span>
                         <Select
                             allowClear
                             value={visualAssetId || undefined}
-                            placeholder="选择已有角色、场景、道具或线索"
+                            placeholder={t("agent.visualAssetModal.existingPlaceholder")}
                             options={project[visualKind].map((item) => ({ value: item.id, label: item.name }))}
                             onChange={(value) => {
                                 setVisualAssetId(value || "");
@@ -636,14 +643,14 @@ function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[
                         />
                     </label>
                     <label className="grid gap-1.5 text-sm">
-                        <span className="font-medium">或新建资产名称</span>
+                        <span className="font-medium">{t("agent.visualAssetModal.newNameLabel")}</span>
                         <Input
                             value={newVisualAssetName}
                             onChange={(event) => {
                                 setNewVisualAssetName(event.target.value);
                                 if (event.target.value.trim()) setVisualAssetId("");
                             }}
-                            placeholder={`例如：${visualAssetKinds.find((item) => item.value === visualKind)?.placeholder || "关键资产"}`}
+                            placeholder={t("agent.visualAssetModal.newNamePlaceholder", { example: t(visualAssetKinds.find((item) => item.value === visualKind)?.exampleKey || "agent.visualAssetKinds.fallbackExample") })}
                         />
                     </label>
                 </div>
@@ -654,11 +661,11 @@ function DramaAgentAssets({ assets, project, episode }: { assets: CreativeAsset[
 
 type VisualAssetKind = "characters" | "scenes" | "props" | "clues";
 
-const visualAssetKinds: Array<{ value: VisualAssetKind; label: string; placeholder: string }> = [
-    { value: "characters", label: "角色", placeholder: "女主角" },
-    { value: "scenes", label: "场景", placeholder: "医院走廊" },
-    { value: "props", label: "道具", placeholder: "旧手机" },
-    { value: "clues", label: "线索", placeholder: "染血的手帕" },
+const visualAssetKinds: Array<{ value: VisualAssetKind; labelKey: string; exampleKey: string }> = [
+    { value: "characters", labelKey: "agent.visualAssetKinds.characters", exampleKey: "agent.visualAssetKinds.characterExample" },
+    { value: "scenes", labelKey: "agent.visualAssetKinds.scenes", exampleKey: "agent.visualAssetKinds.sceneExample" },
+    { value: "props", labelKey: "agent.visualAssetKinds.props", exampleKey: "agent.visualAssetKinds.propExample" },
+    { value: "clues", labelKey: "agent.visualAssetKinds.clues", exampleKey: "agent.visualAssetKinds.clueExample" },
 ];
 
 function emptyAssetProfile() {
@@ -686,9 +693,11 @@ function dramaSnapshot(project: DramaProject, episode: DramaEpisode) {
     };
 }
 
-function agentAssetDownloads(assets: CreativeAsset[]): AgentMediaDownload[] {
+function agentAssetDownloads(assets: CreativeAsset[], t: (key: string) => string): AgentMediaDownload[] {
     return assets.flatMap((asset) => {
         const url = asset.serverUrl || asset.remoteUrl || "";
-        return url && (asset.type === "image" || asset.type === "video") ? [{ type: asset.type, url, title: asset.title || (asset.type === "video" ? "生成视频" : "生成图片"), mimeType: asset.mimeType }] : [];
+        return url && (asset.type === "image" || asset.type === "video")
+            ? [{ type: asset.type, url, title: asset.title || t(asset.type === "video" ? "agent.downloadFallback.video" : "agent.downloadFallback.image"), mimeType: asset.mimeType }]
+            : [];
     });
 }

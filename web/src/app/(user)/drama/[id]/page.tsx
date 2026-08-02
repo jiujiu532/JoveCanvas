@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { App, Button, Empty, Input, Progress, Segmented, Tabs, Tag } from "antd";
 import { ArrowLeft, BookOpenText, Captions, Clapperboard, Download, Film, ImageIcon, Pause, Play, RefreshCw, Save, ScanSearch, Send, Sparkles, Volume2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { createImageGenerationTask, waitForImageGenerationTask } from "@/services/api/image";
 import { createServerVideoGenerationTask } from "@/services/api/video";
@@ -33,17 +34,20 @@ type Stage = "script" | "review" | "assets" | "storyboard" | "generate";
 function shotNeedsVoiceover(shot: DramaShot) {
     return shot.audioMode === "voiceover" && Boolean((shot.subtitle || shot.dialogue || shot.narration).trim());
 }
-const stages = [
-    { value: "script", label: "剧本", shortLabel: "剧本", icon: Clapperboard },
-    { value: "review", label: "内容审核", shortLabel: "审核", icon: Save },
-    { value: "assets", label: "视觉资产", shortLabel: "资产", icon: Sparkles },
-    { value: "storyboard", label: "分镜", shortLabel: "分镜", icon: Film },
-    { value: "generate", label: "镜头生成", shortLabel: "生成", icon: Sparkles },
-] as const;
+function getStages(t: ReturnType<typeof useTranslations<"drama">>) {
+    return [
+        { value: "script" as const, label: t("editor.stages.script"), shortLabel: t("editor.stages.scriptShort"), icon: Clapperboard },
+        { value: "review" as const, label: t("editor.stages.review"), shortLabel: t("editor.stages.reviewShort"), icon: Save },
+        { value: "assets" as const, label: t("editor.stages.assets"), shortLabel: t("editor.stages.assetsShort"), icon: Sparkles },
+        { value: "storyboard" as const, label: t("editor.stages.storyboard"), shortLabel: t("editor.stages.storyboardShort"), icon: Film },
+        { value: "generate" as const, label: t("editor.stages.generate"), shortLabel: t("editor.stages.generateShort"), icon: Sparkles },
+    ];
+}
 const generationActionButtonClass = "!h-9 !px-3 [&>span:last-child]:whitespace-nowrap";
 import { SectionTitle, GenerationTag, StoryboardTag, AudioTag, stableTaskUrl } from "./drama-editor-elements";
 
 export default function DramaProjectPage() {
+    const t = useTranslations("drama");
     const router = useRouter();
     const projectId = String(useParams<{ id: string }>().id || "");
     const loadProject = useDramaStore((state) => state.loadProject);
@@ -56,18 +60,18 @@ export default function DramaProjectPage() {
         setLoading(true);
         setLoadError("");
         void loadProject(projectId)
-            .catch((error) => active && setLoadError(error instanceof Error ? error.message : "短剧项目加载失败"))
+            .catch((error) => active && setLoadError(error instanceof Error ? error.message : t("store.projectLoadFailed")))
             .finally(() => active && setLoading(false));
         return () => {
             active = false;
         };
-    }, [loadProject, projectId, userId]);
-    if (loading && !project) return <main className="grid h-full place-items-center bg-background text-sm text-muted-foreground">正在加载短剧项目…</main>;
+    }, [loadProject, projectId, t, userId]);
+    if (loading && !project) return <main className="grid h-full place-items-center bg-background text-sm text-muted-foreground">{t("editor.loading")}</main>;
     if (!project)
         return (
             <main className="grid h-full place-items-center bg-background">
-                <Empty description={loadError || "短剧项目不存在"}>
-                    <Button onClick={() => router.push("/drama")}>返回项目列表</Button>
+                <Empty description={loadError || t("editor.notFound")}>
+                    <Button onClick={() => router.push("/drama")}>{t("editor.backToList")}</Button>
                 </Empty>
             </main>
         );
@@ -75,6 +79,9 @@ export default function DramaProjectPage() {
 }
 
 function DramaProjectEditor({ project }: { project: DramaProject }) {
+    const t = useTranslations("drama");
+    const tc = useTranslations("common");
+    const stages = getStages(t);
     const { message, modal } = App.useApp();
     const router = useRouter();
     const updateProject = useDramaStore((state) => state.updateProject);
@@ -148,19 +155,19 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
         return () => window.clearInterval(timer);
     }, [episode.id, project.id, renderTask, updateEpisode]);
     const analyzeScript = async () => {
-        if (!episode.script.trim()) return message.warning("请先填写剧本内容");
+        if (!episode.script.trim()) return message.warning(t("editor.script.needScript"));
         setAnalyzing(true);
         try {
             const response = await fetch("/api/drama/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phase: "content", script: episode.script, summary: project.summary, style: project.style }) });
             syncUserPointsFromHeaders(response.headers, "system");
             const payload = (await response.json().catch(() => ({}))) as { data?: DramaContentAnalysis; msg?: string };
-            if (!response.ok || !payload.data) throw new Error(payload.msg || "AI 剧本解析失败");
-            await createVersion(project, "AI 内容解析前");
+            if (!response.ok || !payload.data) throw new Error(payload.msg || t("editor.script.analyzeFailed"));
+            await createVersion(project, t("editor.versionReasons.beforeContentAnalysis"));
             applyContentAnalysis(project.id, episode.id, payload.data);
             setStage("review");
-            message.success(`已提取 ${payload.data.characters.length} 个角色、${payload.data.scenes.length} 个场景和 ${payload.data.shots.length} 个待审核镜头`);
+            message.success(t("editor.script.analyzeSuccess", { characters: payload.data.characters.length, scenes: payload.data.scenes.length, shots: payload.data.shots.length }));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "AI 剧本解析失败");
+            message.error(error instanceof Error ? error.message : t("editor.script.analyzeFailed"));
         } finally {
             setAnalyzing(false);
         }
@@ -169,27 +176,27 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
         if (!file) return;
         try {
             const drafts = splitDramaSource(await file.text());
-            if (!drafts.length) return message.warning("导入文件没有可识别的文本内容");
+            if (!drafts.length) return message.warning(t("editor.script.importEmpty"));
             modal.confirm({
-                title: `导入并自动分为 ${drafts.length} 集？`,
-                content: "当前剧集会被替换，系统会先保存一个可恢复的版本快照。",
-                okText: "导入分集",
-                cancelText: "取消",
+                title: t("editor.script.importConfirmTitle", { count: drafts.length }),
+                content: t("editor.script.importConfirmContent"),
+                okText: t("editor.script.importConfirmOk"),
+                cancelText: tc("cancel"),
                 onOk: async () => {
-                    await createVersion(project, "整本导入前");
+                    await createVersion(project, t("editor.versionReasons.beforeImport"));
                     importEpisodes(project.id, drafts);
                     setStage("script");
-                    message.success(`已导入 ${drafts.length} 集，请逐集检查并提取内容结构`);
+                    message.success(t("editor.script.importSuccess", { count: drafts.length }));
                 },
             });
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "整本导入失败");
+            message.error(error instanceof Error ? error.message : t("editor.script.importFailed"));
         } finally {
             if (sourceFileInputRef.current) sourceFileInputRef.current.value = "";
         }
     };
     const designVisuals = async () => {
-        if (!episode.shots.length) return message.warning("请先完成内容解析");
+        if (!episode.shots.length) return message.warning(t("review.needContent"));
         updateEpisode(project.id, episode.id, { reviewStatus: "approved" });
         setDesigning(true);
         try {
@@ -200,13 +207,13 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
             });
             syncUserPointsFromHeaders(response.headers, "system");
             const payload = (await response.json().catch(() => ({}))) as { data?: DramaVisualAnalysis; msg?: string };
-            if (!response.ok || !payload.data) throw new Error(payload.msg || "AI 视觉方案生成失败");
-            await createVersion(project, "视觉方案生成前");
+            if (!response.ok || !payload.data) throw new Error(payload.msg || t("review.designFailed"));
+            await createVersion(project, t("editor.versionReasons.beforeVisualDesign"));
             applyVisualAnalysis(project.id, episode.id, payload.data);
             setStage("storyboard");
-            message.success("已按审核内容生成视觉方案");
+            message.success(t("review.designSuccess"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "AI 视觉方案生成失败");
+            message.error(error instanceof Error ? error.message : t("review.designFailed"));
         } finally {
             setDesigning(false);
         }
@@ -217,7 +224,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
         try {
             setVersions(await listVersions(project.id));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "版本记录加载失败");
+            message.error(error instanceof Error ? error.message : t("modals.version.loadFailed"));
         } finally {
             setVersionsLoading(false);
         }
@@ -227,9 +234,9 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
             await restoreVersion(project.id, version.id);
             setVersionsOpen(false);
             setStage("review");
-            message.success(`已恢复到版本 ${version.version}`);
+            message.success(t("modals.version.restoreSuccess", { version: version.version }));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "版本恢复失败");
+            message.error(error instanceof Error ? error.message : t("modals.version.restoreFailed"));
         }
     };
     const sendToVideo = (shot: DramaShot) => {
@@ -247,7 +254,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
             void waitForImageGenerationTask(imageConfig, { id: runningEnd.storyboardEndTaskId!, kind: "generation", model: imageConfig.model })
                 .then((result) => {
                     const imageUrl = stableTaskUrl(result.remoteUrl, result.serverUrl, result.dataUrl);
-                    if (!imageUrl) throw new Error("尾帧图没有可持久化的访问地址");
+                    if (!imageUrl) throw new Error(t("storyboard.endFrameNoUrl"));
                     updateShot(project.id, episode.id, runningEnd.id, {
                         storyboardEndStatus: "success",
                         storyboardEndImageUrl: imageUrl,
@@ -257,7 +264,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                         generationStatus: "queued",
                     });
                 })
-                .catch((error) => updateShot(project.id, episode.id, runningEnd.id, { storyboardEndStatus: "error", storyboardEndError: error instanceof Error ? error.message : "尾帧图生成失败" }))
+                .catch((error) => updateShot(project.id, episode.id, runningEnd.id, { storyboardEndStatus: "error", storyboardEndError: error instanceof Error ? error.message : t("storyboard.endFrameGenerateFailed") }))
                 .finally(() => {
                     storyboardTaskRef.current = "";
                 });
@@ -272,7 +279,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
             void waitForImageGenerationTask(imageConfig, { id: running.storyboardTaskId!, kind: "generation", model: imageConfig.model })
                 .then((result) => {
                     const imageUrl = stableTaskUrl(result.remoteUrl, result.serverUrl, result.dataUrl);
-                    if (!imageUrl) throw new Error("分镜图没有可持久化的访问地址");
+                    if (!imageUrl) throw new Error(t("storyboard.imageNoUrl"));
                     const hasEndFrame = running.storyboardFrameMode === "first_last" && running.storyboardEndStatus === "success" && Boolean(running.storyboardEndImageUrl);
                     updateShot(project.id, episode.id, running.id, {
                         storyboardStatus: "success",
@@ -284,7 +291,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                         generationStatus: running.storyboardFrameMode === "first_last" && !hasEndFrame ? "idle" : "queued",
                     });
                 })
-                .catch((error) => updateShot(project.id, episode.id, running.id, { storyboardStatus: "error", storyboardError: error instanceof Error ? error.message : "分镜图生成失败" }))
+                .catch((error) => updateShot(project.id, episode.id, running.id, { storyboardStatus: "error", storyboardError: error instanceof Error ? error.message : t("storyboard.imageGenerateFailed") }))
                 .finally(() => {
                     storyboardTaskRef.current = "";
                 });
@@ -296,11 +303,11 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
             if (isCapacityWaiting(retryKey)) return;
             storyboardTaskRef.current = `${episode.id}:${nextEnd.id}:creating-end`;
             const prompt = compileDramaShotPrompts(project, episode, nextEnd).endFramePrompt;
-            const references = [referenceImage(`storyboard-start-${nextEnd.id}`, `${nextEnd.title}-起始帧.png`, nextEnd.storyboardImageUrl!, "image/png", nextEnd.storyboardImageWidth, nextEnd.storyboardImageHeight)];
+            const references = [referenceImage(`storyboard-start-${nextEnd.id}`, `${nextEnd.title}-${t("storyboard.startFrameFileSuffix")}.png`, nextEnd.storyboardImageUrl!, "image/png", nextEnd.storyboardImageWidth, nextEnd.storyboardImageHeight)];
             const imageConfig = { ...config, model: config.imageModel || config.model, imageModel: config.imageModel || config.model, size: dramaGenerationSize(project, prompt, references), count: "1" };
             void createImageGenerationTask(imageConfig, prompt, references, undefined, {
                 logSource: "drama",
-                logTitle: `${project.title} · ${nextEnd.title}尾帧`,
+                logTitle: `${project.title} · ${nextEnd.title}${t("storyboard.endFrameLogSuffix")}`,
                 conversationId: project.creativeConversationId,
                 surface: "drama",
                 projectId: project.id,
@@ -314,7 +321,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                 .catch((error) =>
                     scheduleCapacityRetry(retryKey, error)
                         ? updateShot(project.id, episode.id, nextEnd.id, { storyboardEndStatus: "queued", storyboardEndError: undefined })
-                        : updateShot(project.id, episode.id, nextEnd.id, { storyboardEndStatus: "error", storyboardEndError: error instanceof Error ? error.message : "尾帧图任务创建失败" }),
+                        : updateShot(project.id, episode.id, nextEnd.id, { storyboardEndStatus: "error", storyboardEndError: error instanceof Error ? error.message : t("storyboard.endFrameTaskCreateFailed") }),
                 )
                 .finally(() => {
                     storyboardTaskRef.current = "";
@@ -345,7 +352,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
             .catch((error) =>
                 scheduleCapacityRetry(retryKey, error)
                     ? updateShot(project.id, episode.id, next.id, { storyboardStatus: "queued", storyboardError: undefined })
-                    : updateShot(project.id, episode.id, next.id, { storyboardStatus: "error", storyboardError: error instanceof Error ? error.message : "分镜图任务创建失败" }),
+                    : updateShot(project.id, episode.id, next.id, { storyboardStatus: "error", storyboardError: error instanceof Error ? error.message : t("storyboard.imageTaskCreateFailed") }),
             )
             .finally(() => {
                 storyboardTaskRef.current = "";
@@ -359,7 +366,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
             const response = await fetch(`/api/video-tasks/${encodeURIComponent(running.generationTaskId!)}`, { cache: "no-store" });
             syncUserPointsFromHeaders(response.headers, "system");
             const payload = (await response.json().catch(() => ({}))) as { task?: { status?: string; result?: { url?: string }; error?: string }; error?: string };
-            if (!response.ok) return updateShot(project.id, episode.id, running.id, { generationStatus: "error", generationError: payload.error || "视频任务查询失败" });
+            if (!response.ok) return updateShot(project.id, episode.id, running.id, { generationStatus: "error", generationError: payload.error || t("render.videoQueryFailed") });
             if (payload.task?.status === "success")
                 updateShot(project.id, episode.id, running.id, {
                     generationStatus: "success",
@@ -383,7 +390,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
         const references = mode === "reference" ? shotReferenceImages(project, next) : storyboardReferenceImages(next);
         const prompts = compileDramaShotPrompts(project, episode, next);
         if (mode === "reference" && !references.length) {
-            updateShot(project.id, episode.id, next.id, { generationStatus: "error", generationError: "参考图模式需要先为关联角色、场景、道具或项目素材配置参考图" });
+            updateShot(project.id, episode.id, next.id, { generationStatus: "error", generationError: t("render.referenceModeRequired") });
             startingShotRef.current = "";
             return;
         }
@@ -409,7 +416,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
             .catch((error) =>
                 scheduleCapacityRetry(retryKey, error)
                     ? updateShot(project.id, episode.id, next.id, { generationStatus: "queued", generationError: undefined })
-                    : updateShot(project.id, episode.id, next.id, { generationStatus: "error", generationError: error instanceof Error ? error.message : "视频任务创建失败" }),
+                    : updateShot(project.id, episode.id, next.id, { generationStatus: "error", generationError: error instanceof Error ? error.message : t("render.videoCreateFailed") }),
             )
             .finally(() => {
                 startingShotRef.current = "";
@@ -424,17 +431,17 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
     };
     const downloadSubtitles = () => {
         const content = buildSrt(episode.shots);
-        if (!content) return message.warning("请先填写至少一条对白或字幕");
+        if (!content) return message.warning(t("render.subtitleEmpty"));
         const url = URL.createObjectURL(new Blob([`\uFEFF${content}`], { type: "application/x-subrip;charset=utf-8" }));
         const anchor = document.createElement("a");
         anchor.href = url;
-        anchor.download = `${project.title.trim().replace(/[\\/:*?"<>|]/g, "-") || "短剧字幕"}.srt`;
+        anchor.download = `${project.title.trim().replace(/[\\/:*?"<>|]/g, "-") || t("render.subtitleFileNameFallback")}.srt`;
         anchor.click();
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-        message.success("SRT 字幕已导出");
+        message.success(t("render.subtitleExported"));
     };
     const exportJianying = async () => {
-        if (!jianyingPath.trim()) return message.warning("请填写剪映草稿目录");
+        if (!jianyingPath.trim()) return message.warning(t("modals.jianying.pathRequired"));
         setJianyingExporting(true);
         try {
             const result = await exportDramaJianyingDraft(project.id, { episodeId: episode.id, draftPath: jianyingPath.trim(), version: jianyingVersion });
@@ -445,9 +452,9 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
             anchor.click();
             window.setTimeout(() => URL.revokeObjectURL(url), 1000);
             setJianyingOpen(false);
-            message.success("剪映草稿已导出");
+            message.success(t("modals.jianying.exported"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "剪映草稿导出失败");
+            message.error(error instanceof Error ? error.message : t("modals.jianying.exportFailed"));
         } finally {
             setJianyingExporting(false);
         }
@@ -465,9 +472,9 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
             }),
         });
         const payload = (await response.json().catch(() => ({}))) as { data?: DramaRenderTask; msg?: string };
-        if (!response.ok || !payload.data) return message.error(payload.msg || "整集合成任务创建失败");
+        if (!response.ok || !payload.data) return message.error(payload.msg || t("render.createFailed"));
         updateEpisode(project.id, episode.id, { renderTask: payload.data });
-        message.success("整集合成任务已创建");
+        message.success(t("render.createSuccess"));
     };
     const cancelRender = async () => {
         if (!renderTask?.id) return;
@@ -475,16 +482,16 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
         updateEpisode(project.id, episode.id, { renderTask: { ...renderTask, status: "cancelled" } });
     };
     const reviewVisuals = async () => {
-        if (!episode.shots.some((shot) => shot.storyboardImageUrl)) return message.warning("请先生成至少一张分镜图");
+        if (!episode.shots.some((shot) => shot.storyboardImageUrl)) return message.warning(t("render.reviewNeedShot"));
         setReviewingVisuals(true);
         try {
             const review = await reviewDramaEpisode(project, episode);
             updateEpisode(project.id, episode.id, { visualReview: review });
-            if (review.status === "passed") message.success("视觉复盘通过");
-            else if (review.status === "needs_revision") message.warning("视觉复盘发现需要调整的镜头");
+            if (review.status === "passed") message.success(t("render.reviewPassed"));
+            else if (review.status === "needs_revision") message.warning(t("render.reviewNeedsRevision"));
             else message.info(review.summary);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "视觉复盘失败");
+            message.error(error instanceof Error ? error.message : t("render.reviewFailed"));
         } finally {
             setReviewingVisuals(false);
         }
@@ -496,10 +503,10 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                 <header className="overflow-hidden rounded-lg border border-border bg-card p-3 sm:p-6">
                     <div className="flex flex-col gap-3 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
                         <div className="flex min-w-0 items-start gap-2.5 sm:gap-4">
-                            <Button type="text" shape="circle" className="!size-9 sm:!size-9" icon={<ArrowLeft className="size-4" />} onClick={() => router.push("/drama")} aria-label="返回短剧项目" />
+                            <Button type="text" shape="circle" className="!size-9 sm:!size-9" icon={<ArrowLeft className="size-4" />} onClick={() => router.push("/drama")} aria-label={t("editor.backAria")} />
                             <div className="min-w-0">
                                 <Input variant="borderless" className="!p-0 !text-xl !font-semibold sm:!text-2xl" value={project.title} onChange={(event) => updateProject(project.id, { title: event.target.value })} />
-                                <p className="mt-1.5 text-sm leading-5 text-muted-foreground sm:mt-3 sm:leading-6">{project.summary || "完善剧本与角色后，再逐镜头生成视频。"}</p>
+                                <p className="mt-1.5 text-sm leading-5 text-muted-foreground sm:mt-3 sm:leading-6">{project.summary || t("editor.summaryFallback")}</p>
                             </div>
                         </div>
                         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:flex-wrap">
@@ -507,9 +514,9 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                 {project.style}
                             </Tag>
                             <Tag className="!m-0">{project.ratio}</Tag>
-                            <Tag className="!m-0">{episode.shots.length} 个镜头</Tag>
+                            <Tag className="!m-0">{t("editor.shotsCountTag", { count: episode.shots.length })}</Tag>
                             <Button className="!h-9" icon={<Save className="size-4" />} onClick={() => void openVersions()}>
-                                版本
+                                {t("editor.versionsButton")}
                             </Button>
                         </div>
                     </div>
@@ -528,11 +535,11 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                             const removing = project.episodes.find((item) => item.id === String(targetKey));
                             if (!removing) return;
                             modal.confirm({
-                                title: `删除${removing.title}？`,
-                                content: "本集剧本、分镜和任务记录会一起删除。",
-                                okText: "删除",
+                                title: t("editor.deleteEpisodeConfirmTitle", { title: removing.title }),
+                                content: t("editor.deleteEpisodeConfirmContent"),
+                                okText: tc("delete"),
                                 okButtonProps: { danger: true },
-                                cancelText: "取消",
+                                cancelText: tc("cancel"),
                                 onOk: () => deleteEpisode(project.id, removing.id),
                             });
                         }}
@@ -566,9 +573,9 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                         {stage === "script" ? (
                             <div>
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-5">
-                                    <SectionTitle className="!mb-0" title="剧本与创作方向" description="先整理故事文本，AI 只提取可审核的内容结构，不会在这一步生成视觉提示词。" />
+                                    <SectionTitle className="!mb-0" title={t("editor.script.sectionTitle")} description={t("editor.script.sectionDescription")} />
                                     <Button className="!h-9 !w-full sm:!w-auto" icon={<BookOpenText className="size-4" />} onClick={() => sourceFileInputRef.current?.click()}>
-                                        导入整本并分集
+                                        {t("editor.script.importButton")}
                                     </Button>
                                 </div>
                                 <input ref={sourceFileInputRef} type="file" accept=".txt,.md,text/plain,text/markdown" className="hidden" onChange={(event) => void importSourceBook(event.target.files?.[0])} />
@@ -578,38 +585,38 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                         value={episode.script}
                                         onChange={(event) => updateEpisode(project.id, episode.id, { script: event.target.value })}
                                         rows={18}
-                                        placeholder="粘贴或编写本集剧本，每个段落会生成一个镜头草稿…"
+                                        placeholder={t("editor.script.scriptPlaceholder")}
                                     />
                                     <div className="space-y-4 rounded-lg border border-border bg-background p-3 sm:space-y-5 sm:p-5">
                                         <label className="block space-y-2.5">
-                                            <span className="text-sm font-medium">本集名称</span>
+                                            <span className="text-sm font-medium">{t("editor.script.episodeTitleLabel")}</span>
                                             <Input value={episode.title} onChange={(event) => updateEpisode(project.id, episode.id, { title: event.target.value })} />
                                         </label>
                                         <label className="block space-y-2.5">
-                                            <span className="text-sm font-medium">故事简介</span>
+                                            <span className="text-sm font-medium">{t("editor.script.summaryLabel")}</span>
                                             <Input.TextArea value={project.summary} onChange={(event) => updateProject(project.id, { summary: event.target.value })} rows={4} />
                                         </label>
                                         <label className="block space-y-2.5">
-                                            <span className="text-sm font-medium">视觉风格</span>
+                                            <span className="text-sm font-medium">{t("editor.script.styleLabel")}</span>
                                             <Input value={project.style} onChange={(event) => updateProject(project.id, { style: event.target.value })} />
                                         </label>
                                         <label className="block space-y-2.5">
-                                            <span className="text-sm font-medium">视频生产模式</span>
+                                            <span className="text-sm font-medium">{t("editor.script.videoModeLabel")}</span>
                                             <Segmented
                                                 block
                                                 value={project.defaultVideoMode}
                                                 options={[
-                                                    { label: "分镜驱动", value: "storyboard" },
-                                                    { label: "直接生成", value: "direct" },
-                                                    { label: "参考图", value: "reference" },
+                                                    { label: t("editor.videoModes.storyboard"), value: "storyboard" },
+                                                    { label: t("editor.videoModes.direct"), value: "direct" },
+                                                    { label: t("editor.videoModes.reference"), value: "reference" },
                                                 ]}
                                                 onChange={(value) => updateProject(project.id, { defaultVideoMode: value as DramaProject["defaultVideoMode"] })}
                                             />
                                         </label>
                                         <Button type="primary" block className="!h-11 sm:!h-9" icon={<Sparkles className="size-4" />} loading={analyzing} onClick={() => void analyzeScript()}>
-                                            AI 提取内容结构
+                                            {t("editor.script.analyzeButton")}
                                         </Button>
-                                        <p className="pt-1 text-xs leading-5 text-muted-foreground">解析结果会进入内容审核，不会直接启动图片或视频生成。</p>
+                                        <p className="pt-1 text-xs leading-5 text-muted-foreground">{t("editor.script.analyzeHint")}</p>
                                     </div>
                                 </div>
                             </div>
@@ -621,7 +628,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
 
                         {stage === "storyboard" ? (
                             <div>
-                                <SectionTitle title="分镜编辑" description="视觉字段来自已审核内容；这里可以精调画面、镜头运动和模型提示词。" />
+                                <SectionTitle title={t("storyboard.sectionTitle")} description={t("storyboard.sectionDescription")} />
                                 {episode.shots.length ? (
                                     <div className="grid min-w-0 items-start gap-3 xl:grid-cols-2 sm:gap-5">
                                         {episode.shots.map((shot) => (
@@ -636,9 +643,9 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                         ))}
                                     </div>
                                 ) : (
-                                    <Empty description="还没有分镜">
+                                    <Empty description={t("storyboard.empty")}>
                                         <Button type="primary" onClick={() => setStage("script")}>
-                                            先填写剧本
+                                            {t("storyboard.goToScript")}
                                         </Button>
                                     </Empty>
                                 )}
@@ -648,14 +655,14 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                         {stage === "generate" ? (
                             <div>
                                 {episode.reviewStatus !== "visual_ready" ? (
-                                    <p className="mb-4 border-l-2 border-amber-400 pl-3 text-sm leading-5 text-amber-700 sm:mb-6 sm:leading-6 dark:text-amber-200">请先在“内容审核”中确认镜头，并生成完整视觉方案。</p>
+                                    <p className="mb-4 border-l-2 border-amber-400 pl-3 text-sm leading-5 text-amber-700 sm:mb-6 sm:leading-6 dark:text-amber-200">{t("render.needReviewHint", { stage: t("editor.stages.review") })}</p>
                                 ) : null}
                                 <div className="mb-4 grid grid-cols-2 gap-px overflow-hidden border border-border bg-border sm:mb-6 sm:grid-cols-4">
                                     {[
-                                        ["本集预计", `${estimateEpisodePoints(config, project, episode.shots)} 积分`],
-                                        ["任务实际", `${costSummary?.actualPoints || 0} 积分`],
-                                        ["已登记任务", String(costSummary?.taskCount || 0)],
-                                        ["失败/取消", String(costSummary?.failedCount || 0)],
+                                        [t("render.stats.estimatedLabel"), t("render.stats.pointsValue", { value: estimateEpisodePoints(config, project, episode.shots) })],
+                                        [t("render.stats.actualLabel"), t("render.stats.pointsValue", { value: costSummary?.actualPoints || 0 })],
+                                        [t("render.stats.taskCountLabel"), String(costSummary?.taskCount || 0)],
+                                        [t("render.stats.failedLabel"), String(costSummary?.failedCount || 0)],
                                     ].map(([label, value]) => (
                                         <div key={label} className="bg-background px-3 py-2.5 sm:px-4 sm:py-3">
                                             <div className="text-xs text-muted-foreground">{label}</div>
@@ -664,7 +671,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                     ))}
                                 </div>
                                 <div>
-                                    <SectionTitle className="!mb-4 sm:!mb-5" title="镜头生成队列" description="项目内串行创建后台视频任务，避免超过用户并发上限；也可继续把单镜头送入视频工作台精调。" />
+                                    <SectionTitle className="!mb-4 sm:!mb-5" title={t("render.queue.title")} description={t("render.queue.description")} />
                                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                                             <Button
@@ -677,16 +684,16 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                     !episode.shots.every((shot) => shot.videoUrl && (!shotNeedsVoiceover(shot) || shot.audioUrl)) ||
                                                     Boolean(renderTask && ["pending", "running"].includes(renderTask.status))
                                                 }
-                                                title={!renderReady ? "服务器尚未安装 FFmpeg" : "需要所有镜头视频完成；选择 AI 配音的镜头还需配音完成"}
+                                                title={!renderReady ? t("render.tooltips.ffmpegMissing") : t("render.tooltips.allShotsRequired")}
                                                 onClick={() => void createRender()}
                                             >
-                                                {renderReady === null ? "检查合成环境" : renderReady ? "合成整集" : "FFmpeg 未就绪"}
+                                                {renderReady === null ? t("render.buttons.checking") : renderReady ? t("render.buttons.renderAll") : t("render.buttons.ffmpegNotReady")}
                                             </Button>
                                             <Button
                                                 className={generationActionButtonClass}
                                                 icon={<Volume2 className="size-4" />}
                                                 disabled={!audioReady || !episode.shots.some((shot) => shot.videoUrl && (shot.subtitle || shot.dialogue).trim())}
-                                                title={audioReady ? undefined : "请管理员先在后台设置默认音频模型"}
+                                                title={audioReady ? undefined : t("render.tooltips.audioModelMissing")}
                                                 onClick={() =>
                                                     queueAudio(
                                                         project.id,
@@ -695,7 +702,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                     )
                                                 }
                                             >
-                                                批量生成配音
+                                                {t("render.buttons.batchVoiceover")}
                                             </Button>
                                             <Button
                                                 className={generationActionButtonClass}
@@ -704,7 +711,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                 disabled={!episode.shots.some((shot) => shot.storyboardImageUrl)}
                                                 onClick={() => void reviewVisuals()}
                                             >
-                                                视觉复盘
+                                                {t("render.buttons.reviewVisuals")}
                                             </Button>
                                             <Button
                                                 type="primary"
@@ -719,18 +726,18 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                     )
                                                 }
                                             >
-                                                批量生成未完成镜头
+                                                {t("render.buttons.batchGenerate")}
                                             </Button>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:justify-end">
                                             <Button className={generationActionButtonClass} icon={<Captions className="size-4" />} disabled={!episode.shots.some((shot) => (shot.subtitle || shot.dialogue).trim())} onClick={() => setSubtitleOpen(true)}>
-                                                字幕时间轴
+                                                {t("modals.subtitle.title")}
                                             </Button>
                                             <Button className={generationActionButtonClass} icon={<Download className="size-4" />} disabled={!episode.shots.some((shot) => (shot.subtitle || shot.dialogue).trim())} onClick={downloadSubtitles}>
-                                                导出 SRT
+                                                {t("render.buttons.exportSrt")}
                                             </Button>
                                             <Button className={`col-span-2 sm:col-span-1 ${generationActionButtonClass}`} icon={<Download className="size-4" />} disabled={!episode.shots.some((shot) => shot.videoUrl)} onClick={() => setJianyingOpen(true)}>
-                                                剪映草稿
+                                                {t("render.buttons.jianyingDraft")}
                                             </Button>
                                         </div>
                                     </div>
@@ -739,17 +746,17 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                                 <div className="min-w-0">
                                                     <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="font-semibold">分镜视觉复盘</span>
+                                                        <span className="font-semibold">{t("render.review.title")}</span>
                                                         <Tag color={episode.visualReview.status === "passed" ? "success" : episode.visualReview.status === "needs_revision" ? "warning" : "default"}>
-                                                            {episode.visualReview.status === "passed" ? "通过" : episode.visualReview.status === "needs_revision" ? "需调整" : "未完成"}
+                                                            {episode.visualReview.status === "passed" ? t("render.review.status.passed") : episode.visualReview.status === "needs_revision" ? t("render.review.status.needsRevision") : t("render.review.status.pending")}
                                                         </Tag>
-                                                        {typeof episode.visualReview.score === "number" ? <span className="text-sm tabular-nums text-muted-foreground">{episode.visualReview.score} 分</span> : null}
+                                                        {typeof episode.visualReview.score === "number" ? <span className="text-sm tabular-nums text-muted-foreground">{t("render.review.scoreValue", { score: episode.visualReview.score })}</span> : null}
                                                     </div>
                                                     <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{episode.visualReview.summary}</p>
                                                 </div>
                                                 {episode.visualReview.retryTaskIds.length ? (
                                                     <Button className="!h-9 shrink-0" icon={<RefreshCw className="size-4" />} onClick={() => queueShots(project.id, episode.id, episode.visualReview!.retryTaskIds)}>
-                                                        重试问题镜头
+                                                        {t("render.review.retryButton")}
                                                     </Button>
                                                 ) : null}
                                             </div>
@@ -761,7 +768,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                             <div key={`${issue.taskId || "general"}-${index}`} className="border-l-2 border-amber-400 pl-3 text-sm">
                                                                 <div className="font-medium">{shot?.title || issue.category}</div>
                                                                 <p className="mt-1 leading-5 text-muted-foreground">{issue.message}</p>
-                                                                {issue.correction ? <p className="mt-1 leading-5">建议：{issue.correction}</p> : null}
+                                                                {issue.correction ? <p className="mt-1 leading-5">{t("render.review.correctionPrefix", { correction: issue.correction })}</p> : null}
                                                             </div>
                                                         );
                                                     })}
@@ -771,7 +778,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                     ) : null}
                                 </div>
                                 {!audioReady ? (
-                                    <p className="mt-6 border-l-2 border-amber-400 pl-3 text-sm leading-6 text-amber-700 dark:border-amber-300 dark:text-amber-200">配音暂不可用：后台尚未配置可用的默认音频模型。视频镜头生成和整集合成不受影响。</p>
+                                    <p className="mt-6 border-l-2 border-amber-400 pl-3 text-sm leading-6 text-amber-700 dark:border-amber-300 dark:text-amber-200">{t("render.audioUnavailableHint")}</p>
                                 ) : null}
                                 {renderTask ? (
                                     <div className="mt-4 rounded-xl border border-border/80 bg-background/65 p-4 sm:mt-6 sm:rounded-2xl sm:p-6">
@@ -779,15 +786,15 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                             <div>
                                                 <div className="flex items-center gap-2 font-semibold">
                                                     <Film className="size-4" />
-                                                    整集合成
+                                                    {t("render.task.title")}
                                                 </div>
                                                 <p className="mt-1 text-sm text-muted-foreground">
-                                                    {renderTask.status === "success" ? "成片已生成" : renderTask.status === "error" ? renderTask.error || "合成失败" : renderTask.status === "cancelled" ? "合成已取消" : "正在转码、拼接并烧录字幕…"}
+                                                    {renderTask.status === "success" ? t("render.task.status.success") : renderTask.status === "error" ? renderTask.error || t("render.task.status.error") : renderTask.status === "cancelled" ? t("render.task.status.cancelled") : t("render.task.status.inProgress")}
                                                 </p>
                                             </div>
                                             {["pending", "running"].includes(renderTask.status) ? (
                                                 <Button danger className="!h-11 sm:!h-9" onClick={() => void cancelRender()}>
-                                                    取消合成
+                                                    {t("render.task.cancelButton")}
                                                 </Button>
                                             ) : null}
                                         </div>
@@ -800,7 +807,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                     href={originalMediaDownloadUrl(renderTask.result.url)}
                                                     download={mediaDownloadFileName(renderTask.id, "video/mp4", renderTask.result.url)}
                                                 >
-                                                    下载整集成片
+                                                    {t("render.task.downloadLink")}
                                                 </a>
                                             </div>
                                         ) : null}
@@ -815,7 +822,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
-                                                        <h3 className="min-w-0 shrink truncate font-semibold">{shot.title || `镜头 ${String(shot.order).padStart(2, "0")}`}</h3>
+                                                        <h3 className="min-w-0 shrink truncate font-semibold">{shot.title || t("render.shotTitleFallback", { order: String(shot.order).padStart(2, "0") })}</h3>
                                                         <div className="flex flex-wrap items-center gap-1.5">
                                                             <StoryboardTag status={shot.storyboardStatus} />
                                                             {shot.storyboardFrameMode === "first_last" ? (
@@ -828,11 +835,11 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                                               : "border-border bg-muted/60 text-muted-foreground"
                                                                     }`}
                                                                 >
-                                                                    尾帧
+                                                                    {t("storyboard.endFrameLogSuffix")}
                                                                 </span>
                                                             ) : null}
                                                             <GenerationTag status={shot.generationStatus} />
-                                                            {shot.audioMode === "voiceover" ? <AudioTag status={shot.audioStatus} /> : <Tag>{shot.audioMode === "mute" ? "静音" : "视频原声"}</Tag>}
+                                                            {shot.audioMode === "voiceover" ? <AudioTag status={shot.audioStatus} /> : <Tag>{shot.audioMode === "mute" ? t("storyboard.audioModes.mute") : t("storyboard.audioModes.source")}</Tag>}
                                                         </div>
                                                     </div>
                                                     <p className="mt-2 line-clamp-2 text-sm leading-5 text-muted-foreground sm:leading-6">{shot.videoPrompt}</p>
@@ -845,16 +852,16 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                     {shot.generationError ? <p className="mt-2 text-xs text-red-500">{shot.generationError}</p> : null}
                                                     {shot.storyboardImageUrl ? (
                                                         <div className="mt-4 flex max-w-xl gap-2 overflow-x-auto">
-                                                            <DramaMediaThumbnail media={{ type: "image", url: shot.storyboardImageUrl, title: `${shot.title}起始帧` }} onOpen={setPreviewMedia} />
-                                                            {shot.storyboardEndImageUrl ? <DramaMediaThumbnail media={{ type: "image", url: shot.storyboardEndImageUrl, title: `${shot.title}结束帧` }} onOpen={setPreviewMedia} /> : null}
+                                                            <DramaMediaThumbnail media={{ type: "image", url: shot.storyboardImageUrl, title: `${shot.title}${t("storyboard.startFrameFileSuffix")}` }} onOpen={setPreviewMedia} />
+                                                            {shot.storyboardEndImageUrl ? <DramaMediaThumbnail media={{ type: "image", url: shot.storyboardEndImageUrl, title: `${shot.title}${t("storyboard.endFrameFileSuffix")}` }} onOpen={setPreviewMedia} /> : null}
                                                         </div>
                                                     ) : null}
                                                     {shot.videoUrl ? (
                                                         <div className="mt-4">
-                                                            <DramaMediaThumbnail media={{ type: "video", url: shot.videoUrl, title: `${shot.title}生成视频` }} onOpen={setPreviewMedia} />
+                                                            <DramaMediaThumbnail media={{ type: "video", url: shot.videoUrl, title: `${shot.title}${t("agent.downloadFallback.video")}` }} onOpen={setPreviewMedia} />
                                                         </div>
                                                     ) : null}
-                                                    {shot.subtitle || shot.dialogue ? <p className="mt-2 max-w-2xl text-xs leading-5 text-muted-foreground">字幕：{shot.subtitle || shot.dialogue}</p> : null}
+                                                    {shot.subtitle || shot.dialogue ? <p className="mt-2 max-w-2xl text-xs leading-5 text-muted-foreground">{t("render.subtitleLinePrefix", { text: shot.subtitle || shot.dialogue })}</p> : null}
                                                     {shot.audioError ? <p className="mt-2 text-xs text-red-500">{shot.audioError}</p> : null}
                                                     {shot.audioUrl ? <audio className="mt-4 h-10 w-full max-w-sm" src={shot.audioUrl} controls preload="metadata" /> : null}
                                                 </div>
@@ -865,17 +872,17 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                             icon={<Pause className="size-4" />}
                                                             onClick={() => void cancelDramaAudioTask(shot.audioTaskId).finally(() => updateShot(project.id, episode.id, shot.id, { audioStatus: "cancelled" }))}
                                                         >
-                                                            取消配音
+                                                            {t("render.buttons.cancelVoiceover")}
                                                         </Button>
                                                     ) : shot.subtitle || shot.dialogue ? (
                                                         <Button
                                                             className={generationActionButtonClass}
                                                             disabled={!audioReady}
-                                                            title={audioReady ? undefined : "请管理员先在后台设置默认音频模型"}
+                                                            title={audioReady ? undefined : t("render.tooltips.audioModelMissing")}
                                                             icon={<Volume2 className="size-4" />}
                                                             onClick={() => queueAudio(project.id, episode.id, [shot.id])}
                                                         >
-                                                            {shot.audioStatus === "error" ? "重试配音" : shot.audioMode === "voiceover" ? "生成配音" : "改用 AI 配音"}
+                                                            {shot.audioStatus === "error" ? t("render.buttons.retryVoiceover") : shot.audioMode === "voiceover" ? t("render.buttons.generateVoiceover") : t("render.buttons.switchToAiVoiceover")}
                                                         </Button>
                                                     ) : null}
                                                     {shot.storyboardStatus === "running" ||
@@ -885,7 +892,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                     shot.generationStatus === "running" ||
                                                     shot.generationStatus === "queued" ? (
                                                         <Button className={generationActionButtonClass} icon={<Pause className="size-4" />} onClick={() => void cancelShot(shot.id, shot.generationTaskId, shot.storyboardTaskId, shot.storyboardEndTaskId)}>
-                                                            取消生成
+                                                            {t("render.buttons.cancelGeneration")}
                                                         </Button>
                                                     ) : (
                                                         <Button
@@ -894,7 +901,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                             icon={<RefreshCw className="size-4" />}
                                                             onClick={() => queueShots(project.id, episode.id, [shot.id])}
                                                         >
-                                                            {shot.storyboardStatus === "error" || shot.storyboardEndStatus === "error" || shot.generationStatus === "error" ? "重试生成" : "生成镜头"}
+                                                            {shot.storyboardStatus === "error" || shot.storyboardEndStatus === "error" || shot.generationStatus === "error" ? t("render.buttons.retryGenerate") : t("render.buttons.generateShot")}
                                                         </Button>
                                                     )}
                                                     <Button
@@ -904,14 +911,14 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                         icon={<Send className="size-4" />}
                                                         onClick={() => sendToVideo(shot)}
                                                     >
-                                                        视频工作台精调
+                                                        {t("render.buttons.sendToVideoWorkbench")}
                                                     </Button>
                                                 </div>
                                             </article>
                                         ))}
                                     </div>
                                 ) : (
-                                    <Empty className="!my-6 sm:!my-12" description="请先生成分镜草稿" />
+                                    <Empty className="!my-6 sm:!my-12" description={t("render.emptyNeedStoryboard")} />
                                 )}
                             </div>
                         ) : null}
@@ -924,7 +931,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                 loading={versionsLoading}
                 versions={versions}
                 onClose={() => setVersionsOpen(false)}
-                onSave={() => void createVersion(project, "手动保存版本").then(() => openVersions())}
+                onSave={() => void createVersion(project, t("editor.versionReasons.manualSave")).then(() => openVersions())}
                 onRestore={(version) => void restore(version)}
             />
             <DramaJianyingModal

@@ -3,6 +3,7 @@
 import type { RefObject } from "react";
 import { Button, Input, Segmented } from "antd";
 import { BookOpenText, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { DramaEpisode, DramaProject } from "../types";
 import { SectionTitle } from "./drama-editor-elements";
@@ -26,12 +27,13 @@ export function DramaScriptPanel({
     onUpdateEpisode: (patch: Partial<DramaEpisode>) => void;
     onAnalyzeScript: () => void;
 }) {
+    const t = useTranslations("drama.editor");
     return (
         <div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-5">
-                <SectionTitle className="!mb-0" title="剧本与创作方向" description="先整理故事文本，AI 只提取可审核的内容结构，不会在这一步生成视觉提示词。" />
+                <SectionTitle className="!mb-0" title={t("script.sectionTitle")} description={t("script.sectionDescription")} />
                 <Button className="!h-9 !w-full sm:!w-auto" icon={<BookOpenText className="size-4" />} onClick={() => sourceFileInputRef.current?.click()}>
-                    导入整本并分集
+                    {t("script.importButton")}
                 </Button>
             </div>
             <input ref={sourceFileInputRef} type="file" accept=".txt,.md,text/plain,text/markdown" className="hidden" onChange={(event) => void onImportSourceBook(event.target.files?.[0])} />
@@ -41,38 +43,38 @@ export function DramaScriptPanel({
                     value={episode.script}
                     onChange={(event) => onUpdateEpisode({ script: event.target.value })}
                     rows={18}
-                    placeholder="粘贴或编写本集剧本，每个段落会生成一个镜头草稿…"
+                    placeholder={t("script.scriptPlaceholder")}
                 />
                 <div className="space-y-4 rounded-lg border border-border bg-background p-3 sm:space-y-5 sm:p-5">
                     <label className="block space-y-2.5">
-                        <span className="text-sm font-medium">本集名称</span>
+                        <span className="text-sm font-medium">{t("script.episodeTitleLabel")}</span>
                         <Input value={episode.title} onChange={(event) => onUpdateEpisode({ title: event.target.value })} />
                     </label>
                     <label className="block space-y-2.5">
-                        <span className="text-sm font-medium">故事简介</span>
+                        <span className="text-sm font-medium">{t("script.summaryLabel")}</span>
                         <Input.TextArea value={project.summary} onChange={(event) => onUpdateProject({ summary: event.target.value })} rows={4} />
                     </label>
                     <label className="block space-y-2.5">
-                        <span className="text-sm font-medium">视觉风格</span>
+                        <span className="text-sm font-medium">{t("script.styleLabel")}</span>
                         <Input value={project.style} onChange={(event) => onUpdateProject({ style: event.target.value })} />
                     </label>
                     <label className="block space-y-2.5">
-                        <span className="text-sm font-medium">视频生产模式</span>
+                        <span className="text-sm font-medium">{t("script.videoModeLabel")}</span>
                         <Segmented
                             block
                             value={project.defaultVideoMode}
                             options={[
-                                { label: "分镜驱动", value: "storyboard" },
-                                { label: "直接生成", value: "direct" },
-                                { label: "参考图", value: "reference" },
+                                { label: t("videoModes.storyboard"), value: "storyboard" },
+                                { label: t("videoModes.direct"), value: "direct" },
+                                { label: t("videoModes.reference"), value: "reference" },
                             ]}
                             onChange={(value) => onUpdateProject({ defaultVideoMode: value as DramaProject["defaultVideoMode"] })}
                         />
                     </label>
                     <Button type="primary" block className="!h-11 sm:!h-9" icon={<Sparkles className="size-4" />} loading={analyzing} onClick={onAnalyzeScript}>
-                        AI 提取内容结构
+                        {t("script.analyzeButton")}
                     </Button>
-                    <p className="pt-1 text-xs leading-5 text-muted-foreground">解析结果会进入内容审核，不会直接启动图片或视频生成。</p>
+                    <p className="pt-1 text-xs leading-5 text-muted-foreground">{t("script.analyzeHint")}</p>
                 </div>
             </div>
         </div>

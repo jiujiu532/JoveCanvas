@@ -27,7 +27,8 @@
             "exportAria": "Export",
             "renameAria": "Rename",
             "deleteAria": "Delete",
-            "defaultExportName": "{prefix} Canvas"
+            "defaultExportName": "{prefix} Canvas",
+            "publishAria": "Publish work"
         },
         "deleteDialog": {
             "title": "Delete canvas?",
@@ -35,7 +36,9 @@
             "confirm": "Delete",
             "description": "This will delete {count} canvas(es), along with their nodes and connections.",
             "failed": "Failed to delete canvas"
-        }
+        },
+        "reload": "Reload",
+        "exportFailed": "Failed to export canvas"
     },
     "agent": {
         "connected": "Local Canvas Agent connected",
@@ -166,7 +169,8 @@
         "decreaseFont": "Decrease font size",
         "decreaseFontLabel": "Smaller",
         "increaseFont": "Increase font size",
-        "increaseFontLabel": "Larger"
+        "increaseFontLabel": "Larger",
+        "zoom": "Zoom"
     },
     "info": {
         "title": "Node info",
@@ -176,7 +180,11 @@
         "status": "Status",
         "imageBatch": "Image group",
         "imageBatchCount": "{count} images",
-        "imageSize": "Image size"
+        "imageSize": "Image size",
+        "id": "ID",
+        "json": "JSON",
+        "prompt": "Prompt",
+        "config": "Generation settings"
     },
     "topbar": {
         "workbench": "Workbench",
@@ -232,7 +240,11 @@
         "deleteChatsDesc": "This will delete {count} chat record(s). This action cannot be undone.",
         "resizePanel": "Resize right panel",
         "canvasAssistant": "Canvas assistant",
-        "collapseChat": "Collapse chat"
+        "collapseChat": "Collapse chat",
+        "backToLatest": "Jump to latest",
+        "receivedWithRefs": "Got it. I'll work from the currently selected assets for this request.",
+        "receivedPlain": "Got it. I'll work with the current canvas for this request.",
+        "retryingTaskDots": "Retrying the failed task…"
     },
     "run": {
         "planning": "Understanding the request and analyzing the canvas",
@@ -287,7 +299,8 @@
         "emptyAudio": "Empty audio node",
         "batchExpanded": "Image group expanded",
         "batchCollapsed": "Image group collapsed",
-        "setPrimary": "Set as primary"
+        "setPrimary": "Set as primary",
+        "cancelledMessage": "Task cancelled"
     },
     "chat": {
         "toolCall": "Tool call",
@@ -308,7 +321,11 @@
         "statusRejected": "Rejected",
         "statusFailed": "Failed",
         "statusApproved": "Approved",
-        "statusCompleted": "Completed"
+        "statusCompleted": "Completed",
+        "referenceImages": "Reference images for this turn",
+        "uploadingName": "Uploading {name}",
+        "retryUploadName": "Retry image upload: {name}",
+        "uploadingImage": "Uploading image"
     },
     "assets": {
         "selectTitle": "Select asset",
@@ -317,7 +334,15 @@
         "searchPlaceholder": "Search assets",
         "loading": "Loading assets",
         "loadFailed": "Failed to load assets",
-        "empty": "No assets"
+        "empty": "No assets",
+        "retry": "Retry"
+    },
+    "nodeTitles": {
+        "panorama": "Panorama",
+        "config": "Generation settings",
+        "brief": "Creative brief",
+        "task": "Agent task",
+        "brandKit": "Brand kit"
     },
     "upscale": {
         "title": "Upscale image",
@@ -488,5 +513,36 @@
     },
     "export": {
         "defaultName": "Canvas"
+    },
+    "createMenu": {
+        "title": "New node",
+        "closeAria": "Close",
+        "text": "Text",
+        "textDesc": "Scripts, ads, and brand copy",
+        "image": "Image",
+        "panorama": "Panorama",
+        "panoramaDesc": "Generate a 2:1 environment panorama",
+        "video": "Video",
+        "audio": "Audio",
+        "config": "Generation config",
+        "configDesc": "Model, size, count, and input order"
+    },
+    "connectionMenu": {
+        "title": "Generate from this node",
+        "text": "Text generation",
+        "image": "Image generation",
+        "panorama": "Panorama generation",
+        "video": "Video generation",
+        "audio": "Audio reference",
+        "config": "Config node"
+    },
+    "page": {
+        "untitled": "Untitled canvas",
+        "imageDetails": "Image details",
+        "imageAlt": "Image",
+        "clearConfirmTitle": "Clear canvas?",
+        "cancel": "Cancel",
+        "clear": "Clear",
+        "clearConfirmDesc": "This will delete all nodes and connections on the current canvas."
     }
 }

@@ -2,6 +2,7 @@
 
 import { Button, Empty, Progress, Tag } from "antd";
 import { Film, Pause, Play, RefreshCw, ScanSearch, Send, Volume2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { mediaDownloadFileName } from "@/lib/media-file";
 import { originalMediaDownloadUrl } from "@/lib/media-image-url";
@@ -11,7 +12,6 @@ import { DramaAudioPanel, generationActionButtonClass } from "./drama-audio-pane
 import { DramaMediaThumbnail, type DramaPreviewMedia } from "./drama-media-preview";
 import { estimateEpisodePoints } from "./drama-shot-generation-utils";
 import type { useEffectiveConfig } from "@/stores/use-config-store";
-type EffectiveConfig = ReturnType<typeof useEffectiveConfig>;
 
 export function shotNeedsVoiceover(shot: DramaShot) {
     return shot.audioMode === "voiceover" && Boolean((shot.subtitle || shot.dialogue || shot.narration).trim());
@@ -60,15 +60,20 @@ export function DramaShotsPanel({
     onOpenJianying: () => void;
     onPreviewMedia: (media: DramaPreviewMedia) => void;
 }) {
+    const t = useTranslations("drama");
     return (
         <div>
-            {episode.reviewStatus !== "visual_ready" ? <p className="mb-4 border-l-2 border-amber-400 pl-3 text-sm leading-5 text-amber-700 sm:mb-6 sm:leading-6 dark:text-amber-200">请先在“内容审核”中确认镜头，并生成完整视觉方案。</p> : null}
+            {episode.reviewStatus !== "visual_ready" ? (
+                <p className="mb-4 border-l-2 border-amber-400 pl-3 text-sm leading-5 text-amber-700 sm:mb-6 sm:leading-6 dark:text-amber-200">
+                    {t("render.needReviewHint", { stage: t("editor.stages.review") })}
+                </p>
+            ) : null}
             <div className="mb-4 grid grid-cols-2 gap-px overflow-hidden border border-border bg-border sm:mb-6 sm:grid-cols-4">
                 {[
-                    ["本集预计", `${estimateEpisodePoints(config, project, episode.shots)} 积分`],
-                    ["任务实际", `${costSummary?.actualPoints || 0} 积分`],
-                    ["已登记任务", String(costSummary?.taskCount || 0)],
-                    ["失败/取消", String(costSummary?.failedCount || 0)],
+                    [t("render.stats.estimatedLabel"), t("render.stats.pointsValue", { value: estimateEpisodePoints(config, project, episode.shots) })],
+                    [t("render.stats.actualLabel"), t("render.stats.pointsValue", { value: costSummary?.actualPoints || 0 })],
+                    [t("render.stats.taskCountLabel"), String(costSummary?.taskCount || 0)],
+                    [t("render.stats.failedLabel"), String(costSummary?.failedCount || 0)],
                 ].map(([label, value]) => (
                     <div key={label} className="bg-background px-3 py-2.5 sm:px-4 sm:py-3">
                         <div className="text-xs text-muted-foreground">{label}</div>
@@ -77,7 +82,7 @@ export function DramaShotsPanel({
                 ))}
             </div>
             <div>
-                <SectionTitle className="!mb-4 sm:!mb-5" title="镜头生成队列" description="项目内串行创建后台视频任务，避免超过用户并发上限；也可继续把单镜头送入视频工作台精调。" />
+                <SectionTitle className="!mb-4 sm:!mb-5" title={t("render.queue.title")} description={t("render.queue.description")} />
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                         <Button
@@ -85,13 +90,13 @@ export function DramaShotsPanel({
                             icon={<Film className="size-4" />}
                             loading={renderTask?.status === "pending" || renderTask?.status === "running"}
                             disabled={!renderReady || !episode.shots.length || !episode.shots.every((shot) => shot.videoUrl && (!shotNeedsVoiceover(shot) || shot.audioUrl)) || Boolean(renderTask && ["pending", "running"].includes(renderTask.status))}
-                            title={!renderReady ? "服务器尚未安装 FFmpeg" : "需要所有镜头视频完成；选择 AI 配音的镜头还需配音完成"}
+                            title={!renderReady ? t("render.tooltips.ffmpegMissing") : t("render.tooltips.allShotsRequired")}
                             onClick={onCreateRender}
                         >
-                            {renderReady === null ? "检查合成环境" : renderReady ? "合成整集" : "FFmpeg 未就绪"}
+                            {renderReady === null ? t("render.buttons.checking") : renderReady ? t("render.buttons.renderAll") : t("render.buttons.ffmpegNotReady")}
                         </Button>
                         <Button className={generationActionButtonClass} icon={<ScanSearch className="size-4" />} loading={reviewingVisuals} disabled={!episode.shots.some((shot) => shot.storyboardImageUrl)} onClick={onReviewVisuals}>
-                            视觉复盘
+                            {t("render.buttons.reviewVisuals")}
                         </Button>
                         <Button
                             type="primary"
@@ -100,7 +105,7 @@ export function DramaShotsPanel({
                             disabled={!episode.shots.length || episode.reviewStatus !== "visual_ready"}
                             onClick={() => onQueueShots(episode.shots.filter((shot) => shot.generationStatus !== "success").map((shot) => shot.id))}
                         >
-                            批量生成未完成镜头
+                            {t("render.buttons.batchGenerate")}
                         </Button>
                     </div>
                     <DramaAudioPanel
@@ -117,17 +122,23 @@ export function DramaShotsPanel({
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <span className="font-semibold">分镜视觉复盘</span>
+                                    <span className="font-semibold">{t("render.review.title")}</span>
                                     <Tag color={episode.visualReview.status === "passed" ? "success" : episode.visualReview.status === "needs_revision" ? "warning" : "default"}>
-                                        {episode.visualReview.status === "passed" ? "通过" : episode.visualReview.status === "needs_revision" ? "需调整" : "未完成"}
+                                        {episode.visualReview.status === "passed"
+                                            ? t("render.review.status.passed")
+                                            : episode.visualReview.status === "needs_revision"
+                                              ? t("render.review.status.needsRevision")
+                                              : t("render.review.status.pending")}
                                     </Tag>
-                                    {typeof episode.visualReview.score === "number" ? <span className="text-sm tabular-nums text-muted-foreground">{episode.visualReview.score} 分</span> : null}
+                                    {typeof episode.visualReview.score === "number" ? (
+                                        <span className="text-sm tabular-nums text-muted-foreground">{t("render.review.scoreValue", { score: episode.visualReview.score })}</span>
+                                    ) : null}
                                 </div>
                                 <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{episode.visualReview.summary}</p>
                             </div>
                             {episode.visualReview.retryTaskIds.length ? (
                                 <Button className="!h-9 shrink-0" icon={<RefreshCw className="size-4" />} onClick={() => onQueueShots(episode.visualReview!.retryTaskIds)}>
-                                    重试问题镜头
+                                    {t("render.review.retryButton")}
                                 </Button>
                             ) : null}
                         </div>
@@ -139,7 +150,7 @@ export function DramaShotsPanel({
                                         <div key={`${issue.taskId || "general"}-${index}`} className="border-l-2 border-amber-400 pl-3 text-sm">
                                             <div className="font-medium">{shot?.title || issue.category}</div>
                                             <p className="mt-1 leading-5 text-muted-foreground">{issue.message}</p>
-                                            {issue.correction ? <p className="mt-1 leading-5">建议：{issue.correction}</p> : null}
+                                            {issue.correction ? <p className="mt-1 leading-5">{t("render.review.correctionPrefix", { correction: issue.correction })}</p> : null}
                                         </div>
                                     );
                                 })}
@@ -148,22 +159,28 @@ export function DramaShotsPanel({
                     </div>
                 ) : null}
             </div>
-            {!audioReady ? <p className="mt-6 border-l-2 border-amber-400 pl-3 text-sm leading-6 text-amber-700 dark:border-amber-300 dark:text-amber-200">配音暂不可用：后台尚未配置可用的默认音频模型。视频镜头生成和整集合成不受影响。</p> : null}
+            {!audioReady ? <p className="mt-6 border-l-2 border-amber-400 pl-3 text-sm leading-6 text-amber-700 dark:border-amber-300 dark:text-amber-200">{t("render.audioUnavailableHint")}</p> : null}
             {renderTask ? (
                 <div className="mt-4 rounded-xl border border-border/80 bg-background/65 p-4 sm:mt-6 sm:rounded-2xl sm:p-6">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <div className="flex items-center gap-2 font-semibold">
                                 <Film className="size-4" />
-                                整集合成
+                                {t("render.task.title")}
                             </div>
                             <p className="mt-1 text-sm text-muted-foreground">
-                                {renderTask.status === "success" ? "成片已生成" : renderTask.status === "error" ? renderTask.error || "合成失败" : renderTask.status === "cancelled" ? "合成已取消" : "正在转码、拼接并烧录字幕…"}
+                                {renderTask.status === "success"
+                                    ? t("render.task.status.success")
+                                    : renderTask.status === "error"
+                                      ? renderTask.error || t("render.task.status.error")
+                                      : renderTask.status === "cancelled"
+                                        ? t("render.task.status.cancelled")
+                                        : t("render.task.status.inProgress")}
                             </p>
                         </div>
                         {["pending", "running"].includes(renderTask.status) ? (
                             <Button danger className="!h-11 sm:!h-9" onClick={onCancelRender}>
-                                取消合成
+                                {t("render.task.cancelButton")}
                             </Button>
                         ) : null}
                     </div>
@@ -176,7 +193,7 @@ export function DramaShotsPanel({
                                 href={originalMediaDownloadUrl(renderTask.result.url)}
                                 download={mediaDownloadFileName(renderTask.id, "video/mp4", renderTask.result.url)}
                             >
-                                下载整集成片
+                                {t("render.task.downloadLink")}
                             </a>
                         </div>
                     ) : null}
@@ -191,7 +208,7 @@ export function DramaShotsPanel({
                         >
                             <div className="min-w-0 flex-1">
                                 <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
-                                    <h3 className="min-w-0 shrink truncate font-semibold">{shot.title || `镜头 ${String(shot.order).padStart(2, "0")}`}</h3>
+                                    <h3 className="min-w-0 shrink truncate font-semibold">{shot.title || t("render.shotTitleFallback", { order: String(shot.order).padStart(2, "0") })}</h3>
                                     <div className="flex flex-wrap items-center gap-1.5">
                                         <StoryboardTag status={shot.storyboardStatus} />
                                         {shot.storyboardFrameMode === "first_last" ? (
@@ -204,11 +221,11 @@ export function DramaShotsPanel({
                                                           : "border-border bg-muted/60 text-muted-foreground"
                                                 }`}
                                             >
-                                                尾帧
+                                                {t("storyboard.endFrameTag")}
                                             </span>
                                         ) : null}
                                         <GenerationTag status={shot.generationStatus} />
-                                        {shot.audioMode === "voiceover" ? <AudioTag status={shot.audioStatus} /> : <Tag>{shot.audioMode === "mute" ? "静音" : "视频原声"}</Tag>}
+                                        {shot.audioMode === "voiceover" ? <AudioTag status={shot.audioStatus} /> : <Tag>{shot.audioMode === "mute" ? t("storyboard.audioModes.mute") : t("storyboard.audioModes.source")}</Tag>}
                                     </div>
                                 </div>
                                 <p className="mt-2 line-clamp-2 text-sm leading-5 text-muted-foreground sm:leading-6">{shot.videoPrompt}</p>
@@ -219,27 +236,27 @@ export function DramaShotsPanel({
                                 {shot.generationError ? <p className="mt-2 text-xs text-red-500">{shot.generationError}</p> : null}
                                 {shot.storyboardImageUrl ? (
                                     <div className="mt-4 flex max-w-xl gap-2 overflow-x-auto">
-                                        <DramaMediaThumbnail media={{ type: "image", url: shot.storyboardImageUrl, title: `${shot.title}起始帧` }} onOpen={onPreviewMedia} />
-                                        {shot.storyboardEndImageUrl ? <DramaMediaThumbnail media={{ type: "image", url: shot.storyboardEndImageUrl, title: `${shot.title}结束帧` }} onOpen={onPreviewMedia} /> : null}
+                                        <DramaMediaThumbnail media={{ type: "image", url: shot.storyboardImageUrl, title: t("render.mediaTitles.startFrame", { title: shot.title }) }} onOpen={onPreviewMedia} />
+                                        {shot.storyboardEndImageUrl ? <DramaMediaThumbnail media={{ type: "image", url: shot.storyboardEndImageUrl, title: t("render.mediaTitles.endFrame", { title: shot.title }) }} onOpen={onPreviewMedia} /> : null}
                                     </div>
                                 ) : null}
                                 {shot.videoUrl ? (
                                     <div className="mt-4">
-                                        <DramaMediaThumbnail media={{ type: "video", url: shot.videoUrl, title: `${shot.title}生成视频` }} onOpen={onPreviewMedia} />
+                                        <DramaMediaThumbnail media={{ type: "video", url: shot.videoUrl, title: t("render.mediaTitles.generatedVideo", { title: shot.title }) }} onOpen={onPreviewMedia} />
                                     </div>
                                 ) : null}
-                                {shot.subtitle || shot.dialogue ? <p className="mt-2 max-w-2xl text-xs leading-5 text-muted-foreground">字幕：{shot.subtitle || shot.dialogue}</p> : null}
+                                {shot.subtitle || shot.dialogue ? <p className="mt-2 max-w-2xl text-xs leading-5 text-muted-foreground">{t("render.subtitleLinePrefix", { text: shot.subtitle || shot.dialogue })}</p> : null}
                                 {shot.audioError ? <p className="mt-2 text-xs text-red-500">{shot.audioError}</p> : null}
                                 {shot.audioUrl ? <audio className="mt-4 h-10 w-full max-w-sm" src={shot.audioUrl} controls preload="metadata" /> : null}
                             </div>
                             <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:max-w-[420px] sm:flex-wrap sm:justify-end">
                                 {shot.audioStatus === "running" || shot.audioStatus === "queued" ? (
                                     <Button className={generationActionButtonClass} icon={<Pause className="size-4" />} onClick={() => onCancelAudio(shot)}>
-                                        取消配音
+                                        {t("render.buttons.cancelVoiceover")}
                                     </Button>
                                 ) : shot.subtitle || shot.dialogue ? (
-                                    <Button className={generationActionButtonClass} disabled={!audioReady} title={audioReady ? undefined : "请管理员先在后台设置默认音频模型"} icon={<Volume2 className="size-4" />} onClick={() => onQueueAudio([shot.id])}>
-                                        {shot.audioStatus === "error" ? "重试配音" : shot.audioMode === "voiceover" ? "生成配音" : "改用 AI 配音"}
+                                    <Button className={generationActionButtonClass} disabled={!audioReady} title={audioReady ? undefined : t("render.tooltips.audioModelMissing")} icon={<Volume2 className="size-4" />} onClick={() => onQueueAudio([shot.id])}>
+                                        {shot.audioStatus === "error" ? t("render.buttons.retryVoiceover") : shot.audioMode === "voiceover" ? t("render.buttons.generateVoiceover") : t("render.buttons.switchToAiVoiceover")}
                                     </Button>
                                 ) : null}
                                 {shot.storyboardStatus === "running" ||
@@ -249,11 +266,11 @@ export function DramaShotsPanel({
                                 shot.generationStatus === "running" ||
                                 shot.generationStatus === "queued" ? (
                                     <Button className={generationActionButtonClass} icon={<Pause className="size-4" />} onClick={() => void onCancelShot(shot.id, shot.generationTaskId, shot.storyboardTaskId, shot.storyboardEndTaskId)}>
-                                        取消生成
+                                        {t("render.buttons.cancelGeneration")}
                                     </Button>
                                 ) : (
                                     <Button className={generationActionButtonClass} disabled={episode.reviewStatus !== "visual_ready"} icon={<RefreshCw className="size-4" />} onClick={() => onQueueShots([shot.id])}>
-                                        {shot.storyboardStatus === "error" || shot.storyboardEndStatus === "error" || shot.generationStatus === "error" ? "重试生成" : "生成镜头"}
+                                        {shot.storyboardStatus === "error" || shot.storyboardEndStatus === "error" || shot.generationStatus === "error" ? t("render.buttons.retryGenerate") : t("render.buttons.generateShot")}
                                     </Button>
                                 )}
                                 <Button
@@ -263,14 +280,14 @@ export function DramaShotsPanel({
                                     icon={<Send className="size-4" />}
                                     onClick={() => onSendToVideo(shot)}
                                 >
-                                    视频工作台精调
+                                    {t("render.buttons.sendToVideoWorkbench")}
                                 </Button>
                             </div>
                         </article>
                     ))}
                 </div>
             ) : (
-                <Empty className="!my-6 sm:!my-12" description="请先生成分镜草稿" />
+                <Empty className="!my-6 sm:!my-12" description={t("render.emptyNeedStoryboard")} />
             )}
         </div>
     );

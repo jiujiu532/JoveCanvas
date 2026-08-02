@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Tag } from "antd";
+import { useTranslations } from "next-intl";
 
 const compactTagClass = "!m-0 !inline-flex !h-6 !min-w-max !shrink-0 !items-center !whitespace-nowrap !rounded-md !border !px-2 !text-xs !font-medium !leading-6";
 
@@ -23,37 +24,19 @@ export function SectionTitle({ title, description, className = "" }: { title: st
     );
 }
 export function GenerationTag({ status = "idle" }: { status?: string }) {
-    const values: Record<string, string> = {
-        idle: "未生成",
-        queued: "排队中",
-        running: "生成中",
-        success: "已完成",
-        error: "失败",
-        cancelled: "已取消",
-    };
-    return <Tag className={`${compactTagClass} ${statusToneClass[status] || statusToneClass.idle}`}>{values[status] || values.idle}</Tag>;
+    const t = useTranslations("drama");
+    const key = statusToneClass[status] ? status : "idle";
+    return <Tag className={`${compactTagClass} ${statusToneClass[key]}`}>{t(`storyboard.status.generation.${key}`)}</Tag>;
 }
 export function StoryboardTag({ status = "idle" }: { status?: string }) {
-    const values: Record<string, string> = {
-        idle: "待分镜图",
-        queued: "分镜排队",
-        running: "分镜图生成中",
-        success: "分镜图完成",
-        error: "分镜图失败",
-        cancelled: "分镜图取消",
-    };
-    return <Tag className={`${compactTagClass} ${statusToneClass[status] || statusToneClass.idle}`}>{values[status] || values.idle}</Tag>;
+    const t = useTranslations("drama");
+    const key = statusToneClass[status] ? status : "idle";
+    return <Tag className={`${compactTagClass} ${statusToneClass[key]}`}>{t(`storyboard.status.storyboard.${key}`)}</Tag>;
 }
 export function AudioTag({ status = "idle" }: { status?: string }) {
-    const values: Record<string, string> = {
-        idle: "未配音",
-        queued: "配音排队",
-        running: "配音中",
-        success: "配音完成",
-        error: "配音失败",
-        cancelled: "配音取消",
-    };
-    return <Tag className={`${compactTagClass} ${statusToneClass[status] || statusToneClass.idle}`}>{values[status] || values.idle}</Tag>;
+    const t = useTranslations("drama");
+    const key = statusToneClass[status] ? status : "idle";
+    return <Tag className={`${compactTagClass} ${statusToneClass[key]}`}>{t(`storyboard.status.audio.${key}`)}</Tag>;
 }
 export function AssetPanel({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
     return (
@@ -67,17 +50,18 @@ export function AssetPanel({ icon, title, children }: { icon: ReactNode; title: 
     );
 }
 export function AssetList({ items }: { items: Array<{ id: string; name: string; description: string }> }) {
+    const t = useTranslations("drama");
     return items.length ? (
         <div className="mt-4 space-y-3 sm:mt-6 sm:space-y-4">
             {items.map((item) => (
                 <div key={item.id} className="rounded-xl border border-border bg-card p-3 sm:p-4">
                     <div className="text-sm font-semibold">{item.name}</div>
-                    <div className="mt-2 text-xs leading-5 text-muted-foreground">{item.description || "暂无描述"}</div>
+                    <div className="mt-2 text-xs leading-5 text-muted-foreground">{item.description || t("assets.noDescription")}</div>
                 </div>
             ))}
         </div>
     ) : (
-        <p className="mt-6 text-sm text-muted-foreground">暂未添加</p>
+        <p className="mt-6 text-sm text-muted-foreground">{t("assets.notAddedYet")}</p>
     );
 }
 

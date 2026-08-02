@@ -27,7 +27,8 @@
             "exportAria": "导出",
             "renameAria": "重命名",
             "deleteAria": "删除",
-            "defaultExportName": "{prefix} 画布"
+            "defaultExportName": "{prefix} 画布",
+            "publishAria": "发布作品"
         },
         "deleteDialog": {
             "title": "删除画布？",
@@ -35,7 +36,9 @@
             "confirm": "删除",
             "description": "将删除 {count} 个画布，里面的节点和连线也会一起移除。",
             "failed": "画布删除失败"
-        }
+        },
+        "reload": "重新加载",
+        "exportFailed": "画布导出失败"
     },
     "agent": {
         "connected": "本地 Canvas Agent 已连接",
@@ -166,7 +169,8 @@
         "decreaseFont": "减小字号",
         "decreaseFontLabel": "缩小",
         "increaseFont": "增大字号",
-        "increaseFontLabel": "放大"
+        "increaseFontLabel": "放大",
+        "zoom": "放大"
     },
     "info": {
         "title": "节点信息",
@@ -176,7 +180,11 @@
         "status": "状态",
         "imageBatch": "图片组",
         "imageBatchCount": "{count} 张",
-        "imageSize": "图片大小"
+        "imageSize": "图片大小",
+        "id": "ID",
+        "json": "JSON",
+        "prompt": "提示词",
+        "config": "生成配置"
     },
     "topbar": {
         "workbench": "工作台",
@@ -232,7 +240,11 @@
         "deleteChatsDesc": "将删除 {count} 条对话记录，此操作不可撤销。",
         "resizePanel": "调整右侧面板宽度",
         "canvasAssistant": "画布助手",
-        "collapseChat": "收起对话"
+        "collapseChat": "收起对话",
+        "backToLatest": "回到最新消息",
+        "receivedWithRefs": "收到，我会基于当前选中素材处理这次创作需求。",
+        "receivedPlain": "收到，我会结合当前画布处理这次创作需求。",
+        "retryingTaskDots": "正在重新执行失败任务…"
     },
     "run": {
         "planning": "正在理解需求并分析当前画布",
@@ -287,7 +299,8 @@
         "emptyAudio": "空音频节点",
         "batchExpanded": "图片组已展开",
         "batchCollapsed": "图片组已收起",
-        "setPrimary": "设为主图"
+        "setPrimary": "设为主图",
+        "cancelledMessage": "任务已取消"
     },
     "chat": {
         "toolCall": "工具调用",
@@ -308,7 +321,11 @@
         "statusRejected": "拒绝执行",
         "statusFailed": "执行失败",
         "statusApproved": "已批准执行",
-        "statusCompleted": "执行完成"
+        "statusCompleted": "执行完成",
+        "referenceImages": "本轮参考图片",
+        "uploadingName": "{name} 上传中",
+        "retryUploadName": "重试上传图片：{name}",
+        "uploadingImage": "正在上传图片"
     },
     "assets": {
         "selectTitle": "选择素材",
@@ -317,7 +334,15 @@
         "searchPlaceholder": "搜索素材",
         "loading": "正在加载素材",
         "loadFailed": "素材加载失败",
-        "empty": "没有素材"
+        "empty": "没有素材",
+        "retry": "重试"
+    },
+    "nodeTitles": {
+        "panorama": "全景图",
+        "config": "生成配置",
+        "brief": "创作简报",
+        "task": "Agent 任务",
+        "brandKit": "品牌规范"
     },
     "upscale": {
         "title": "图片放大",
@@ -488,5 +513,36 @@
     },
     "export": {
         "defaultName": "画布"
+    },
+    "createMenu": {
+        "title": "新建节点",
+        "closeAria": "关闭",
+        "text": "文本",
+        "textDesc": "脚本、广告词、品牌文案",
+        "image": "图片",
+        "panorama": "全景图",
+        "panoramaDesc": "生成 2:1 环境全景",
+        "video": "视频",
+        "audio": "音频",
+        "config": "生成配置",
+        "configDesc": "模型、尺寸、数量和输入顺序"
+    },
+    "connectionMenu": {
+        "title": "引用该节点生成",
+        "text": "文本生成",
+        "image": "图片生成",
+        "panorama": "全景生成",
+        "video": "视频生成",
+        "audio": "音频参考",
+        "config": "配置节点"
+    },
+    "page": {
+        "untitled": "未命名画布",
+        "imageDetails": "图片详情",
+        "imageAlt": "图片",
+        "clearConfirmTitle": "清空画布？",
+        "cancel": "取消",
+        "clear": "清空",
+        "clearConfirmDesc": "这会删除当前画布上的所有节点和连线。"
     }
 }

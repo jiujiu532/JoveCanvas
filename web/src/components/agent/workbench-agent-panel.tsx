@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 
 import { AgentMessageActions } from "@/components/agent/agent-message-actions";
 import { AgentMarkdown } from "@/components/agent/agent-markdown";
-import { formatAgentMessageText } from "@/components/agent/agent-message-format";
+import { agentMessageFormatLabelsFromT, formatAgentMessageText } from "@/components/agent/agent-message-format";
 import { CreativeAgentControls, CreativeAgentSkillCard, type CreativeAgentModelOption } from "@/components/agent/creative-agent-controls";
 import type { AgentSkillSummary } from "@/services/api/agent-skills";
 import { imageReferenceLabel } from "@/lib/image-reference-prompt";
@@ -104,6 +104,7 @@ export function WorkbenchAgentConversation({
     onRetryMessage?: (messageId: string) => void;
 }) {
     const t = useTranslations("layout");
+    const formatLabels = agentMessageFormatLabelsFromT(t);
     const scrollRef = useRef<HTMLDivElement>(null);
     const scrollStateRef = useRef<{ firstId?: string; height: number }>({ height: 0 });
     const hasActiveProgress = messages.some((message) => message.progress?.phase === "planning" || message.progress?.phase === "submitting");
@@ -126,7 +127,7 @@ export function WorkbenchAgentConversation({
                 </div>
             ) : null}
             {messages.map((message) => {
-                const displayMessage = { ...message, text: formatAgentMessageText(message.text) };
+                const displayMessage = { ...message, text: formatAgentMessageText(message.text, formatLabels) };
                 return (
                     <div key={message.id} className={`group/message flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                         <div className={cn("flex min-w-0 flex-col", message.role === "user" ? "max-w-[88%] items-end" : "w-full items-start")}>

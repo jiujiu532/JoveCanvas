@@ -1,15 +1,17 @@
 "use client";
 
 import { Button, Empty } from "antd";
+import { useTranslations } from "next-intl";
 
 import type { DramaEpisode, DramaProject } from "../types";
 import { SectionTitle } from "./drama-editor-elements";
 import { DramaStoryboardShotCard } from "./drama-storyboard-shot-card";
 
 export function DramaStoryboardPanel({ project, episode, expandedShotId, onToggleShot, onGoToScript }: { project: DramaProject; episode: DramaEpisode; expandedShotId: string; onToggleShot: (shotId: string) => void; onGoToScript: () => void }) {
+    const t = useTranslations("drama");
     return (
         <div>
-            <SectionTitle title="分镜编辑" description="视觉字段来自已审核内容；这里可以精调画面、镜头运动和模型提示词。" />
+            <SectionTitle title={t("storyboard.sectionTitle")} description={t("storyboard.sectionDescription")} />
             {episode.shots.length ? (
                 <div className="grid min-w-0 items-start gap-3 xl:grid-cols-2 sm:gap-5">
                     {episode.shots.map((shot) => (
@@ -17,9 +19,9 @@ export function DramaStoryboardPanel({ project, episode, expandedShotId, onToggl
                     ))}
                 </div>
             ) : (
-                <Empty description="还没有分镜">
+                <Empty description={t("storyboard.empty")}>
                     <Button type="primary" onClick={onGoToScript}>
-                        先填写剧本
+                        {t("storyboard.goToScript")}
                     </Button>
                 </Empty>
             )}

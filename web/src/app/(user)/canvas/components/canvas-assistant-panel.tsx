@@ -18,7 +18,8 @@ import { CanvasPromptLibrary } from "./canvas-prompt-library";
 import { watchCanvasAgentRun } from "./canvas-agent-run-client";
 import { withCanvasAgentRunWatch } from "./canvas-agent-run-watch-guard";
 import type { CanvasAgentRunStage } from "./canvas-agent-progress";
-import { formatAgentMessageText, friendlyAgentError } from "@/components/agent/agent-message-format";
+import { agentMessageFormatLabelsFromT, friendlyAgentError } from "@/components/agent/agent-message-format";
+import { useTranslations } from "next-intl";
 import { AgentChatComposer, AgentChatMessage, AgentPanelTabs, AgentWorkingMessage, type CanvasAgentChatMessage } from "./canvas-agent-chat-ui";
 import { useCanvasAgentAttachments } from "./use-canvas-agent-attachments";
 import { useCanvasAgentMessageScroll } from "./use-canvas-agent-message-scroll";
@@ -76,6 +77,8 @@ export function CanvasAssistantPanel({
     closing,
     onCollapse,
 }: CanvasAssistantPanelProps) {
+    const t = useTranslations("canvas");
+    const formatLabels = agentMessageFormatLabelsFromT(useTranslations("layout"));
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
     const user = useUserStore((state) => state.user);
     const { skills, skillsLoading, models } = useCreativeAgentOptions("canvas");
@@ -241,7 +244,7 @@ export function CanvasAssistantPanel({
             setRunPaused(false);
             await waitForBackendAgent(payload.data.run.id, session.id, assistantId);
         } catch (error) {
-            upsertMessage(session.id, { id: assistantId, role: "error", title: "Agent 执行失败", text: friendlyAgentError(error) });
+            upsertMessage(session.id, { id: assistantId, role: "error", title: t("panel.runFailed"), text: friendlyAgentError(error, undefined, formatLabels) });
             setIsRunning(false);
         }
     };
@@ -298,7 +301,7 @@ export function CanvasAssistantPanel({
                 setActiveRunId(run.id);
                 setRunPaused(run.status === "paused");
                 setIsRunning(true);
-                void waitForBackendAgent(run.id, session.id, assistantId).catch((error) => appendMessage(session.id, { id: nanoid(), role: "error", title: "恢复失败", text: friendlyAgentError(error, "Agent 任务恢复失败，请稍后重试。") }));
+                void waitForBackendAgent(run.id, session.id, assistantId).catch((error) => appendMessage(session.id, { id: nanoid(), role: "error", title: t("panel.restoreFailed"), text: friendlyAgentError(error, t("panel.restoreFailedDetail"), formatLabels) }));
             });
         return () => {
             cancelled = true;
@@ -323,7 +326,7 @@ export function CanvasAssistantPanel({
             if (action === "cancel") setRunPaused(false);
         } catch (error) {
             const session = activeSession || localSessions[0];
-            if (session) appendMessage(session.id, { id: nanoid(), role: "error", title: "控制失败", text: friendlyAgentError(error, "Agent 任务控制失败，请稍后重试。") });
+            if (session) appendMessage(session.id, { id: nanoid(), role: "error", title: t("panel.controlFailedTitle"), text: friendlyAgentError(error, t("panel.controlFailedDetail"), formatLabels) });
         }
     };
 
@@ -341,7 +344,7 @@ export function CanvasAssistantPanel({
             if (!response.ok) throw new Error(payload.msg || "任务重试失败");
             await waitForBackendAgent(runId, session.id, assistantId, taskId, !taskId);
         } catch (error) {
-            upsertMessage(session.id, { id: assistantId, role: "error", title: "重试失败", text: friendlyAgentError(error, "任务重试失败，请稍后再试。"), detail: { runId, taskId } });
+            upsertMessage(session.id, { id: assistantId, role: "error", title: t("panel.retryFailedTitle"), text: friendlyAgentError(error, t("panel.retryFailedDetail"), formatLabels), detail: { runId, taskId } });
             setIsRunning(false);
             setActiveRunId("");
         }
@@ -441,7 +444,7 @@ export function CanvasAssistantPanel({
                             {messages.map((message) => (
                                 <div key={message.id} className="space-y-1">
                                     <AgentChatMessage
-                                        item={assistantMessageToChatMessage(message)}
+                                        item={assistantMessageToChatMessage(message, formatLabels)}
                                         theme={theme}
                                         user={user}
                                         onLocateNode={onLocateNode}

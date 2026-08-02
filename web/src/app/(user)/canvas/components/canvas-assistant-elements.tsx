@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 import { CanvasPromptLibrary } from "./canvas-prompt-library";
 import { watchCanvasAgentRun } from "./canvas-agent-run-client";
 import type { CanvasAgentRunStage } from "./canvas-agent-progress";
-import { formatAgentMessageText, friendlyAgentError } from "@/components/agent/agent-message-format";
+import { formatAgentMessageText, type AgentMessageFormatLabels } from "@/components/agent/agent-message-format";
 import { AgentChatComposer, AgentChatMessage, AgentPanelTabs, AgentWorkingMessage, type CanvasAgentChatMessage } from "./canvas-agent-chat-ui";
 import { CANVAS_AGENT_PANEL_MOTION_MS } from "./canvas-agent-panel-motion";
 import { CanvasNodeType, isCanvasImageNodeType, type CanvasAssistantMessage, type CanvasAssistantReference, type CanvasAssistantSession, type CanvasNodeData } from "../types";
@@ -152,9 +152,9 @@ export function assistantImageReferenceLabel(references: CanvasAssistantReferenc
     return imageIndex >= 0 ? imageReferenceLabel(imageIndex) : undefined;
 }
 
-export function assistantMessageToChatMessage(message: CanvasAssistantMessage): CanvasAgentChatMessage {
+export function assistantMessageToChatMessage(message: CanvasAssistantMessage, labels?: AgentMessageFormatLabels): CanvasAgentChatMessage {
     const attachments = message.references?.flatMap((item) => (item.dataUrl ? [{ id: item.id, name: item.title, url: item.dataUrl }] : []));
-    return { id: message.id, role: message.role, title: message.title, text: formatAgentMessageText(message.text), meta: message.meta, detail: message.detail, ...(attachments?.length ? { attachments } : {}) };
+    return { id: message.id, role: message.role, title: message.title, text: formatAgentMessageText(message.text, labels), meta: message.meta, detail: message.detail, ...(attachments?.length ? { attachments } : {}) };
 }
 
 export function formatSessionTime(value?: string) {
