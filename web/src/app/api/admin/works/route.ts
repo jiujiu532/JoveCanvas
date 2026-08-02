@@ -9,8 +9,8 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
     const user = await getCurrentUser();
-    if (!user) return unauthorized();
-    if (user.role !== "admin") return forbidden();
+    if (!user) return await unauthorized();
+    if (user.role !== "admin") return await forbidden();
     try {
         const params = request.nextUrl.searchParams;
         const works = await listWorkPublicationsForAdmin({

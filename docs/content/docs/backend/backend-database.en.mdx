@@ -1,0 +1,114 @@
+---
+title: Database structure
+description: JoveCanvas PostgreSQL schema and Repository boundaries
+---
+
+# Database structure
+
+The JoveCanvas commercial edition uses PostgreSQL as its primary database by default. Initialization SQL is maintained in `web/src/lib/server/database/schema.ts`, and server code accesses the primary database through Repositories under `web/src/lib/server/database/`.
+
+## Environment variables
+
+```bash
+VOZEB_PRO_DATABASE_PROVIDER=postgres
+DATABASE_URL=postgres://vozeb_pro:change-me@localhost:5432/vozeb_pro
+VOZEB_PRO_DATABASE_POOL_MAX=10
+VOZEB_PRO_DATABASE_SSL=0
+VOZEB_PRO_ENCRYPTION_KEY=64-hex-characters-or-32-byte-Base64-key
+```
+
+After the first deployment, open `/install`. The status GET only checks `DATABASE_URL`, the PostgreSQL connection, the schema, and the administrator count; it does not run DDL. The install page POST explicitly initializes the schema. A valid 32-byte encryption key is required before initialization and creation of the first administrator.
+
+For a local file-backed experience, configure:
+
+```bash
+VOZEB_PRO_DATABASE_PROVIDER=file
+```
+
+## Table prefixes
+
+JoveCanvas PostgreSQL tables use the `vozeb_pro_` project prefix. Business code continues to use logical names such as `users`, `billing_orders`, and `generation_logs`; the database execution layer maps them to real names:
+
+- `users` -> `vozeb_pro_users`
+- `billing_orders` -> `vozeb_pro_billing_orders`
+- `generation_logs` -> `vozeb_pro_generation_logs`
+
+This keeps JoveCanvas objects distinct from other applications in the same PostgreSQL database. Explicit indexes and named unique constraints must also use the `vozeb_pro_` prefix. Unprefixed tables are never removed automatically; current reads and writes use only prefixed tables.
+
+## Core tables
+
+- `vozeb_pro_schema_migrations`: applied schema versions.
+- `vozeb_pro_app_settings`: site, registration, email, points, generation, payment, logical-model, channel-binding, and default-model settings; `logical_models` JSONB stores user-visible capabilities, upstream models, channels, enablement, and priority.
+- `vozeb_pro_users` / `vozeb_pro_sessions`: user identity, role, status, profile, plan, points, password-hash, session-token hashes, and expiry data. Public creator responses never expose email or internal user IDs.
+- `vozeb_pro_entitlement_plans` / `vozeb_pro_user_plan_assignments`: plan capabilities, daily limits, feature flags, and effective assignments from orders, CDK, administrators, or system grants.
+- `vozeb_pro_quota_usage` / `vozeb_pro_point_records`: daily plan usage, point balances, and immutable credit/debit/refund ledger entries.
+- `vozeb_pro_billing_products`, `vozeb_pro_promotion_campaigns`, `vozeb_pro_promotion_products`, `vozeb_pro_coupon_templates`, `vozeb_pro_coupon_template_products`, `vozeb_pro_user_coupons`, and `vozeb_pro_coupon_redemptions`: products, non-overlapping campaign prices, coupon rules, product eligibility, locked/redeemed states, and full-order refund association.
+- `vozeb_pro_cdk_codes` / `vozeb_pro_cdk_redemptions`: redeemable codes and redemption records; PostgreSQL admin lists filter and paginate server-side.
+- `vozeb_pro_billing_orders` / `vozeb_pro_payment_transactions`: authoritative order price snapshots, locked payment channel, provider transaction, currency, payment state, `amountCents`, refund claim state, and indexed date-window aggregation.
+- `vozeb_pro_payment_provider_events`, `vozeb_pro_billing_reconciliation_runs`, and `vozeb_pro_billing_reconciliation_rows`: deduplicated callbacks, import batches, normalized statement rows, matched orders, and discrepancy codes without retaining whole source files.
+- `vozeb_pro_referral_programs`, `vozeb_pro_referral_codes`, `vozeb_pro_referral_relationships`, and `vozeb_pro_referral_rewards`: single-level attribution, HMAC risk signals, cooling periods, limits, reward ledgers, coupon links, and reversal states; raw IP, full User-Agent, and device fingerprints are not stored.
+- `vozeb_pro_prompts` / `vozeb_pro_prompt_seed_sources`: public and user prompts and seed provenance. `locale` (`zh`, `en`, or `mixed`, nullable) is a sort preference only.
+- `vozeb_pro_generation_logs`, `vozeb_pro_generation_log_assets`, `vozeb_pro_generation_tasks`, `vozeb_pro_generation_worker_heartbeats`, and `vozeb_pro_generation_webhook_events`: generation history, registered media, durable task status, execution phases, upstream IDs, leases, worker health, callback idempotency, and recovery metadata.
+- `vozeb_pro_creative_conversations`, `vozeb_pro_creative_messages`, `vozeb_pro_creative_assets`, and `vozeb_pro_creative_run_events`: durable summaries, ordered messages, stable assets, and numeric SSE cursors. History reads newest messages first and paginates with `beforeSequence`; summaries prevent reloading compressed context.
+- `vozeb_pro_canvas_projects`, `vozeb_pro_library_assets`, and `vozeb_pro_local_media_assets`: user-scoped Canvas snapshots, server-paginated library records, and stable media registrations for local or S3-compatible providers. Media rows store a stable internal key, not a signed URL or raw object key.
+- `vozeb_pro_drama_projects` / `vozeb_pro_drama_project_versions`: aggregate short-drama snapshots and reversible, uniquely numbered project versions.
+- `vozeb_pro_published_works`, `vozeb_pro_published_work_versions`, `vozeb_pro_published_work_assets`, and `vozeb_pro_published_work_cases`: stable work identity, immutable reviewed versions, public media references, reports, and appeals. Public versions require a non-empty `public_prompt`; internal planning never enters that field.
+- `vozeb_pro_published_work_likes`, `vozeb_pro_user_follows`, `vozeb_pro_user_blocks`, and `vozeb_pro_user_notifications`: idempotent community relations, self-relation constraints, atomic block cleanup, stable notification dedupe keys, and server pagination.
+- `vozeb_pro_object_storage_settings`, `vozeb_pro_system_model_channels`, `vozeb_pro_announcements`, `vozeb_pro_email_codes`, `vozeb_pro_rate_limits`, `vozeb_pro_account_deletion_requests`, and `vozeb_pro_audit_logs`: redacted storage/channel settings, announcements, verification codes, shared rate-limit windows, deletion requests, and security audit records.
+
+The schema does not create favorites, comments, or comment-report tables. Task terminal updates use atomic `user_id + task_type + allowed status` conditions, while recovery claims use `worker_id + lease_until`. A saved upstream task ID is queried rather than recreated; `result_ready` retries persistence only, and uncertain `submitting` operations enter `needs_review` for explicit administrator handling.
+
+Operational invariants:
+
+- Secrets are encrypted at rest and management APIs return configuration state, never plaintext credentials.
+- `prompts.locale` (`zh`, `en`, or `mixed`, nullable) affects list `preferLocale` ordering only; it does not filter the public library by language.
+- Billing orders persist authoritative everyday price, campaign discount, coupon discount, amount due, and `pricing_snapshot`; checkout, refunds, and reconciliation read `amountCents` rather than recomputing prices.
+- Coupon locking, redemption, order cancellation, payment, and full-order refunds are transactional and idempotent.
+- Generation tasks persist business status separately from execution phase, upstream task identifiers, leases, worker heartbeats, result payloads, and retry metadata. Once an upstream task is created, recovery queries that task and never silently creates another one.
+- Creative assets store stable IDs and persistent media locations, never base64. Public work assets store stable internal storage keys, never object keys or signed URLs.
+- Published works expose only active, approved, public versions. Reports are bound to the version that was public when submitted; old reports cannot take down a later version.
+- The community model provides likes, follows, blocks, and interaction notifications. It does not create favorites, comments, or comment-report tables.
+
+## Repository boundaries
+
+`createPostgresRepositories()` exposes table-level Repositories for `settings`, `users`, `sessions`, `points`, `cdk`, `announcements`, `prompts`, `generationLogs`, `billing`, `promotions`, `coupons`, `referrals`, `auditLogs`, `workPublications`, `workGovernance`, and `workCommunity`.
+
+Business services must use these Repositories rather than accessing `.data/*.json` paths directly. Image, video, and audio binaries stay outside business tables: with external storage disabled they are written to the server data directory; when enabled, new media is written to S3-compatible storage.
+
+High-frequency point consumption, refunds, and balance reads use targeted user, plan, wallet, quota, and ledger queries inside one transaction. They do not load a complete authentication snapshot for every generation request. Full snapshots remain for backup and compatibility paths only.
+
+## Current integration status
+
+`web/src/lib/auth/store.ts` reads and writes PostgreSQL snapshots for users, sessions, global settings, entitlement plans, system channels, points, daily quotas, CDK codes, email codes, and announcements. System channel API keys are stored encrypted and are decrypted only on the server when needed.
+
+`web/src/lib/prompts/store.ts` and the Stores under `web/src/lib/server/` are connected to PostgreSQL for prompts, generation logs, the creative runtime, Canvas, the library, short drama, and audit logs. The JSON Provider remains available for single-machine deployments. Media records always keep a stable internal path and choose their original storage provider when read, regardless of the current external-storage switch.
+
+Works publishing, gallery governance, and community interactions require PostgreSQL. Drafts, review, take-down, restore, permanent deletion, reports, appeals, featured works, likes, follows, blocks, notifications, and rankings all enforce ownership and transactional boundaries in their Repositories. Deleting a published work removes publication snapshots and related governance/interaction records but keeps source projects and media files.
+
+The external-storage switch controls only new writes. Existing media remains readable through the provider recorded on its registration row. Local-to-object migration removes the local source only after upload and registration both succeed.
+
+## Payment configuration
+
+Users can call `POST /api/billing/orders/{id}/checkout` to obtain provider-specific checkout parameters. Depending on the locked order channel, the response can contain a Stripe Checkout URL, Alipay official form or face-to-face QR code, WeChat Pay v3 Native `code_url`, or a PayPly link, QR value, or form HTML.
+
+Administrators may configure provider switches, checkout credentials, webhook credentials, PayPly field mappings, and return addresses. The browser receives only non-secret fields and configuration state; an empty value keeps an existing stored secret.
+
+```bash
+VOZEB_PRO_STRIPE_SECRET_KEY=sk_live_replace-with-stripe-secret-key
+VOZEB_PRO_ALIPAY_APP_ID=replace-with-alipay-app-id
+VOZEB_PRO_ALIPAY_MODE=official
+VOZEB_PRO_WECHAT_PAY_API_V3_KEY=replace-with-32-byte-api-v3-key
+VOZEB_PRO_PAYPLY_CHECKOUT_URL=
+VOZEB_PRO_PAYPLY_API_KEY=
+VOZEB_PRO_PAYPLY_WEBHOOK_SECRET=
+```
+
+Payment callbacks enter `/api/billing/webhooks/{provider}`. Stripe, Alipay, WeChat Pay, and PayPly verify their provider-specific signatures before entering the common order-completion service. Official Alipay and face-to-face Alipay share the same callback and refund path; switching mode affects new checkouts only.
+
+## Agent runtime
+
+Agent Runs use `generation_tasks` with `task_type = agent`; the payload stores the conversation, surface, optional project, request, status, and plan. Events are appended to `creative_run_events`, and generated results are registered in `creative_assets`.
+
+Planning uses the durable summary and recent completed messages, bounded by the current complexity budget. Duplicate `client_request_id` submissions return the original Run without creating duplicate messages, tasks, or charges. Multi-result children retain independent state and results, and SSE resumes from the numeric `creative_run_events.id` cursor.
+
+Chat planning may hand off a Canvas or short-drama project through a stable `handoff-{runId}` identifier. Project APIs create the handoff idempotently, and no media base64 is written to the project or handoff record.

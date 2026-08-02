@@ -12,8 +12,8 @@ type ReviewBody = { versionId?: unknown; decision?: unknown; reason?: unknown };
 
 export async function POST(request: Request, context: Context) {
     const user = await getCurrentUser();
-    if (!user) return unauthorized();
-    if (user.role !== "admin") return forbidden();
+    if (!user) return await unauthorized();
+    if (user.role !== "admin") return await forbidden();
     const { id } = await context.params;
     const body = await readJsonBody<ReviewBody>(request);
     try {

@@ -1,0 +1,163 @@
+---
+title: Production readiness
+description: Health checks, scheduling, backups, monitoring, payments, and compliance before JoveCanvas commercial deployment
+---
+
+# Production readiness
+
+Stable application code is only one part of a commercial launch. Deployment infrastructure, payment accounts, monitoring, and operating ownership must also be accepted. Baota, Docker, cloud containers, and managed PostgreSQL follow the same checklist.
+
+## Current evidence boundary
+
+- Web automation, Prettier, TypeScript, dependency audits, release checks, and production builds have passed. Docs types, indexing, and production build have also passed. Real PostgreSQL tests cover community transactions and the current schema, but do not replace multi-account manual operation or production concurrency.
+- The default production model is currently empty. Local declarative-protocol fixtures prove that text, image, video, and audio responses can cross the application runtime and adapters, including polling, media persistence, refunds, and candidate failover. They do not prove any real provider account, model quality, quota, or SLA.
+- Compose and Render deployment contracts are covered structurally. The final image still requires clean Linux pull/start validation, generation operations, Worker heartbeat, Sharp WebP preview, Blueprint creation, Baota installation, and recovery verification.
+- Browser regression has covered desktop, 390px/430px, light and dark themes, and the main workspace and admin flows. Final acceptance still requires target browsers, real accounts, real media, and production networking.
+
+## Health checks
+
+- `GET /api/health/live` checks only whether the Web process responds. Compose uses this endpoint so a temporary database failure does not restart the application container.
+- `GET /api/health/ready` checks the database, schema, encryption key, and first administrator. It returns HTTP `503` before installation or when dependencies fail.
+- `/api/install/status` is safe for the installation page and should not be used as the production alert source.
+
+## Scheduled jobs
+
+Configure a `VOZEB_PRO_MAINTENANCE_TOKEN` of at least 32 characters and call the following every 5 minutes:
+
+```bash
+curl -fsS -X POST \
+  -H "Authorization: Bearer $VOZEB_PRO_MAINTENANCE_TOKEN" \
+  https://vozeb-pro.example.com/api/maintenance/billing-orders/expire
+```
+
+Baota uses scheduled tasks, Docker uses host Cron, and cloud platforms use a Scheduler. Jobs may run repeatedly; database locks prevent multiple instances from closing the same order.
+
+## Backup and recovery
+
+- The admin data backup exports redacted business data for account entitlements, non-sensitive settings, public prompts, and generation records.
+- PostgreSQL requires a platform backup or `pg_dump` full-database backup. Payment transactions, payment configuration, and keys must not rely on the business JSON backup.
+- Back up local media, S3/OSS objects, and object-storage configuration separately. A database-only backup cannot restore media.
+- Keep daily automatic backups, an off-site copy, and regular restoration drills. A successful backup job does not prove that recovery works.
+
+## Monitoring and alerts
+
+Choose Sentry, OpenTelemetry, a cloud APM, Prometheus/Grafana, or a log platform for the deployment. At minimum monitor:
+
+- `/api/health/ready` availability and consecutive failures.
+- Web CPU, memory, disk, container restarts, and media capacity.
+- PostgreSQL connections, pool waits, slow queries, lock waits, and storage growth.
+- API P50/P95/P99, HTTP 5xx, login failures, and rate limiting.
+- Image, video, audio, and Agent success rate, latency, refunds, and channel cool-downs.
+- Payment checkout success, webhook failures, long-pending orders, and refund failures.
+
+Restrict access to server logs and set retention. Never write keys, payment credentials, session tokens, or media signatures to the log platform. Production-equivalent load testing must still cover proxy hops, multi-instance limits, private S3, hot resources, file handles, and outbound bandwidth.
+
+## Payment acceptance
+
+For every enabled provider, test checkout, successful and failed payment, duplicate/out-of-order/late callbacks, timeout, full refund, refund-failure recovery, and reconciliation. Official Alipay requires computer-web checkout; face-to-face Alipay separately requires `precreate`, QR expiration, scanning, asynchronous callbacks, refunds, and reconciliation. Automatic refunds are full-order only; partial refunds require order, ledger, and accounting rules first.
+
+The application locks the order payment channel and checks normalized channel, amount, and currency before idempotent callback processing. Real acceptance must retain evidence for normal, duplicate, late, tampered-amount, wrong-currency, and cross-channel callbacks.
+
+Promotions and coupons persist server-authoritative price snapshots and support locking, release, redemption, and full-order refund association. PostgreSQL-equivalent testing must cover concurrent claims and checkout, timeout, late payment conflicts, duplicate callbacks, provider settlement, and reconciliation.
+
+Referral rewards require real PostgreSQL and multiple accounts to verify atomic attribution, first-order thresholds, cooling periods, limits, maintenance settlement, reverse ledgers, coupon revocation, and false-positive recovery. A single IP signal must never be the sole fraud decision.
+
+## Capacity and load testing
+
+Run staged tests at 100, 500, and 1000 concurrent users against production-equivalent database, proxy, and storage. Record P95/P99 for login, lists, task creation, SSE, payment, and admin queries. Tune `VOZEB_PRO_DATABASE_POOL_MAX`, instance count, queues, or caches based on evidence; simply increasing the pool is not a concurrency strategy.
+
+Retain `EXPLAIN (ANALYZE, BUFFERS)`, response-size, pool-wait, and lock-wait evidence at production-equivalent data volume. Local small-data measurements are useful for query shape only.
+
+## Async generation and billing
+
+Real image, video, audio, and Agent channels must be tested for queuing, timeout, cancel, retry, reconnect, duplicate submission, and stuck-task takeover. Each task must reconcile to its original charge, refund, balance, generation record, and media registration. Restart and multi-instance races must not create duplicate charges or assets.
+
+The durable Worker, PostgreSQL leases, heartbeats, HMAC webhooks, `needs_review` takeover, result persistence, and SSE notification fallback are technical foundations. They do not replace testing with real providers, closed pages, multiple instances, notification loss, or takeover races. Once an upstream task ID is saved, recovery may query only that task.
+
+## Security incident response
+
+Prepare and drill a separate incident handbook for model keys, payment certificates, maintenance tokens, OSS credentials, sessions, private media, database exposure, and personal data. Define discovery, severity, isolation, revocation, rotation, forensics, repair, user notification, and postmortem owners. Test pausing affected providers, revoking sessions, rotating keys, restoring backups, and revalidating media and order references.
+
+## Legal and operations
+
+`/privacy` and `/terms` are product-level placeholders. Counsel must review the operator, service regions, storage location, model providers, refunds, intellectual property, moderation, and account-deletion process before commercial operation. Disclose third-party processing and cross-border transfer where applicable.
+
+User data export excludes passwords, sessions, credentials, raw payment payloads, signed URLs, and platform-internal planning. Account deletion requests require password confirmation and admin review; acceptance is not automatic deletion. Define consent versioning, formal deletion, statutory order/payment retention, identity checks, response deadlines, and support escalation.
+
+## Content, support, and finance
+
+- Works publishing includes drafts, version review, stable sharing, public gallery, public creator pages, featuring, reports, take-down appeals, audit logs, and dynamic media authorization. When a user or admin first takes down and then permanently deletes a work, only the publish snapshot, governance, and interaction records are cleared; source assets, projects, and media files remain unchanged. The public product currently provides like/unlike and author follow only. Favorites, comments, and comment-report UI, APIs, services, counters, schema, and admin governance have all been removed. Own follows, followers, and like history are paginated for the signed-in user and support unfollow, unlike, and block; blocking removes mutual follows and prevents re-following. Public profiles show only identity-public works and aggregate stats, never email, internal user IDs, or relationship lists. Interaction notifications remain; 7/30-day rankings apply basic anti-refresh filtering by valid likes, featuring, and freshness. Manual review is the default; keyword or neutral HTTP risk signals may be wired in, but automatic results never publish directly. These code capabilities do not mean platform content compliance or anti-abuse operations are closed. Multi-account verification of relationship privacy, block/unblock, take-down/ban coupling, infringement complaints, anti-spam rules, human on-call, handling SLAs, false-positive review, privacy rules, production monitoring, and real drills is still required.
+- The drama workbench "content review" gate is a production gate for the user to confirm script facts. It is not platform content-compliance review. Formal operation still depends on platform report/appeal flows, human re-review, and audit evidence.
+- Define age limits, prohibited uses, AI-generated content labeling, user-upload authorization, infringement complaints, and take-down process. Users must not be assumed to hold unrestricted commercial rights over inputs or generated results.
+- Help center and announcements do not replace support operations. At minimum define support entry points, service hours, payment issues, content reports, privacy requests, and complaint escalation.
+- CSV payment-statement import and discrepancy reconciliation are supported. Formal operation still requires a billing acquisition cycle, exception ownership, refund approval, invoices/tax, and financial archival rules.
+
+## Vendor and security governance
+
+- Maintain a vendor inventory for model channels, payment providers, SMTP, object storage, and notification services. Record prices, quotas, data use, data regions, retention periods, SLA, shutdown notice, and alternative channels. Code support for a provider does not mean contracts, merchant permissions, or refund rights are complete.
+- State in the user agreement: user content licenses, uncertainty of generated-content ownership, third-party model training/retention boundaries, brand and likeness material authorization responsibility, and result variance caused by upstream model changes.
+- Fulfill AGPL-3.0, third-party dependency, font, and asset license obligations; retain license and copyright notices. Before formal release, complete dependency, container image, and secret-leak scans, and establish vulnerability disclosure, remediation, and security-advisory processes.
+- Define degradation, generation pause, user notification, and refund rules for model-channel failure, price changes, quota exhaustion, model decommissioning, and unavailable content-safety services.
+
+## Account risk and commercial gaps
+
+The following cannot be completed automatically by application code or a Baota panel. Before formal commercial launch, operations, finance, legal, and technical owners must jointly confirm:
+
+- **Operating entity and qualifications**: Confirm the operating entity, service regions, domain and network-related qualifications, payment merchant qualifications, invoice/tax entity, and contracts plus data-processing boundaries for third-party models, SMTP, payment, and object storage. AGPL-3.0 network-service source obligations still apply according to actual secondary development and delivery.
+- **Pricing and cost**: Fix points and plan conversion semantics; distinguish one-time points, plan daily points, and expiry rules. Build a cost table covering model calls, failed-task refunds, storage, bandwidth, payment fees, and taxes; set alerts for upstream balance, abnormal cost, and margin. The current business dashboard must not be treated as a profit statement.
+- **Permissions and audit**: Admin currently has only ordinary user / administrator roles and does not yet provide fine-grained finance, support, content review, operations, or read-only audit duties. Before team operation, define least privilege, refund/points-adjustment dual control, and high-risk action approval rules.
+- **Incidents and service**: Define release, rollback, on-call, severity levels, status notification, support entry, response SLAs, and escalation paths. Health probes, logs, and alerts are technical foundations; they are not an SLA or human-response process.
+- **Scale and growth**: Define metrics for registration, first successful work, generation success rate, paid conversion, retention, ARPU, repurchase, refund rate, and unit-work cost, then tune plan upgrades, renewals, promotions, referral parameters, and batch operations. The current referral funnel does not replace full business analytics.
+- **Account and abuse governance**: Define age gates, regional limits, acceptable-use policy, bulk-registration / points-farming / payment-theft / automation-abuse signals, plus freeze, unfreeze, appeal, and false-positive review flows.
+- **Vendor exit and portability**: Keep alternatives and data-export plans for model, payment, SMTP, object storage, and notification services when they shut down, ban accounts, raise prices, exhaust quotas, or change cross-border policy, so accounts, orders, media, and user data are not locked to a single vendor.
+
+## Overlooked launch controls
+
+These items often fall outside a "features done" checklist, yet they directly affect post-launch security, cost, and support liability:
+
+- **Admin high-risk protection**: Confirm whether admins need MFA, device / anomalous-IP alerts, short sessions, and secondary confirmation for high-risk actions. Until fine-grained roles ship, at least limit the number of admin accounts and periodically re-review permissions.
+- **Key lifecycle**: Establish create, custody, rotation, revocation, and breach-response processes for encryption keys, model keys, payment certificates, maintenance tokens, and OSS credentials. When restoring backups, also verify key availability; restoring only the database and media is not enough.
+- **Payment disputes**: Beyond refunds, define ownership, evidence retention, and user notification for chargebacks, payment disputes, duplicate charges, failed original-path refunds, and provider account freezes.
+- **Data lifecycle**: Define retention periods, deletion triggers, legal-hold exceptions, lifecycle cleanup, and deletion verification for chats, generation tasks, original media, WebP variants, temp files, audit logs, payment records, and S3 objects.
+- **Storage and network cost**: Monitor cost for local disk, OSS requests, storage capacity, outbound bandwidth, CDN/proxy, and backup replicas; set capacity, bandwidth, and object-storage bill alerts. Turning S3 on is not cost governance.
+- **Incident communication**: Prepare a status page or announcement fallback, maintenance notice templates, user copy for generation failure / delayed refunds / upstream outage, and support escalation paths. Clarify who may pause a given model or payment channel.
+- **Accessibility and browser support**: On target browsers and mobile, accept keyboard use, focus order, form errors, contrast, live-region status, media alternative text, and download behavior; publish the minimum support matrix.
+- **Notification reachability**: Verify actual delivery of registration, OTP, password reset, payment result, and outage notices. Configure sending-domain SPF/DKIM/DMARC, monitor bounces and complaints, retain template versions, and prepare human or in-app announcement fallback when the notification vendor fails.
+- **Environment and rollback**: Development, staging, and production must isolate databases, object-storage buckets, payment merchants, model keys, maintenance tokens, and callback domains. Every release needs a pre-migration backup, smoke checks, a replaceable image, and post-rollback data-compatibility notes.
+- **Cost circuit breakers**: Cap model calls, media processing, storage, and outbound bandwidth at per-user, per-task, per-day, and site-wide levels. Points-balance checks do not replace upstream quotas, account-takeover, or abnormal-cost protection.
+- **Commercial evidence**: Every P0/P1 control should register an owner, due date, environment, evidence link, reviewer, and review date. Without real payment, notification, recovery, load-test, or security-drill evidence, keep the item marked incomplete.
+
+These controls must land as owners, due dates, evidence links, and review outcomes. Without evidence, keep marking them incomplete. Do not treat an existing API, admin toggle, or automated test as a closed commercial loop.
+
+## Commercial launch evidence matrix
+
+The following is the minimum evidence required before launch. The same person may hold multiple roles, but finance, legal, high-risk operations, and security incidents must not be confirmed by developers alone.
+
+| Domain | Minimum evidence | Gate |
+| --- | --- | --- |
+| Payments and refunds | Every enabled channel: checkout, success/failure, duplicate/late callbacks, full-order refund, refund-failure recovery, reconciliation | Blocker |
+| Legal and authorization | Reviewed privacy policy, terms, refund and content-liability text; registration consent version and record plan | Blocker |
+| Content safety | At least one drill each for taxonomy, report entry, human re-review, appeal, take-down, and audit record | Blocker |
+| Monitoring and on-call | Trigger records for readiness, generation failure, payment failure, and disk alerts; on-call owner and escalation path | Blocker |
+| Backup and recovery | Backup inventory for PostgreSQL, media, OSS, payment config, and encryption keys; clean-environment restore report with RPO/RTO | Blocker |
+| Capacity and proxy | Staged concurrency and media hot-spot load report with P95/P99, pools, lock waits, file handles, proxy IP, S3 egress, and 429 false positives | Blocker |
+| Generation and billing | Real media-task timeout, cancel, retry, reconnect, duplicate submission, failure refund, and ledger reconciliation records | Blocker |
+| Finance and pricing | Points cost, model cost, storage/bandwidth, fees, tax, and margin baseline; refund and chargeback owners | Blocker |
+| Access and security | Admin account roster, MFA / anomalous-login decision, high-risk action review rules, and key-rotation records | Blocker |
+| Support and notifications | Support entry, hours, SLA, complaint/privacy request channel; mail-domain and bounce-handling verification | Pre-canary |
+| Vendor exit | Contracts, limits, SLA, shutdown alternatives, and data-export verification for model, payment, SMTP, and OSS | Pre-canary |
+| Data lifecycle | Retention, deletion, and legal-hold rules for chats, tasks, original media, WebP, temp files, audit, and payment records | Pre-canary |
+
+### Evidence registration template
+
+Before launch, register one row for every blocker and pre-canary item. Writing "configured" in docs alone is not enough:
+
+| Domain | Owner | Due date | Environment | Evidence link/file | Reviewer | Review date | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Example: payments and refunds | TBD | TBD | Sandbox/production | TBD: checkout, callback, refund, reconciliation records | TBD | TBD | Incomplete |
+
+### Launch decision
+
+1. If any blocker lacks an owner, reviewer, and real evidence, the product may enter internal or closed testing only and must not be claimed as a formal commercial launch.
+2. Code tests, health probes, admin toggles, and configuration pages prove technical foundations only. They do not replace acceptance of payment providers, OSS, mail, proxies, recovery, or human processes.
+3. During canary, weekly review generation success rate, refund rate, unit-work cost, storage growth, complaints, and vendor anomalies. On financial, privacy, or content-safety risk, immediately pause the affected channel and preserve user data and financial records.

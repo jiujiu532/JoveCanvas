@@ -1,0 +1,103 @@
+---
+title: Pending tests
+description: Items in the current JoveCanvas release that still require manual or real-environment verification
+---
+
+# Pending tests
+
+This page records acceptance items that still require manual testing, production-equivalent infrastructure, real providers, or an accountable operator. Automated tests and local fixtures are evidence of implementation boundaries, not substitutes for these checks.
+
+## v0.0.3 release retest
+
+- Users who installed 0.0.2 must stop the old service, remove the old database or database volume, and install 0.0.3 again through `/install`. The release does not support in-place upgrades. Verify installation redirects, schema creation, first-admin creation, App/Worker shared maintenance tokens, 390px layout, and readiness behavior in clean Docker, Baota, and external-database environments.
+- Rebuild the production image with the current Sharp/libvips native package and verify the generation operations endpoints, Worker heartbeat, and image WebP preview on both amd64 and arm64 where applicable.
+- With a real administrator account, verify channel capability checks, refresh persistence, protocol changes, invalidation of old snapshots, and mobile modal behavior.
+- Verify the production build in a clean Linux/pnpm environment, including standalone static files, `/logo.svg`, `/icon.svg`, `/favicon.ico`, CSS, JavaScript, and health endpoints.
+
+## Release fixes still requiring acceptance
+
+The following release-level fixes have automated or local evidence but still require production-equivalent manual acceptance:
+
+- Channel capability snapshots must persist the redacted result across refreshes for both file and PostgreSQL providers; changing a channel, protocol, or model must invalidate the old snapshot without turning an upstream success into a false failure.
+- Video tasks use a 30-minute wait window and text candidates use 3 minutes. Query timeouts, connection errors, and Worker takeover must retain the upstream task; Seedance 2.0 special pricing may fall back only to `/v1/videos/:task_id/content`, while the official NewAPI query path remains unchanged.
+- A `429` or generation-concurrency response while submitting a drama shot must remain queued and retry after backoff. Parameter and capability errors remain terminal. A submitted upstream task must never be silently recreated.
+- Canvas lists must return summaries, and opening a project must tolerate one corrupt image or assistant asset without rejecting the remaining nodes. Verify large v0.0.2 projects, export, rename, dragging, and links.
+- Production standalone output must place static files under the actual `distDir`, include `public`, `logo.svg`, `icon.svg`, and `favicon.ico`, and serve them from a clean Linux build.
+- Verify the dependency audit, TypeScript, Prettier, release check, Fumadocs index, and production build in a clean clone. The current automated evidence includes 353 Web test files, 1 environment-gated skip, 1439 passing tests, 2 skipped tests, and 36 Docs pages; these figures do not replace deployment acceptance.
+- Real protocol fixtures have exercised text, image, video, and audio TCP responses through the application runtime, media persistence, asset registration, and refund boundaries. They do not prove a real provider account, quota, model quality, or SLA.
+- Public prompts, coupon/promotion/referral flows, media references, and works governance have dedicated automated coverage, but still require real PostgreSQL, multiple accounts, production-equivalent media, and manual light/dark mobile checks.
+
+## Engineering structure and resilience
+
+- The split page controllers, database repositories, Agent execution, generation routing, payment/refund, Canvas, and drama modules must retain their public imports and behavior after a clean production build.
+- PostgreSQL and file providers must preserve session, message order, asset ownership, project immutability, idempotent Run creation, and monotonic event cursors. Multi-instance tests must cover duplicate submits, locks, leases, heartbeat cleanup, cancellation, refund races, and recovery after process restart.
+- Notifications are wake-ups only: SSE recovery must read durable events after `LISTEN` notifications are lost. Verify the 2.5-second polling and 15-second heartbeat fallbacks and `Retry-After` responses under real proxy conditions.
+
+## Unified creative runtime
+
+- Chat must support text, image, video, audio, and durable asset references without emitting Canvas operations. Canvas and Drama Runs must retain project and snapshot association and must not create nested project handoffs.
+- Verify persistent summaries, recent-message budgets, explicit model selection, Skill selection, multi-reference dependencies, child-result events, `conversationId`, and `clientRequestId` idempotency after refresh and reconnect.
+- Internal planning prompts, model rationale, creative briefs, material plans, and review details must remain hidden from user-facing generation messages and public work prompts.
+
+## Admin and short-drama operations
+
+- Verify the nine admin navigation groups, generation-operations review states, payment window fallback, model protocol selection, secret redaction, local/S3 media management, backup restore, and works review/governance at desktop and 390px/430px.
+- Verify the five drama stages, multi-episode switching, content-review gate before visual analysis, stable character/scene/prop IDs, shot retry attempt numbers, version snapshots/restores, FFmpeg/FFprobe rendering, subtitles, audio muxing, and Jianying 5.x/6+ export on Windows.
+
+## Branding, deployment, and external capabilities
+
+- Product surfaces, docs, metadata, favicon, exports, cookies, headers, database names, and image references must consistently use `JoveCanvas`; runtime environment variables retain the `VOZEB_PRO_*` prefix.
+- Verify Docker, Baota, low-memory, external-database, Render, and clean Linux deployment paths without reusing a v0.0.2 database. Confirm App/Worker shared maintenance token, health checks, persistent volumes, static assets, restart recovery, and production reverse-proxy behavior.
+- Validate real SMTP delivery, object-storage signatures and Range/HEAD behavior, image/video/audio generation, payment callbacks, FFmpeg cancellation, and media cleanup. Secrets must never enter the repository or logs.
+
+## Payment, billing, and referrals
+
+- Use real sandbox or production-equivalent provider accounts to verify checkout, successful and failed payment, cancel, timeout, duplicate/out-of-order/late callbacks, full refund, refund failure recovery, and reconciliation for every enabled provider.
+- Verify Alipay official and face-to-face modes separately, including `precreate`, QR expiration, scanning, asynchronous notifications, refunds, and reconciliation. Confirm that both modes remain one user-facing Alipay channel.
+- Verify concurrent coupon claims and orders, coupon lock/release/redeem behavior, promotion overlap, late payment after timeout, duplicate callbacks, and authoritative `amountCents` reconciliation in PostgreSQL.
+- Use multiple real accounts to verify referral attribution, atomic registration binding, first-order threshold, cooling period, monthly and campaign limits, concurrent settlement, refund reversal, coupon revocation, risk signals, manual freeze/restore/reject, and appeal handling.
+- Verify points and plan behavior for free users, purchased plans, daily resets, expiry, permanent points, refunds, and logical-model pricing. Confirm the top-bar balance and ledger after each operation.
+
+## Generation and recovery
+
+- Use real image, video, audio, text, and Agent channels to verify queueing, timeout, cancel, retry, reconnect, duplicate submission, stuck-task takeover, media registration, and refund to the original ledger.
+- Close the browser during generation, restart the App and Worker, and verify that recovery queries the saved upstream task rather than creating a second task. Verify `result_ready`, `needs_review`, lease expiry, heartbeat, and multi-instance takeover.
+- Verify multi-result Agent runs display each completed or failed child immediately, preserve successful siblings, resume SSE from `Last-Event-ID`, and do not duplicate assets or project handoffs after replay.
+- Verify Chat, Canvas, and Drama surface isolation, durable summaries, recent-message limits, stable `conversationId`, `clientRequestId` idempotency, explicit model selection, Skill selection, and reference asset chains.
+- Configure real video and audio models and verify duration normalization, playback size, download, history restoration, cancellation, and cleanup of temporary files.
+- Verify real short-drama flows: content extraction, content confirmation, visual planning, storyboard images, shot video, voiceover, final rendering, cancellation, retry, multiple episodes, version restore, and Jianying export on Windows.
+
+## Canvas, media, and works
+
+- Open large legacy Canvas projects from v0.0.2 and verify loading, export, rename, node drag, links, corrupted-media tolerance, and recovery in production-equivalent storage.
+- Verify custom image dimensions, reference-image ratios, Canvas node dimensions, image-to-image, image-to-video, panorama preview, immersive viewer, and refresh persistence with real media.
+- Upload, preview, download, migrate, and delete real image/video/audio assets through local storage and S3-compatible storage. Verify Range, HEAD, ETag, WebP variants, original downloads, signed expiry, ownership, reference protection, and cleanup after restart.
+- Use real accounts to create drafts, submit review, edit rejected works, publish, share, feature, report, appeal, take down, restore, and permanently delete works. Verify the gallery, sitemap, 404 boundaries, media authorization, version binding, and source-project retention.
+- Use at least two accounts to verify likes, follows, blocks, notifications, creator pages, rankings, pagination, disabled or taken-down authors, and cross-page count refresh. Confirm that favorites, comments, and comment reports remain absent.
+- Verify admin works review and governance on desktop, 390px, and 430px in light and dark themes, including filters, details, thumbnails, moderation actions, appeals, and long text.
+
+## Database, performance, and operations
+
+- Run PostgreSQL acceptance with production-equivalent data volume. Record response bodies, `EXPLAIN (ANALYZE, BUFFERS)`, P50/P95/P99, pool waits, lock waits, and slow queries for public lists, Canvas, assets, prompts, generation operations, billing summaries, CDK, users, and short-drama cost summaries.
+- Verify the 58-table schema, `vozeb_pro_` prefixes, indexes, unique constraints, backup export, partial restore, corrupted-backup rollback, key retention, and migration/recovery in a clean environment.
+- Stress 100, 500, and 1000 concurrent requests across login, lists, generation creation, SSE, media, payment callbacks, and admin queries. Verify PostgreSQL rate limits, proxy-hop handling, worker leases, heartbeat cleanup, and concurrency permits.
+- Verify external monitoring, `/api/health/live`, `/api/health/ready`, Cron or Scheduler maintenance calls, `Retry-After`, alert delivery, on-call escalation, and restore drills.
+- Validate development, staging, and production isolation for databases, buckets, payment merchants, model keys, maintenance tokens, and callback domains. Confirm rollback and post-rollback data compatibility.
+
+## Security, privacy, and legal operations
+
+- Verify CSP, HSTS, clickjacking, MIME, Referrer, Permissions, CSRF, proxy headers, signed media purposes, expiry, and original-download restrictions through the real reverse proxy.
+- Verify password reset failure limits, session revocation, administrator controls, audit logs, account deletion requests, data export, identity confirmation, retention, and statutory payment/order records using real administrator and ordinary-user sessions.
+- Confirm privacy, terms, refund, content responsibility, AI-labeling, age limits, acceptable-use, infringement, report, appeal, and takedown documents with legal counsel before paid operation.
+- Test notification delivery for registration, OTP, password reset, payment, and outage messages. Configure and verify SPF/DKIM/DMARC, bounce handling, and an in-app fallback.
+- Keep evidence for provider contracts, quotas, data regions, retention, SLA, shutdown alternatives, licensing, dependency/image/secret scans, and incident-response drills.
+
+## UI regression
+
+- Complete the browser matrix for target desktop browsers and 390px/430px mobile widths in light and dark themes. Verify keyboard focus, form errors, contrast, live status announcements, media alternative text, downloads, and long titles.
+- Recheck public, authentication, `/create`, image, video, Canvas, drama, assets, prompts, profile, billing, gallery, share, creator, admin, works governance, storage, and help pages after each production build.
+- Verify all touched buttons, loading/error/empty states, mobile drawers and modals, internal table scrolling, no horizontal overflow, and no new console warnings or errors.
+
+## Evidence rule
+
+Every item remains pending until it has an owner, environment, reproducible steps, evidence link or file, reviewer, review date, and status. A passing unit test, health probe, mock provider, admin toggle, or local browser check may support an item but cannot by itself mark real-provider, production, financial, privacy, or legal acceptance complete.

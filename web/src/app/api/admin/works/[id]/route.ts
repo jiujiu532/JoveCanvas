@@ -10,8 +10,8 @@ type Context = { params: Promise<{ id: string }> };
 
 export async function DELETE(request: Request, context: Context) {
     const user = await getCurrentUser();
-    if (!user) return unauthorized();
-    if (user.role !== "admin") return forbidden();
+    if (!user) return await unauthorized();
+    if (user.role !== "admin") return await forbidden();
     const { id } = await context.params;
     try {
         const deleted = await deleteWorkPublicationForAdmin(user.id, id);

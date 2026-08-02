@@ -3,6 +3,7 @@
 import { App, Button, Input, Modal, Pagination, Segmented, Select, Table, Tag, Tooltip } from "antd";
 import type { TableColumnsType } from "antd";
 import { Ban, Check, Eye, GalleryVerticalEnd, RefreshCw, Search, Star, Trash2, X } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -24,15 +25,11 @@ import { setAdminWorkFeatured } from "@/services/api/work-governance";
 import { AdminWorkCasesSection } from "./admin-work-cases-section";
 
 const PAGE_SIZE = 12;
-const STATUS_OPTIONS: Array<{ value: WorkPublicationModerationStatus | "all"; label: string }> = [
-    { value: "all", label: "全部" },
-    { value: "pending", label: "待审核" },
-    { value: "approved", label: "已通过" },
-    { value: "rejected", label: "已驳回" },
-    { value: "taken_down", label: "已下架" },
-];
+
+type WorksT = ReturnType<typeof useTranslations<"admin.content.works">>;
 
 export function AdminWorksSection() {
+    const t = useTranslations("admin.content.works");
     const [view, setView] = useState<"reviews" | "governance">("reviews");
     return (
         <div className="min-w-0 space-y-3">
@@ -40,8 +37,8 @@ export function AdminWorksSection() {
                 <Segmented
                     value={view}
                     options={[
-                        { value: "reviews", label: "作品审核" },
-                        { value: "governance", label: "举报申诉" },
+                        { value: "reviews", label: t("tabReviews") },
+                        { value: "governance", label: t("tabGovernance") },
                     ]}
                     onChange={(value) => setView(value as typeof view)}
                 />
@@ -52,6 +49,8 @@ export function AdminWorksSection() {
 }
 
 function AdminWorkReviewSection() {
+    const t = useTranslations("admin.content.works");
+    const locale = useLocale();
     const { message, modal } = App.useApp();
     const requestIdRef = useRef(0);
     const [items, setItems] = useState<WorkPublication[]>([]);
@@ -67,6 +66,20 @@ function AdminWorkReviewSection() {
     const [reasonAction, setReasonAction] = useState<{ work: WorkPublication; kind: "reject" | "take-down" }>();
     const [reason, setReason] = useState("");
     const [viewingWork, setViewingWork] = useState<WorkPublication>();
+
+    const statusOptions: Array<{ value: WorkPublicationModerationStatus | "all"; label: string }> = [
+        { value: "all", label: t("statusAll") },
+        { value: "pending", label: t("statusPending") },
+        { value: "approved", label: t("statusApproved") },
+        { value: "rejected", label: t("statusRejected") },
+        { value: "taken_down", label: t("statusTakenDown") },
+    ];
+
+    const lifecycleOptions: Array<{ value: WorkPublicationLifecycleStatus | "all"; label: string }> = [
+        { value: "all", label: t("lifecycleAll") },
+        { value: "active", label: t("lifecycleActive") },
+        { value: "revoked", label: t("lifecycleRevoked") },
+    ];
 
     useEffect(() => {
         const timer = window.setTimeout(() => setDebouncedKeyword(keyword.trim()), 300);
@@ -92,11 +105,11 @@ function AdminWorkReviewSection() {
             if (requestId !== requestIdRef.current) return;
             setItems([]);
             setTotal(0);
-            setError(loadError instanceof Error ? loadError.message : "作品审核列表加载失败");
+            setError(loadError instanceof Error ? loadError.message : t("loadFailed"));
         } finally {
             if (requestId === requestIdRef.current) setLoading(false);
         }
-    }, [debouncedKeyword, lifecycleStatus, page, status]);
+    }, [debouncedKeyword, lifecycleStatus, page, status, t]);
 
     useEffect(() => {
         void load();
@@ -106,18 +119,18 @@ function AdminWorkReviewSection() {
         const version = work.currentVersion;
         if (!version) return;
         modal.confirm({
-            title: "通过这个发布版本？",
-            content: "审核通过后将原子切换为当前公开版本；已有线上版本会被替换，但历史审核证据仍保留。",
-            okText: "通过审核",
-            cancelText: "取消",
+            title: t("approveTitle"),
+            content: t("approveContent"),
+            okText: t("approveOk"),
+            cancelText: t("cancel"),
             onOk: async () => {
                 setActionId(work.id);
                 try {
                     await reviewAdminWorkPublication(work.id, { versionId: version.id, decision: "approved" });
-                    message.success("作品已通过审核");
+                    message.success(t("approveSuccess"));
                     await load();
                 } catch (approveError) {
-                    message.error(approveError instanceof Error ? approveError.message : "审核失败");
+                    message.error(approveError instanceof Error ? approveError.message : t("reviewFailed"));
                     throw approveError;
                 } finally {
                     setActionId("");
@@ -129,19 +142,19 @@ function AdminWorkReviewSection() {
     const submitReasonAction = async () => {
         const action = reasonAction;
         const value = reason.trim();
-        if (!action || !value) return message.warning(action?.kind === "reject" ? "请填写驳回原因" : "请填写下架原因");
+        if (!action || !value) return message.warning(action?.kind === "reject" ? t("rejectReasonRequired") : t("takeDownReasonRequired"));
         const version = action.work.currentVersion;
         if (!version) return;
         setActionId(action.work.id);
         try {
             if (action.kind === "reject") await reviewAdminWorkPublication(action.work.id, { versionId: version.id, decision: "rejected", reason: value });
             else await takeDownAdminWorkPublication(action.work.id, value);
-            message.success(action.kind === "reject" ? "作品已驳回" : "作品已下架");
+            message.success(action.kind === "reject" ? t("rejectSuccess") : t("takeDownSuccess"));
             setReasonAction(undefined);
             setReason("");
             await load();
         } catch (actionError) {
-            message.error(actionError instanceof Error ? actionError.message : "操作失败");
+            message.error(actionError instanceof Error ? actionError.message : t("actionFailed"));
         } finally {
             setActionId("");
         }
@@ -151,10 +164,10 @@ function AdminWorkReviewSection() {
         setActionId(work.id);
         try {
             await setAdminWorkFeatured(work.id, !work.isFeatured);
-            message.success(work.isFeatured ? "作品已取消精选" : "作品已设为精选");
+            message.success(work.isFeatured ? t("unfeatureSuccess") : t("featureSuccess"));
             await load();
         } catch (featureError) {
-            message.error(featureError instanceof Error ? featureError.message : "更新精选状态失败");
+            message.error(featureError instanceof Error ? featureError.message : t("featureFailed"));
         } finally {
             setActionId("");
         }
@@ -162,19 +175,19 @@ function AdminWorkReviewSection() {
 
     const remove = (work: WorkPublication) => {
         modal.confirm({
-            title: "永久删除这个作品？",
-            content: "作品主记录、全部版本快照、发布媒体关联和互动记录会被永久删除，用户原始素材与项目不受影响。此操作无法撤销。",
-            okText: "永久删除",
-            cancelText: "取消",
+            title: t("deleteTitle"),
+            content: t("deleteContent"),
+            okText: t("deleteOk"),
+            cancelText: t("cancel"),
             okButtonProps: { danger: true },
             onOk: async () => {
                 setActionId(work.id);
                 try {
                     await deleteAdminWorkPublication(work.id);
-                    message.success("作品已永久删除");
+                    message.success(t("deleteSuccess"));
                     await load();
                 } catch (deleteError) {
-                    message.error(deleteError instanceof Error ? deleteError.message : "删除失败");
+                    message.error(deleteError instanceof Error ? deleteError.message : t("deleteFailed"));
                     throw deleteError;
                 } finally {
                     setActionId("");
@@ -201,16 +214,16 @@ function AdminWorkReviewSection() {
         return (
             <div className="flex flex-wrap items-center justify-end gap-0.5">
                 <Button type="link" size="small" icon={<Eye className="size-3.5" />} onClick={() => setViewingWork(work)}>
-                    详情
+                    {t("detail")}
                 </Button>
                 {shareable ? (
-                    <Tooltip title="打开公开页面">
-                        <Button type="text" size="small" aria-label="打开公开页面" icon={<Eye className="size-3.5" />} onClick={() => window.open(`/share/${encodeURIComponent(work.slug)}`, "_blank", "noopener,noreferrer")} />
+                    <Tooltip title={t("openPublic")}>
+                        <Button type="text" size="small" aria-label={t("openPublic")} icon={<Eye className="size-3.5" />} onClick={() => window.open(`/share/${encodeURIComponent(work.slug)}`, "_blank", "noopener,noreferrer")} />
                     </Tooltip>
                 ) : null}
                 {canFeature ? (
-                    <Tooltip title={work.isFeatured ? "取消精选" : "设为精选"}>
-                        <Button type="text" size="small" aria-label={work.isFeatured ? "取消精选" : "设为精选"} icon={<Star className={`size-3.5 ${work.isFeatured ? "fill-current" : ""}`} />} onClick={() => void toggleFeatured(work)} loading={busy} />
+                    <Tooltip title={work.isFeatured ? t("unfeature") : t("feature")}>
+                        <Button type="text" size="small" aria-label={work.isFeatured ? t("unfeature") : t("feature")} icon={<Star className={`size-3.5 ${work.isFeatured ? "fill-current" : ""}`} />} onClick={() => void toggleFeatured(work)} loading={busy} />
                     </Tooltip>
                 ) : null}
                 {pending ? (
@@ -226,10 +239,10 @@ function AdminWorkReviewSection() {
                                 setReasonAction({ work, kind: "reject" });
                             }}
                         >
-                            驳回
+                            {t("reject")}
                         </Button>
                         <Button type="link" size="small" icon={<Check className="size-3.5" />} loading={busy} onClick={() => approve(work)}>
-                            通过
+                            {t("approve")}
                         </Button>
                     </>
                 ) : null}
@@ -245,12 +258,12 @@ function AdminWorkReviewSection() {
                             setReasonAction({ work, kind: "take-down" });
                         }}
                     >
-                        下架
+                        {t("takeDown")}
                     </Button>
                 ) : null}
                 {canDelete ? (
                     <Button type="link" size="small" danger icon={<Trash2 className="size-3.5" />} loading={busy} onClick={() => remove(work)}>
-                        删除
+                        {t("delete")}
                     </Button>
                 ) : null}
             </div>
@@ -259,59 +272,59 @@ function AdminWorkReviewSection() {
 
     const columns: TableColumnsType<WorkPublication> = [
         {
-            title: "更新时间",
+            title: t("colUpdatedAt"),
             dataIndex: "updatedAt",
             width: 156,
-            render: (value: string) => <span className="whitespace-nowrap text-xs text-zinc-500 dark:text-zinc-400">{formatAdminTime(value)}</span>,
+            render: (value: string) => <span className="whitespace-nowrap text-xs text-zinc-500 dark:text-zinc-400">{formatAdminTime(value, locale)}</span>,
         },
         {
-            title: "作品",
+            title: t("colWork"),
             key: "work",
             width: 330,
             render: (_, work) => <AdminWorkIdentity work={work} />,
         },
         {
-            title: "用户",
+            title: t("colUser"),
             key: "owner",
             width: 210,
-            render: (_, work) => <AdminUserIdentity displayName={work.ownerDisplayName} username={work.ownerUsername} accountId={work.ownerAccountId} fallback="用户信息不可用" />,
+            render: (_, work) => <AdminUserIdentity displayName={work.ownerDisplayName} username={work.ownerUsername} accountId={work.ownerAccountId} fallback={t("userUnavailable")} />,
         },
         {
-            title: "来源",
+            title: t("colSource"),
             dataIndex: "sourceType",
             width: 100,
-            render: (value: WorkPublication["sourceType"]) => <span className="text-xs text-zinc-600 dark:text-zinc-300">{sourceTypeLabel(value)}</span>,
+            render: (value: WorkPublication["sourceType"]) => <span className="text-xs text-zinc-600 dark:text-zinc-300">{sourceTypeLabel(t, value)}</span>,
         },
         {
-            title: "版本 / 可见性",
+            title: t("colVersionVisibility"),
             key: "version",
             width: 130,
             render: (_, work) => (
                 <div className="text-xs leading-5 text-zinc-600 dark:text-zinc-300">
                     <div>v{work.currentVersion?.versionNumber || 1}</div>
-                    <div className="text-zinc-500 dark:text-zinc-400">{visibilityLabel(work.currentVersion?.visibility)}</div>
+                    <div className="text-zinc-500 dark:text-zinc-400">{visibilityLabel(t, work.currentVersion?.visibility)}</div>
                 </div>
             ),
         },
         {
-            title: "状态",
+            title: t("colStatus"),
             key: "status",
             width: 112,
             render: (_, work) => <AdminWorkStatus work={work} />,
         },
         {
-            title: "数据",
+            title: t("colMetrics"),
             key: "metrics",
             width: 110,
             render: (_, work) => (
                 <div className="text-xs leading-5 text-zinc-500 dark:text-zinc-400">
-                    <div>{work.viewCount} 次访问</div>
-                    <div>{work.likeCount} 次点赞</div>
+                    <div>{t("viewCount", { count: work.viewCount })}</div>
+                    <div>{t("likeCount", { count: work.likeCount })}</div>
                 </div>
             ),
         },
         {
-            title: "操作",
+            title: t("colActions"),
             key: "actions",
             fixed: "right",
             width: 286,
@@ -321,14 +334,14 @@ function AdminWorkReviewSection() {
 
     return (
         <Panel>
-            <PanelHeader title="作品审核" description="按用户、来源和审核状态集中查看作品；驳回不影响旧线上版本，下架会立即关闭公开访问。" />
+            <PanelHeader title={t("tabReviews")} description={t("reviewsDescription")} />
             <div className="min-w-0 space-y-3 p-3 sm:p-5">
                 <div className="grid min-w-0 grid-cols-2 gap-2.5 md:grid-cols-[minmax(180px,1fr)_minmax(110px,130px)_minmax(120px,140px)_auto_auto_auto] md:items-center" data-testid="admin-work-filters">
                     <Input
                         className="col-span-2 min-w-0 md:col-span-1"
                         allowClear
                         prefix={<Search className="size-4 text-zinc-400" />}
-                        placeholder="搜索作品标题、用户、用户 ID 或作品链接"
+                        placeholder={t("searchPlaceholder")}
                         value={keyword}
                         onChange={(event) => {
                             setKeyword(event.target.value);
@@ -338,7 +351,7 @@ function AdminWorkReviewSection() {
                     <Select
                         className="min-w-0"
                         value={status}
-                        options={STATUS_OPTIONS}
+                        options={statusOptions}
                         onChange={(value) => {
                             setStatus(value);
                             if (value === "taken_down") setLifecycleStatus("all");
@@ -348,22 +361,18 @@ function AdminWorkReviewSection() {
                     <Select
                         className="min-w-0"
                         value={lifecycleStatus}
-                        options={[
-                            { value: "all", label: "全部" },
-                            { value: "active", label: "有效作品" },
-                            { value: "revoked", label: "用户已下架" },
-                        ]}
+                        options={lifecycleOptions}
                         onChange={(value) => {
                             setLifecycleStatus(value);
                             setPage(1);
                         }}
                     />
-                    <span className="col-span-2 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400 md:col-span-1">共 {total} 条</span>
+                    <span className="col-span-2 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400 md:col-span-1">{t("totalCount", { count: total })}</span>
                     <Button className="w-full md:w-auto" icon={<RefreshCw className="size-4" />} loading={loading} onClick={() => void load()}>
-                        刷新
+                        {t("refresh")}
                     </Button>
                     <Button className="w-full md:w-auto" onClick={clearFilters}>
-                        清除筛选
+                        {t("clearFilters")}
                     </Button>
                 </div>
 
@@ -376,7 +385,7 @@ function AdminWorkReviewSection() {
                                 <AdminWorkMobileCard key={work.id} work={work} actions={renderActions(work)} />
                             ))}
                             {!items.length && !loading ? <AdminWorksEmpty /> : null}
-                            {loading && !items.length ? <div className="grid min-h-36 place-items-center text-sm text-zinc-500 dark:text-zinc-400">正在加载作品...</div> : null}
+                            {loading && !items.length ? <div className="grid min-h-36 place-items-center text-sm text-zinc-500 dark:text-zinc-400">{t("loading")}</div> : null}
                             {total > PAGE_SIZE ? <Pagination current={page} pageSize={PAGE_SIZE} total={total} showSizeChanger={false} size="small" onChange={setPage} /> : null}
                         </div>
                         <div className="hidden min-w-0 md:block">
@@ -391,7 +400,7 @@ function AdminWorkReviewSection() {
                                     pageSize: PAGE_SIZE,
                                     total,
                                     showSizeChanger: false,
-                                    showTotal: (count, range) => `${range[0]}-${range[1]} / ${count} 条`,
+                                    showTotal: (count, range) => t("showTotal", { from: range[0], to: range[1], total: count }),
                                     onChange: setPage,
                                 }}
                                 locale={{ emptyText: <AdminWorksEmpty /> }}
@@ -405,10 +414,10 @@ function AdminWorkReviewSection() {
             </div>
 
             <Modal
-                title={reasonAction?.kind === "reject" ? "驳回发布版本" : "下架公开作品"}
+                title={reasonAction?.kind === "reject" ? t("rejectModalTitle") : t("takeDownModalTitle")}
                 open={Boolean(reasonAction)}
-                okText={reasonAction?.kind === "reject" ? "确认驳回" : "确认下架"}
-                cancelText="取消"
+                okText={reasonAction?.kind === "reject" ? t("rejectConfirm") : t("takeDownConfirm")}
+                cancelText={t("cancel")}
                 confirmLoading={Boolean(reasonAction && actionId === reasonAction.work.id)}
                 okButtonProps={{ danger: true, disabled: !reason.trim() }}
                 onOk={() => void submitReasonAction()}
@@ -417,17 +426,17 @@ function AdminWorkReviewSection() {
                     setReason("");
                 }}
             >
-                <p className="mb-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{reasonAction?.kind === "reject" ? "原因会显示给投稿用户，需说明可执行的修改方向。" : "下架后公开链接和媒体会立即返回 404，请填写可审计原因。"}</p>
+                <p className="mb-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{reasonAction?.kind === "reject" ? t("rejectHint") : t("takeDownHint")}</p>
                 <Input.TextArea
                     value={reason}
                     rows={4}
                     maxLength={500}
                     showCount
-                    placeholder={reasonAction?.kind === "reject" ? "例如：封面包含不可公开的个人信息，请替换后重新提交" : "例如：收到权利方通知，等待运营复核"}
+                    placeholder={reasonAction?.kind === "reject" ? t("rejectPlaceholder") : t("takeDownPlaceholder")}
                     onChange={(event) => setReason(event.target.value)}
                 />
             </Modal>
-            <Modal title="作品详情" open={Boolean(viewingWork)} width={760} footer={null} destroyOnHidden onCancel={() => setViewingWork(undefined)}>
+            <Modal title={t("detailModalTitle")} open={Boolean(viewingWork)} width={760} footer={null} destroyOnHidden onCancel={() => setViewingWork(undefined)}>
                 {viewingWork ? <AdminWorkDetail work={viewingWork} /> : null}
             </Modal>
         </Panel>
@@ -435,8 +444,9 @@ function AdminWorkReviewSection() {
 }
 
 function AdminWorkIdentity({ work }: { work: WorkPublication }) {
+    const t = useTranslations("admin.content.works");
     const version = work.currentVersion;
-    if (!version) return <span className="text-xs text-zinc-500">版本不可用</span>;
+    if (!version) return <span className="text-xs text-zinc-500">{t("versionUnavailable")}</span>;
     return (
         <div className="flex min-w-0 items-center gap-2.5">
             <AdminWorkThumbnail work={work} />
@@ -444,7 +454,7 @@ function AdminWorkIdentity({ work }: { work: WorkPublication }) {
                 <Tooltip title={version.title} placement="topLeft">
                     <div className="truncate text-sm font-semibold text-zinc-950 dark:text-zinc-100">{version.title}</div>
                 </Tooltip>
-                <div className="mt-0.5 line-clamp-2 text-xs leading-5 text-zinc-500 dark:text-zinc-400">{version.description || "未填写作品说明"}</div>
+                <div className="mt-0.5 line-clamp-2 text-xs leading-5 text-zinc-500 dark:text-zinc-400">{version.description || t("noDescription")}</div>
                 <div className="mt-0.5 truncate text-[11px] text-zinc-400 dark:text-zinc-500" title={work.slug}>
                     {work.slug}
                 </div>
@@ -454,24 +464,26 @@ function AdminWorkIdentity({ work }: { work: WorkPublication }) {
 }
 
 function AdminWorkStatus({ work }: { work: WorkPublication }) {
+    const t = useTranslations("admin.content.works");
     const version = work.currentVersion;
-    if (!version) return <Tag className="m-0">未知</Tag>;
-    const moderationSignal = version.moderationStatus === "pending" ? moderationSignalText(version.moderationProvider, version.moderationSignal) : "";
+    if (!version) return <Tag className="m-0">{t("statusUnknown")}</Tag>;
+    const moderationSignal = version.moderationStatus === "pending" ? moderationSignalText(t, version.moderationProvider, version.moderationSignal) : "";
     const tag = (
         <span className={`inline-flex h-6 items-center rounded-md border px-2 text-xs font-medium leading-none ${workStatusToneClass(work.lifecycleStatus === "revoked" ? "revoked" : version.moderationStatus)}`}>
-            {work.lifecycleStatus === "revoked" ? "用户已下架" : adminStatusLabel(version.moderationStatus)}
+            {work.lifecycleStatus === "revoked" ? t("lifecycleRevoked") : adminStatusLabel(t, version.moderationStatus)}
         </span>
     );
     return (
         <div className="flex flex-col items-start gap-1">
             {moderationSignal ? <Tooltip title={moderationSignal}>{tag}</Tooltip> : tag}
-            {work.isFeatured ? <Tag color="gold">精选</Tag> : null}
-            {work.publishedVersion && work.publishedVersion.id !== version.id ? <span className="text-[11px] text-zinc-500 dark:text-zinc-400">线上 v{work.publishedVersion.versionNumber}</span> : null}
+            {work.isFeatured ? <Tag color="gold">{t("featured")}</Tag> : null}
+            {work.publishedVersion && work.publishedVersion.id !== version.id ? <span className="text-[11px] text-zinc-500 dark:text-zinc-400">{t("liveVersion", { version: work.publishedVersion.versionNumber })}</span> : null}
         </div>
     );
 }
 
 function AdminWorkThumbnail({ work }: { work: WorkPublication }) {
+    const t = useTranslations("admin.content.works");
     const [failed, setFailed] = useState(false);
     const asset = work.currentPreview;
     const url = asset?.previewUrl || "";
@@ -481,12 +493,14 @@ function AdminWorkThumbnail({ work }: { work: WorkPublication }) {
         <div className="relative size-14 shrink-0 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900">
             <img src="/logo.svg" alt="" className="absolute inset-0 size-full object-contain p-3 opacity-45" />
             {!failed && url && asset?.mediaType === "video" ? <video src={url} muted playsInline preload="metadata" className="relative size-full object-cover" onError={() => setFailed(true)} /> : null}
-            {!failed && imageUrl && asset?.mediaType === "image" ? <img src={imageUrl} alt={work.currentVersion?.title || "作品预览"} loading="lazy" className="relative size-full object-cover" onError={() => setFailed(true)} /> : null}
+            {!failed && imageUrl && asset?.mediaType === "image" ? <img src={imageUrl} alt={work.currentVersion?.title || t("previewAlt")} loading="lazy" className="relative size-full object-cover" onError={() => setFailed(true)} /> : null}
         </div>
     );
 }
 
 function AdminWorkMobileCard({ work, actions }: { work: WorkPublication; actions: ReactNode }) {
+    const t = useTranslations("admin.content.works");
+    const locale = useLocale();
     return (
         <article className="min-w-0 rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950">
             <div className="flex items-start justify-between gap-2">
@@ -497,11 +511,11 @@ function AdminWorkMobileCard({ work, actions }: { work: WorkPublication; actions
             </div>
             <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-zinc-500 dark:text-zinc-400">
                 <span className="inline-flex min-w-0 items-center gap-1.5">
-                    <span className="truncate">{work.ownerDisplayName || work.ownerUsername || "用户信息不可用"}</span>
+                    <span className="truncate">{work.ownerDisplayName || work.ownerUsername || t("userUnavailable")}</span>
                     <AdminAccountId accountId={work.ownerAccountId} className="shrink-0" />
                 </span>
-                <span>{sourceTypeLabel(work.sourceType)}</span>
-                <span>{formatAdminTime(work.updatedAt)}</span>
+                <span>{sourceTypeLabel(t, work.sourceType)}</span>
+                <span>{formatAdminTime(work.updatedAt, locale)}</span>
             </div>
             <div className="mt-2 flex flex-wrap justify-end gap-0.5 border-t border-zinc-200 pt-2 dark:border-zinc-800">{actions}</div>
         </article>
@@ -509,21 +523,26 @@ function AdminWorkMobileCard({ work, actions }: { work: WorkPublication; actions
 }
 
 function AdminWorksEmpty() {
+    const t = useTranslations("admin.content.works");
     return (
         <div className="flex min-h-36 flex-col items-center justify-center gap-2 px-4 text-center">
             <GalleryVerticalEnd className="size-5 text-zinc-400" />
-            <div className="text-sm font-medium text-zinc-800 dark:text-zinc-200">当前筛选下没有作品</div>
-            <div className="text-xs text-zinc-500 dark:text-zinc-400">切换审核状态或清除筛选后再查看。</div>
+            <div className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{t("emptyTitle")}</div>
+            <div className="text-xs text-zinc-500 dark:text-zinc-400">{t("emptyDesc")}</div>
         </div>
     );
 }
 
 function AdminWorkDetail({ work }: { work: WorkPublication }) {
+    const t = useTranslations("admin.content.works");
+    const locale = useLocale();
     const version = work.currentVersion;
     if (!version) return null;
     const asset = work.currentPreview;
     const url = asset?.previewUrl || "";
     const imageUrl = imagePreviewUrl(url, 1920);
+    const userName = work.ownerDisplayName || work.ownerUsername || t("userUnavailable");
+    const accountSuffix = work.ownerAccountId ? t("detailAccountId", { id: work.ownerAccountId }) : "";
     return (
         <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-[240px_minmax(0,1fr)]">
@@ -535,15 +554,15 @@ function AdminWorkDetail({ work }: { work: WorkPublication }) {
                 <div className="min-w-0 space-y-3">
                     <div>
                         <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-100">{version.title}</h3>
-                        <p className="mt-1 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{version.description || "未填写作品说明"}</p>
+                        <p className="mt-1 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{version.description || t("noDescription")}</p>
                     </div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-y border-zinc-200 py-3 text-xs dark:border-zinc-800">
-                        <DetailValue label="用户" value={`${work.ownerDisplayName || work.ownerUsername || "用户信息不可用"}${work.ownerAccountId ? ` · ID：${work.ownerAccountId}` : ""}`} />
-                        <DetailValue label="来源" value={sourceTypeLabel(work.sourceType)} />
-                        <DetailValue label="版本" value={`v${version.versionNumber}`} />
-                        <DetailValue label="可见性" value={visibilityLabel(version.visibility)} />
-                        <DetailValue label="更新时间" value={formatAdminTime(work.updatedAt)} />
-                        <DetailValue label="作品链接" value={work.slug} />
+                        <DetailValue label={t("detailUser")} value={`${userName}${accountSuffix}`} />
+                        <DetailValue label={t("detailSource")} value={sourceTypeLabel(t, work.sourceType)} />
+                        <DetailValue label={t("detailVersion")} value={`v${version.versionNumber}`} />
+                        <DetailValue label={t("detailVisibility")} value={visibilityLabel(t, version.visibility)} />
+                        <DetailValue label={t("detailUpdatedAt")} value={formatAdminTime(work.updatedAt, locale)} />
+                        <DetailValue label={t("detailSlug")} value={work.slug} />
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                         <AdminWorkStatus work={work} />
@@ -556,10 +575,10 @@ function AdminWorkDetail({ work }: { work: WorkPublication }) {
                 </div>
             </div>
             <div className="border-t border-zinc-200 pt-4 dark:border-zinc-800">
-                <div className="mb-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">公开提示词</div>
-                <div className="max-h-48 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-6 text-zinc-800 dark:text-zinc-200">{version.publicPrompt || "未填写提示词"}</div>
+                <div className="mb-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">{t("publicPrompt")}</div>
+                <div className="max-h-48 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-6 text-zinc-800 dark:text-zinc-200">{version.publicPrompt || t("noPrompt")}</div>
             </div>
-            {version.rejectionReason ? <div className="border-l-2 border-rose-400 pl-3 text-sm leading-6 text-rose-700 dark:text-rose-300">处理原因：{version.rejectionReason}</div> : null}
+            {version.rejectionReason ? <div className="border-l-2 border-rose-400 pl-3 text-sm leading-6 text-rose-700 dark:text-rose-300">{t("resolutionReason", { reason: version.rejectionReason })}</div> : null}
         </div>
     );
 }
@@ -575,29 +594,29 @@ function DetailValue({ label, value }: { label: string; value: string }) {
     );
 }
 
-function sourceTypeLabel(value: WorkPublication["sourceType"]) {
-    return value === "canvas" ? "画布" : value === "drama" ? "短剧" : "素材";
+function sourceTypeLabel(t: WorksT, value: WorkPublication["sourceType"]) {
+    return value === "canvas" ? t("sourceCanvas") : value === "drama" ? t("sourceDrama") : t("sourceMedia");
 }
 
-function visibilityLabel(value: WorkPublicationVisibility | undefined) {
-    return value === "public" ? "公开" : value === "unlisted" ? "持链接可见" : "仅自己可见";
+function visibilityLabel(t: WorksT, value: WorkPublicationVisibility | undefined) {
+    return value === "public" ? t("visibilityPublic") : value === "unlisted" ? t("visibilityUnlisted") : t("visibilityPrivate");
 }
 
-function formatAdminTime(value: string) {
+function formatAdminTime(value: string, locale: string) {
     const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("zh-CN", { hour12: false });
+    return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString(locale === "en" ? "en-US" : "zh-CN", { hour12: false });
 }
 
-function adminStatusLabel(status: WorkPublicationModerationStatus) {
-    return status === "pending" ? "待审核" : status === "approved" ? "已通过" : status === "rejected" ? "已驳回" : status === "taken_down" ? "已下架" : "草稿";
+function adminStatusLabel(t: WorksT, status: WorkPublicationModerationStatus) {
+    return status === "pending" ? t("statusPending") : status === "approved" ? t("statusApproved") : status === "rejected" ? t("statusRejected") : status === "taken_down" ? t("statusTakenDown") : t("statusDraft");
 }
 
-function moderationSignalText(provider: string | undefined, value: unknown) {
-    if (!provider || provider === "manual") return "等待人工审核";
+function moderationSignalText(t: WorksT, provider: string | undefined, value: unknown) {
+    if (!provider || provider === "manual") return t("awaitManualReview");
     if (!value || typeof value !== "object") return "";
     const signal = value as { riskLevel?: unknown; summary?: unknown };
     const summary = typeof signal.summary === "string" ? signal.summary : "";
     if (!summary) return "";
-    const level = signal.riskLevel === "safe" ? "低风险" : signal.riskLevel === "block" ? "高风险" : "需复核";
-    return `${provider} / ${level} / ${summary}`;
+    const level = signal.riskLevel === "safe" ? t("riskLow") : signal.riskLevel === "block" ? t("riskHigh") : t("riskReview");
+    return t("moderationSignal", { provider, level, summary });
 }
