@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { CSSProperties } from "react";
 import styles from "./workbench-generation-placeholder.module.css";
+import { useTranslations } from "next-intl";
 
 export const GENERATION_PLACEHOLDER_TILE_COUNT = 96;
 const GPT_IMAGE_TILE_PALETTE = [
@@ -15,7 +16,8 @@ const GPT_IMAGE_TILE_PALETTE = [
 ] as const;
 
 export function WorkbenchGenerationPlaceholder({ kind, className }: { kind: "image" | "video"; className?: string }) {
-    const label = kind === "image" ? "图片正在生成" : "视频正在生成";
+    const t = useTranslations("layout");
+    const label = kind === "image" ? t("agent.generationPlaceholder.imageGenerating") : t("agent.generationPlaceholder.videoGenerating");
     return (
         <div role="status" aria-label={label} aria-busy="true" className={cn(styles.placeholder, "relative isolate overflow-hidden rounded-lg border border-border bg-muted", className)}>
             <span className={styles.cube} aria-hidden="true">
@@ -30,7 +32,9 @@ export function WorkbenchGenerationPlaceholder({ kind, className }: { kind: "ima
 }
 
 export function WorkbenchGenerationActivity({ kind, count }: { kind: "image" | "video"; count: number }) {
-    const label = `${count} 个${kind === "image" ? "图片" : "视频"}任务正在生成`;
+    const t = useTranslations("layout");
+    const kindLabel = kind === "image" ? t("agent.generationPlaceholder.kindImage") : t("agent.generationPlaceholder.kindVideo");
+    const label = t("agent.generationPlaceholder.tasksGenerating", { count, kind: kindLabel });
     return (
         <span role="status" aria-label={label} aria-busy="true" className="relative inline-flex h-7 w-11 items-center justify-center overflow-hidden rounded-full border border-border bg-muted text-muted-foreground">
             <span className="relative flex items-end gap-1" aria-hidden="true">

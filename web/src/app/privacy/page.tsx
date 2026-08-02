@@ -1,37 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft, Database, KeyRound, MailCheck, ShieldCheck, Workflow } from "lucide-react";
 
-const policies = [
-    {
-        title: "账号与配置数据",
-        body: "JoveCanvas 将账号、项目、创作对话、生成记录和媒体文件保存在服务器；媒体按临时与长期分类，管理员可在后台管理和删除。",
-        icon: <Database className="size-5" />,
-    },
-    {
-        title: "邮箱验证码",
-        body: "开启邮箱注册、修改邮箱或忘记密码时，系统会通过管理员配置的 SMTP 服务发送验证码。验证码仅用于验证当前操作，默认 10 分钟有效，使用后失效。",
-        icon: <MailCheck className="size-5" />,
-    },
-    {
-        title: "AI 模型请求",
-        body: "AI 生成请求统一经过系统接口代理发送到管理员配置的模型服务或 OpenAI 兼容接口，用户端不会展示真实上游域名或 API Key。部署者仍需确认对应服务商的数据处理规则。",
-        icon: <Workflow className="size-5" />,
-    },
-    {
-        title: "备份文件安全",
-        body: "管理员可在后台导出脱敏业务数据。导出不包含邮箱、密码哈希、会话、验证码、CDK、渠道密钥、支付配置、外部存储凭据或媒体原文件；完整数据库和媒体仍由部署者按本机、Docker、宝塔或云服务方案备份。",
-        icon: <KeyRound className="size-5" />,
-    },
-];
+export async function generateMetadata(): Promise<Metadata> {
+    const t = await getTranslations("public.privacy");
+    return {
+        title: t("metaTitle"),
+        description: t("metaDescription"),
+        alternates: { canonical: "/privacy" },
+    };
+}
 
-export const metadata: Metadata = {
-    title: "隐私政策",
-    description: "了解 JoveCanvas 对账号、创作、媒体与第三方服务数据的处理方式。",
-    alternates: { canonical: "/privacy" },
-};
+export default async function PrivacyPage() {
+    const t = await getTranslations("public.privacy");
+    const policies = [
+        { title: t("section1Title"), body: t("section1Body"), icon: <Database className="size-5" /> },
+        { title: t("section2Title"), body: t("section2Body"), icon: <MailCheck className="size-5" /> },
+        { title: t("section3Title"), body: t("section3Body"), icon: <Workflow className="size-5" /> },
+        { title: t("section4Title"), body: t("section4Body"), icon: <KeyRound className="size-5" /> },
+    ];
 
-export default function PrivacyPage() {
     return (
         <main className="app-scroll-page bg-[radial-gradient(circle_at_top_right,rgba(34,197,94,0.12),transparent_30%),linear-gradient(180deg,#ffffff_0%,#f8fafc_58%,#eef2f7_100%)] text-stone-800 dark:bg-[radial-gradient(circle_at_top_right,rgba(45,212,191,0.12),transparent_34%),linear-gradient(180deg,#0a0a0a_0%,#101010_58%,#171717_100%)] dark:text-stone-200">
             <div className="mx-auto flex min-h-full w-full max-w-5xl flex-col px-5 py-8 sm:px-8 sm:py-10">
@@ -40,7 +29,7 @@ export default function PrivacyPage() {
                     className="inline-flex w-fit items-center gap-2 rounded-full border border-stone-200 bg-white/80 px-4 py-2 text-sm font-medium text-stone-700 shadow-sm shadow-stone-200/50 backdrop-blur transition hover:border-emerald-300 hover:text-emerald-700 dark:border-white/10 dark:bg-white/5 dark:text-stone-200 dark:shadow-black/30 dark:hover:border-emerald-500/50 dark:hover:text-emerald-200"
                 >
                     <ArrowLeft className="size-4" />
-                    返回首页
+                    {t("backHome")}
                 </Link>
 
                 <section className="mt-8 overflow-hidden rounded-lg border border-stone-200 bg-white/88 shadow-xl shadow-stone-200/60 backdrop-blur dark:border-white/10 dark:bg-stone-950/78 dark:shadow-black/30">
@@ -49,8 +38,8 @@ export default function PrivacyPage() {
                             <ShieldCheck className="size-3.5" />
                             JoveCanvas Privacy
                         </div>
-                        <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">隐私政策</h1>
-                        <p className="mt-4 max-w-2xl text-base leading-8 text-stone-200 dark:text-stone-300">这里说明 JoveCanvas 在账号、邮箱、模型请求和备份文件中的数据处理方式，方便部署者和使用者提前了解边界。</p>
+                        <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">{t("title")}</h1>
+                        <p className="mt-4 max-w-2xl text-base leading-8 text-stone-200 dark:text-stone-300">{t("subtitle")}</p>
                     </div>
 
                     <div className="grid gap-4 p-4 sm:p-6 lg:grid-cols-2">

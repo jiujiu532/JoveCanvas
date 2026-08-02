@@ -3,11 +3,13 @@
 import { App, Empty, Modal, Spin } from "antd";
 import { BadgeCheck, Sparkles, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { BillingPlanGrid } from "@/components/billing/billing-plan-grid";
 import { listBillingProducts, type BillingProduct } from "@/services/api/billing";
 
 export function BillingPlansModal({ open, onClose, onSelect }: { open: boolean; onClose: () => void; onSelect: (product: BillingProduct) => void }) {
+    const t = useTranslations("layout");
     const { message } = App.useApp();
     const [products, setProducts] = useState<BillingProduct[]>([]);
     const [loading, setLoading] = useState(false);
@@ -17,9 +19,9 @@ export function BillingPlansModal({ open, onClose, onSelect }: { open: boolean; 
         setLoading(true);
         void listBillingProducts()
             .then((payload) => setProducts(payload.products || []))
-            .catch((error) => message.error(error instanceof Error ? error.message : "套餐加载失败"))
+            .catch((error) => message.error(error instanceof Error ? error.message : t("billing.modal.loadFailed")))
             .finally(() => setLoading(false));
-    }, [loading, message, open, products.length]);
+    }, [loading, message, open, products.length, t]);
 
     return (
         <Modal
@@ -39,8 +41,8 @@ export function BillingPlansModal({ open, onClose, onSelect }: { open: boolean; 
                     <button
                         type="button"
                         className="absolute right-2.5 top-2.5 z-10 grid size-8 place-items-center rounded-full border border-white/15 bg-white/10 text-white transition hover:bg-white/20 sm:right-3 sm:top-3 sm:size-9"
-                        aria-label="关闭套餐选择"
-                        title="关闭"
+                        aria-label={t("billing.modal.closeAria")}
+                        title={t("billing.modal.close")}
                         onClick={onClose}
                     >
                         <X className="size-4" />
@@ -51,20 +53,20 @@ export function BillingPlansModal({ open, onClose, onSelect }: { open: boolean; 
                                 <Sparkles className="size-4.5" />
                             </span>
                             <div>
-                                <div className="text-sm font-semibold">升级创作套餐</div>
-                                <div className="mt-0.5 hidden text-xs leading-5 text-stone-300 sm:block">按实际创作频率选择方案，价格与权益实时同步后台商品。</div>
+                                <div className="text-sm font-semibold">{t("billing.modal.upgradeTitle")}</div>
+                                <div className="mt-0.5 hidden text-xs leading-5 text-stone-300 sm:block">{t("billing.modal.upgradeDesc")}</div>
                             </div>
                         </div>
                         <span className="hidden items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white sm:inline-flex">
-                            <BadgeCheck className="size-4 text-[#d8dee8]" /> 支付成功自动到账
+                            <BadgeCheck className="size-4 text-[#d8dee8]" /> {t("billing.modal.autoCredit")}
                         </span>
                     </div>
                 </div>
 
                 <div className="px-2 pb-2 pt-2 sm:px-6 sm:pb-6 sm:pt-5">
                     <div className="mx-auto max-w-[820px]">
-                        <h2 className="text-lg font-semibold tracking-tight sm:text-2xl">选择适合您的套餐</h2>
-                        <p className="mt-0.5 text-xs leading-5 text-stone-500 sm:mt-1 sm:text-sm sm:leading-6 dark:text-stone-400">确认方案后进入独立安全结算页。</p>
+                        <h2 className="text-lg font-semibold tracking-tight sm:text-2xl">{t("billing.modal.chooseTitle")}</h2>
+                        <p className="mt-0.5 text-xs leading-5 text-stone-500 sm:mt-1 sm:text-sm sm:leading-6 dark:text-stone-400">{t("billing.modal.chooseDesc")}</p>
                     </div>
 
                     {loading ? (
@@ -84,7 +86,7 @@ export function BillingPlansModal({ open, onClose, onSelect }: { open: boolean; 
                         </div>
                     ) : (
                         <div className="mx-auto mt-3 max-w-3xl rounded-xl border border-dashed border-stone-300 bg-white py-6 sm:rounded-2xl sm:py-12 dark:border-stone-700 dark:bg-stone-950">
-                            <Empty description="暂无已上架套餐" />
+                            <Empty description={t("billing.modal.empty")} />
                         </div>
                     )}
                 </div>

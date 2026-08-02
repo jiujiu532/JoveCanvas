@@ -79,26 +79,26 @@ import {
 } from "./billing-operation-elements";
 
 export function BillingOperations({ initialTab = "orders", initialPaymentConfig, embedded = false, hideTabs = false }: { initialTab?: BillingTab; initialPaymentConfig?: PaymentConfigSummary; embedded?: boolean; hideTabs?: boolean }) {
-    const t = useTranslations("admin");
+    const t = useTranslations("admin.billingOps");
     const tabOptions = useMemo(
         () => [
-            { label: t("billingOps.tabs.orders"), value: "orders" as const },
-            { label: t("billingOps.tabs.products"), value: "products" as const },
-            { label: t("billingOps.tabs.promotions"), value: "promotions" as const },
-            { label: t("billingOps.tabs.coupons"), value: "coupons" as const },
-            { label: t("billingOps.tabs.payments"), value: "payments" as const },
+            { label: t("tabs.orders"), value: "orders" as const },
+            { label: t("tabs.products"), value: "products" as const },
+            { label: t("tabs.promotions"), value: "promotions" as const },
+            { label: t("tabs.coupons"), value: "coupons" as const },
+            { label: t("tabs.payments"), value: "payments" as const },
         ],
         [t],
     );
     const statusOptions = useMemo(
         () => [
-            { label: t("billingOps.status.all"), value: "" as const },
-            { label: t("billingOps.status.pending"), value: "pending" as const },
-            { label: t("billingOps.status.paid"), value: "paid" as const },
-            { label: t("billingOps.status.closed"), value: "closed" as const },
-            { label: t("billingOps.status.canceled"), value: "canceled" as const },
-            { label: t("billingOps.status.refunded"), value: "refunded" as const },
-            { label: t("billingOps.status.refunding"), value: "refunding" as const },
+            { label: t("status.all"), value: "" as const },
+            { label: t("status.pending"), value: "pending" as const },
+            { label: t("status.paid"), value: "paid" as const },
+            { label: t("status.closed"), value: "closed" as const },
+            { label: t("status.canceled"), value: "canceled" as const },
+            { label: t("status.refunded"), value: "refunded" as const },
+            { label: t("status.refunding"), value: "refunding" as const },
         ],
         [t],
     );
@@ -134,28 +134,28 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
         try {
             const response = await fetch("/api/admin/billing/products", { cache: "no-store" });
             const payload = (await response.json().catch(() => null)) as { products?: BillingProduct[]; error?: string } | null;
-            if (!response.ok || !payload?.products) throw new Error(payload?.error || "加载套餐商品失败");
+            if (!response.ok || !payload?.products) throw new Error(payload?.error || t("loadProductsFailed"));
             setProducts(payload.products);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "加载套餐商品失败");
+            message.error(error instanceof Error ? error.message : t("loadProductsFailed"));
         } finally {
             setProductsLoading(false);
         }
-    }, [message]);
+    }, [message, t]);
 
     const loadPaymentConfig = useCallback(async () => {
         setPaymentConfigLoading(true);
         try {
             const response = await fetch("/api/admin/billing/payment-config", { cache: "no-store" });
             const payload = (await response.json().catch(() => null)) as { paymentConfig?: PaymentConfigSummary; error?: string } | null;
-            if (!response.ok || !payload?.paymentConfig) throw new Error(payload?.error || "加载支付配置失败");
+            if (!response.ok || !payload?.paymentConfig) throw new Error(payload?.error || t("loadPaymentConfigFailed"));
             setPaymentConfig(payload.paymentConfig);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "加载支付配置失败");
+            message.error(error instanceof Error ? error.message : t("loadPaymentConfigFailed"));
         } finally {
             setPaymentConfigLoading(false);
         }
-    }, [message]);
+    }, [message, t]);
 
     const loadDashboard = useCallback(async () => {
         setLoading(true);
@@ -171,17 +171,17 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
             const [summaryResponse, ordersResponse] = await Promise.all([fetch(`/api/admin/billing/summary?${summaryParams.toString()}`, { cache: "no-store" }), fetch(`/api/admin/billing/orders?${orderParams.toString()}`, { cache: "no-store" })]);
             const summaryPayload = (await summaryResponse.json().catch(() => null)) as { summary?: BillingSummary; error?: string } | null;
             const ordersPayload = (await ordersResponse.json().catch(() => null)) as { orders?: BillingOrder[]; total?: number; error?: string } | null;
-            if (!summaryResponse.ok || !summaryPayload?.summary) throw new Error(summaryPayload?.error || "加载运营摘要失败");
-            if (!ordersResponse.ok || !ordersPayload?.orders) throw new Error(ordersPayload?.error || "加载订单失败");
+            if (!summaryResponse.ok || !summaryPayload?.summary) throw new Error(summaryPayload?.error || t("loadSummaryFailed"));
+            if (!ordersResponse.ok || !ordersPayload?.orders) throw new Error(ordersPayload?.error || t("loadOrdersFailed"));
             setSummary(summaryPayload.summary);
             setOrders(ordersPayload.orders);
             setTotal(ordersPayload.total || 0);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "加载财务钱包数据失败");
+            message.error(error instanceof Error ? error.message : t("loadDashboardFailed"));
         } finally {
             setLoading(false);
         }
-    }, [endDate, message, page, startDate, status, submittedKeyword]);
+    }, [endDate, message, t, page, startDate, status, submittedKeyword]);
 
     useEffect(() => {
         if (activeTab === "orders" || activeTab === "products" || activeTab === "promotions" || activeTab === "coupons") void loadProducts();
@@ -208,11 +208,11 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
                 body: JSON.stringify(action === "complete" ? { provider: order.provider || "manual", channel: "admin-manual", providerTradeId: order.providerOrderId || order.orderNo } : { reason }),
             });
             const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-            if (!response.ok) throw new Error(payload?.error || "订单操作失败");
-            message.success(action === "complete" ? "已确认支付" : action === "close" ? "已关闭订单" : "已标记退款");
+            if (!response.ok) throw new Error(payload?.error || t("orderActionFailed"));
+            message.success(action === "complete" ? t("completeSuccess") : action === "close" ? t("closeSuccess") : t("refundSuccess"));
             await loadDashboard();
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "订单操作失败");
+            message.error(error instanceof Error ? error.message : t("orderActionFailed"));
         } finally {
             setActionOrderId("");
         }
@@ -221,10 +221,10 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
     const confirmOrderAction = (order: BillingOrder, action: "complete" | "close" | "refund") => {
         if (action === "complete") {
             modal.confirm({
-                title: "确认这笔订单已收款？",
-                content: "确认后会开通套餐并发放积分。请只对人工确认或已经核实的收款订单执行。",
-                okText: "确认收款",
-                cancelText: "取消",
+                title: t("completeConfirmTitle"),
+                content: t("completeConfirmContent"),
+                okText: t("completeOk"),
+                cancelText: t("cancel"),
                 onOk: () => runOrderAction(order, action),
             });
             return;
@@ -232,19 +232,19 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
 
         let reason = "";
         modal.confirm({
-            title: action === "close" ? "关闭这笔待支付订单？" : "标记这笔订单为已退款？",
+            title: action === "close" ? t("closeConfirmTitle") : t("refundConfirmTitle"),
             content: (
                 <Input.TextArea
                     rows={3}
                     maxLength={200}
-                    placeholder={action === "close" ? "例如：用户取消、超时未支付" : "例如：支付商后台已退款、人工售后退款"}
+                    placeholder={action === "close" ? t("closeReasonPlaceholder") : t("refundReasonPlaceholder")}
                     onChange={(event) => {
                         reason = event.target.value;
                     }}
                 />
             ),
-            okText: action === "close" ? "关闭订单" : "标记退款",
-            cancelText: "取消",
+            okText: action === "close" ? t("closeOk") : t("refundOk"),
+            cancelText: t("cancel"),
             okButtonProps: { danger: action === "refund" },
             onOk: () => runOrderAction(order, action, reason),
         });
@@ -304,25 +304,25 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
                 }),
             });
             const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-            if (!response.ok) throw new Error(payload?.error || "保存套餐商品失败");
-            message.success("套餐商品已保存");
+            if (!response.ok) throw new Error(payload?.error || t("saveProductFailed"));
+            message.success(t("saveProductSuccess"));
             setProductModalOpen(false);
             setEditingProductId("");
             productForm.resetFields();
             await loadProducts();
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "保存套餐商品失败");
+            message.error(error instanceof Error ? error.message : t("saveProductFailed"));
         } finally {
             setProductSaving(false);
         }
     };
     const confirmDeleteProduct = (product: BillingProduct) => {
         modal.confirm({
-            title: `删除“${product.name}”？`,
-            content: "未产生订单的商品会永久删除；已有订单的商品会被保护，请改为编辑后下架。",
-            okText: "确认删除",
+            title: t("deleteProductTitle", { name: product.name }),
+            content: t("deleteProductContent"),
+            okText: t("deleteConfirm"),
             okButtonProps: { danger: true },
-            cancelText: "取消",
+            cancelText: t("cancel"),
             onOk: async () => {
                 setDeletingProductId(product.id);
                 try {
@@ -330,18 +330,18 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
                     const payload = (await response.json().catch(() => null)) as { error?: string } | null;
                     if (response.status === 409) {
                         modal.warning({
-                            title: "该套餐已有订单，不能删除",
-                            content: payload?.error || "为保留订单和财务记录，该套餐只能下架。请在编辑商品中关闭上架状态。",
-                            okText: "去编辑下架",
+                            title: t("productHasOrdersTitle"),
+                            content: payload?.error || t("productHasOrdersContent"),
+                            okText: t("goEditDelist"),
                             onOk: () => editProduct(product),
                         });
                         return;
                     }
-                    if (!response.ok) throw new Error(payload?.error || "删除套餐商品失败");
-                    message.success("套餐商品已删除");
+                    if (!response.ok) throw new Error(payload?.error || t("deleteProductFailed"));
+                    message.success(t("deleteProductSuccess"));
                     await loadProducts();
                 } catch (error) {
-                    message.error(error instanceof Error ? error.message : "删除套餐商品失败");
+                    message.error(error instanceof Error ? error.message : t("deleteProductFailed"));
                     throw error;
                 } finally {
                     setDeletingProductId("");
@@ -352,7 +352,7 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
 
     const columns: TableColumnsType<BillingOrder> = [
         {
-            title: "订单",
+            title: t("columns.order"),
             dataIndex: "orderNo",
             width: 230,
             render: (_, order) => (
@@ -363,49 +363,49 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
             ),
         },
         {
-            title: "状态",
+            title: t("columns.status"),
             dataIndex: "status",
             width: 110,
             render: (value: BillingOrderStatus) => <Tag color={statusColor(value)}>{statusLabel(value)}</Tag>,
         },
         {
-            title: "渠道",
+            title: t("columns.channel"),
             dataIndex: "provider",
             width: 110,
             render: (value: string) => <span className="text-sm text-stone-700 dark:text-stone-200">{providerLabel(value)}</span>,
         },
         {
-            title: "金额",
+            title: t("columns.amount"),
             dataIndex: "amountCents",
             width: 130,
             render: (_, order) => <span className="font-medium">{formatMoney(order.amountCents, order.currency)}</span>,
         },
         {
-            title: "权益",
+            title: t("columns.benefit"),
             width: 150,
             render: (_, order) => (
                 <div className="text-sm text-stone-600 dark:text-stone-300">
-                    <div>{order.pointsAmount} 永久积分</div>
+                    <div>{t("orderPermanentPoints", { count: order.pointsAmount })}</div>
                     <div className="text-xs text-stone-500 dark:text-stone-400">
-                        每日 {order.dailyPoints} · {order.periodDays ? `${order.periodDays} 天` : "长期"}
+                        {t("orderDailyPeriod", { daily: order.dailyPoints, period: order.periodDays ? t("periodDaysValue", { count: order.periodDays }) : t("orderLongTerm") })}
                     </div>
                 </div>
             ),
         },
         {
-            title: "用户",
+            title: t("columns.user"),
             dataIndex: "userId",
             width: 220,
-            render: (_, order) => <AdminUserIdentity displayName={order.userDisplayName} username={order.userUsername} accountId={order.userAccountId} fallback={order.userId ? "用户信息不可用" : "未绑定用户"} />,
+            render: (_, order) => <AdminUserIdentity displayName={order.userDisplayName} username={order.userUsername} accountId={order.userAccountId} fallback={order.userId ? t("userUnavailable") : t("userUnbound")} />,
         },
         {
-            title: "创建时间",
+            title: t("createdAt"),
             dataIndex: "createdAt",
             width: 170,
             render: (value: string) => formatTime(value),
         },
         {
-            title: "操作",
+            title: t("actions"),
             fixed: "right",
             width: 230,
             render: (_, order) => (
@@ -413,16 +413,16 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
                     {order.status === "pending" ? (
                         <>
                             <Button size="small" icon={<CheckCircle2 className="size-3.5" />} loading={actionOrderId === `complete:${order.id}`} onClick={() => confirmOrderAction(order, "complete")}>
-                                收款
+                                {t("collectPayment")}
                             </Button>
                             <Button size="small" icon={<XCircle className="size-3.5" />} loading={actionOrderId === `close:${order.id}`} onClick={() => confirmOrderAction(order, "close")}>
-                                关单
+                                {t("closeOrderShort")}
                             </Button>
                         </>
                     ) : null}
                     {order.status === "paid" ? (
                         <Button danger size="small" icon={<Undo2 className="size-3.5" />} loading={actionOrderId === `refund:${order.id}`} onClick={() => confirmOrderAction(order, "refund")}>
-                            退款
+                            {t("refundShort")}
                         </Button>
                     ) : null}
                 </Space>
@@ -447,10 +447,10 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
             {activeTab === "orders" ? (
                 <>
                     <section className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        <Metric title={t("billingOps.metrics.paidAmount")} value={formatMoney(summary?.orders.paidAmountCents || 0)} icon={<CircleDollarSign className="size-4" />} tone="emerald" />
-                        <Metric title={t("billingOps.metrics.pendingAmount")} value={formatMoney(summary?.orders.pendingAmountCents || 0)} icon={<WalletCards className="size-4" />} tone="amber" />
-                        <Metric title={t("billingOps.metrics.paidOrders")} value={summary?.orders.paid || 0} icon={<ReceiptText className="size-4" />} tone="blue" />
-                        <Metric title={t("billingOps.metrics.reconciliationIssues")} value={reconciliationIssues} icon={<AlertTriangle className="size-4" />} tone={reconciliationIssues ? "rose" : "slate"} />
+                        <Metric title={t("metrics.paidAmount")} value={formatMoney(summary?.orders.paidAmountCents || 0)} icon={<CircleDollarSign className="size-4" />} tone="emerald" />
+                        <Metric title={t("metrics.pendingAmount")} value={formatMoney(summary?.orders.pendingAmountCents || 0)} icon={<WalletCards className="size-4" />} tone="amber" />
+                        <Metric title={t("metrics.paidOrders")} value={summary?.orders.paid || 0} icon={<ReceiptText className="size-4" />} tone="blue" />
+                        <Metric title={t("metrics.reconciliationIssues")} value={reconciliationIssues} icon={<AlertTriangle className="size-4" />} tone={reconciliationIssues ? "rose" : "slate"} />
                     </section>
 
                     <section
@@ -462,8 +462,8 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
                     >
                         <div>
                             <div>
-                                <h2 className="text-base font-semibold text-stone-950 dark:text-stone-100">运营筛选</h2>
-                                <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">日期范围影响摘要；订单列表可按状态和关键词筛选。</p>
+                                <h2 className="text-base font-semibold text-stone-950 dark:text-stone-100">{t("opsFilterTitle")}</h2>
+                                <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">{t("opsFilterDesc")}</p>
                             </div>
                             <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(240px,1fr)_minmax(128px,0.45fr)_minmax(220px,0.9fr)_auto]">
                                 <DatePicker.RangePicker className="w-full" value={range} onChange={(value) => setRange(value)} />
@@ -481,7 +481,7 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
                                     allowClear
                                     value={keyword}
                                     prefix={<Search className="size-4 text-stone-400" />}
-                                    placeholder="订单号 / 商品 / 支付单号 / 用户 ID"
+                                    placeholder={t("orderSearchPlaceholder")}
                                     onChange={(event) => setKeyword(event.target.value)}
                                     onPressEnter={() => {
                                         setSubmittedKeyword(keyword.trim());
@@ -497,10 +497,10 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
                                             setPage(1);
                                         }}
                                     >
-                                        查询
+                                        {t("search")}
                                     </Button>
                                     <Button className="w-full xl:w-auto" icon={<RefreshCw className="size-4" />} loading={loading || productsLoading} onClick={() => void Promise.all([loadProducts(), loadDashboard()])}>
-                                        刷新
+                                        {t("refresh")}
                                     </Button>
                                 </div>
                             </div>
@@ -543,16 +543,16 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
                         >
                             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1.5 border-b border-stone-200 p-3 sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-4 dark:border-stone-800">
                                 <div className="contents sm:block">
-                                    <h2 className="text-base font-semibold text-stone-950 dark:text-stone-100">套餐商品</h2>
-                                    <div className="col-span-2 line-clamp-2 text-xs leading-5 text-stone-500 sm:mt-1 sm:block sm:text-sm dark:text-stone-400">上架后会出现在用户端充值中心；创建和编辑都在弹窗中完成。</div>
+                                    <h2 className="text-base font-semibold text-stone-950 dark:text-stone-100">{t("products.title")}</h2>
+                                    <div className="col-span-2 line-clamp-2 text-xs leading-5 text-stone-500 sm:mt-1 sm:block sm:text-sm dark:text-stone-400">{t("products.description")}</div>
                                 </div>
                                 <div className="col-start-2 row-start-1 flex flex-wrap justify-end gap-1.5 sm:gap-2">
-                                    <Button type="primary" aria-label="创建商品" title="创建商品" icon={<Plus className="size-4" />} onClick={openCreateProductModal}>
-                                        <span className="sm:hidden">新建</span>
-                                        <span className="hidden sm:inline">创建商品</span>
+                                    <Button type="primary" aria-label={t("products.create")} title={t("products.create")} icon={<Plus className="size-4" />} onClick={openCreateProductModal}>
+                                        <span className="sm:hidden">{t("products.createShort")}</span>
+                                        <span className="hidden sm:inline">{t("products.create")}</span>
                                     </Button>
-                                    <Button aria-label="刷新套餐商品" title="刷新套餐商品" icon={<RefreshCw className="size-4" />} loading={productsLoading} onClick={() => void loadProducts()}>
-                                        <span className="hidden sm:inline">刷新</span>
+                                    <Button aria-label={t("products.refreshAria")} title={t("products.refreshAria")} icon={<RefreshCw className="size-4" />} loading={productsLoading} onClick={() => void loadProducts()}>
+                                        <span className="hidden sm:inline">{t("refresh")}</span>
                                     </Button>
                                 </div>
                             </div>
@@ -560,7 +560,7 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
                                 {productsLoading && !products.length ? (
                                     <div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-stone-200 px-3 py-6 text-sm text-stone-500 sm:py-10 md:col-span-2 dark:border-stone-800 dark:text-stone-400">
                                         <RefreshCw className="size-4 animate-spin" />
-                                        <span>正在加载套餐商品</span>
+                                        <span>{t("products.loading")}</span>
                                     </div>
                                 ) : products.length ? (
                                     products.map((product) => (
@@ -571,48 +571,48 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="min-w-0">
                                                     <div className="truncate text-sm font-semibold text-stone-950 dark:text-stone-100">{product.name}</div>
-                                                    <div className="mt-1 line-clamp-2 text-xs leading-5 text-stone-500 dark:text-stone-400">{product.description || (product.productKind === "points" ? "积分充值商品" : product.planId || "未关联套餐")}</div>
+                                                    <div className="mt-1 line-clamp-2 text-xs leading-5 text-stone-500 dark:text-stone-400">{product.description || (product.productKind === "points" ? t("products.pointsProduct") : product.planId || t("products.noPlan"))}</div>
                                                     {product.pricing.discountCents > 0 ? (
                                                         <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5 text-xs">
                                                             <Tag className="m-0" color="red">
-                                                                {product.pricing.promotion?.label || "活动进行中"}
+                                                                {product.pricing.promotion?.label || t("products.promoActive")}
                                                             </Tag>
-                                                            <span className="font-semibold text-rose-600 dark:text-rose-300">活动价 {formatMoney(product.pricing.saleUnitAmountCents, product.currency)}</span>
-                                                            <span className="text-stone-400 line-through dark:text-stone-500">日常价 {formatMoney(product.amountCents, product.currency)}</span>
+                                                            <span className="font-semibold text-rose-600 dark:text-rose-300">{t("products.salePrice", { price: formatMoney(product.pricing.saleUnitAmountCents, product.currency) })}</span>
+                                                            <span className="text-stone-400 line-through dark:text-stone-500">{t("products.listPrice", { price: formatMoney(product.amountCents, product.currency) })}</span>
                                                         </div>
                                                     ) : null}
                                                 </div>
                                                 <div className="flex shrink-0 items-center gap-1.5">
-                                                    <Tag color={product.productKind === "points" ? "gold" : "blue"}>{product.productKind === "points" ? "积分" : "套餐"}</Tag>
-                                                    <Tag color={product.enabled ? "green" : "default"}>{product.enabled ? "上架" : "下架"}</Tag>
+                                                    <Tag color={product.productKind === "points" ? "gold" : "blue"}>{product.productKind === "points" ? t("products.kindPoints") : t("products.kindPlan")}</Tag>
+                                                    <Tag color={product.enabled ? "green" : "default"}>{product.enabled ? t("products.listed") : t("products.delisted")}</Tag>
                                                 </div>
                                             </div>
                                             <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-stone-500 sm:mt-4 sm:grid-cols-4 dark:text-stone-400">
-                                                <ProductFact label="日常价" value={formatMoney(product.amountCents, product.currency)} />
-                                                <ProductFact label={product.productKind === "points" ? "充值积分" : "永久积分"} value={`${product.pointsAmount}`} />
-                                                <ProductFact label="每日赠送" value={product.productKind === "plan" ? `${product.dailyPoints}` : "-"} />
-                                                <ProductFact label="周期" value={product.productKind === "plan" ? (product.periodDays ? `${product.periodDays} 天` : "长期") : "一次性"} />
+                                                <ProductFact label={t("products.listPriceLabel")} value={formatMoney(product.amountCents, product.currency)} />
+                                                <ProductFact label={product.productKind === "points" ? t("products.rechargePoints") : t("products.permanentPoints")} value={`${product.pointsAmount}`} />
+                                                <ProductFact label={t("products.dailyGift")} value={product.productKind === "plan" ? `${product.dailyPoints}` : "-"} />
+                                                <ProductFact label={t("products.period")} value={product.productKind === "plan" ? (product.periodDays ? t("periodDaysValue", { count: product.periodDays }) : t("orderLongTerm")) : t("products.oneTime")} />
                                             </div>
                                             <div className="mt-3 flex justify-end gap-2 border-t border-stone-200 pt-2.5 sm:mt-4 sm:pt-3 dark:border-stone-800">
                                                 <Button size="small" icon={<Pencil className="size-3.5" />} onClick={() => editProduct(product)}>
-                                                    编辑
+                                                    {t("products.edit")}
                                                 </Button>
                                                 <Button danger size="small" icon={<Trash2 className="size-3.5" />} loading={deletingProductId === product.id} onClick={() => confirmDeleteProduct(product)}>
-                                                    删除
+                                                    {t("products.delete")}
                                                 </Button>
                                             </div>
                                         </article>
                                     ))
                                 ) : (
                                     <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-stone-200 px-3 py-6 text-center text-sm text-stone-500 sm:gap-3 sm:py-10 md:col-span-2 dark:border-stone-800 dark:text-stone-400">
-                                        <span>暂无套餐商品</span>
+                                        <span>{t("products.empty")}</span>
                                     </div>
                                 )}
                             </div>
                         </div>
                     </section>
                     <Modal
-                        title={editingProductId ? "编辑商品" : "创建商品"}
+                        title={editingProductId ? t("products.editTitle") : t("products.createTitle")}
                         open={productModalOpen}
                         width={760}
                         centered
@@ -621,66 +621,66 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
                         styles={{ body: { maxHeight: "min(68dvh, 640px)", overflowY: "auto", paddingTop: 8 } }}
                         footer={[
                             <Button key="cancel" onClick={closeProductModal} disabled={productSaving}>
-                                取消
+                                {t("cancel")}
                             </Button>,
                             <Button key="save" type="primary" icon={<Save className="size-4" />} loading={productSaving} onClick={() => productForm.submit()}>
-                                保存商品
+                                {t("products.save")}
                             </Button>,
                         ]}
                     >
                         <Form form={productForm} layout="vertical" initialValues={defaultProductFormValue(products.length + 1)} onFinish={(value) => void saveProduct(value)}>
                             <div className="mb-4 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm leading-6 text-stone-500 dark:border-stone-800 dark:bg-stone-900/50 dark:text-stone-400">
-                                保存后会立即影响充值中心展示。积分充值只增加永久积分；套餐可同时配置有效期内的每日赠送积分。
+                                {t("products.modalHint")}
                             </div>
                             <Form.Item name="id" hidden>
                                 <Input />
                             </Form.Item>
-                            <Form.Item name="name" label="商品名称" rules={[{ required: true, message: "请填写商品名称" }]}>
-                                <Input maxLength={80} placeholder="例如：创作者版月卡" />
+                            <Form.Item name="name" label={t("products.name")} rules={[{ required: true, message: t("products.nameRequired") }]}>
+                                <Input maxLength={80} placeholder={t("products.namePlaceholder")} />
                             </Form.Item>
-                            <Form.Item name="description" label="商品描述">
-                                <Input.TextArea rows={3} maxLength={500} placeholder="展示给用户看的套餐说明" />
+                            <Form.Item name="description" label={t("products.descriptionLabel")}>
+                                <Input.TextArea rows={3} maxLength={500} placeholder={t("products.descriptionPlaceholder")} />
                             </Form.Item>
-                            <Form.Item name="productKind" label="商品类型" rules={[{ required: true, message: "请选择商品类型" }]}>
+                            <Form.Item name="productKind" label={t("products.productKind")} rules={[{ required: true, message: t("products.productKindRequired") }]}>
                                 <Segmented
                                     block
                                     options={[
-                                        { label: "套餐权益", value: "plan" },
-                                        { label: "积分充值", value: "points" },
+                                        { label: t("products.kindPlanBenefit"), value: "plan" },
+                                        { label: t("products.kindPointsTopup"), value: "points" },
                                     ]}
                                 />
                             </Form.Item>
                             <div className="grid gap-3 sm:grid-cols-2">
                                 {productKind === "plan" ? (
-                                    <Form.Item name="planId" label="关联套餐" rules={[{ required: true, message: "请填写套餐 ID" }]}>
+                                    <Form.Item name="planId" label={t("products.planId")} rules={[{ required: true, message: t("products.planIdRequired") }]}>
                                         <Input maxLength={80} placeholder="creator / pro" />
                                     </Form.Item>
                                 ) : null}
-                                <Form.Item name="currency" label="币种" rules={[{ required: true, message: "请填写币种" }]}>
+                                <Form.Item name="currency" label={t("products.currency")} rules={[{ required: true, message: t("products.currencyRequired") }]}>
                                     <Input maxLength={8} placeholder="CNY" />
                                 </Form.Item>
-                                <Form.Item name="amountYuan" label="价格" rules={[{ required: true, message: "请填写价格" }]}>
+                                <Form.Item name="amountYuan" label={t("products.amount")} rules={[{ required: true, message: t("products.amountRequired") }]}>
                                     <InputNumber min={0} precision={2} className="w-full" prefix="¥" />
                                 </Form.Item>
-                                <Form.Item name="pointsAmount" label="一次性永久积分" rules={[{ required: true, message: "请填写永久积分" }]} extra="支付成功后一次性加入永久余额，不会按日过期。">
+                                <Form.Item name="pointsAmount" label={t("products.pointsAmount")} rules={[{ required: true, message: t("products.pointsAmountRequired") }]} extra={t("products.pointsAmountExtra")}>
                                     <InputNumber min={0} precision={0} className="w-full" />
                                 </Form.Item>
                                 {productKind === "plan" ? (
                                     <>
-                                        <Form.Item name="dailyPoints" label="每日赠送积分" rules={[{ required: true, message: "请填写每日赠送积分" }]} extra="套餐有效期内每天自动补充，仅当日有效，不会跨日累积。">
+                                        <Form.Item name="dailyPoints" label={t("products.dailyPoints")} rules={[{ required: true, message: t("products.dailyPointsRequired") }]} extra={t("products.dailyPointsExtra")}>
                                             <InputNumber min={0} precision={0} className="w-full" />
                                         </Form.Item>
-                                        <Form.Item name="periodDays" label="生效天数" rules={[{ required: true, message: "请填写天数" }]}>
+                                        <Form.Item name="periodDays" label={t("products.periodDays")} rules={[{ required: true, message: t("products.periodDaysRequired") }]}>
                                             <InputNumber min={1} precision={0} className="w-full" />
                                         </Form.Item>
                                     </>
                                 ) : null}
-                                <Form.Item name="sortOrder" label="排序">
+                                <Form.Item name="sortOrder" label={t("products.sortOrder")}>
                                     <InputNumber min={0} precision={0} className="w-full" />
                                 </Form.Item>
                             </div>
-                            <Form.Item name="enabled" label="上架状态" valuePropName="checked">
-                                <Switch checkedChildren="上架" unCheckedChildren="下架" />
+                            <Form.Item name="enabled" label={t("products.enabled")} valuePropName="checked">
+                                <Switch checkedChildren={t("products.listed")} unCheckedChildren={t("products.delisted")} />
                             </Form.Item>
                         </Form>
                     </Modal>

@@ -1,24 +1,29 @@
+import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { App } from "antd";
+import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
 
+import layoutMessages from "../../../messages/zh/layout.json";
 import { agentMediaDownloadName } from "./agent-media-download";
 import { formatAgentMessageText } from "./agent-message-format";
 import { agentMediaPreviewPopupStyles, AgentMediaPreview } from "./agent-media-preview";
 import { AgentMessageActions } from "./agent-message-actions";
 
+const messages = { layout: layoutMessages };
+
+function renderWithIntl(node: ReactNode) {
+    return renderToStaticMarkup(
+        <NextIntlClientProvider locale="zh" messages={messages}>
+            <App>{node}</App>
+        </NextIntlClientProvider>,
+    );
+}
+
 describe("agent message controls", () => {
     it("shows copy for every message and edit only for user messages", () => {
-        const userActions = renderToStaticMarkup(
-            <App>
-                <AgentMessageActions text="生成一张海报" onEdit={vi.fn()} />
-            </App>,
-        );
-        const assistantActions = renderToStaticMarkup(
-            <App>
-                <AgentMessageActions text="海报已经生成" downloads={[{ type: "image", url: "/generated/image.png", title: "生成图片" }]} />
-            </App>,
-        );
+        const userActions = renderWithIntl(<AgentMessageActions text="生成一张海报" onEdit={vi.fn()} />);
+        const assistantActions = renderWithIntl(<AgentMessageActions text="海报已经生成" downloads={[{ type: "image", url: "/generated/image.png", title: "生成图片" }]} />);
 
         expect(userActions).toContain('aria-label="复制消息"');
         expect(userActions).toContain('aria-label="编辑消息"');
@@ -29,16 +34,8 @@ describe("agent message controls", () => {
 
     it("renders clickable image and video preview entries", () => {
         const onDimensions = vi.fn();
-        const image = renderToStaticMarkup(
-            <App>
-                <AgentMediaPreview type="image" url="/generated/image.png" title="生成图片" fit="contain" onDimensions={onDimensions} />
-            </App>,
-        );
-        const video = renderToStaticMarkup(
-            <App>
-                <AgentMediaPreview type="video" url="/generated/video.mp4" title="生成视频" fit="contain" />
-            </App>,
-        );
+        const image = renderWithIntl(<AgentMediaPreview type="image" url="/generated/image.png" title="生成图片" fit="contain" onDimensions={onDimensions} />);
+        const video = renderWithIntl(<AgentMediaPreview type="video" url="/generated/video.mp4" title="生成视频" fit="contain" />);
 
         expect(image).toContain("查看大图");
         expect(image).toContain('src="/generated/image.png"');

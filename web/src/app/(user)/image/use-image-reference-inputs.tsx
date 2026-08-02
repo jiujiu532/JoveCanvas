@@ -2,6 +2,7 @@
 
 import { nanoid } from "nanoid";
 import { useEffect, useRef, type Dispatch, type DragEvent as ReactDragEvent, type SetStateAction } from "react";
+import { useTranslations } from "next-intl";
 
 import { droppedFiles, leftDropTarget, preventFileDragEvent } from "@/lib/file-drop";
 import { uploadImage } from "@/services/image-storage";
@@ -13,6 +14,7 @@ export function useImageReferenceInputs(input: { references: ReferenceImage[]; s
     const previewUrlsRef = useRef(new Set<string>());
     const retrySourcesRef = useRef(new Map<string, { source: Blob; name: string }>());
 
+    const t = useTranslations("workspace.image");
     useEffect(() => {
         const activeUrls = new Set(input.references.map((item) => item.previewUrl).filter((url): url is string => Boolean(url)));
         for (const url of previewUrlsRef.current) {
@@ -53,7 +55,7 @@ export function useImageReferenceInputs(input: { references: ReferenceImage[]; s
             input.setReferences((value) => value.map((item) => (item.id === reference.id ? ready : item)));
             return ready;
         } catch (error) {
-            const uploadError = error instanceof Error ? error.message : "参考图上传失败";
+            const uploadError = error instanceof Error ? error.message : t("referenceUploadFailed");
             input.setReferences((value) => value.map((item) => (item.id === reference.id ? { ...item, uploadStatus: "failed", uploadError } : item)));
             input.notice.error(uploadError);
             return null;
@@ -87,7 +89,7 @@ export function useImageReferenceInputs(input: { references: ReferenceImage[]; s
         const pending = retrySourcesRef.current.get(id);
         const reference = input.references.find((item) => item.id === id);
         if (!pending || !reference) {
-            input.notice.error("原始参考图已不可用，请重新选择文件");
+            input.notice.error(t("originalReferenceUnavailable"));
             return null;
         }
         return uploadReference(pending.source, { ...reference, name: pending.name });
@@ -116,11 +118,11 @@ export function useImageReferenceInputs(input: { references: ReferenceImage[]; s
         try {
             const items = await navigator.clipboard.read();
             const blobs = await Promise.all(items.flatMap((item) => item.types.filter((type) => type.startsWith("image/")).map((type) => item.getType(type))));
-            if (!blobs.length) return input.notice.error("剪切板里没有可读取的图片");
+            if (!blobs.length) return input.notice.error(t("noClipboardImage"));
             const next = await uploadReferences(blobs.map((blob, index) => ({ source: blob, name: `clipboard-${index + 1}.png` })));
-            input.notice.success(`已读取 ${next.length} 张参考图`);
+            input.notice.success(t("clipboardImagesReadCount", { count: next.length }));
         } catch {
-            input.notice.error("剪切板里没有可读取的图片");
+            input.notice.error(t("noClipboardImage"));
         }
     };
     return { addReferences, retryReferenceUpload, addReferencesFromClipboard, handleReferenceDragOver, handleReferenceDragLeave, handleReferenceDrop };

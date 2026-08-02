@@ -187,6 +187,7 @@ export function mapAnnouncement(row: Record<string, unknown>): AnnouncementRecor
 }
 
 export function mapPrompt(row: Record<string, unknown>): PromptRecord {
+    const locale = optionalString(row.locale);
     return {
         id: stringValue(row.id),
         scope: row.scope === "user" ? "user" : "library",
@@ -199,6 +200,7 @@ export function mapPrompt(row: Record<string, unknown>): PromptRecord {
         preview: stringValue(row.preview),
         githubUrl: optionalString(row.github_url),
         source: optionalString(row.source),
+        locale: locale === "zh" || locale === "en" || locale === "mixed" ? locale : undefined,
         createdAt: isoValue(row.created_at),
         updatedAt: isoValue(row.updated_at),
     };

@@ -1,0 +1,169 @@
+---
+title: Features overview
+description: JoveCanvas creative flows, workbenches, canvas, model routing, and commerce
+---
+
+# JoveCanvas features overview
+
+JoveCanvas puts creative planning, image and video generation, canvas, short-drama production, asset management, and commercial operations in one application. Users mainly express goals, audience, and constraints; the Agent forms a professional plan and selects real, available model capabilities.
+
+## Five-stage creative loop
+
+### 1. Creative brief
+
+The Agent organizes goals, audience, use case, core message, content constraints, and reference strategy. When information is sufficient it fills gaps reasonably—users need not complete a large parameter form first.
+
+### 2. Inspiration & visual direction
+
+Internally the system forms recommended directions: style, composition or camera, color, lighting, visual keywords, and avoid-list. Planning data constrains later tasks and is **not** shown as long chat messages.
+
+### 3. Full deliverable plan
+
+Canvas Agent can plan dependencies among text, image, video, and audio while keeping context for companion assets. Chat shows only user input, necessary natural confirmations, concise completion hints, and real generation results.
+
+### 4. Consistent generation
+
+Real tasks inherit the same internal brief, visual direction, reference strategy, and upstream dependency summary. With smart planning on, the Agent chooses models and parameters; when the user picks a model and gives an explicit prompt, that choice is kept but still validated against Skills, capabilities, references, and billing. Model rationale and platform prompts are never shown or persisted into generation chat.
+
+### 5. Automatic visual review
+
+When a vision-capable text model is available, image results can run structured visual checks internally. Review detail is not written into generation chat, and a missing review model never blocks an already successful generation.
+
+## Creative workbenches
+
+### Image workbench
+
+- Text-to-image, image-to-image, and reference editing.
+- Multi-result generation, history restore, title rename, selective delete, failure retry.
+- Smart planning auto-selects logical model, aspect ratio, quality, and count; off requires a user model choice.
+- Manual model + precise prompt can run directly, still through Skill and capability checks.
+
+### Video workbench
+
+- Text-to-video, image-to-video, multi-type references.
+- Real controls for aspect ratio, resolution, duration, audio, watermark.
+- Async poll, refresh recovery, history, result delete.
+- With reference images, emphasize first frame, subject, wardrobe, product, and composition consistency.
+
+### Canvas
+
+- Nodes for text, image, video, audio, creative brief, brand rules, and generation tasks.
+- Drag, zoom, connect, minimap, box-select, multi-select, undo/redo, import/export.
+- Canvas Agent reads the current board, plans multi-asset dependencies, and writes nodes/edges back.
+- Tasks support dependency execution, pause, resume, cancel, failure retry, and refresh recovery.
+
+### Short-drama pipeline
+
+- Script analysis, characters & scenes, storyboard, shot video, voice, subtitles.
+- FFmpeg full-episode assembly, Chinese subtitle burn-in, cancel, preview, download.
+- Real video/audio channels and production images still need per-environment acceptance.
+
+## Models & task execution
+
+- Admins configure OpenAI-compatible channels, real models, and capability tags.
+- Text/image/video/audio use stable logical model names; admin decides actual channels and priority.
+- Channels support catalog pull, capability probes, timeouts, error redaction, and saved credentials.
+- Generation tasks unify status, points, duration, entry, model, and result URLs.
+- Plan / generate / review are billed server-side; refresh or SSE replay does not recreate tasks or double-charge; without explicit upstream failure the create API is not re-called automatically.
+
+## Data & assets
+
+- PostgreSQL stores users, creative sessions, workbench history, Canvas, assets, short drama, config, tasks, points, orders, and audit data.
+- Image/video/audio are registered to server `VOZEB_PRO_DATA_DIR` or S3-compatible storage; business tables never store base64 or temporary signed URLs.
+- Temporary references expire after 24h by default; long-lived uploads, results, and short-drama finals are deleted only by admins.
+- Admin “local media”: classify, preview, expiry checks, single/batch delete, temp cleanup.
+- Admin “external storage”: S3-compatible config, connection test, object management, batch migration of local media.
+
+## Commerce & operations
+
+- Users, roles, status, points, and plan entitlements.
+- Daily free points, CDK, products, orders, payment channels, refunds, ledgers, reconciliation.
+- Announcements, prompts, model channels, Agent Skills, local/external media, business backup, mail config.
+- Model, payment, and SMTP secrets stay server-side.
+
+## Public pages & first install
+
+| Entry | Capabilities |
+| --- | --- |
+| Home `/` | Product showcase, workbench entries, public nav, login/register, brand & ops content |
+| Login `/login` | Username or email login, session, account status, install-state redirects |
+| Register `/register` | Registration per admin switches; optional SMTP email OTP and policy |
+| Forgot password | Email OTP, failure limits, expiry, password reset |
+| Announcements `/announcements` | Active, pinned, published notices; shared notification center after login |
+| Privacy & terms | Accounts, creative content, media, third-party models, billing, refunds, OSS license, deployer duties |
+| Install `/install` | DB connection check, local/Baota/Compose hints, init PostgreSQL tables, first admin, next-step guide |
+
+## User workspace checklist
+
+| Page | Features |
+| --- | --- |
+| Agent `/create` | Unified text+image input; paste images, upload refs, Skills, smart planning, manual logical models, history, rename, bulk delete, copy/edit messages, failure retry |
+| Image `/image` | T2I, I2I, reference edit, model categories, aspect/quality/count, smart planning toggle, history, rename, delete, WebP preview, original download, continue generate |
+| Video `/video` | T2V, I2V, reference video/audio, duration/ratio/resolution/audio/watermark, poll, refresh recovery, retry, play preview, original download |
+| Canvas list `/canvas` | Create, open, rename, delete projects; list is current-user only |
+| Canvas editor | Text, image, panorama, video, audio, gen config, brief, Agent task, brand rule nodes; drag, box-select, multi-select, edges, zoom, minimap, undo/redo |
+| Canvas Agent | Reads board & selection; creates task/output nodes per Skills & capabilities; keeps dependency edges; pause/resume/cancel/retry/refresh recovery |
+| Canvas files | Upload/paste image/video/audio, paste text, import/export, preview, download, continue from existing results |
+| Drama list `/drama` | Create, open, rename, delete; show episode/shot/production status |
+| Drama script | Enter/import long text, auto split episodes, structured analysis, script/episode edit, content-confirm gate |
+| Drama visual assets | Characters, scenes, props, refs, baselines; view/replace/delete images |
+| Drama storyboard & shots | Shot titles, visuals, dialogue, VO, subtitles, continuity; single-frame / first-last / storyboard-driven / direct / ref image video modes |
+| Drama audio & export | Source audio, AI VO or mute; subtitle timeline; shot transcode; FFmpeg final; Jianying draft; version snapshot, restore, cancel, download |
+| Prompts `/prompts` | Public library pagination, keywords, categories, tags, detail, copy, use |
+| My prompts `/my-prompts` | Private create/edit/categorize/tag/search/delete |
+| Assets `/assets` | Text/image/video/audio create, upload, URL, tags, source, search, preview, edit, delete, download, insert into creative |
+| Help `/help` | Quick start, Agent, image, video, Canvas, drama, assets, prompts, billing, troubleshooting |
+| Billing `/billing` | On-sale plans & point packs, entitlements, prices, qty, payment method, order summary |
+| Secure checkout | Dedicated checkout + success/cancel result pages; channel pay or manual confirm |
+| Profile `/profile` | Account overview, nickname/email, plans, orders, spend, points ledger, password change, personal export, deletion request |
+
+Shared generation rules: internal planning prompts and model rationale are never shown or persisted; manual model + precise prompt still runs only after Skill, capability, billing, and safety checks; insufficient points only say “insufficient points”; a task never auto-recreates an upstream request.
+
+## Admin console checklist
+
+| Section | Page | Capabilities |
+| --- | --- | --- |
+| Analytics | Ops dashboard | Users, revenue, points liability, orders, generation, channels, health summary |
+| Analytics | User ops | Server-paginated user search; roles, status, plan, permanent/daily points |
+| Analytics | Call logs | Admin actions, model calls, entry sources, failures, security audit |
+| Analytics | Generation ops | Unified tasks by user/type/status/entry/project/channel; cancel, retry, cost stats |
+| Products | Plans | Create/maintain plans & point products, price, daily/permanent points, validity, pay type, sort, publish |
+| Products | Orders | Search/filter; manual confirm, close, mark refund; entitlement open results |
+| Finance | Points rules | Free daily quota; base charges and generation param multipliers for text/image/video/audio |
+| Finance | Payment channels | Stripe, Alipay, WeChat Pay, PayPly, manual; keys/certs, webhooks, enable |
+| Finance | CDK | Batch point/plan codes; search, status filter, disable, redemption tracking |
+| Finance | Ledger | Point buckets, charge, refund, top-up, admin adjust, revenue summary, bill import recon |
+| Upstream | Model channels | Base URL, API key, protocol, presets, catalog pull, T/I/V/A probes, real↔logical bindings |
+| Upstream | Agent Skills | Categories, names, triggers, sources, capability requirements, rules, sort, enable |
+| System | Site profile | Name, logo, favicon, SEO title/desc/keywords, social links, home content |
+| System | Basics | Registration, SMTP, generation defaults, smart-planning default, concurrency, account security |
+| System | Deletion requests | Query applications; identity check; accept/reject with notes and audit |
+| System | Version updates | Current version, remote changelog, Release, GitHub, pre-upgrade checks |
+| Storage | Local media | Filter by type/entry; preview, download, expiry, ref-protected delete, temp cleanup |
+| Storage | External storage | S3-compatible endpoint/region/bucket/prefix/creds, path-style, enable, probe, objects, batch migrate |
+| Storage | Data backup | Export/import redacted business data; full PG/media/OSS backups remain separate |
+| Content | Announcements | Create/edit/pin/schedule/expiry; home/login popups; publish |
+| Content | Prompt ops | Public prompts server pagination, categories, tags, search, CRUD, visibility |
+| Init hub | Launch checklist | Site/model/plan/payment/mail/storage/backup/security status summary and deep links |
+
+## Platform, data & security
+
+- **Database**: default PostgreSQL 16; accounts, sessions, config, creative sessions, messages, stable assets, Canvas, materials, drama, tasks, points, orders, payments, audit—all server-side. File provider is a legacy single-host fallback only.
+- **Server pagination**: long chats load latest first with older pages; users/orders/points/prompts/CDK/generation/admin lists use server pagination or targeted queries.
+- **Model routing**: real channels vs logical models; capability tags, defaults, priority, candidates, health probes, redacted errors, GlobalAiOpc isolation adapters.
+- **Tasks & billing**: create idempotency, per-user/type concurrency, points pre-auth, terminal settle, failure refund, refresh recovery, user retry only after explicit failure; query timeouts do not recreate upstream tasks.
+- **Media**: uploads/generation named by date-time + UUID; register original name, user, source, type, session/run/task/project links; pages use WebP preview; download returns originals.
+- **Storage switch**: external off → new files local only; on → new files S3-compatible only, no new local durable copy; history reads by its own provider.
+- **Media security**: ownership checks on user read; upstream refs use short-lived signed URLs; delete checks creative sessions, assets, Canvas, drama, generation refs.
+- **Account security**: password hash, session cookie, email OTP failure limits, admin authz, API body size limits, trusted proxy hops, redacted errors, audit logs.
+- **Personal rights**: users may export their business data and submit/withdraw deletion requests; formal delete and legal retention follow ops policy and human review.
+- **Backup boundary**: admin business import/export excludes secrets and media binaries; production restore must cover PostgreSQL **and** local media or object storage.
+- **Deploy**: source dev, standard Compose, source-build Compose, Baota PostgreSQL, external PostgreSQL, low-memory, Render; app and docs GHCR workflows for amd64/arm64.
+
+Screenshots and per-page notes: [Page gallery](/en/docs/overview/page-gallery). Directory & request path: [Project structure](/en/docs/overview/project-structure). Remaining validation: [Pending tests](/en/docs/progress/pending-test).
+
+## Current limits
+
+- Video visual review only marks “unavailable” when a trusted cover/keyframe is missing—it never fakes a real visual check.
+- Docker static paths, server media volumes, real payment refunds, and full Linux deploys still need the pending-test checklist.
+- No scraping or copying unauthorized third-party galleries, fonts, icons, or brand assets.

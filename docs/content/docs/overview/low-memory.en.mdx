@@ -1,0 +1,55 @@
+---
+title: Low-memory server deployment
+description: Run JoveCanvas with a release image and external PostgreSQL
+---
+
+# Low-memory server deployment
+
+On low-memory machines, do **not** run `next build` or `docker build` on the host. `docker-compose.lowmem.yml` runs only the JoveCanvas app; PostgreSQL must be an external managed service or another server.
+
+## Minimum resource bounds
+
+Recommended for the whole host:
+
+- 1 vCPU.
+- 1GB physical RAM plus at least 1GB swap.
+- 10GB free SSD.
+- 64-bit Linux, Docker Engine, and Compose v2.
+- External PostgreSQL 16 and external S3/OSS so the DB and long-lived media do not sit on this low-memory box.
+- HTTPS domain and outbound access to models, the database, object storage, and SMTP.
+
+The app container is capped at 512MB, but the host still needs headroom for Linux, Docker, Nginx/Baota, and file caches—do not buy a host with only 512MB RAM. This mode fits install trials, personal low-frequency use, and light concurrency—not local Docker builds, long video transcodes, or full short-drama assembly.
+
+## Configuration
+
+```bash
+cp .env.example .env
+```
+
+At minimum set:
+
+```dotenv
+NEXT_PUBLIC_SITE_URL=https://vozeb-pro.example.com
+DATABASE_URL=postgres://user:password@database-host:5432/vozeb_pro
+VOZEB_PRO_DATABASE_SSL=1
+VOZEB_PRO_DATABASE_POOL_MAX=5
+VOZEB_PRO_ENCRYPTION_KEY=replace-with-a-long-random-secret
+```
+
+## Start
+
+```bash
+docker compose -f docker-compose.lowmem.yml pull
+docker compose -f docker-compose.lowmem.yml up -d
+```
+
+This profile limits the app container to:
+
+- 512MB memory.
+- 768MB memory + swap total.
+- Node.js heap 384MB.
+- Thread pool size 2.
+
+Keep 512MB–1GB swap. PostgreSQL and model services can be external, but the app host still mounts `VOZEB_PRO_DATA_DIR` for images, video, and audio.
+
+With S3/OSS enabled, new media is not kept as a local durable copy, but FFmpeg, downloads, and format normalization may still use temporary disk. For stable image/video workbenches, plan on 2 vCPU / 2GB; for short-drama assembly, at least 4 vCPU / 8GB.

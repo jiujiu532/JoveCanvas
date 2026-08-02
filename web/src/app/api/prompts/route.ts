@@ -1,5 +1,7 @@
 import type { NextRequest } from "next/server";
 
+import { LOCALE_COOKIE_NAME } from "@/i18n/locale";
+import { resolvePreferLocale } from "@/lib/prompts/locale-rank";
 import { listPrompts } from "@/lib/prompts/store";
 
 export const runtime = "nodejs";
@@ -7,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
     const params = request.nextUrl.searchParams;
+    const preferLocale = resolvePreferLocale(params.get("preferLocale"), request.cookies.get(LOCALE_COOKIE_NAME)?.value);
     const result = await listPrompts({
         scope: "library",
         keyword: params.get("keyword") || "",
@@ -15,6 +18,7 @@ export async function GET(request: NextRequest) {
         random: params.get("random") === "1",
         page: Math.max(1, Number(params.get("page")) || 1),
         pageSize: Math.max(1, Math.min(100, Number(params.get("pageSize")) || 20)),
+        preferLocale,
     });
     return Response.json(result, {
         headers: {

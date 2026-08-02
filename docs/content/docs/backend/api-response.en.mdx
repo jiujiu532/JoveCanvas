@@ -1,0 +1,164 @@
+---
+title: API responses & sensitive config
+description: Current API response facts and admin sensitive-configuration contracts
+---
+
+# API responses & sensitive configuration
+
+## Current response rules
+
+Existing Next.js Route Handlers return JSON per business need. Errors usually use `{ error: string }` with a matching HTTP status. The project is **not** fully unified on `{ code, data, msg }` yet—when adding or changing APIs, keep the caller’s existing contract and validate identity, permission, and external input at the boundary.
+
+Promotion and coupon APIs use `{ code, data, msg }`: success is `code = 0` with data in `data`; failures set `data = null` and keep HTTP status aligned with `code`:
+
+- `GET /api/billing/coupons`, `POST /api/billing/coupons/claim`
+- `POST /api/billing/quotes`
+- `/api/admin/billing/promotions` and `/api/admin/billing/promotions/{id}`
+- `/api/admin/billing/coupon-templates` and `/api/admin/billing/coupon-templates/{id}`
+- `POST /api/admin/billing/coupons/grant`
+
+Referral reward APIs also use `{ code, data, msg }`:
+
+- `GET /api/referrals`: current user’s stable invite code, invite link, conversion stats, redacted invite progress, and reward records.
+- `GET/PATCH /api/admin/referrals`: read or update invite program rules; omitted `PATCH` fields keep previous values.
+- `GET /api/admin/referrals/relationships`, `PATCH /api/admin/referrals/relationships/{id}`: paginate relationships and restore/freeze/reject.
+- `GET /api/admin/referrals/rewards`, `POST /api/admin/referrals/settle`: paginate rewards and manually settle due items.
+- `POST /api/maintenance/referrals/settle`: batch due settlement with the maintenance token.
+
+`GET /invite/{code}` is an attribution redirect, not JSON: a valid visit writes a 30-day HttpOnly, SameSite=Lax cookie then redirects to registration. `next` only accepts same-site absolute paths. Referral features require PostgreSQL; the file provider does not create relationships or reward ledgers.
+
+`POST /api/billing/orders` keeps its existing compatible response and accepts optional `userCouponId`. Order responses include everyday total, campaign discount, coupon discount, amount due, and a read-only price snapshot. Provider checkout, refund, and reconciliation must **not** recompute price—they only read the order’s `amountCents`.
+
+The server must never return exception stacks, upstream auth headers, full secrets, or upstream errors that embed secrets. External channel failures should keep a diagnosable HTTP status and a redacted message.
+
+## Works publish and share
+
+Works publish, review, and public-detail JSON APIs use `{ code, data, msg }`: success `code = 0`, failures `data = null`, HTTP status aligned with error `code`.
+
+- `GET/POST /api/works`: paginate the owner’s works or create a draft.
+- `GET /api/works/sources`: list the user’s asset/Canvas/drama sources; with `sourceType + sourceId`, return media candidates and `suggestedPrompt` built only from user-visible project fields. Saving drafts and submitting for review both require non-empty `publicPrompt`.
+- `GET/PATCH /api/works/{id}`, `POST /api/works/{id}/submit`, `POST /api/works/{id}/revoke`: read/save own draft, submit review, revoke share.
+- `GET /api/admin/works`, `POST /api/admin/works/{id}/review`, `POST /api/admin/works/{id}/take-down`: admin paginated review, reject, take-down.
+- `POST /api/admin/works/{id}/feature`: admin feature/unfeature a currently public work.
+- `GET /api/public/works/{slug}`, `POST /api/public/works/{slug}/view`: read the current public version and rate-limit view counts.
+- `GET /api/public/gallery`: public gallery by featured/latest/hot, category, tags, keywords; stable opaque-cursor pagination.
+- `POST /api/public/works/{slug}/report`: logged-in users report the version that was public at submit time; owners cannot report themselves; open reports for the same version are deduped.
+- `GET/POST /api/works/{id}/appeal`: owners read governance records or appeal their taken-down version.
+- `GET /api/admin/work-cases`, `POST /api/admin/work-cases/{id}/resolve`: admins filter and resolve reports/appeals; confirming a report only affects the same online version; approving an appeal only restores a taken-down work with no other online version.
+
+All private APIs check login, ownership, source ownership, and media provenance. Admin review, feature, and governance writes also write security audit logs. The gallery only returns `public` works; link-only works remain reachable via share URL but never enter the gallery or sitemap. Non-public, pending, rejected, taken-down, or revoked works return 404 without revealing existence.
+
+`GET/HEAD /api/public/works/{slug}/media/{assetId}` is a media response, not a JSON success envelope: local files stream with single-range support; object-storage GET returns a 307 short-lived signed URL; HEAD returns registered type/length/Range metadata. Requests re-check that the asset belongs to the current public version, never expose object keys, and never offer anonymous original download. Errors still use `{ code, data, msg }`.
+
+## Media access protection
+
+- `GET/HEAD /api/reference-assets/{path}` requires the current user owns the media, is an admin, or presents a short-lived HMAC bound to the resource, `provider-read` purpose, and expiry. Upstream signatures must not append `download=original` to become anonymous original downloads.
+- `GET/HEAD /api/generation-log-assets/{path}` requires the current user can reach the asset from their own generation history; cross-user and missing resources both hide as 404.
+- Local media accepts only single-segment `bytes` Range; multi-range or illegal Range returns 416. Open, suffix, or explicitly huge ranges return at most 32 MiB per response and use `Content-Range` so players can continue. Media proxies clamp ranges to the same cap; if upstream ignores Range, response-byte caps still apply.
+- Local originals return weak ETag, Last-Modified, and conditional 304; image WebP variants keep limited widths and ETags. HEAD does not open local file streams; object-storage HEAD must not misuse GET-only temporary URLs.
+- Private reads are rate-limited per user or signature; public works use layered limits on resource volume and trusted client IP. Local files, public media, and media proxies also use process-wide and per-identity concurrency permits released on completion, error, cancel, or lease expiry. 429 responses include `Retry-After`.
+- Client IP is only taken from proxy headers when `VOZEB_PRO_TRUSTED_PROXY_HOPS` is greater than `0`. Direct deployments must not trust client-supplied forwarding headers.
+
+## Community interactions and rankings
+
+Community APIs use `{ code, data, msg }`. Anonymous users may read public interaction summaries, rankings, and creator profiles. Like, follow, personal interaction history, and notifications require a valid login. The product does **not** provide work favorites, comments, or comment reports.
+
+- `GET /api/public/works/{slug}/community`: interaction counts, current-user relation, whether the author can be followed.
+- `POST /api/public/works/{slug}/community/like`, `POST /api/public/works/{slug}/community/follow`: like/unlike or follow/unfollow the profile-identity author with `{ active: boolean }`; returns server-authoritative state. Repeating the same setting does not re-increment relations, counts, or notifications.
+- `GET /api/public/users/{username}`: public nickname, avatar, bio, work/like/follow stats, and keyset pagination of `active + approved + public + profile` works. Never returns email, internal user id, hidden/custom author identity, or personal like history.
+- `POST /api/public/users/{username}/follow`: follow/unfollow a public creator; self-follow forbidden; unfollow remains allowed after a public profile becomes unavailable.
+- `POST /api/public/users/{username}/block`: block/unblock with `{ active: boolean }`; blocking atomically removes mutual follows and returns `removedFollowCount`; either direction of block forbids new follows and hides each other from following/follower lists.
+- `GET /api/public/gallery/ranking?window=weekly|monthly`: 7-day or 30-day hot ranking with opaque cursor. Score uses valid likes `3`, featured `8`, and freshness up to `7`, counting only active non-author accounts registered for at least 24 hours at interaction time.
+- `GET /api/community/activity?view=summary|following|followers|likes`: current-user community summary or paginated following/followers/liked public works. These lists never appear on public creator pages.
+- `GET /api/notifications/interactions`, `POST /api/notifications/interactions/{id}/read`, `POST /api/notifications/interactions/read-all`: server-paginated interaction notifications, unread counts, and read updates.
+
+Author self-likes do not count toward ranking; self-follow is rejected. After take-down, revoke, public-version change, or author disable, public reads, personal like lists, and rankings immediately exclude the work. Interaction notifications use stable dedupe keys so cancel-then-rebuild of the same relation does not re-spam. Author-follow notifications land on the personal `/me` community home; notification lists are not merged into global session responses.
+
+## System channel secrets
+
+Admin settings responses express system-channel secret state as:
+
+```ts
+{
+  apiKey: "";
+  hasApiKey: boolean;
+}
+```
+
+- `apiKey` is always empty in server responses and page initial data—never used to echo a stored secret.
+- `hasApiKey` only means a credential exists server-side; it never contains the credential.
+- On channel update, empty `apiKey` means keep the stored secret; only an explicit clear deletes it.
+- Model pull and channel health checks should submit a channel id so the server reads stored credentials; temporary new keys are only for the current save or test request.
+- Filter Authorization, API keys, and any sensitive fields upstream may echo before returning to clients or writing logs.
+
+New sensitive settings should follow the same rule: browsers receive “configured or not” only; real values decrypt and run only on the server.
+
+## Unified creative runtime
+
+Creative conversation and asset APIs use `{ code, data, msg }`:
+
+- `GET/POST /api/creative/conversations`
+- `GET/PATCH /api/creative/conversations/{id}`
+- `GET /api/creative/conversations/{id}/messages`
+- `GET /api/creative/conversations/{id}/assets`
+- `POST /api/creative/assets`
+- `GET /api/creative/assets/{id}`
+
+All APIs first check login and ownership. Unauthorized access returns 404 or 403 without leaking other users’ conversations, messages, or assets. Surface and project cannot change after conversation creation.
+
+`POST /api/creative/assets` accepts `multipart/form-data` with `conversationId` and a single `file`. Only listed image/video/audio MIME types are accepted, max 20MB per file. After upload, a stable creative asset is returned; media content lands under the server date directory and is never stored as database base64.
+
+Canvas uses `GET/POST/DELETE /api/canvas/projects` and `PATCH /api/canvas/projects/{id}`. The asset library uses `GET/POST /api/library-assets` and `PATCH/DELETE /api/library-assets/{id}`. Both groups isolate by the current user and respond with `{ code, data, msg }`.
+
+`POST /api/agent/runs` accepts:
+
+```ts
+{
+  clientRequestId: string;
+  surface: "chat" | "canvas" | "drama";
+  conversationId?: string;
+  projectId?: string;
+  prompt: string;
+  snapshot?: unknown;
+  assetIds?: string[];
+}
+```
+
+`chat` rejects project/snapshot; `canvas`/`drama` require a project; project snapshots max 512KB. Duplicate submits for the same user and `clientRequestId` return the original Run. `GET /api/agent/runs/{id}/events` uses monotonic numeric event ids and supports `Last-Event-ID` or `lastEventId` resume. Multi-result runs emit `task.child.completed` or `task.child.failed` per child with parent/child ids, completed/failed/total counts, and the current asset—clients must not wait for parent terminal state before refreshing assets.
+
+For later runs, the server reads the conversation’s durable summary plus recent completed messages; planning input keeps at most the latest 6 messages and trims further when over budget. Frontends only need to keep submitting a stable `conversationId`. A deliverable may select multiple `assetIds`; assets registered after dependency deliverables complete automatically become real references for downstream image/video tasks. Explicit logical media-model selection skips text planning; otherwise ordinary, multi-result, and drama/complex Canvas runs use bounded plan input/output budgets.
+
+Text planning picks Chat, Responses, Gemini, or a custom protocol from model- or channel-level presets. The same candidate must not produce a second upstream request due to protocol guessing. All text candidates share a 1-minute allowance that text capability profiles do not override. After failure, timeout, 429, or 5xx, the caller automatically tries the next logical-model binding; the current process ranks candidates by recent success rate, latency, and short-term cool-down.
+
+When the user explicitly asks to “create a canvas project” or “create a short-drama project,” Chat planning may return `projectHandoff`. Before run completion, SSE sends one `project.handoff` with stable `id/sourceRunId/conversationId`, target `surface`, title, summary, style, ratio, stable `assetIds`, and full asset info. The same handoff is stored on `run.completed.data.projectHandoff` and assistant-message metadata. Clients must land Canvas local projects or server drama projects idempotently by handoff id; SSE replay must not create duplicates.
+
+## Short drama and generation operations
+
+- `GET/POST /api/drama/projects`: list or create the current user’s drama projects. `ratio` supports `9:16`, `16:9`, or boundary-checked exact `widthxheight`. Shot images/videos follow project size priority and may inherit reference-image aspect ratio when no exact project size exists.
+- `GET/PATCH/DELETE /api/drama/projects/{id}`: read, update, or delete an owned drama project.
+- `GET /api/admin/generation-operations`: admins paginate unified generation ops by task type, status, surface, user, and keyword; returns task summaries and probeable channels.
+
+Drama APIs use `{ code, data, msg }`; the server checks ownership and stores the full aggregate project snapshot. Generation-ops APIs are admin-only. Cancel, retry, and channel probes continue to use existing task-control and health endpoints—they do not create a separate task state machine.
+
+## Generation recovery, Worker, and webhooks
+
+Text/image/video/audio task detail APIs and Agent Run SSE only wake the same durable task the current user is reading. Business status is separate from execution phase: `pending/running` tasks may be in `created/submitting/submitted/polling/result_ready/persisting`. After ordinary Agent generation, review may be `review_pending/reviewing/review_unavailable/completed`; the durable Worker retries review at most three times, and a failed review never undoes media the user already received. `needs_review` and ordinary terminal states are never auto-advanced by pages or Workers. After an upstream task id is saved, recovery may only query that task; `result_ready` only retries result persistence and must never create another upstream task.
+
+- `POST /api/maintenance/generation-tasks/run`: claim a bounded recovery batch with `Authorization: Bearer <VOZEB_PRO_MAINTENANCE_TOKEN>`; may sync heartbeats via `x-vozeb-pro-worker-id`.
+- `POST /api/maintenance/generation-tasks/heartbeat`: same Bearer token plus required `x-vozeb-pro-worker-id`.
+- `POST /api/generation-webhooks/{channelId}`: accepts JSON ≤1MB; `x-vozeb-pro-signature` or `x-signature` carries the hex HMAC-SHA256 of the raw body; optional `x-vozeb-pro-event-id` for a stable event id.
+- `POST /api/admin/generation-operations/{type}/{id}/review`: admin handling for `needs_review` `text/image/video/audio` tasks; actions are only `resume_upstream`, `provide_result`, or `confirm_failed`.
+
+Maintenance APIs return 503 when the token is unset and 401 on auth failure. Generation webhooks return 503 when the secret is unset and 401 on bad signature. Webhooks only match existing image/video/audio tasks on currently enabled channels and use PostgreSQL `(channelId, eventId)` for idempotency. If an event is registered but not yet matched to a task, the response is success with reconciliation state retained—no new task and no double charge. All of the above return `{ code, data, msg }`. Logs and responses must never include the maintenance token, webhook secret, channel API key, or full auth headers.
+
+On PostgreSQL, Run/event/assistant-message transactions also `pg_notify('vozeb_pro_run_events', runId)`. SSE processes use a separate connection to `LISTEN` then immediately read durable events. Notifications are wake-ups only; cross-instance recovery always uses the event table, with 2.5s polling and 15s heartbeats as fallback when notify is lost. The file provider keeps in-process notifications.
+
+## Model-routing settings snapshot
+
+When admins update system channels, logical models, or default models, the settings API treats `{ systemChannels, logicalModels, defaultModels }` as one configuration snapshot:
+
+- Logical model ids are unique within the snapshot; the same logical model cannot bind the same channel + upstream model twice.
+- Bound channels must exist; upstream models must belong to the channel’s pulled model list.
+- Default models must be enabled, capability-matching logical models with at least one usable binding.
+- Deleting a channel should also remove related bindings client-side; snapshots that still contain dangling references return 400 and write nothing partial.
+- Before save, the server normalizes priority, model names, and invalid defaults; responses continue to redact secrets per sensitive-config rules.

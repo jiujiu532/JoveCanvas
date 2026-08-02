@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { ImageSettingsPanel, imageQualityLabel, imageSizeLabel } from "@/components/image-settings-panel";
 import type { AiConfig } from "@/stores/use-config-store";
 import { CanvasSettingsPopoverShell, type CanvasSettingsPopoverPlacement } from "./canvas-settings-popover-shell";
@@ -14,13 +16,20 @@ type CanvasImageSettingsPopoverProps = {
 };
 
 export function CanvasImageSettingsPopover({ config, onConfigChange, onOpenChange, buttonClassName, placement = "topLeft", fixedSizeLabel }: CanvasImageSettingsPopoverProps) {
+    const t = useTranslations("layout");
     const quality = config.quality || "auto";
     const count = Math.max(1, Math.min(15, Math.floor(Math.abs(Number(config.count)) || 1)));
     const activeSize = config.size || "auto";
+    const qualityLabel = imageQualityLabel(quality, {
+        auto: t("settings.image.qualityAuto"),
+        high: t("settings.image.qualityHigh"),
+        medium: t("settings.image.qualityMedium"),
+        low: t("settings.image.qualityLow"),
+    });
 
     return (
         <CanvasSettingsPopoverShell
-            label={`${imageQualityLabel(quality)} · ${fixedSizeLabel || imageSizeLabel(activeSize)} · ${count} 张`}
+            label={`${qualityLabel} · ${fixedSizeLabel || imageSizeLabel(activeSize)} · ${t("settings.image.countUnit", { count })}`}
             buttonClassName={buttonClassName}
             defaultButtonClassName="!h-8 !max-w-[180px] !justify-start !rounded-full !px-2.5"
             placement={placement}

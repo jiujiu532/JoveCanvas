@@ -5,14 +5,15 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { commerceError, commerceOk } from "@/app/api/billing/commerce-response";
 import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-log-store";
 import { updateReferralRelationshipRisk } from "@/lib/server/referral-service";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
     const admin = await getCurrentUser();
-    if (!admin) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
-    if (admin.role !== "admin") return NextResponse.json({ code: 403, data: null, msg: "需要管理员权限" }, { status: 403 });
+    if (!admin) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (admin.role !== "admin") return NextResponse.json({ code: 403, data: null, msg: await serverMessage("common.adminRequired") }, { status: 403 });
     const { id } = await context.params;
     try {
         const body = await readJsonBody<{ riskStatus?: unknown; reason?: unknown }>(request);
@@ -32,6 +33,6 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
             target: { type: "referral_relationship", id },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        return commerceError(error, "更新邀请关系失败", "Update referral relationship failed");
+        return await commerceError(error, "更新邀请关系失败", "Update referral relationship failed");
     }
 }

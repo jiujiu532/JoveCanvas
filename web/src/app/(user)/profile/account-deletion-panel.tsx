@@ -78,8 +78,8 @@ export function AccountDeletionPanel() {
                     <p className="mt-1 max-w-xl text-sm leading-6 text-stone-500 dark:text-stone-400">{t("description")}</p>
                     {request ? (
                         <div className="mt-3 space-y-1 text-xs leading-5 text-stone-500 dark:text-stone-400">
-                            <div>申请时间：{formatTime(request.requestedAt)}</div>
-                            {request.reviewNote ? <div className="break-words">处理备注：{request.reviewNote}</div> : null}
+                            <div>{t("requestedAt", { time: formatTime(request.requestedAt) })}</div>
+                            {request.reviewNote ? <div className="break-words">{t("reviewNote", { note: request.reviewNote })}</div> : null}
                         </div>
                     ) : null}
                 </div>
@@ -87,7 +87,7 @@ export function AccountDeletionPanel() {
                     {pending ? (
                         <Popconfirm title={t("withdrawConfirmTitle")} description={t("withdrawConfirmDesc")} okText={t("withdrawOk")} cancelText={t("cancel")} onConfirm={() => void withdrawRequest()}>
                             <Button className={profileSecondaryButtonClass} loading={withdrawing} icon={<RotateCcw className="size-4" />}>
-                                撤回申请
+                                {t("withdrawButton")}
                             </Button>
                         </Popconfirm>
                     ) : (
@@ -117,7 +117,7 @@ export function AccountDeletionPanel() {
             >
                 <div className="space-y-4 pt-2">
                     <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-6 text-red-800 dark:border-red-950 dark:bg-red-950/35 dark:text-red-200">
-                        管理员会核对创作数据、媒体引用和订单保留要求。正式执行前可能需要进一步身份复核。
+                        {t("modalWarning")}
                     </div>
                     <label className="block space-y-2">
                         <span className="text-sm font-medium text-stone-700 dark:text-stone-200">{t("currentPassword")}</span>

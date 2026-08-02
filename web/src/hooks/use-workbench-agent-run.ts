@@ -4,8 +4,9 @@ import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateA
 import { nanoid } from "nanoid";
 import type { CreativeDeliverableSummary, CreativeFoundation } from "@/lib/creative-agent-contract";
 import type { WorkbenchAgentAttachment } from "@/lib/workbench-agent-attachment";
-import { formatAgentMessageText } from "@/components/agent/agent-message-format";
+import { DEFAULT_AGENT_MESSAGE_FORMAT_LABELS, formatAgentMessageText, type AgentMessageFormatLabels } from "@/components/agent/agent-message-format";
 import { refreshUserPointsIfSystem } from "@/services/api/points";
+import { useTranslations } from "next-intl";
 
 import {
     appendWorkbenchAgentRequest,
@@ -92,12 +93,13 @@ export function useWorkbenchAgentRun({
     onRequestSent,
     onManualModelRequired,
 }: UseWorkbenchAgentRunOptions) {
+    const t = useTranslations("layout");
     const [agentRunning, setAgentRunning] = useState(false);
     const [pendingAgentGenerate, setPendingAgentGenerate] = useState<PendingAgentGenerate | null>(null);
     const [creativeReviewContext, setCreativeReviewContext] = useState<WorkbenchCreativeReviewContext | null>(null);
     const agentRequestRef = useRef<{ messageId: string; controller: AbortController; stage: AgentRunStage } | null>(null);
     const retryActionsRef = useRef(new Map<string, () => void>());
-    const mediaLabel = workspace === "image" ? "图片" : "视频";
+    const mediaLabel = workspace === "image" ? t("agent.mediaLabel.image") : t("agent.mediaLabel.video");
 
     const runAgentGenerate = useCallback(async () => {
         const text = prompt.trim();
@@ -120,7 +122,14 @@ export function useWorkbenchAgentRun({
                 setAgentMessages((items) => appendWorkbenchAgentRequest(items, text, submittedAttachments, createWorkbenchAgentProgressMessage(progressId, hasReferences, mediaLabel)));
                 onRequestSent?.();
             } else {
-                setAgentMessages((items) => updateWorkbenchAgentProgress(items, progressId, { phase: "planning", hasReferences }, hasReferences ? `收到，我会根据当前参考素材完成这次${mediaLabel}。` : `收到，我会按你的要求完成这次${mediaLabel}。`));
+                setAgentMessages((items) =>
+                    updateWorkbenchAgentProgress(
+                        items,
+                        progressId,
+                        { phase: "planning", hasReferences },
+                        hasReferences ? t("agent.workbenchRun.receivedWithReferences", { media: mediaLabel }) : t("agent.workbenchRun.receivedWithoutReferences", { media: mediaLabel }),
+                    ),
+                );
             }
             setAgentRunning(true);
             try {
@@ -146,7 +155,7 @@ export function useWorkbenchAgentRun({
                     }),
                 });
                 const payload = (await response.json().catch(() => ({}))) as { data?: WorkbenchAgentPlanPayload; msg?: string };
-                if (!response.ok || !payload.data) throw new Error(payload.msg || "Agent 参数解析失败");
+                if (!response.ok || !payload.data) throw new Error(payload.msg || t("agent.workbenchRun.parseFailed"));
                 if (controller.signal.aborted || agentRequestRef.current?.messageId !== progressId) return;
 
                 const patch = normalizeParameterPatch(payload.data.parameterPatch);
@@ -154,12 +163,12 @@ export function useWorkbenchAgentRun({
                 const resolvedPrompt = typeof payload.data.resolvedPrompt === "string" && payload.data.resolvedPrompt.trim() ? payload.data.resolvedPrompt : text;
                 setLastAgentPrompt(resolvedPrompt);
                 const shouldGenerate = payload.data.shouldGenerate !== false;
-                const reply = typeof payload.data.reply === "string" && payload.data.reply.trim() ? payload.data.reply : "已完成处理。";
+                const reply = typeof payload.data.reply === "string" && payload.data.reply.trim() ? payload.data.reply : t("agent.workbenchRun.understood");
                 const choices = Array.isArray(payload.data.choices) ? (payload.data.choices as WorkbenchAgentChoice[]) : [];
                 const intent = payload.data.intent === "conversation" ? "conversation" : "generation";
                 const foundation = payload.data.foundation && typeof payload.data.foundation === "object" ? (payload.data.foundation as CreativeFoundation) : undefined;
                 const deliverables = Array.isArray(payload.data.deliverables) ? (payload.data.deliverables as CreativeDeliverableSummary[]) : [];
-                setAgentMessages((items) => applyWorkbenchAgentPlan(items, progressId, shouldGenerate ? "已理解需求，正在创建生成任务。" : reply, choices));
+                setAgentMessages((items) => applyWorkbenchAgentPlan(items, progressId, shouldGenerate ? t("agent.workbenchRun.generating") : reply, choices));
                 if (shouldGenerate) {
                     if (agentRequestRef.current?.messageId === progressId) agentRequestRef.current.stage = "submitting";
                     setPendingAgentGenerate({
@@ -180,8 +189,8 @@ export function useWorkbenchAgentRun({
                 }
             } catch (error) {
                 if (agentRequestRef.current?.messageId !== progressId) return;
-                const errorMessage = error instanceof Error ? error.message : `${mediaLabel} Agent 规划失败`;
-                const failure = buildWorkbenchAgentFailureUpdate({ aborted: controller.signal.aborted, failedAt: "planning", hasReferences, mediaLabel, errorMessage });
+                const errorMessage = error instanceof Error ? error.message : t("agent.workbenchRun.planFailed", { media: mediaLabel });
+                const failure = buildWorkbenchAgentFailureUpdate({ aborted: controller.signal.aborted, failedAt: "planning", hasReferences, mediaLabel, errorMessage, messages: workbenchAgentFailureMessagesFromT(t) });
                 setPendingAgentGenerate(null);
                 setAgentMessages((items) => updateWorkbenchAgentProgress(items, progressId, failure.progress, failure.text));
                 if (!controller.signal.aborted) retryActionsRef.current.set(progressId, () => void executePlanning(false));
@@ -214,6 +223,7 @@ export function useWorkbenchAgentRun({
         skillIds,
         smartPlanning,
         submitGeneration,
+        t,
         workspace,
     ]);
 
@@ -223,10 +233,10 @@ export function useWorkbenchAgentRun({
         active.controller.abort();
         retryActionsRef.current.delete(active.messageId);
         setPendingAgentGenerate(null);
-        setAgentMessages((items) => updateWorkbenchAgentProgress(items, active.messageId, { phase: "cancelled", hasReferences, failedAt: active.stage }, "你已停止本轮 Agent，本次没有创建生成任务。"));
+        setAgentMessages((items) => updateWorkbenchAgentProgress(items, active.messageId, { phase: "cancelled", hasReferences, failedAt: active.stage }, t("agent.workbenchRun.stopped")));
         agentRequestRef.current = null;
         setAgentRunning(false);
-    }, [hasReferences, setAgentMessages]);
+    }, [hasReferences, setAgentMessages, t]);
 
     useEffect(() => {
         if (!pendingAgentGenerate) return;
@@ -241,7 +251,7 @@ export function useWorkbenchAgentRun({
             if (agentRequestRef.current) return;
             const controller = new AbortController();
             agentRequestRef.current = { messageId: pending.messageId, controller, stage: "submitting" };
-            setAgentMessages((items) => updateWorkbenchAgentProgress(items, pending.messageId, { phase: "submitting", hasReferences: pending.hasReferences, shouldGenerate: true }, "正在重新创建生成任务。"));
+            setAgentMessages((items) => updateWorkbenchAgentProgress(items, pending.messageId, { phase: "submitting", hasReferences: pending.hasReferences, shouldGenerate: true }, t("agent.workbenchRun.recreatingTask")));
             setAgentRunning(true);
             setPendingAgentGenerate(pending);
         };
@@ -249,15 +259,15 @@ export function useWorkbenchAgentRun({
             .submitGeneration({ promptOverride: pending.resolvedPrompt, userPrompt: pending.userPrompt, signal: active.controller.signal, parameterPatch: pending.parameterPatch, conversationId: pending.conversationId })
             .then((recordId) => {
                 if (active.controller.signal.aborted || agentRequestRef.current?.messageId !== pending.messageId) return;
-                const acceptedRecordId = acceptWorkbenchGenerationSubmission(recordId, mediaLabel);
+                const acceptedRecordId = acceptWorkbenchGenerationSubmission(recordId, mediaLabel, t("agent.workbenchRun.createNotReady", { media: mediaLabel }));
                 retryActionsRef.current.delete(pending.messageId);
                 if (pending.foundation) setCreativeReviewContext({ recordId: acceptedRecordId, foundation: pending.foundation, deliverables: pending.deliverables });
-                setAgentMessages((items) => updateWorkbenchAgentResponse(items, pending.messageId, `${mediaLabel}任务正在生成，工作区会持续显示进度和结果。`));
+                setAgentMessages((items) => updateWorkbenchAgentResponse(items, pending.messageId, t("agent.workbenchRun.taskGenerating", { media: mediaLabel })));
             })
             .catch((error) => {
                 if (active.controller.signal.aborted) return;
-                const errorMessage = error instanceof Error ? error.message : `${mediaLabel}生成任务创建失败`;
-                const failure = buildWorkbenchAgentFailureUpdate({ aborted: false, failedAt: "submitting", hasReferences: pending.hasReferences, shouldGenerate: true, mediaLabel, errorMessage });
+                const errorMessage = error instanceof Error ? error.message : t("agent.workbenchRun.createFailed", { media: mediaLabel });
+                const failure = buildWorkbenchAgentFailureUpdate({ aborted: false, failedAt: "submitting", hasReferences: pending.hasReferences, shouldGenerate: true, mediaLabel, errorMessage, messages: workbenchAgentFailureMessagesFromT(t) });
                 retryActionsRef.current.set(pending.messageId, retrySubmission);
                 setAgentMessages((items) => updateWorkbenchAgentProgress(items, pending.messageId, failure.progress, failure.text));
             })
@@ -265,15 +275,70 @@ export function useWorkbenchAgentRun({
                 if (agentRequestRef.current?.messageId === pending.messageId) agentRequestRef.current = null;
                 setAgentRunning(false);
             });
-    }, [mediaLabel, pendingAgentGenerate, setAgentMessages]);
+    }, [mediaLabel, pendingAgentGenerate, setAgentMessages, t]);
 
     const retryAgentMessage = useCallback((messageId: string) => retryActionsRef.current.get(messageId)?.(), []);
 
     return { agentRunning, runAgentGenerate, retryAgentMessage, cancelAgentRun, creativeReviewContext };
 }
 
-export function acceptWorkbenchGenerationSubmission(recordId: string | null | undefined, mediaLabel: string) {
-    if (!recordId) throw new Error(`${mediaLabel}生成任务未能创建，请检查模型与参数`);
+export type WorkbenchAgentFailureMessages = {
+    stopped: string;
+    planningIncomplete: string;
+    submitFailed: string;
+    reasonPrefix: string;
+    reasonUnknown: string;
+    hintTextModel: string;
+    hintVideoModel: string;
+    hintReference: string;
+    hintGeneral: string;
+    createNotReady: string;
+    format: AgentMessageFormatLabels;
+};
+
+const DEFAULT_WORKBENCH_AGENT_FAILURE_MESSAGES: WorkbenchAgentFailureMessages = {
+    stopped: "你已停止本轮 Agent，本次没有创建生成任务。",
+    planningIncomplete: "规划没有完成，本次没有创建生成任务。",
+    submitFailed: "任务没有创建成功，本次没有进入{media}生成队列。",
+    reasonPrefix: "原因：{message}",
+    reasonUnknown: "原因：未知错误",
+    hintTextModel: "。请在后台模型渠道中确认默认文本模型已启用、绑定渠道有密钥，并重新发送需求。",
+    hintVideoModel: "。请在后台确认视频逻辑模型和上游渠道可用，或切换到可用视频模型后重试。",
+    hintReference: "。请重新上传参考素材、切换可用渠道，或选择无参考方案/只做方案。",
+    hintGeneral: "。可以调整需求后重试；若持续失败，请检查后台模型渠道、额度和并发设置。",
+    createNotReady: "{media}生成任务未能创建，请检查模型与参数",
+    format: DEFAULT_AGENT_MESSAGE_FORMAT_LABELS,
+};
+
+function formatWorkbenchTemplate(template: string, values: Record<string, string>) {
+    return Object.entries(values).reduce((text, [key, value]) => text.replaceAll(`{${key}}`, value), template);
+}
+
+function workbenchAgentFailureMessagesFromT(t: (key: string, values?: Record<string, string | number | Date>) => string): WorkbenchAgentFailureMessages {
+    return {
+        stopped: t("agent.workbenchRun.stopped"),
+        planningIncomplete: t("agent.workbenchRun.planningIncomplete"),
+        submitFailed: t("agent.workbenchRun.submitFailed", { media: "{media}" }),
+        reasonPrefix: t("agent.workbenchRun.reasonPrefix", { message: "{message}" }),
+        reasonUnknown: t("agent.workbenchRun.reasonUnknown"),
+        hintTextModel: t("agent.workbenchRun.hintTextModel"),
+        hintVideoModel: t("agent.workbenchRun.hintVideoModel"),
+        hintReference: t("agent.workbenchRun.hintReference"),
+        hintGeneral: t("agent.workbenchRun.hintGeneral"),
+        createNotReady: t("agent.workbenchRun.createNotReady", { media: "{media}" }),
+        format: {
+            default: t("agent.errors.default"),
+            insufficientPoints: t("agent.errors.insufficientPoints"),
+            partialTaskFailure: t("agent.errors.partialTaskFailure"),
+            modelUnavailable: t("agent.errors.modelUnavailable"),
+            taskRunning: t("agent.errors.taskRunning"),
+            taskCompleted: t("agent.errors.taskCompleted"),
+        },
+    };
+}
+
+export function acceptWorkbenchGenerationSubmission(recordId: string | null | undefined, mediaLabel: string, createNotReadyMessage?: string) {
+    if (!recordId) throw new Error(createNotReadyMessage || formatWorkbenchTemplate(DEFAULT_WORKBENCH_AGENT_FAILURE_MESSAGES.createNotReady, { media: mediaLabel }));
     return recordId;
 }
 
@@ -288,6 +353,7 @@ export function buildWorkbenchAgentFailureUpdate({
     shouldGenerate,
     mediaLabel,
     errorMessage,
+    messages = DEFAULT_WORKBENCH_AGENT_FAILURE_MESSAGES,
 }: {
     aborted: boolean;
     failedAt: "planning" | "submitting";
@@ -295,29 +361,30 @@ export function buildWorkbenchAgentFailureUpdate({
     shouldGenerate?: boolean;
     mediaLabel: string;
     errorMessage: string;
+    messages?: WorkbenchAgentFailureMessages;
 }): { progress: { phase: "cancelled" | "failed"; hasReferences: boolean; shouldGenerate?: boolean; failedAt: "planning" | "submitting" }; text: string } {
     const baseProgress = { hasReferences, failedAt, ...(shouldGenerate === undefined ? {} : { shouldGenerate }) };
     if (aborted) {
         return {
             progress: { phase: "cancelled", ...baseProgress },
-            text: "你已停止本轮 Agent，本次没有创建生成任务。",
+            text: messages.stopped,
         };
     }
 
-    const prefix = failedAt === "planning" ? "规划没有完成，本次没有创建生成任务。" : `任务没有创建成功，本次没有进入${mediaLabel}生成队列。`;
+    const prefix = failedAt === "planning" ? messages.planningIncomplete : formatWorkbenchTemplate(messages.submitFailed, { media: mediaLabel });
     return {
         progress: { phase: "failed", ...baseProgress },
-        text: `${prefix}${workbenchAgentRecoveryHint(errorMessage)}`,
+        text: `${prefix}${workbenchAgentRecoveryHint(errorMessage, messages)}`,
     };
 }
 
-function workbenchAgentRecoveryHint(errorMessage: string) {
-    const message = formatAgentMessageText(errorMessage.trim());
-    const reason = message ? `原因：${message}` : "原因：未知错误";
-    if (/默认文本模型|文本模型|规划失败|执行计划/.test(message)) return `${reason}。请在后台模型渠道中确认默认文本模型已启用、绑定渠道有密钥，并重新发送需求。`;
-    if (/视频模型|可用视频模型|video/i.test(message)) return `${reason}。请在后台确认视频逻辑模型和上游渠道可用，或切换到可用视频模型后重试。`;
-    if (/参考|素材|公网|NEXT_PUBLIC_SITE_URL/i.test(message)) return `${reason}。请重新上传参考素材、切换可用渠道，或选择无参考方案/只做方案。`;
-    return `${reason}。可以调整需求后重试；若持续失败，请检查后台模型渠道、额度和并发设置。`;
+function workbenchAgentRecoveryHint(errorMessage: string, messages: WorkbenchAgentFailureMessages) {
+    const message = formatAgentMessageText(errorMessage.trim(), messages.format);
+    const reason = message ? formatWorkbenchTemplate(messages.reasonPrefix, { message }) : messages.reasonUnknown;
+    if (/默认文本模型|文本模型|规划失败|执行计划|default text model|text model|planning/i.test(message)) return `${reason}${messages.hintTextModel}`;
+    if (/视频模型|可用视频模型|video/i.test(message)) return `${reason}${messages.hintVideoModel}`;
+    if (/参考|素材|公网|NEXT_PUBLIC_SITE_URL|reference/i.test(message)) return `${reason}${messages.hintReference}`;
+    return `${reason}${messages.hintGeneral}`;
 }
 
 function normalizeParameterPatch(value: unknown): WorkbenchAgentParameterPatch {

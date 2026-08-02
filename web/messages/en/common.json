@@ -8,5 +8,6 @@
     "delete": "Delete",
     "loading": "Loading",
     "empty": "No data yet",
-    "imageUnavailable": "Image unavailable"
+    "imageUnavailable": "Image unavailable",
+    "copiedDefault": "Copied"
 }

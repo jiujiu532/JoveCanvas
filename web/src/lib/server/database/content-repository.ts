@@ -60,11 +60,32 @@ export class AnnouncementsRepository {
 export class PromptsRepository {
     constructor(private readonly db: QueryExecutor) {}
 
-    async list(input: PageInput & { scope: PromptScope; ownerUserId?: string; keyword?: string; category?: string; tags?: string[]; random?: boolean }): Promise<PageResult<PromptRecord>> {
+    async list(
+        input: PageInput & {
+            scope: PromptScope;
+            ownerUserId?: string;
+            keyword?: string;
+            category?: string;
+            tags?: string[];
+            random?: boolean;
+            preferLocale?: "zh" | "en";
+        },
+    ): Promise<PageResult<PromptRecord>> {
         const page = normalizePage(input.page);
         const pageSize = normalizePageSize(input.pageSize);
         const keyword = input.keyword?.trim().toLowerCase() || "";
         const tags = input.tags?.map((tag) => tag.trim().toLowerCase()).filter(Boolean) || [];
+        const preferLocale = !input.random && (input.preferLocale === "zh" || input.preferLocale === "en") ? input.preferLocale : null;
+        // preferLocale 仅影响排序优先级，不按语言过滤
+        const orderBy = input.random
+            ? "random()"
+            : preferLocale
+              ? `CASE WHEN locale = $7 THEN 0 WHEN locale = 'mixed' THEN 1 WHEN locale IS NULL OR locale = '' THEN 2 ELSE 3 END, updated_at DESC`
+              : "updated_at DESC";
+        const params = preferLocale
+            ? [input.scope, input.ownerUserId || null, keyword, `%${keyword}%`, input.category || "", tags.length ? tags : null, preferLocale, pageSize, (page - 1) * pageSize]
+            : [input.scope, input.ownerUserId || null, keyword, `%${keyword}%`, input.category || "", tags.length ? tags : null, pageSize, (page - 1) * pageSize];
+        const limitOffset = preferLocale ? "LIMIT $8 OFFSET $9" : "LIMIT $7 OFFSET $8";
         const result = await this.db.query(
             `
             SELECT *, count(*) OVER() AS total_count
@@ -74,10 +95,10 @@ export class PromptsRepository {
               AND ($3 = '' OR lower(title) LIKE $4 OR lower(prompt) LIKE $4 OR lower(category) LIKE $4 OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(tags) AS prompt_tag WHERE lower(prompt_tag) LIKE $4))
               AND ($5 = '' OR category = $5)
               AND ($6::text[] IS NULL OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(tags) AS prompt_tag WHERE prompt_tag = ANY($6::text[])))
-            ORDER BY ${input.random ? "random()" : "updated_at DESC"}
-            LIMIT $7 OFFSET $8
+            ORDER BY ${orderBy}
+            ${limitOffset}
             `,
-            [input.scope, input.ownerUserId || null, keyword, `%${keyword}%`, input.category || "", tags.length ? tags : null, pageSize, (page - 1) * pageSize],
+            params,
         );
         return pageResult(result.rows.map(mapPrompt), Number(result.rows[0]?.total_count || 0), page, pageSize);
     }
@@ -138,10 +159,11 @@ export class PromptsRepository {
     }
 
     async upsert(prompt: PromptRecord) {
+        const locale = prompt.locale === "zh" || prompt.locale === "en" || prompt.locale === "mixed" ? prompt.locale : null;
         const result = await this.db.query(
             `
-            INSERT INTO prompts (id, scope, owner_user_id, title, cover_url, prompt, tags, category, preview, github_url, source, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            INSERT INTO prompts (id, scope, owner_user_id, title, cover_url, prompt, tags, category, preview, github_url, source, locale, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
             ON CONFLICT (id) DO UPDATE SET
                 scope = EXCLUDED.scope,
                 owner_user_id = EXCLUDED.owner_user_id,
@@ -153,10 +175,26 @@ export class PromptsRepository {
                 preview = EXCLUDED.preview,
                 github_url = EXCLUDED.github_url,
                 source = EXCLUDED.source,
+                locale = EXCLUDED.locale,
                 updated_at = EXCLUDED.updated_at
             RETURNING *
             `,
-            [prompt.id, prompt.scope, prompt.ownerUserId || null, prompt.title, prompt.coverUrl, prompt.prompt, jsonParam(prompt.tags), prompt.category, prompt.preview, prompt.githubUrl || null, prompt.source || null, prompt.createdAt, prompt.updatedAt],
+            [
+                prompt.id,
+                prompt.scope,
+                prompt.ownerUserId || null,
+                prompt.title,
+                prompt.coverUrl,
+                prompt.prompt,
+                jsonParam(prompt.tags),
+                prompt.category,
+                prompt.preview,
+                prompt.githubUrl || null,
+                prompt.source || null,
+                locale,
+                prompt.createdAt,
+                prompt.updatedAt,
+            ],
         );
         return mapPrompt(result.rows[0]);
     }

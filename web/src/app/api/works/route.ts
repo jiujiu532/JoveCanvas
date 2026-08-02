@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
     const user = await getCurrentUser();
-    if (!user) return unauthorized();
+    if (!user) return await unauthorized();
     try {
         const params = request.nextUrl.searchParams;
         const works = await listWorkPublicationsForUser(user.id, {
@@ -20,15 +20,15 @@ export async function GET(request: NextRequest) {
             status: params.get("status"),
             keyword: params.get("keyword"),
         });
-        return workPublicationOk(works);
+        return await workPublicationOk(works);
     } catch (error) {
-        return workPublicationError(error, "获取作品失败", "List user works failed");
+        return await workPublicationError(error, "获取作品失败", "List user works failed");
     }
 }
 
 export async function POST(request: Request) {
     const user = await getCurrentUser();
-    if (!user) return unauthorized();
+    if (!user) return await unauthorized();
     try {
         const work = await createWorkPublicationDraft(user.id, await readJsonBody<WorkPublicationDraftInput>(request));
         await safeRecordAuditLog({
@@ -37,9 +37,9 @@ export async function POST(request: Request) {
             target: { type: "published_work", id: work.id, label: work.currentVersion?.title },
             metadata: { sourceType: work.sourceType, visibility: work.currentVersion?.visibility },
         });
-        return workPublicationOk({ work }, "作品草稿已创建", 201);
+        return await workPublicationOk({ work }, "作品草稿已创建", 201);
     } catch (error) {
         await safeRecordAuditLog({ action: "work.publication.create", status: "failure", actor: auditActorFromRequest(request, user), metadata: { error: error instanceof Error ? error.message : "unknown" } });
-        return workPublicationError(error, "创建作品失败", "Create work publication failed");
+        return await workPublicationError(error, "创建作品失败", "Create work publication failed");
     }
 }

@@ -8,5 +8,6 @@
     "delete": "删除",
     "loading": "加载中",
     "empty": "暂无数据",
-    "imageUnavailable": "图片不可用"
+    "imageUnavailable": "图片不可用",
+    "copiedDefault": "已复制"
 }

@@ -9,11 +9,11 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
     const user = await getCurrentUser();
-    if (!user) return unauthorized();
-    if (user.role !== "admin") return forbidden();
+    if (!user) return await unauthorized();
+    if (user.role !== "admin") return await forbidden();
     try {
         const params = request.nextUrl.searchParams;
-        return workPublicationOk(
+        return await workPublicationOk(
             await listWorkGovernanceCasesForAdmin({
                 page: Number(params.get("page")) || 1,
                 pageSize: Number(params.get("pageSize")) || 20,
@@ -23,6 +23,6 @@ export async function GET(request: NextRequest) {
             }),
         );
     } catch (error) {
-        return workPublicationError(error, "获取举报申诉列表失败", "List work governance cases failed");
+        return await workPublicationError(error, "获取举报申诉列表失败", "List work governance cases failed");
     }
 }

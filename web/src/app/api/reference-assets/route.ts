@@ -5,17 +5,18 @@ import { CREATIVE_UPLOAD_MAX_BYTES } from "@/lib/creative-upload";
 import { writePersistentMediaDataUrl, writeReferenceMediaDataUrl } from "@/lib/server/reference-asset-store";
 import { readJsonBody } from "@/lib/auth/request";
 import { createSignedReferenceAssetUrl } from "@/lib/server/reference-asset-access";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const body = await readJsonBody<{ dataUrl?: unknown; type?: unknown; persistent?: unknown; originalName?: unknown }>(request, 28 * 1024 * 1024).catch(() => ({}) as { dataUrl?: unknown; type?: unknown; persistent?: unknown; originalName?: unknown });
     const dataUrl = typeof body.dataUrl === "string" ? body.dataUrl : "";
-    if (!dataUrl) return NextResponse.json({ error: "缺少参考素材" }, { status: 400 });
+    if (!dataUrl) return NextResponse.json({ error: await serverMessage("media.missingReference") }, { status: 400 });
     const type = body.type === "video" || body.type === "audio" ? body.type : "image";
 
     try {

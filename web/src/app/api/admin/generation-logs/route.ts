@@ -5,14 +5,15 @@ import { readJsonBody } from "@/lib/auth/request";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getPublicUsersByIds } from "@/lib/auth/store";
 import { deleteGenerationLogs, listGenerationLogs } from "@/lib/server/generation-log-store";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     const params = request.nextUrl.searchParams;
     const result = await listGenerationLogs({
@@ -34,8 +35,8 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     const body = await readJsonBody<{ ids?: unknown }>(request);
     const ids = Array.isArray(body.ids) ? body.ids.map(String) : [];

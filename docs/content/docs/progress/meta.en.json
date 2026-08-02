@@ -1,0 +1,10 @@
+{
+  "title": "Progress",
+  "root": true,
+  "defaultOpen": true,
+  "pages": [
+    "[Changelog](/en/docs/progress/changelog)",
+    "pending-test",
+    "todo"
+  ]
+}

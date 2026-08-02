@@ -14,6 +14,7 @@ import { SYSTEM_AI_LOGICAL_MODEL_HEADER, SYSTEM_AI_POINTS_IDEMPOTENCY_HEADER, SY
 import { isAgnesApiBaseUrl } from "@/lib/agnes-model-catalog";
 import { channelConnectionReady, protocolAuthHeaders, resolveChannelModelConfig } from "@/lib/channel-protocol-registry";
 import { authorizedMaintenanceUserId } from "@/lib/server/maintenance-auth";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,16 +58,16 @@ export async function DELETE(request: Request, context: RouteContext) {
 async function proxySystemRequest(request: Request, context: RouteContext) {
     const currentUser = await getCurrentUser();
     const userId = currentUser?.id || authorizedMaintenanceUserId(request);
-    if (!userId) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!userId) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const { channelId, path } = await context.params;
     const settings = await getAuthSettings();
     const channel = settings.systemChannels.find((item) => item.id === channelId && item.enabled);
-    if (!channel || !channelConnectionReady(channel)) return NextResponse.json({ error: "默认接口未配置或已停用" }, { status: 404 });
+    if (!channel || !channelConnectionReady(channel)) return NextResponse.json({ error: await serverMessage("admin.defaultChannelMissing") }, { status: 404 });
 
     if (isMediaProxyPath(path)) {
         const rate = await checkMediaProxyRateLimit(userId, request);
-        if (!rate.allowed) return NextResponse.json({ error: "媒体访问过于频繁，请稍后重试" }, { status: 429, headers: rateLimitHeaders(rate) });
+        if (!rate.allowed) return NextResponse.json({ error: await serverMessage("media.accessRateLimited") }, { status: 429, headers: rateLimitHeaders(rate) });
         return proxySystemMediaRequest(request, channel);
     }
 
@@ -95,9 +96,9 @@ async function proxySystemRequest(request: Request, context: RouteContext) {
     Object.entries(protocolAuthHeaders(channel.apiKey, channel.advancedConfig, globalChannel ? "openai" : apiFormat)).forEach(([key, value]) => headers.set(key, value));
     const globalPreset = resolveGlobalAiOpcPreset(channel.advancedConfig, upstreamModel) || resolveGlobalAiOpcPathPreset(channel.advancedConfig, path);
     const globalAdaptation = adaptGlobalAiOpcTextRequest(channel.advancedConfig, path, requestBody.body);
-    if (globalAdaptation === "responses-unsupported") return NextResponse.json({ error: "该 GlobalAiOpc 原生文本接口不支持 Responses，已切换 Chat 兼容回退。" }, { status: 404 });
+    if (globalAdaptation === "responses-unsupported") return NextResponse.json({ error: await serverMessage("admin.globalAiOpcResponsesFallback") }, { status: 404 });
     const target = targetUrl(globalPreset?.baseUrl || channel.baseUrl, globalPreset?.apiFormat || apiFormat, globalAdaptation?.path || path, new URL(request.url).search, globalChannel, modelConfig?.protocol || channel.advancedConfig?.protocol);
-    if (!(await isSafeOutboundUrl(target, { allowCredentials: false }))) return NextResponse.json({ error: "接口地址不允许访问内网或保留地址" }, { status: 400 });
+    if (!(await isSafeOutboundUrl(target, { allowCredentials: false }))) return NextResponse.json({ error: await serverMessage("media.urlUnsafe") }, { status: 400 });
     const pointsRequest =
         classifyPointsRequest(request.method, apiFormat, path, contentType, requestBody.pointsPayload, settings.generationPointMultipliers) ||
         classifyConfiguredPointsRequest(
@@ -111,7 +112,7 @@ async function proxySystemRequest(request: Request, context: RouteContext) {
             settings.logicalModels,
             settings.generationPointMultipliers,
         );
-    if (pointsRequest?.model && !channelHasModel(channel.models, pointsRequest.model)) return NextResponse.json({ error: "该模型未在后台渠道中启用" }, { status: 403 });
+    if (pointsRequest?.model && !channelHasModel(channel.models, pointsRequest.model)) return NextResponse.json({ error: await serverMessage("admin.modelNotEnabled") }, { status: 403 });
     const billingModel =
         pointsRequest && pointsRequest.usageKind !== "api" ? resolveLogicalBillingModel(settings.logicalModels, pointsRequest.usageKind, channel.id, pointsRequest.model, request.headers.get(SYSTEM_AI_LOGICAL_MODEL_HEADER) || "") : pointsRequest?.model;
     const pointsIdempotencyBase = normalizePointsIdempotencyKey(request.headers.get(SYSTEM_AI_POINTS_IDEMPOTENCY_HEADER));
@@ -156,12 +157,12 @@ async function proxySystemRequest(request: Request, context: RouteContext) {
         pointsResult = null;
     }
     if (isRedirectStatus(upstream.status)) {
-        return NextResponse.json({ error: "上游接口不允许重定向，请检查后台渠道地址" }, { status: 502, headers: responseHeaders(new Headers(), null, refundedPointsRemaining) });
+        return NextResponse.json({ error: await serverMessage("admin.upstreamRedirectBlocked") }, { status: 502, headers: responseHeaders(new Headers(), null, refundedPointsRemaining) });
     }
     if (upstream.ok) pointsSettled = true;
     if (globalAdaptation && upstream.ok) {
         const payload = await upstream.json().catch(() => null);
-        if (!payload) return NextResponse.json({ error: "上游文本接口返回了无效 JSON" }, { status: 502, headers: responseHeaders(upstream.headers, pointsResult, refundedPointsRemaining, target) });
+        if (!payload) return NextResponse.json({ error: await serverMessage("admin.upstreamInvalidJson") }, { status: 502, headers: responseHeaders(upstream.headers, pointsResult, refundedPointsRemaining, target) });
         return NextResponse.json(adaptGlobalAiOpcTextResponse(globalAdaptation.adapter, payload), { status: upstream.status, headers: responseHeaders(upstream.headers, pointsResult, refundedPointsRemaining, target) });
     }
 
@@ -201,7 +202,7 @@ async function proxySystemMediaRequest(request: Request, channel: SystemMediaCha
     if (request.method !== "GET" && request.method !== "HEAD") return NextResponse.json({ error: "Media proxy only supports GET and HEAD" }, { status: 405 });
     const target = mediaTargetRequest(channel.baseUrl, channel.apiFormat, new URL(request.url).searchParams.get("url") || "", isGlobalAiOpcChannel(channel.advancedConfig));
     if (!target) return NextResponse.json({ error: "Invalid media url" }, { status: 400 });
-    if (!(await isSafeOutboundUrl(target.url, { allowCredentials: false }))) return NextResponse.json({ error: "媒体地址不允许访问内网或保留地址" }, { status: 400 });
+    if (!(await isSafeOutboundUrl(target.url, { allowCredentials: false }))) return NextResponse.json({ error: await serverMessage("media.urlUnsafe") }, { status: 400 });
 
     const headers = new Headers();
     const range = request.headers.get("range");

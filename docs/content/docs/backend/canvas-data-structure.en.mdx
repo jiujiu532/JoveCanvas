@@ -1,0 +1,79 @@
+---
+title: Canvas data structures
+description: Server-side canvas projects, nodes, sessions, and media references
+---
+
+# Canvas data structures
+
+Canvas projects are stored per signed-in user on the server. PostgreSQL uses `canvas_projects`; the file provider uses `canvas-projects.json`. The browser only keeps transient interaction state—it does not own business persistence for projects, chats, or media.
+
+## Project APIs
+
+- `GET /api/canvas/projects`: list current user’s projects by update time.
+- `POST /api/canvas/projects`: create empty project or import a snapshot; also creates a creative session with `surface=canvas`.
+- `PATCH /api/canvas/projects/{id}`: save nodes, edges, viewport, project assistant sessions, and appearance.
+- `DELETE /api/canvas/projects`: batch-delete projects owned by the current user.
+
+After login the client store calls `hydrate()` from the API. Edits update memory first, then write back with a 250ms debounce. The server rejects project snapshots over 5MB and strips `data:` / `blob:` so temporary browser media never hits the database.
+
+## Project shape
+
+```ts
+type CanvasProject = {
+  id: string;
+  sourceHandoffId?: string;
+  creativeConversationId?: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  nodes: CanvasNodeData[];
+  connections: CanvasConnection[];
+  chatSessions: CanvasAssistantSession[];
+  activeChatId: string | null;
+  backgroundMode: "lines" | "dots" | "blank";
+  showImageInfo: boolean;
+  viewport: { x: number; y: number; k: number };
+};
+```
+
+- `sourceHandoffId`: stable ID for Agent project handoff (SSE replay / concurrent handoff idempotency).
+- `creativeConversationId`: server creative session reused when re-entering Canvas Agent for the project.
+- `chatSessions` / `activeChatId`: right-side assistant history, persisted with the project snapshot.
+- `viewport`: last pan/zoom.
+
+## Nodes and edges
+
+`CanvasNodeData` holds id, type, title, world coordinates, size, and metadata. Nodes cover text, image, video, audio, generation config, brief, task, and status. Media nodes use:
+
+```ts
+type CanvasNodeMetadata = {
+  content?: string;
+  storageKey?: string;
+  serverUrl?: string;
+  remoteUrl?: string;
+  mimeType?: string;
+  bytes?: number;
+  naturalWidth?: number;
+  naturalHeight?: number;
+  durationMs?: number;
+  status?: "idle" | "loading" | "success" | "error";
+};
+```
+
+Persistence keys off `storageKey` / `serverUrl`. Uploaded image/video/audio first land under `reference-assets/permanent/YYYY/MM/DD/{images|videos|audio}`, then on the node; generation results also keep a server copy. `content` stores only re-fetchable URLs—never base64 or object URLs.
+
+`CanvasConnection` stores only `id` / `fromNodeId` / `toNodeId`. Deleting a node removes related edges; batch image root/child links live in node metadata.
+
+## Media import/export
+
+Export reads media by stable `storageKey` from the server into a ZIP. Import uploads each ZIP media item into a new server date directory, rewrites old `storageKey` / `content` / `serverUrl`, then creates the server Canvas project—so the import package is never a browser media cache.
+
+Admin “local media” lists generation and reference directories, type, size, and preview, and supports single/batch/expired temp deletion. Temp assets expire after 24h by default; project nodes, uploaded assets, and generation results are long-lived and not auto-cleaned.
+
+## Security boundaries
+
+- All project query/update/delete must match `user_id`.
+- Project ID, handoff ID, and title lengths are capped server-side.
+- PostgreSQL SQL is parameterized; file provider uses a serial mutation queue.
+- Server paths are rooted; clients cannot submit arbitrary filesystem paths.
+- Project delete and media delete are separate: deleting a project does not silently remove long-lived media that may still be referenced by the asset library, chats, or other projects—admins clean media explicitly.

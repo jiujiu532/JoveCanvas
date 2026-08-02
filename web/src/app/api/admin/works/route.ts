@@ -20,8 +20,8 @@ export async function GET(request: NextRequest) {
             lifecycleStatus: params.get("lifecycleStatus"),
             keyword: params.get("keyword"),
         });
-        return workPublicationOk(works);
+        return await workPublicationOk(works);
     } catch (error) {
-        return workPublicationError(error, "获取作品审核列表失败", "List admin works failed");
+        return await workPublicationError(error, "获取作品审核列表失败", "List admin works failed");
     }
 }

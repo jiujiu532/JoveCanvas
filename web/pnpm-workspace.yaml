@@ -1,10 +1,12 @@
 allowBuilds:
-    sharp: true
+  '@parcel/watcher': set this to true or false
+  '@swc/core': set this to true or false
+  sharp: true
 minimumReleaseAgeExclude:
-    - postcss@8.5.25
+  - postcss@8.5.25
 overrides:
-    "@hono/node-server": 2.0.12
-    brace-expansion: 5.0.8
-    fast-uri: 3.1.4
-    postcss: 8.5.25
-    sharp: 0.35.3
+  "@hono/node-server": 2.0.12
+  brace-expansion: 5.0.8
+  fast-uri: 3.1.4
+  postcss: 8.5.25
+  sharp: 0.35.3

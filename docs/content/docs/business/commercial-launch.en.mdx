@@ -1,0 +1,89 @@
+---
+title: Commercial launch gaps
+description: Acceptance checklist for tech, ops, finance, and legal before public paid operation
+---
+
+# Commercial launch gaps
+
+JoveCanvas already ships image/video/short-drama/Canvas/Agent, points, products, payment adapters, server media, and S3-compatible storage. Passing automated tests, having admin toggles, or callable APIs does **not** alone prove readiness for formal commercial operation.
+
+This page records items that still need real environments, external vendors, or human process. Until owner, reviewer, and reproducible evidence exist, status stays **incomplete**—internal or closed testing only. Deployment execution detail lives in [Production readiness](/en/docs/overview/production-readiness).
+
+## Current implementation boundaries
+
+These are technical foundations in code—not completed merchant setup, contracts, credentials, or production acceptance:
+
+- Payment code includes Stripe Checkout, Alipay PC website, WeChat Pay v3 Native, PayPly custom API, and manual confirmation. There is no standalone PayPal adapter; do not market PayPly as PayPal.
+- Automatic refunds are **full order** only. Partial refunds, partial points reclaim, multi-refund accumulation, and chargebacks need finance rules first, then server, PSP, and reconciliation acceptance.
+- Admin business backup is redacted import/export—not full PostgreSQL, payment secrets, encryption keys, local media, or S3/OSS recoverability.
+- Ops dashboard summarizes calls, models, entry points, content types, and points—not revenue, tax, margin, retention, or formal finance reconciliation.
+- S3-compatible config, media migration, and signed reads are storage tech—not contracts, IAM, lifecycle, backup, bandwidth cost, or vendor SLA.
+- Admin CDK lists have DB pagination/filter/aggregates for large datasets—that is query performance only; still run production-scale admin P95, slow-query, and pool acceptance.
+
+“Integrated in code” only scopes implementation. Items leave the commercial checklist only after the [evidence matrix](#commercial-launch-evidence-matrix) has owner, reviewer, and real proof.
+
+## Deliverables code cannot replace
+
+These are not “done” because an API or page exists. Project owner, deployer, finance, support, and legal each must deliver and archive:
+
+- **Business & payments**: legal entity, service regions, domain/network credentials, merchant & refund authority, invoice/tax policy, reconciliation owners; plan prices, points conversion, model cost, storage/bandwidth, and margin sheets.
+- **Legal & content**: reviewed privacy, ToS, refund rules, user content license, AI-generation labeling, age/region limits, AUP, takedown, report re-review, appeal, and delisting processes.
+- **Security & access**: admin roster & SoD, MFA decisions, key/cert rotation, privilege escalation / private media exposure response, vulnerability disclosure, dependency/image/secret scan records.
+- **Ops & DR**: production monitoring, alerts, on-call escalation; backups of PostgreSQL / local media / OSS / payment config / encryption keys; restore reports in a clean environment; RPO, RTO, retention, post-restore data checks.
+- **User service**: support entry, hours, payment/refund escalation, privacy request SLAs, notification delivery, bounce handling, status page or maintenance notices.
+- **Vendors & exit**: contracts, pricing, quotas, data regions, SLAs, sunsetting notices, export/migration, and alternate channels for model, payment, SMTP, object storage, and notification providers.
+
+Code, automated tests, health probes, or admin switches without owner, due date, reviewer, environment, and reproducible evidence still count as **incomplete**. Developers must not “sign off” commercial readiness with “the API works”.
+
+## P0 launch blockers
+
+Must finish before public paid operation:
+
+- **Real payment acceptance**: for each enabled channel—order, success/fail pay, cancel, timeout, duplicate/out-of-order/late webhooks, full refund, refund-failure recovery, and statement reconciliation. Auto refund is whole-order; partial refund needs order/points/accounting rules first.
+- **Legal & authorization**: counsel-reviewed privacy, ToS, refund, IP, content liability, account deletion, dispute clauses; registration consent checkbox, policy version, consent time, and disclosures for third-party model/payment/email/object-storage processing and cross-border transfer.
+- **Content safety**: violation taxonomy, pre-publish review, reports, human re-review, appeals, delisting, infringement, audit logs. Short-drama content-confirm gates serve creative flow only—not platform compliance. Define age limits, prohibited use, AI labeling.
+- **Monitoring & on-call**: readiness probes, CPU/memory/disk, DB connections & slow queries, API P95/P99, 5xx, generation success, payment/refund failures, object-storage capacity; drill notify/locate/escalate/recover.
+- **Backup & DR**: separate backups of PostgreSQL, local media, S3/OSS, payment config, encryption keys; restore in a clean environment checking accounts, points, orders, generation, Canvas, short drama, media links; record RPO/RTO/retention.
+- **Capacity**: graded 100/500/1000 concurrency near production proxy/DB/storage covering login, lists, generation, SSE, media play, payment webhooks, admin aggregates; record pool waits, locks, slow queries, disk growth.
+- **Async generation & billing consistency**: real image/video/audio/Agent channels for queue, timeout, cancel, retry, reconnect, double-submit, stuck-task takeover, asset registration, and refund to original charge ledger. Points-query optimizations do not replace this closed loop under restart/multi-instance races.
+- **Incident response**: graded playbooks for model keys, payment certs, maintenance tokens, OSS credentials, sessions, privilege abuse, private media exposure, personal data breach; drill isolate, forensics, revoke, rotate, notify, recover, postmortem.
+- **Entity & cost baseline**: operator entity, regions, domain/network licenses, merchant eligibility, invoice/tax stance; model/storage/bandwidth/fees/failed-refund/gifted-points cost and margin baseline.
+
+## P1 pre-canary items
+
+- **User rights**: formal deletion after request, creative/media deletion, statutory order/payment retention, identity verification, response SLAs. Export ≠ deletion policy.
+- **Finance & after-sales**: statement pull or periodic recon, refund approval, invoices/receipts, chargebacks, disputes, double charge, failed original-path refunds, exception orders.
+- **Support & complaints**: entry, hours, payment issues, content reports, privacy requests, escalation, compensation; operator/reason/audit for points, refunds, account actions.
+- **Access governance**: only user vs admin roles exist today. Before team ops: least privilege for finance/support/moderation/ops/read-only audit; admin MFA, anomaly login alerts, refund/points dual control, second confirm for high risk.
+- **Key lifecycle**: create/store/rotate/revoke/leak response and restore validation for encryption keys, model keys, payment certs, maintenance tokens, OSS credentials. DB+media without usable keys ≠ successful restore.
+- **Data lifecycle & cost**: retention, delete triggers, legal-hold exceptions, cleanup jobs, verification for chats, tasks, raw media, WebP variants, temps, audit logs, payment records, S3 objects; monitor capacity, requests, egress, CDN/proxy, backup cost; abnormal circuit breakers.
+- **Notifications & incident comms**: deliver registration, OTP, password reset, payment result, outage notices; SPF/DKIM/DMARC, bounce/complaint handling, in-app fallback; status page/notice plan; authorized pausers for models/payments.
+- **Environments & rollback**: isolate dev/staging/prod DB, buckets, merchants, model keys, maintenance tokens, webhook domains; pre-migration backup, smoke, image rollback, post-rollback data compatibility records.
+- **Vendors & ownership**: contracts, pricing, quotas, regions, retention, SLA, sunsetting, alternates; user content license, gen ownership, third-party train/retain boundaries, AGPL, deps, fonts, asset licenses. Define degrade/pause/notify/refund when models fail, prices change, quotas exhaust, or safety services die.
+- **Abuse & growth**: age/region/AUP metrics; freeze/unfreeze/appeal/false-positive review; unified funnels for registration, first successful work, retention, paid conversion, ARPU, repurchase, refund rate, unit-work cost.
+- **UX & a11y**: target browsers + 390px/430px mobile for focus, form errors, contrast, live regions, media alt, downloads, long sessions, real media, long lists; publish support matrix; first successful generation path for new users.
+- **Cost caps & breakers**: per-user/task/day/site caps for model calls, media processing, storage, egress; upstream balance / abnormal cost / capacity / margin alerts. Points balance checks ≠ anti-theft, quota exhaustion, or runaway cost protection.
+
+## Launch evidence matrix
+
+Register at least one row per P0/P1 item. Code tests, health probes, admin switches, and mocks do not replace real evidence.
+
+| Domain | Minimum evidence | Owner | Due | Environment | Evidence link/file | Reviewer | Review date | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Payments & refunds | Order, webhook, refund-failure recovery, recon | TBD | TBD | Sandbox/prod | TBD | TBD | TBD | Incomplete |
+| Legal & content safety | Approved policies; report/re-review/appeal/delist drill | TBD | TBD | Pre-prod | TBD | TBD | TBD | Incomplete |
+| Monitoring & on-call | Alert fire, notify, response, escalation | TBD | TBD | Prod | TBD | TBD | TBD | Incomplete |
+| Backup & restore | PG/media/OSS/key restore report + RPO/RTO | TBD | TBD | Clean env | TBD | TBD | TBD | Incomplete |
+| Capacity & cost | Load report, cost sheet, margin, breaker thresholds | TBD | TBD | Prod-like | TBD | TBD | TBD | Incomplete |
+| Generation & billing | Real media timeout/cancel/retry/reconnect/dup/refund + ledger check | TBD | TBD | Prod-like | TBD | TBD | TBD | Incomplete |
+| Access & security | Admin roster, MFA decision, dual-control, rotation log | TBD | TBD | Prod | TBD | TBD | TBD | Incomplete |
+| Incident response | Leak/privilege/private-media isolate-notify-restore drill | TBD | TBD | Pre-prod | TBD | TBD | TBD | Incomplete |
+| Vendor degrade & exit | Pause, refund, migrate, export, alternate channel records | TBD | TBD | Pre-prod | TBD | TBD | TBD | Incomplete |
+| Support & notifications | Support entry, SLA, email delivery, bounce handling | TBD | TBD | Pre-prod | TBD | TBD | TBD | Incomplete |
+
+## Go / no-go
+
+1. Any P0 without owner, reviewer, and real evidence → do not claim formal commercial launch.
+2. Incomplete P1 → closed or canary ops only, with named human fallbacks.
+3. Weekly review generation success, refund rate, unit-work cost, storage growth, complaints, vendor incidents; on funds/privacy/content risk, pause the related model or payment channel while preserving user and finance records.
+4. On upstream outage, quota exhaustion, abnormal cost, or notification failure, execute pre-approved degrade/breaker rules and record impact, refunds, recovery time, and review conclusions.

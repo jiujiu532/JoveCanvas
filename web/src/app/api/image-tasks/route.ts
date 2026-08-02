@@ -59,6 +59,7 @@ import {
 } from "./image-task-types";
 import { runGenerationTaskRecoveryBatch } from "@/lib/server/generation-task-recovery-service";
 import { scheduleGenerationTask } from "@/lib/server/generation-task-scheduler";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 import {
     publicTask,
     sanitizeConfigs,
@@ -130,21 +131,21 @@ import {
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser(request);
     const settings = currentUser ? await getAuthSettings() : null;
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const rate = await checkGenerationRateLimit(currentUser.id, request, "image");
-    if (!rate.allowed) return NextResponse.json({ error: "生图请求过于频繁，请稍后重试" }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.imageGenShort") }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const response = await withGenerationConcurrencyLimit(currentUser.id, "image", 10 * 60 * 1000, settings!.generationConcurrency.image, async () => {
         let resolvedBody: CreateImageTaskBody;
         try {
             resolvedBody = await readJsonBody(request, 32 * 1024 * 1024);
         } catch (error) {
-            if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+            if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
             throw error;
         }
         const configs = sanitizeConfigs(resolvedBody.config, settings!);
         const prompt = (resolvedBody.prompt || "").trim();
         const kind = resolvedBody.kind === "edit" ? "edit" : "generation";
-        if (!configs.length || !prompt) return NextResponse.json({ error: "任务参数不完整" }, { status: 400 });
+        if (!configs.length || !prompt) return NextResponse.json({ error: await serverMessage("tasks.paramsIncomplete") }, { status: 400 });
         const references = Array.isArray(resolvedBody.references) ? resolvedBody.references.filter((item) => Boolean(item?.dataUrl || item?.url || item?.remoteUrl || item?.serverUrl)) : [];
         const constrainedConfigs = configs.filter((config) => {
             try {
@@ -162,7 +163,7 @@ export async function POST(request: Request) {
                 return false;
             }
         });
-        if (!compatibleConfigs.length) return NextResponse.json({ error: "当前模型能力不满足参考素材或数量参数" }, { status: 400 });
+        if (!compatibleConfigs.length) return NextResponse.json({ error: await serverMessage("tasks.capabilityMismatch") }, { status: 400 });
         const config = compatibleConfigs[0];
         const requestId = resolvedBody.context?.clientRequestId?.trim();
         if (requestId) {
@@ -193,5 +194,5 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ task: publicTask(task) });
     });
-    return response || NextResponse.json({ error: "当前用户生图任务已达到并发上限，请稍后再试" }, { status: 429 });
+    return response || NextResponse.json({ error: await serverMessage("tasks.imageConcurrencyLimitRetry") }, { status: 429 });
 }

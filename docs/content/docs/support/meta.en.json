@@ -1,0 +1,11 @@
+{
+  "title": "Support & security",
+  "root": true,
+  "defaultOpen": true,
+  "pages": [
+    "community",
+    "security",
+    "donate",
+    "sponsor"
+  ]
+}

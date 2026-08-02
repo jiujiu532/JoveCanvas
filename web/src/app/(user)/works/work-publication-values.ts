@@ -1,35 +1,75 @@
 import type { WorkPublicationModerationStatus, WorkPublicationSourceType, WorkPublicationVisibility } from "@/services/api/work-publications";
 
-export { WORK_CATEGORY_OPTIONS } from "@/lib/work-publication-options";
+export { WORK_CATEGORY_OPTIONS, WORK_CATEGORIES } from "@/lib/work-publication-options";
 
-export const WORK_STATUS_OPTIONS: Array<{ value: WorkPublicationModerationStatus | "all"; label: string }> = [
-    { value: "all", label: "全部" },
-    { value: "draft", label: "草稿" },
-    { value: "pending", label: "审核中" },
-    { value: "approved", label: "已通过" },
-    { value: "rejected", label: "已驳回" },
-    { value: "taken_down", label: "已下架" },
-];
+type Translate = (key: string, values?: Record<string, string | number | Date>) => string;
 
-export const SOURCE_TYPE_LABELS: Record<WorkPublicationSourceType, string> = {
-    media: "素材",
-    canvas: "画布",
-    drama: "短剧",
+const STATUS_LABEL_KEYS: Record<WorkPublicationModerationStatus | "all", string> = {
+    all: "statusAll",
+    draft: "statusDraft",
+    pending: "statusPending",
+    approved: "statusApproved",
+    rejected: "statusRejected",
+    taken_down: "statusTakenDown",
 };
 
-export const VISIBILITY_LABELS: Record<WorkPublicationVisibility, string> = {
-    private: "仅自己可见",
-    unlisted: "仅链接分享（不进入广场）",
-    public: "公开到作品广场",
+const SOURCE_LABEL_KEYS: Record<WorkPublicationSourceType, string> = {
+    media: "sourceMedia",
+    canvas: "sourceCanvas",
+    drama: "sourceDrama",
 };
 
-export function workStatusLabel(status: WorkPublicationModerationStatus) {
-    return WORK_STATUS_OPTIONS.find((item) => item.value === status)?.label || status;
+const VISIBILITY_LABEL_KEYS: Record<WorkPublicationVisibility, string> = {
+    private: "visibilityPrivate",
+    unlisted: "visibilityUnlisted",
+    public: "visibilityPublic",
+};
+
+/** Category storage values stay Chinese (API/filter contract); labels are localized for UI. */
+const CATEGORY_LABEL_KEYS: Record<string, string> = {
+    视觉设计: "categoryVisual",
+    插画: "categoryIllustration",
+    摄影: "categoryPhotography",
+    品牌内容: "categoryBrand",
+    视频: "categoryVideo",
+    短剧: "categoryDrama",
+    其他: "categoryOther",
+};
+
+export function workStatusOptions(t: Translate): Array<{ value: WorkPublicationModerationStatus | "all"; label: string }> {
+    return (Object.keys(STATUS_LABEL_KEYS) as Array<WorkPublicationModerationStatus | "all">).map((value) => ({
+        value,
+        label: t(STATUS_LABEL_KEYS[value]),
+    }));
 }
 
-export function formatWorkTime(value?: string) {
-    if (!value) return "暂无";
-    return new Intl.DateTimeFormat("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+export function sourceTypeLabels(t: Translate): Record<WorkPublicationSourceType, string> {
+    return {
+        media: t(SOURCE_LABEL_KEYS.media),
+        canvas: t(SOURCE_LABEL_KEYS.canvas),
+        drama: t(SOURCE_LABEL_KEYS.drama),
+    };
+}
+
+export function visibilityLabels(t: Translate): Record<WorkPublicationVisibility, string> {
+    return {
+        private: t(VISIBILITY_LABEL_KEYS.private),
+        unlisted: t(VISIBILITY_LABEL_KEYS.unlisted),
+        public: t(VISIBILITY_LABEL_KEYS.public),
+    };
+}
+
+export function workCategoryOptions(t: Translate): Array<{ value: string; label: string }> {
+    return Object.entries(CATEGORY_LABEL_KEYS).map(([value, key]) => ({ value, label: t(key) }));
+}
+
+export function workStatusLabel(status: WorkPublicationModerationStatus, t: Translate) {
+    return t(STATUS_LABEL_KEYS[status] || "statusDraft");
+}
+
+export function formatWorkTime(value: string | undefined, locale: string, t: Translate) {
+    if (!value) return t("noTime");
+    return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
 
 export function workSharePath(slug: string) {

@@ -41,14 +41,14 @@ export function normalizeCameraControl(value?: Partial<CameraControlOptions>): C
     };
 }
 
-export function cameraControlLabel(value?: Partial<CameraControlOptions>) {
+export function cameraControlLabel(value?: Partial<CameraControlOptions>, labels?: { disabledLabel?: string }) {
     const control = normalizeCameraControl(value);
-    return control.enabled ? `${control.focalLength}mm · f/${control.aperture}` : "镜头关闭";
+    return control.enabled ? `${control.focalLength}mm · f/${control.aperture}` : labels?.disabledLabel || "镜头关闭";
 }
 
-export function cameraControlSummary(value?: Partial<CameraControlOptions>) {
+export function cameraControlSummary(value?: Partial<CameraControlOptions>, labels?: { disabledSummary?: string }) {
     const control = normalizeCameraControl(value);
-    if (!control.enabled) return "未启用镜头控制";
+    if (!control.enabled) return labels?.disabledSummary || "未启用镜头控制";
     const camera = CAMERA_OPTIONS.find((item) => item.value === control.camera)!;
     const lens = LENS_OPTIONS.find((item) => item.value === control.lens)!;
     return `${camera.label} · ${lens.label} · ${control.focalLength}mm · f/${control.aperture}`;

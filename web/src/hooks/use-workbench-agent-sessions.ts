@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { nanoid } from "nanoid";
+import { useTranslations } from "next-intl";
 
 import type { WorkbenchAgentMessage, WorkbenchAgentSession } from "@/components/agent/workbench-agent-panel";
 import { loadOlderWorkbenchAgentSession, loadWorkbenchAgentSession, loadWorkbenchAgentSessions, mergeWorkbenchAgentSessions } from "@/components/agent/workbench-agent-session-store";
@@ -28,6 +29,7 @@ export function useWorkbenchAgentSessions(workspace: "image" | "video", userId: 
     const activeConversationRef = useRef<{ key: string; id: string } | undefined>(undefined);
     const conversationRequestRef = useRef<(WorkbenchContext & { promise: Promise<string> }) | null>(null);
     const olderMessagesRequestRef = useRef<string | undefined>(undefined);
+    const t = useTranslations("layout");
     if (contextRef.current.key !== contextKey) {
         contextRef.current = { key: contextKey, generation: contextRef.current.generation + 1 };
         agentMessagesContextRef.current = "";
@@ -81,7 +83,7 @@ export function useWorkbenchAgentSessions(workspace: "image" | "video", userId: 
             id: activeAgentSessionId,
             recordId: activeAgentRecordId,
             creativeConversationId: activeCreativeConversationId,
-            title: agentMessages.find((item) => item.role === "user")?.text.slice(0, 24) || "新对话",
+            title: agentMessages.find((item) => item.role === "user")?.text.slice(0, 24) || t("agent.sessions.newConversationTitle"),
             messages: agentMessages,
             prompt,
             lastPrompt: lastAgentPrompt,
@@ -162,8 +164,8 @@ export function useWorkbenchAgentSessions(workspace: "image" | "video", userId: 
         if (active?.key === context.key) return active.id;
         const pending = conversationRequestRef.current;
         if (pending && isCurrentContext(pending, context)) return pending.promise;
-        const request = createCreativeConversation({ surface: "chat", source: `${workspace}-workbench`, title: workspace === "image" ? "图片工作台对话" : "视频工作台对话" }).then((conversation) => {
-            if (!isCurrentContext(contextRef.current, context)) throw new Error("工作台已切换，请重试");
+        const request = createCreativeConversation({ surface: "chat", source: `${workspace}-workbench`, title: workspace === "image" ? t("agent.sessions.imageConversationTitle") : t("agent.sessions.videoConversationTitle") }).then((conversation) => {
+            if (!isCurrentContext(contextRef.current, context)) throw new Error(t("agent.sessions.switchedRetry"));
             activeConversationRef.current = { key: context.key, id: conversation.id };
             setActiveCreativeConversationId(conversation.id);
             return conversation.id;

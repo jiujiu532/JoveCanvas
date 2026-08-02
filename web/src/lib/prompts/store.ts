@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { AuthInputError } from "@/lib/auth/store";
+import { comparePromptsByPreferLocale, guessPromptLocale, isPreferLocale, normalizePromptLocale, type PreferLocale, type PromptLocale } from "@/lib/prompts/locale-rank";
 import { createPostgresRepositories, ensurePostgresSchema, isPostgresDatabaseEnabled, postgresQuery, withPostgresTransaction, type QueryExecutor } from "@/lib/server/database";
 import type { PromptRecord } from "@/lib/server/database/repository-types";
 import { readJsonDataFile, writeJsonDataFile } from "@/lib/server/data-adapter";
@@ -19,6 +20,7 @@ type StoredPrompt = {
     preview: string;
     githubUrl?: string;
     source?: string;
+    locale?: PromptLocale;
     createdAt: string;
     updatedAt: string;
 };
@@ -30,6 +32,7 @@ export type PromptInput = {
     tags?: string[] | string;
     category?: string;
     preview?: string;
+    locale?: string;
 };
 
 export type PromptDatabase = {
@@ -47,6 +50,7 @@ type BuiltInPromptSeed = {
     category: string;
     preview: string;
     githubUrl: string;
+    locale?: PromptLocale;
 };
 
 type PromptListOptions = {
@@ -56,6 +60,7 @@ type PromptListOptions = {
     tags?: string[];
     category?: string;
     random?: boolean;
+    preferLocale?: PreferLocale;
     page?: number;
     pageSize?: number;
 };
@@ -77,12 +82,15 @@ export async function listPrompts(options: PromptListOptions) {
     const category = options.category || "";
     const page = Math.max(1, options.page || 1);
     const pageSize = Math.max(1, Math.min(100, options.pageSize || 20));
+    const preferLocale = isPreferLocale(options.preferLocale) ? options.preferLocale : undefined;
     const base = db.prompts
         .filter((item) => item.scope === options.scope)
         .filter((item) => (options.scope === "user" ? item.ownerUserId === options.ownerUserId : true))
-        .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+        .sort((a, b) => (preferLocale ? comparePromptsByPreferLocale(a, b, preferLocale) : Date.parse(b.updatedAt) - Date.parse(a.updatedAt)));
     const withoutTagFilter = filterPrompts(base, { keyword, category, tags: [] });
-    const filtered = options.random ? shufflePrompts(filterPrompts(base, { keyword, category, tags })) : filterPrompts(base, { keyword, category, tags });
+    const matched = filterPrompts(base, { keyword, category, tags });
+    // random 不按语言排序；preferLocale 只影响排序，不剔除其它语言
+    const filtered = options.random ? shufflePrompts(matched) : preferLocale ? [...matched].sort((a, b) => comparePromptsByPreferLocale(a, b, preferLocale)) : matched;
 
     return {
         items: filtered.slice((page - 1) * pageSize, page * pageSize),
@@ -140,6 +148,7 @@ export async function createPrompt(scope: PromptScope, input: PromptInput, owner
             tags: prompt.tags,
             category: prompt.category,
             preview: prompt.preview,
+            locale: prompt.locale,
             createdAt: now,
             updatedAt: now,
         };
@@ -176,6 +185,7 @@ export async function updatePrompt(id: string, input: PromptInput, options: { sc
         item.tags = next.tags;
         item.category = next.category;
         item.preview = next.preview;
+        item.locale = next.locale;
         item.updatedAt = new Date().toISOString();
         return item;
     });
@@ -212,6 +222,7 @@ function normalizePromptInput(input: PromptInput) {
     const prompt = repairMojibakeText(input.prompt || "").trim();
     if (!title) throw new AuthInputError("请输入标题");
     if (!prompt) throw new AuthInputError("请输入提示词内容");
+    const locale = normalizePromptLocale(input.locale) || guessPromptLocale(title, prompt);
     return {
         title: title.slice(0, 120),
         coverUrl: (input.coverUrl || DEFAULT_COVER_URL).trim(),
@@ -222,6 +233,7 @@ function normalizePromptInput(input: PromptInput) {
                 .trim()
                 .slice(0, 40) || "默认",
         preview: repairMojibakeText(input.preview || "").trim(),
+        locale,
     };
 }
 
@@ -241,7 +253,22 @@ async function readPromptDb({ includeSeeds }: { includeSeeds: boolean }): Promis
         prompts: Array.isArray(db.prompts) ? db.prompts.map(normalizeStoredPrompt).filter(Boolean) : [],
         seedSources: Array.isArray(db.seedSources) ? db.seedSources.filter(Boolean) : [],
     };
-    return includeSeeds ? ensureBuiltInPromptLibrary(normalized) : normalized;
+    const withLocale = await backfillMissingPromptLocales(normalized);
+    return includeSeeds ? ensureBuiltInPromptLibrary(withLocale) : withLocale;
+}
+
+/** 存量 file DB 一次性补 locale（合法值不覆盖）；写回后后续读取即有字段 */
+async function backfillMissingPromptLocales(db: PromptDatabase): Promise<PromptDatabase> {
+    let changed = 0;
+    for (const item of db.prompts) {
+        if (normalizePromptLocale(item.locale)) continue;
+        item.locale = guessPromptLocale(item.title, item.prompt);
+        changed += 1;
+    }
+    if (changed > 0) {
+        await writeJsonDataFile(PROMPT_DATA_FILE, db);
+    }
+    return db;
 }
 
 async function ensureBuiltInPromptLibrary(db: PromptDatabase) {
@@ -285,6 +312,7 @@ function buildBuiltInPromptLibrary(seeds: BuiltInPromptSeed[], now: string): Sto
         category: seed.category,
         preview: seed.preview,
         githubUrl: seed.githubUrl,
+        locale: normalizePromptLocale(seed.locale) || guessPromptLocale(seed.title, seed.prompt),
         source: AWESOME_PROMPT_SEED_SOURCE,
         createdAt: now,
         updatedAt: now,
@@ -318,6 +346,7 @@ function promptInputFromRecord(prompt: PromptRecord): PromptInput {
         tags: Array.isArray(prompt.tags) ? prompt.tags.filter((tag): tag is string => typeof tag === "string") : [],
         category: prompt.category,
         preview: prompt.preview,
+        locale: prompt.locale,
     };
 }
 
@@ -334,6 +363,7 @@ function toPromptRecord(prompt: StoredPrompt): PromptRecord {
         preview: prompt.preview,
         githubUrl: prompt.githubUrl,
         source: prompt.source,
+        locale: prompt.locale,
         createdAt: prompt.createdAt,
         updatedAt: prompt.updatedAt,
     };
@@ -352,6 +382,7 @@ function toStoredPrompt(prompt: PromptRecord): StoredPrompt {
         preview: prompt.preview,
         githubUrl: prompt.githubUrl,
         source: prompt.source,
+        locale: normalizePromptLocale(prompt.locale),
         createdAt: prompt.createdAt,
         updatedAt: prompt.updatedAt,
     });
@@ -429,8 +460,8 @@ async function insertPostgresPrompts(db: QueryExecutor, prompts: StoredPrompt[])
     for (const prompt of prompts) {
         await db.query(
             `
-            INSERT INTO prompts (id, scope, owner_user_id, title, cover_url, prompt, tags, category, preview, github_url, source, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            INSERT INTO prompts (id, scope, owner_user_id, title, cover_url, prompt, tags, category, preview, github_url, source, locale, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
             `,
             [
                 prompt.id,
@@ -444,6 +475,7 @@ async function insertPostgresPrompts(db: QueryExecutor, prompts: StoredPrompt[])
                 prompt.preview,
                 prompt.githubUrl || null,
                 prompt.source || null,
+                prompt.locale || null,
                 prompt.createdAt,
                 prompt.updatedAt,
             ],
@@ -464,6 +496,7 @@ function mapPostgresPrompt(row: Record<string, unknown>): StoredPrompt {
         preview: dbText(row.preview),
         githubUrl: dbOptionalText(row.github_url),
         source: dbOptionalText(row.source),
+        locale: normalizePromptLocale(dbOptionalText(row.locale)),
         createdAt: dbIso(row.created_at),
         updatedAt: dbIso(row.updated_at),
     };
@@ -494,18 +527,22 @@ function emptyPromptDb(): PromptDatabase {
 
 function normalizeStoredPrompt(value: StoredPrompt): StoredPrompt {
     const now = new Date().toISOString();
+    const title = repairMojibakeText(value.title || "") || "未命名提示词";
+    const prompt = repairMojibakeText(value.prompt || "");
     return {
         id: value.id || randomUUID(),
         scope: value.scope === "user" ? "user" : "library",
         ownerUserId: value.ownerUserId,
-        title: repairMojibakeText(value.title || "") || "未命名提示词",
+        title,
         coverUrl: value.coverUrl || "",
-        prompt: repairMojibakeText(value.prompt || ""),
+        prompt,
         tags: normalizeTags(value.tags),
         category: repairMojibakeText(value.category || "") || "默认",
         preview: repairMojibakeText(value.preview || ""),
         githubUrl: value.githubUrl,
         source: value.source,
+        // 存量无 locale 时不猜写，列表排序把空值当 unknown；创建/更新/种子路径会显式赋值
+        locale: normalizePromptLocale(value.locale),
         createdAt: value.createdAt || now,
         updatedAt: value.updatedAt || value.createdAt || now,
     };
@@ -554,15 +591,6 @@ function isManagedPromptSeedSourceExceptCurrent(source?: string) {
     return Boolean(source && source !== AWESOME_PROMPT_SEED_SOURCE && isManagedPromptSeedSource(source));
 }
 
-function isUsefulPromptTag(tag?: string) {
-    const value = (tag || "").trim();
-    if (!value || value.length > 24) return false;
-    if (value.startsWith("@")) return false;
-    if (/^aws?ome-?gpt/i.test(value)) return false;
-    if (/^(moosl|openai)$/i.test(value)) return false;
-    return true;
-}
-
 // ---- Seed import support (JoveCanvas unique) ----
 
 export type StoredPromptExport = StoredPrompt;
@@ -570,6 +598,26 @@ export type StoredPromptExport = StoredPrompt;
 export const LIBRARY_SEED_SOURCE_WHITELIST = ["vozeb-pro/youmind-skill", "vozeb-pro/gptimage2-json"] as const;
 export type LibrarySeedSourcePrefix = (typeof LIBRARY_SEED_SOURCE_WHITELIST)[number];
 
+function assertLibrarySeedBatchInput(input: { sourcePrefix: string; source: string; prompts: StoredPrompt[] }) {
+    const { sourcePrefix, source, prompts } = input;
+    if (!sourcePrefix || !source) throw new AuthInputError("seed source/prefix 不能为空");
+    if (MANAGED_PROMPT_SEED_SOURCE_PREFIXES.some((prefix) => sourcePrefix === prefix || source.startsWith(prefix))) {
+        throw new AuthInputError("禁止通过 library seed batch 写入 managed awesome/original-author 前缀");
+    }
+    if (!(LIBRARY_SEED_SOURCE_WHITELIST as readonly string[]).includes(sourcePrefix)) {
+        throw new AuthInputError(`sourcePrefix 不在白名单: ${sourcePrefix}`);
+    }
+    if (!source.startsWith(sourcePrefix)) throw new AuthInputError("source 必须以前缀 sourcePrefix 开头");
+    for (const item of prompts) {
+        if (item.scope !== "library") throw new AuthInputError(`seed 必须为 library scope: ${item.id}`);
+        if (item.source !== source) throw new AuthInputError(`seed source 必须等于批次 source: ${item.id}`);
+    }
+}
+
+/**
+ * Read-only: whether this exact versioned seed source is already registered.
+ * Used by import CLI/pipeline to skip rehost before any media download.
+ */
 export async function isLibrarySeedSourceRegistered(source: string): Promise<boolean> {
     const value = (source || "").trim();
     if (!value) return false;
@@ -578,5 +626,84 @@ export async function isLibrarySeedSourceRegistered(source: string): Promise<boo
         return createPostgresRepositories().prompts.hasSeedSource(value);
     }
     const db = await readPromptBackup();
-    return db.prompts.some((item) => item.source === value);
+    return db.seedSources.includes(value) || db.prompts.some((item) => item.source === value);
+}
+
+/**
+ * Replace one independent library seed batch (PG or file).
+ * Never accepts managed awesome/original-author prefixes.
+ * Same versioned `source` already registered → skip (idempotent; bump :vN to force replace).
+ */
+export async function replaceLibrarySeedBatch(input: { sourcePrefix: string; source: string; prompts: StoredPrompt[] }): Promise<{ written: number; skipped?: boolean }> {
+    assertLibrarySeedBatchInput(input);
+    const { sourcePrefix, source, prompts } = input;
+
+    if (isPostgresDatabaseEnabled()) {
+        await ensurePostgresSchema();
+        const repository = createPostgresRepositories().prompts;
+        if (await repository.hasSeedSource(source)) {
+            return { written: 0, skipped: true };
+        }
+        const records = prompts.map((item) =>
+            toPromptRecord({
+                ...normalizeStoredPrompt(item),
+                locale: normalizePromptLocale(item.locale) || guessPromptLocale(item.title, item.prompt),
+                source,
+                scope: "library",
+            }),
+        );
+        await withPostgresTransaction(async (client) => {
+            await createPostgresRepositories(client).prompts.replaceSeededPrompts([sourcePrefix], source, records);
+        });
+        return { written: prompts.length };
+    }
+
+    const existing = await readPromptDb({ includeSeeds: false });
+    if (existing.seedSources.includes(source)) {
+        return { written: 0, skipped: true };
+    }
+
+    return mutatePromptDb((db) => {
+        if (db.seedSources.includes(source)) {
+            return { written: 0, skipped: true };
+        }
+        db.prompts = db.prompts.filter((item) => !(typeof item.source === "string" && item.source.startsWith(sourcePrefix)));
+        db.seedSources = db.seedSources.filter((item) => !item.startsWith(sourcePrefix));
+        const existingIds = new Set(db.prompts.map((item) => item.id));
+        for (const prompt of prompts) {
+            const next = normalizeStoredPrompt({
+                ...prompt,
+                scope: "library",
+                source,
+                locale: normalizePromptLocale(prompt.locale) || guessPromptLocale(prompt.title, prompt.prompt),
+            });
+            if (existingIds.has(next.id)) {
+                db.prompts = db.prompts.filter((item) => item.id !== next.id);
+            }
+            db.prompts.push(next);
+            existingIds.add(next.id);
+        }
+        db.seedSources = Array.from(new Set([...db.seedSources, source]));
+        return { written: prompts.length };
+    });
+}
+
+/** Read all library prompts (for hash index during import). Does not force-apply Phase2 batches. */
+export async function listAllLibraryPromptsForImport(): Promise<StoredPrompt[]> {
+    if (isPostgresDatabaseEnabled()) {
+        await ensurePostgresPromptSeeds();
+        const db = await readPostgresPromptDb();
+        return db.prompts.filter((item) => item.scope === "library");
+    }
+    const db = await readPromptDb({ includeSeeds: true });
+    return db.prompts.filter((item) => item.scope === "library");
+}
+
+function isUsefulPromptTag(tag?: string) {
+    const value = (tag || "").trim();
+    if (!value || value.length > 24) return false;
+    if (value.startsWith("@")) return false;
+    if (/^aws?ome-?gpt/i.test(value)) return false;
+    if (/^(moosl|openai)$/i.test(value)) return false;
+    return true;
 }

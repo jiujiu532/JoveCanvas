@@ -1,0 +1,81 @@
+---
+title: Local development
+description: Develop JoveCanvas with Node.js, pnpm, and PostgreSQL
+---
+
+# Local development
+
+## Requirements
+
+- Node.js 22
+- pnpm 11
+- PostgreSQL 16
+- FFmpeg (optional; only for media assembly flows)
+
+## Database
+
+```sql
+CREATE USER vozeb_pro WITH PASSWORD 'password';
+CREATE DATABASE vozeb_pro OWNER vozeb_pro;
+```
+
+## Environment variables
+
+```bash
+cp .env.example web/.env.local
+```
+
+Set at least:
+
+```dotenv
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+VOZEB_PRO_DATABASE_PROVIDER=postgres
+DATABASE_URL=postgres://vozeb_pro:password@localhost:5432/vozeb_pro
+VOZEB_PRO_DATABASE_POOL_MAX=10
+VOZEB_PRO_DATABASE_SSL=0
+VOZEB_PRO_ENCRYPTION_KEY=output-of-openssl-rand-hex-32
+VOZEB_PRO_INTERNAL_ORIGIN=http://127.0.0.1:3000
+```
+
+## Start the web app
+
+```bash
+cd web
+pnpm install --frozen-lockfile
+pnpm run dev
+```
+
+Open `http://localhost:3000/install`, confirm connectivity, initialize schema, then create the admin.
+
+## Start the docs site
+
+```bash
+cd docs
+pnpm install --frozen-lockfile
+pnpm run dev
+```
+
+Docs always serve at `http://localhost:3001`. `http://localhost:3000` belongs only to `web/`. If that URL shows “JoveCanvas documentation”, you started `docs/` (or an old docs script), not the main app.
+
+## Common checks
+
+```bash
+cd web
+npm test
+npm run typecheck
+npm run build
+
+cd ../docs
+npm run types:check
+npm run build
+```
+
+## Layout
+
+- `web/src/app/`: pages and Route Handlers.
+- `web/src/lib/server/`: server tasks, auth, model routing, billing, storage.
+- `web/src/services/api/`: browser API clients.
+- `web/src/stores/`: Zustand state.
+- `docs/content/docs/`: documentation content.
+
+Configure model channels, logical models, and SMTP in the admin console. Never commit real secrets to source control.

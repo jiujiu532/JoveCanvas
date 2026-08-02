@@ -23,7 +23,7 @@ export async function POST(request: Request, context: Context) {
             target: { type: "published_work", id: work.id },
             metadata: { featured: body.featured === true },
         });
-        return workPublicationOk({ work }, body.featured === true ? "作品已设为精选" : "作品已取消精选");
+        return await workPublicationOk({ work }, body.featured === true ? "作品已设为精选" : "作品已取消精选");
     } catch (error) {
         await safeRecordAuditLog({
             action: body.featured === true ? "admin.work.feature" : "admin.work.unfeature",
@@ -32,6 +32,6 @@ export async function POST(request: Request, context: Context) {
             target: { type: "published_work", id },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        return workPublicationError(error, "更新作品精选状态失败", "Update work featured state failed");
+        return await workPublicationError(error, "更新作品精选状态失败", "Update work featured state failed");
     }
 }

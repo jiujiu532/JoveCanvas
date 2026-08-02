@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { nanoid } from "nanoid";
 import { useCallback, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import { createFreshGenerationTaskContext } from "@/lib/generation-request-context";
 import { resolveImageRequestSize } from "@/lib/image-size";
@@ -12,6 +13,7 @@ import { createTextGenerationTask } from "@/services/api/text";
 import { createServerVideoGenerationTask } from "@/services/api/video";
 import type { InsertAssetPayload } from "../components/asset-picker-modal";
 import { CANVAS_AGENT_PANEL_MOTION_MS } from "../components/canvas-agent-panel-motion";
+import { canvasAgentRunLabelsFromT } from "../components/canvas-agent-run-client";
 import { retryCanvasAgentNode } from "../components/canvas-agent-node-retry";
 import { buildNodeGenerationContext, buildNodeResponseMessages, hydrateNodeGenerationContext } from "../components/canvas-node-generation";
 import { type CanvasNodeGenerationMode } from "../components/canvas-node-prompt-panel";
@@ -47,6 +49,8 @@ import type { CanvasPageState } from "./use-canvas-page-state";
 import type { CanvasTaskRuntime } from "./use-canvas-task-runtime";
 
 export function useCanvasGenerationActions({ state, tasks, interactions }: { state: CanvasPageState; tasks: CanvasTaskRuntime; interactions: CanvasInteractions }) {
+    const t = useTranslations("canvas");
+    const runLabels = canvasAgentRunLabelsFromT(t);
     const {
         message,
         projectId,
@@ -252,7 +256,7 @@ export function useCanvasGenerationActions({ state, tasks, interactions }: { sta
                                 return true;
                             } catch (error) {
                                 if (isGenerationCanceled(error)) return false;
-                                const errorDetails = error instanceof Error ? error.message : "生成失败";
+                                const errorDetails = error instanceof Error ? error.message : t("generation.failed");
                                 hasFailure = true;
                                 setNodes((prev) => prev.map((node) => (node.id === targetId ? { ...node, metadata: { ...node.metadata, status: NODE_STATUS_ERROR, errorDetails, imageTask: undefined } } : node)));
                             } finally {
@@ -266,15 +270,15 @@ export function useCanvasGenerationActions({ state, tasks, interactions }: { sta
                         setNodes((prev) => prev.map((node) => (node.id === nodeId && isConfigNode && node.metadata?.status === NODE_STATUS_LOADING ? { ...node, metadata: { ...node.metadata, status: NODE_STATUS_IDLE, errorDetails: undefined } } : node)));
                         return;
                     }
-                    if (hasFailure) message.error(hasSuccess ? "部分图片生成失败" : "全部图片生成失败");
+                    if (hasFailure) message.error(hasSuccess ? t("generation.partialImagesFailed") : t("generation.allImagesFailed"));
                     setNodes((prev) =>
                         prev.map((node) =>
                             node.id === nodeId && isConfigNode
-                                ? { ...node, metadata: { ...node.metadata, status: hasSuccess ? NODE_STATUS_SUCCESS : NODE_STATUS_ERROR, errorDetails: hasSuccess ? undefined : "全部图片生成失败" } }
+                                ? { ...node, metadata: { ...node.metadata, status: hasSuccess ? NODE_STATUS_SUCCESS : NODE_STATUS_ERROR, errorDetails: hasSuccess ? undefined : t("generation.allImagesFailed") } }
                                 : node.id === nodeId && isEmptyImageNode
-                                  ? { ...node, metadata: { ...node.metadata, status: hasSuccess ? NODE_STATUS_SUCCESS : NODE_STATUS_ERROR, errorDetails: hasSuccess ? undefined : "全部图片生成失败" } }
+                                  ? { ...node, metadata: { ...node.metadata, status: hasSuccess ? NODE_STATUS_SUCCESS : NODE_STATUS_ERROR, errorDetails: hasSuccess ? undefined : t("generation.allImagesFailed") } }
                                   : node.id === rootId && !hasSuccess
-                                    ? { ...node, metadata: { ...node.metadata, status: NODE_STATUS_ERROR, errorDetails: "全部图片生成失败" } }
+                                    ? { ...node, metadata: { ...node.metadata, status: NODE_STATUS_ERROR, errorDetails: t("generation.allImagesFailed") } }
                                     : node,
                         ),
                     );
@@ -434,7 +438,7 @@ export function useCanvasGenerationActions({ state, tasks, interactions }: { sta
                 );
             } catch (error) {
                 if (isGenerationCanceled(error)) return;
-                const errorDetails = error instanceof Error ? error.message : "生成失败";
+                const errorDetails = error instanceof Error ? error.message : t("generation.failed");
                 const videoTaskId = pendingChildIds.find((id) => nodesRef.current.find((item) => item.id === id)?.metadata?.videoTask);
                 const videoFailure = mode === "video" && videoTaskId ? classifyCanvasVideoTaskFailure(error) : undefined;
                 if (videoTaskId && videoFailure && videoFailure !== "upstream_failed") {
@@ -442,7 +446,7 @@ export function useCanvasGenerationActions({ state, tasks, interactions }: { sta
                         message.error(errorDetails);
                         deferVideoTask(videoTaskId, errorDetails, 30_000);
                     } else {
-                        message.info("视频仍在后台生成，系统会继续查询原任务");
+                        message.info(t("generation.videoBackgroundPolling"));
                         deferVideoTask(videoTaskId);
                     }
                     return;
@@ -489,10 +493,10 @@ export function useCanvasGenerationActions({ state, tasks, interactions }: { sta
                 setRunningNodeId(node.id);
                 setNodes((prev) => prev.map((item) => (item.id === node.id ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_LOADING, errorDetails: "" } } : item)));
                 try {
-                    await retryCanvasAgentNode(node, applyAgentOps);
-                    message.success("Agent 任务已重新生成");
+                    await retryCanvasAgentNode(node, applyAgentOps, runLabels);
+                    message.success(t("generation.agentRetried"));
                 } catch (error) {
-                    const errorDetails = error instanceof Error ? error.message : "Agent 任务重试失败";
+                    const errorDetails = error instanceof Error ? error.message : t("generation.agentRetryFailed");
                     message.error(errorDetails);
                     setNodes((prev) => prev.map((item) => (item.id === node.id ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_ERROR, errorDetails } } : item)));
                 } finally {
@@ -525,7 +529,7 @@ export function useCanvasGenerationActions({ state, tasks, interactions }: { sta
             const panoramaPrompt = node.type === CanvasNodeType.Panorama ? buildPanoramaPrompt(sourcePrompt, Boolean(savedImageMetadata?.references?.length || context?.referenceImages.length)) : sourcePrompt;
             const prompt = applyCameraPrompt(panoramaPrompt, node.type === CanvasNodeType.Text || node.type === CanvasNodeType.Panorama ? undefined : savedImageMetadata?.cameraControl || sourceNode.metadata?.cameraControl);
             if (!prompt) {
-                message.warning("找不到提示词，无法重试");
+                message.warning(t("generation.promptMissing"));
                 return;
             }
             const generationType = savedImageMetadata?.generationType;
@@ -533,8 +537,8 @@ export function useCanvasGenerationActions({ state, tasks, interactions }: { sta
             const retryReferenceImages =
                 hasSavedImageMetadata && savedImageMetadata ? await resolveMetadataReferences(savedImageMetadata) : useReferenceImages ? (context?.referenceImages.length ? context.referenceImages : sourceNodeReferenceImages(batchRoot || sourceNode)) : [];
             if (useReferenceImages && !retryReferenceImages) {
-                message.error("参考图片已丢失，无法继续重试");
-                setNodes((prev) => prev.map((item) => (item.id === node.id ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_ERROR, errorDetails: "参考图片已丢失，无法继续重试" } } : item)));
+                message.error(t("generation.referenceImageLost"));
+                setNodes((prev) => prev.map((item) => (item.id === node.id ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_ERROR, errorDetails: t("generation.referenceImageLost") } } : item)));
                 return;
             }
             const retryImages = retryReferenceImages || [];
@@ -596,7 +600,7 @@ export function useCanvasGenerationActions({ state, tasks, interactions }: { sta
                 await startAndCompleteImageTask(node.id, generationConfig, prompt, retryImages, undefined, controller);
             } catch (error) {
                 if (isGenerationCanceled(error)) return;
-                const errorDetails = error instanceof Error ? error.message : "生成失败";
+                const errorDetails = error instanceof Error ? error.message : t("generation.failed");
                 message.error(errorDetails);
                 setNodes((prev) =>
                     prev.map((item) => (item.id === node.id ? { ...item, metadata: { ...item.metadata, status: NODE_STATUS_ERROR, errorDetails, imageTask: undefined, textTask: undefined, videoTask: undefined, audioTask: undefined } } : item)),
@@ -630,7 +634,7 @@ export function useCanvasGenerationActions({ state, tasks, interactions }: { sta
         (node: CanvasNodeData) => {
             const prompt = (node.metadata?.content || node.metadata?.prompt || "").trim();
             if (!prompt) {
-                message.warning("文本节点为空，无法生图");
+                message.warning(t("generation.emptyTextNode"));
                 return;
             }
             const sourceNode = nodesRef.current.find((item) => item.id === node.id);

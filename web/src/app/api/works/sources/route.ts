@@ -9,13 +9,13 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
     const user = await getCurrentUser();
-    if (!user) return unauthorized();
+    if (!user) return await unauthorized();
     try {
         const sourceType = request.nextUrl.searchParams.get("sourceType");
         const sourceId = request.nextUrl.searchParams.get("sourceId");
-        if (sourceType || sourceId) return workPublicationOk({ source: await getWorkPublicationSource(user.id, sourceType, sourceId) });
-        return workPublicationOk({ sources: await listWorkPublicationSources(user.id) });
+        if (sourceType || sourceId) return await workPublicationOk({ source: await getWorkPublicationSource(user.id, sourceType, sourceId) });
+        return await workPublicationOk({ sources: await listWorkPublicationSources(user.id) });
     } catch (error) {
-        return workPublicationError(error, "获取可发布来源失败", "List work publication sources failed");
+        return await workPublicationError(error, "获取可发布来源失败", "List work publication sources failed");
     }
 }

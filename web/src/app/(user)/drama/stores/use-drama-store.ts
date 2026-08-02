@@ -7,6 +7,7 @@ import { summarizeDramaProject } from "@/lib/drama-project-summary";
 import type { DramaSourceEpisodeDraft } from "@/lib/drama-source-splitter";
 import { createDramaProject, createDramaProjectVersion, deleteDramaProject, getDramaProject, listDramaProjectSummaries, listDramaProjectVersions, restoreDramaProjectVersion, saveDramaProject } from "@/services/api/drama-projects";
 import { useUserStore } from "@/stores/use-user-store";
+import { dramaT } from "./drama-i18n-runtime";
 
 type DramaStore = {
     hydrated: boolean;
@@ -96,7 +97,7 @@ export const useDramaStore = create<DramaStore>((set, get) => ({
                 set({ summaries: result.projects, summaryTotal: result.total, summaryPage: result.page, summaryPageSize: result.pageSize, hydrated: true, hydratedUserId: userId });
             })
             .catch((error) => {
-                if (isActiveHydrate(session, requestId)) set({ summaries: [], summaryTotal: 0, summaryPage: 0, hydrated: false, hydratedUserId: userId, syncError: error instanceof Error ? error.message : "短剧项目加载失败" });
+                if (isActiveHydrate(session, requestId)) set({ summaries: [], summaryTotal: 0, summaryPage: 0, hydrated: false, hydratedUserId: userId, syncError: error instanceof Error ? error.message : dramaT()("store.projectLoadFailed") });
             })
             .finally(() => {
                 if (hydrateRequest?.requestId === requestId) hydrateRequest = null;
@@ -124,7 +125,7 @@ export const useDramaStore = create<DramaStore>((set, get) => ({
                 };
             });
         } catch (error) {
-            if (sessionEpoch.isCurrent(session)) set({ summaryLoadingMore: false, syncError: error instanceof Error ? error.message : "更多项目加载失败" });
+            if (sessionEpoch.isCurrent(session)) set({ summaryLoadingMore: false, syncError: error instanceof Error ? error.message : dramaT()("store.moreLoadFailed") });
         }
     },
     loadProject: async (id, force = false) => {
@@ -203,7 +204,7 @@ export const useDramaStore = create<DramaStore>((set, get) => ({
         mutateProject(projectId, (project) => {
             const episode: DramaEpisode = {
                 id: `episode-${nanoid()}`,
-                title: `第 ${project.episodes.length + 1} 集`,
+                title: dramaT()("store.episodeTitleTemplate", { n: project.episodes.length + 1 }),
                 script: "",
                 outline: "",
                 hook: "",
@@ -218,7 +219,7 @@ export const useDramaStore = create<DramaStore>((set, get) => ({
         mutateProject(projectId, (project) => {
             const episodes = drafts.slice(0, 100).map<DramaEpisode>((draft, index) => ({
                 id: `episode-${nanoid()}`,
-                title: draft.title || `第 ${index + 1} 集`,
+                title: draft.title || dramaT()("store.episodeTitleTemplate", { n: index + 1 }),
                 script: draft.script,
                 outline: "",
                 hook: "",
@@ -505,7 +506,7 @@ function queueSave(session: ClientSessionStamp, project: DramaProject) {
                 } catch (error) {
                     if (!sessionEpoch.isCurrent(session)) return;
                     const latest = useDramaStore.getState().projects.find((item) => item.id === project.id);
-                    if (latest?.updatedAt === project.updatedAt) useDramaStore.setState({ syncError: error instanceof Error ? error.message : "短剧项目保存失败" });
+                    if (latest?.updatedAt === project.updatedAt) useDramaStore.setState({ syncError: error instanceof Error ? error.message : dramaT()("store.projectSaveFailed") });
                 }
             });
             saveQueues.set(key, operation);
@@ -537,12 +538,12 @@ function isActiveHydrate(session: ClientSessionStamp, requestId: number) {
 
 function requireSession() {
     const session = sessionEpoch.capture();
-    if (!session.userId) throw new Error("请先登录");
+    if (!session.userId) throw new Error(dramaT()("store.loginRequired"));
     return session;
 }
 
 function assertCurrent(session: ClientSessionStamp) {
-    if (!sessionEpoch.isCurrent(session)) throw new Error("登录会话已变更，请重试");
+    if (!sessionEpoch.isCurrent(session)) throw new Error(dramaT()("store.sessionChanged"));
 }
 
 function invalidateSession() {
@@ -571,19 +572,19 @@ function scriptToShots(script: string, project: DramaProject): DramaShot[] {
             return {
                 id: `shot-${nanoid()}`,
                 order: index + 1,
-                title: `镜头 ${String(index + 1).padStart(2, "0")}`,
+                title: dramaT()("storyboard.shotTitleFallback", { order: String(index + 1).padStart(2, "0") }),
                 description: text,
                 sourceText: text,
-                shotBoundary: "段落边界",
+                shotBoundary: dramaT()("store.paragraphBoundary"),
                 dialogue: "",
                 narration: "",
                 utterances: [],
-                imagePrompt: `${context}，角色与画风保持一致，电影分镜画面`,
-                videoPrompt: `${context}，镜头运动自然，人物动作连续，保持角色一致性`,
-                cameraMotion: "自然镜头运动",
+                imagePrompt: dramaT()("store.defaultImagePrompt", { context }),
+                videoPrompt: dramaT()("store.defaultVideoPrompt", { context }),
+                cameraMotion: dramaT()("store.defaultCameraMotion"),
                 startFramePrompt: text,
                 endFramePrompt: text,
-                negativePrompt: "文字、水印、角色身份漂移、服装变化、错误肢体",
+                negativePrompt: dramaT()("store.defaultNegativePrompt"),
                 continuity: emptyContinuity(),
                 duration: 5,
                 characterIds: [],

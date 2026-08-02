@@ -2,6 +2,7 @@
 
 import { type ReactNode } from "react";
 import { Select } from "antd";
+import { useTranslations } from "next-intl";
 
 import { ImageSettingsTheme } from "@/components/image-settings-panel";
 import { audioFormatOptions, audioSpeedLabel, audioVoiceOptions, normalizeAudioFormatValue, normalizeAudioSpeedValue, normalizeAudioVoiceValue } from "@/lib/audio-generation";
@@ -26,25 +27,26 @@ export function AudioSettingsPanel({ config, onConfigChange, theme, showTitle = 
     const speed = normalizeAudioSpeedValue(config.audioSpeed);
     const speedSelectOptions = speedOptions.map((value) => ({ value, label: audioSpeedLabel(value) }));
 
+    const t = useTranslations("layout");
     return (
         <ImageSettingsTheme theme={theme}>
             <div className={className} style={{ color: theme.node.text }} onMouseDown={(event) => event.stopPropagation()}>
-                {showTitle ? <div className="text-lg font-semibold">音频设置</div> : null}
-                <SettingGroup title="声音" color={theme.node.muted}>
+                {showTitle ? <div className="text-lg font-semibold">{t("settings.audio.title")}</div> : null}
+                <SettingGroup title={t("settings.audio.voice")} color={theme.node.muted}>
                     <AudioSelect value={voice} options={audioVoiceOptions} theme={theme} onChange={(value) => onConfigChange("audioVoice", value)} />
                 </SettingGroup>
                 <div className="grid grid-cols-2 gap-2.5">
-                    <SettingGroup title="格式" color={theme.node.muted}>
+                    <SettingGroup title={t("settings.audio.format")} color={theme.node.muted}>
                         <AudioSelect value={format} options={audioFormatOptions} theme={theme} onChange={(value) => onConfigChange("audioFormat", value)} />
                     </SettingGroup>
-                    <SettingGroup title="语速" color={theme.node.muted}>
+                    <SettingGroup title={t("settings.audio.speed")} color={theme.node.muted}>
                         <AudioSelect value={speed} options={speedSelectOptions} theme={theme} onChange={(value) => onConfigChange("audioSpeed", value)} />
                     </SettingGroup>
                 </div>
-                <SettingGroup title="声音指令" color={theme.node.muted}>
+                <SettingGroup title={t("settings.audio.instructions")} color={theme.node.muted}>
                     <textarea
                         value={config.audioInstructions || ""}
-                        placeholder="例如：自然、温暖、适合旁白。"
+                        placeholder={t("settings.audio.instructionsPlaceholder")}
                         className="thin-scrollbar h-16 w-full resize-none rounded-xl border bg-transparent px-3 py-2 text-sm leading-5 outline-none"
                         style={{ borderColor: theme.node.stroke, color: theme.node.text }}
                         onChange={(event) => onConfigChange("audioInstructions", event.target.value)}

@@ -7,6 +7,7 @@ import { readAdminBackupData, restoreAdminBackupData, type AdminBackupData } fro
 import { getDatabaseProvider } from "@/lib/server/database";
 import { copyDataFile, ensureDataDirectory, listDataDirectory, removeDataPath, resolveDataPath, writeJsonDataFile } from "@/lib/server/data-adapter";
 import { readRequestBodyBytes, RequestBodyTooLargeError } from "@/lib/server/request-body-limit";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,8 +25,8 @@ const RESTORE_IMPORT_BACKUP_PATTERN = /^\d{4}-\d{2}-\d{2}T.+Z$/;
 
 export async function GET() {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     const exportedAt = new Date().toISOString();
     const data = await readAdminBackupData();
@@ -52,28 +53,28 @@ export async function GET() {
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     const contentType = request.headers.get("content-type") || "";
-    if (!contentType.toLowerCase().includes("multipart/form-data")) return NextResponse.json({ error: "备份上传格式不正确" }, { status: 400 });
+    if (!contentType.toLowerCase().includes("multipart/form-data")) return NextResponse.json({ error: await serverMessage("backup.invalidFormat") }, { status: 400 });
     let formData: FormData;
     try {
         const bytes = await readRequestBodyBytes(request, MAX_IMPORT_REQUEST_BYTES);
         formData = await new Request(request.url, { method: "POST", headers: { "content-type": contentType }, body: bytes }).formData();
     } catch (error) {
-        if (error instanceof RequestBodyTooLargeError) return NextResponse.json({ error: "备份文件过大，请确认文件是否正确" }, { status: error.status });
-        return NextResponse.json({ error: "备份上传格式不正确" }, { status: 400 });
+        if (error instanceof RequestBodyTooLargeError) return NextResponse.json({ error: await serverMessage("backup.fileTooLarge") }, { status: error.status });
+        return NextResponse.json({ error: await serverMessage("backup.invalidFormat") }, { status: 400 });
     }
     const file = formData.get("file");
-    if (!(file instanceof File)) return NextResponse.json({ error: "请选择要导入的备份文件" }, { status: 400 });
-    if (file.size > MAX_IMPORT_BYTES) return NextResponse.json({ error: "备份文件过大，请确认文件是否正确" }, { status: 400 });
+    if (!(file instanceof File)) return NextResponse.json({ error: await serverMessage("backup.selectFile") }, { status: 400 });
+    if (file.size > MAX_IMPORT_BYTES) return NextResponse.json({ error: await serverMessage("backup.fileTooLarge") }, { status: 400 });
 
     let parsed: unknown;
     try {
         parsed = JSON.parse(await file.text());
     } catch {
-        return NextResponse.json({ error: "备份文件不是有效 JSON" }, { status: 400 });
+        return NextResponse.json({ error: await serverMessage("backup.invalidJson") }, { status: 400 });
     }
 
     const files = extractBackupFiles(parsed);
@@ -87,7 +88,7 @@ export async function POST(request: Request) {
     const entries = Object.entries(RESTORE_FILE_MAP)
         .map(([key, fileName]) => ({ key, fileName, value: files[key as keyof BackupFiles] }))
         .filter((entry) => entry.value !== undefined && entry.value !== null);
-    if (!entries.length) return NextResponse.json({ error: "备份文件里没有可导入的数据" }, { status: 400 });
+    if (!entries.length) return NextResponse.json({ error: await serverMessage("backup.noImportableData") }, { status: 400 });
 
     let values: Array<(typeof entries)[number] & { value: unknown }>;
     try {

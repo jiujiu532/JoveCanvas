@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Bot, History, PanelRightClose, Pause, Play, Plus, Square, Trash2, X } from "lucide-react";
 import { Button, Modal, Tooltip } from "antd";
 import { motion } from "motion/react";
@@ -18,7 +19,6 @@ import { DiaTextReveal } from "@/components/ui/dia-text-reveal";
 import { ModelIcon } from "@/components/model-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { CanvasPromptLibrary } from "./canvas-prompt-library";
-import { watchCanvasAgentRun } from "./canvas-agent-run-client";
 import type { CanvasAgentRunStage } from "./canvas-agent-progress";
 import { formatAgentMessageText, type AgentMessageFormatLabels } from "@/components/agent/agent-message-format";
 import { AgentChatComposer, AgentChatMessage, AgentPanelTabs, AgentWorkingMessage, type CanvasAgentChatMessage } from "./canvas-agent-chat-ui";
@@ -28,6 +28,7 @@ import type { CanvasAgentOp, CanvasAgentSnapshot } from "../utils/canvas-agent-o
 
 const PANEL_MOTION_SECONDS = CANVAS_AGENT_PANEL_MOTION_MS / 1000;
 export function AgentTextModelPicker({ config, value, onChange }: { config: AiConfig; value: string; onChange: (model: string) => void }) {
+    const t = useTranslations("canvas");
     const options = useMemo(() => Array.from(new Set([value, ...selectableModelsByCapability(config, "text")].filter(Boolean))), [config, value]);
     const current = value || "";
     return (
@@ -35,12 +36,12 @@ export function AgentTextModelPicker({ config, value, onChange }: { config: AiCo
             <SelectTrigger
                 hideChevron
                 className="h-7 min-w-0 max-w-[220px] gap-1.5 border-0 bg-transparent px-1 py-0 text-xs font-normal shadow-none hover:bg-transparent hover:opacity-75 focus-visible:border-transparent focus-visible:ring-0 data-[state=open]:ring-0 dark:bg-transparent dark:hover:bg-transparent"
-                title={current ? `${modelOptionName(current)} · ${resolveModelChannel(config, current).name}` : "选择文本模型"}
+                title={current ? `${modelOptionName(current)} · ${resolveModelChannel(config, current).name}` : t("assistant.selectTextModel")}
                 onMouseDown={(event) => event.stopPropagation()}
                 onPointerDown={(event) => event.stopPropagation()}
             >
                 <ModelIcon model={current} />
-                <span className="min-w-0 truncate">{current ? modelOptionName(current) : "选择文本模型"}</span>
+                <span className="min-w-0 truncate">{current ? modelOptionName(current) : t("assistant.selectTextModel")}</span>
                 {current ? <span className="shrink-0 opacity-55">{resolveModelChannel(config, current).name}</span> : null}
             </SelectTrigger>
             <SelectContent
@@ -65,7 +66,7 @@ export function AgentTextModelPicker({ config, value, onChange }: { config: AiCo
                     ))
                 ) : (
                     <SelectItem value="__empty_text_model__" disabled>
-                        暂无文本模型
+                        {t("assistant.noTextModel")}
                     </SelectItem>
                 )}
             </SelectContent>
@@ -74,12 +75,13 @@ export function AgentTextModelPicker({ config, value, onChange }: { config: AiCo
 }
 
 export function AssistantHistory({ sessions, activeSession, onOpen, onDelete }: { sessions: CanvasAssistantSession[]; activeSession: CanvasAssistantSession | null; onOpen: (id: string) => void; onDelete: (id: string) => void }) {
+    const t = useTranslations("canvas");
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
 
     return (
         <div className="space-y-3">
             <div className="text-sm" style={{ color: theme.node.muted }}>
-                {sessions.length ? `${sessions.length} 条历史` : "暂无历史"}
+                {sessions.length ? t("assistant.historyCount", { count: sessions.length }) : t("assistant.historyEmpty")}
             </div>
             {sessions.map((session) => (
                 <div key={session.id} className="rounded-lg border px-2.5 py-1.5 transition" style={{ borderColor: session.id === activeSession?.id ? theme.node.text : theme.node.stroke, background: "transparent", color: theme.node.text }}>
@@ -88,19 +90,19 @@ export function AssistantHistory({ sessions, activeSession, onOpen, onDelete }: 
                             <div className="flex min-w-0 items-center gap-1.5">
                                 {session.id === activeSession?.id ? (
                                     <span className="shrink-0 text-[10px] font-medium" style={{ color: theme.node.text }}>
-                                        当前
+                                        {t("assistant.current")}
                                     </span>
                                 ) : null}
                                 <div className="truncate text-sm font-medium leading-5">{session.title}</div>
                             </div>
-                            <div className="truncate text-[11px] leading-4 opacity-65">{sessionPreview(session)}</div>
+                            <div className="truncate text-[11px] leading-4 opacity-65">{sessionPreview(session, (count) => t("assistant.messageCount", { count }))}</div>
                         </div>
                         <div className="flex shrink-0 items-center gap-1">
                             <span className="text-[10px] opacity-55">{formatSessionTime(session.updatedAt || session.createdAt)}</span>
                             <Button size="small" className="!h-6 !px-2" onClick={() => onOpen(session.id)}>
-                                进入
+                                {t("assistant.enter")}
                             </Button>
-                            <Tooltip title="删除记录">
+                            <Tooltip title={t("assistant.deleteRecord")}>
                                 <Button size="small" danger type="text" className="!h-6 !w-6 !min-w-6" icon={<Trash2 className="size-3.5" />} onClick={() => onDelete(session.id)} />
                             </Tooltip>
                         </div>
@@ -109,7 +111,7 @@ export function AssistantHistory({ sessions, activeSession, onOpen, onDelete }: 
             ))}
             {!sessions.length ? (
                 <div className="px-3 py-8 text-center text-sm" style={{ color: theme.node.muted }}>
-                    网站 Agent 的对话记录会显示在这里
+                    {t("assistant.historyHint")}
                 </div>
             ) : null}
         </div>
@@ -117,8 +119,9 @@ export function AssistantHistory({ sessions, activeSession, onOpen, onDelete }: 
 }
 
 export function AssistantReferenceChip({ item, label, onRemove }: { item: CanvasAssistantReference; label?: string; onRemove?: () => void }) {
+    const t = useTranslations("canvas");
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
-    const text = (item.text || item.title).replace(/\s+/g, " ").trim().slice(0, 1) || "文";
+    const text = (item.text || item.title).replace(/\s+/g, " ").trim().slice(0, 1) || t("assistant.textFallback");
     return (
         <div className="group/chip relative inline-flex h-8 max-w-[150px] shrink-0 items-center gap-1.5 rounded-lg text-sm" style={{ color: theme.node.text }}>
             {item.dataUrl ? (
@@ -137,7 +140,7 @@ export function AssistantReferenceChip({ item, label, onRemove }: { item: Canvas
                     className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full border opacity-0 shadow-sm transition group-hover/chip:opacity-100"
                     style={{ background: theme.toolbar.panel, borderColor: theme.node.stroke }}
                     onClick={onRemove}
-                    aria-label="移除引用"
+                    aria-label={t("assistant.removeReference")}
                 >
                     <X className="size-3" />
                 </button>
@@ -161,8 +164,8 @@ export function formatSessionTime(value?: string) {
     return value ? new Date(value).toLocaleString() : "";
 }
 
-export function sessionPreview(session: CanvasAssistantSession) {
-    return session.messages.at(-1)?.text || `${session.messages.length} 条消息`;
+export function sessionPreview(session: CanvasAssistantSession, messageCountLabel?: (count: number) => string) {
+    return session.messages.at(-1)?.text || (messageCountLabel ? messageCountLabel(session.messages.length) : `${session.messages.length}`);
 }
 
 export function nodeToReference(node: CanvasNodeData): CanvasAssistantReference | null {
@@ -224,7 +227,7 @@ export function compactMetadata(metadata: CanvasNodeData["metadata"]) {
     };
 }
 
-export function createSession(): CanvasAssistantSession {
+export function createSession(title = "New chat"): CanvasAssistantSession {
     const now = new Date().toISOString();
-    return { id: nanoid(), title: "新对话", messages: [], createdAt: now, updatedAt: now };
+    return { id: nanoid(), title, messages: [], createdAt: now, updatedAt: now };
 }

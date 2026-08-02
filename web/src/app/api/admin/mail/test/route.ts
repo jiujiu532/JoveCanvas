@@ -4,6 +4,7 @@ import { readJsonBody } from "@/lib/auth/request";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getAuthSettings, type MailSettings } from "@/lib/auth/store";
 import { sendSmtpTestMail } from "@/lib/mail/smtp";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 
@@ -14,8 +15,8 @@ type MailTestBody = {
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     try {
         const body = await readJsonBody<MailTestBody>(request);

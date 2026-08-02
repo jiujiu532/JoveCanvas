@@ -1,0 +1,18 @@
+{
+  "title": "Overview",
+  "root": true,
+  "defaultOpen": true,
+  "pages": [
+    "quick-start",
+    "configuration",
+    "production-readiness",
+    "features",
+    "project-structure",
+    "page-gallery",
+    "low-memory",
+    "render",
+    "docker",
+    "third-party-prompt-repositories",
+    "[Repository](https://github.com/jiujiu532/JoveCanvas)"
+  ]
+}

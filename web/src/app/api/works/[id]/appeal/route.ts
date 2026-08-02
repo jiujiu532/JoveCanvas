@@ -10,22 +10,22 @@ type Context = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, context: Context) {
     const user = await getCurrentUser();
-    if (!user) return unauthorized();
+    if (!user) return await unauthorized();
     try {
-        return workPublicationOk({ items: await listWorkCasesForOwner(user.id, (await context.params).id) });
+        return await workPublicationOk({ items: await listWorkCasesForOwner(user.id, (await context.params).id) });
     } catch (error) {
-        return workPublicationError(error, "获取作品申诉记录失败", "List owner work cases failed");
+        return await workPublicationError(error, "获取作品申诉记录失败", "List owner work cases failed");
     }
 }
 
 export async function POST(request: Request, context: Context) {
     const user = await getCurrentUser();
-    if (!user) return unauthorized();
+    if (!user) return await unauthorized();
     const body = await readJsonBody<{ versionId?: unknown; description?: unknown }>(request);
     try {
         const item = await submitWorkAppeal(user.id, (await context.params).id, body);
-        return workPublicationOk({ item }, "申诉已提交");
+        return await workPublicationOk({ item }, "申诉已提交");
     } catch (error) {
-        return workPublicationError(error, "提交申诉失败", "Submit work appeal failed");
+        return await workPublicationError(error, "提交申诉失败", "Submit work appeal failed");
     }
 }

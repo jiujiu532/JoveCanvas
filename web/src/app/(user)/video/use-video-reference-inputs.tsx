@@ -1,6 +1,7 @@
 "use client";
 
 import { nanoid } from "nanoid";
+import { useTranslations } from "next-intl";
 import type { Dispatch, DragEvent as ReactDragEvent, SetStateAction } from "react";
 
 import { droppedFiles, leftDropTarget, preventFileDragEvent } from "@/lib/file-drop";
@@ -25,20 +26,21 @@ export function useVideoReferenceInputs(input: {
     setReferenceDragTarget: Dispatch<SetStateAction<ReferenceDropTarget | null>>;
     notice: Notice;
 }) {
+    const t = useTranslations("workspace.video");
     const addReferences = async (files?: FileList | File[] | null) => {
         const selectedFiles = Array.from(files || []);
         const unsupported = selectedFiles.filter((file) => !file.type.startsWith("image/") && !file.type.startsWith("video/") && !isSupportedAudioFile(file));
-        if (unsupported.length) input.notice.warning("已忽略不支持的参考素材，请使用图片、mp4/mov 视频或 mp3/wav 音频");
+        if (unsupported.length) input.notice.warning(t("ignoredUnsupportedReference"));
         const imageFiles = selectedFiles.filter((file) => file.type.startsWith("image/") && file.size <= SEEDANCE_REFERENCE_LIMITS.imageMaxBytes).slice(0, SEEDANCE_REFERENCE_LIMITS.images - input.references.length);
         const videoFiles = selectedFiles.filter((file) => file.type.startsWith("video/") && file.size <= SEEDANCE_REFERENCE_LIMITS.videoMaxBytes).slice(0, SEEDANCE_REFERENCE_LIMITS.videos - input.videoReferences.length);
         const audioFiles = selectedFiles.filter((file) => isSupportedAudioFile(file) && file.size <= SEEDANCE_REFERENCE_LIMITS.audioMaxBytes).slice(0, SEEDANCE_REFERENCE_LIMITS.audios - input.audioReferences.length);
-        if (selectedFiles.some((file) => file.type.startsWith("image/") && file.size > SEEDANCE_REFERENCE_LIMITS.imageMaxBytes)) input.notice.warning("已忽略超过 30MB 的参考图");
-        if (selectedFiles.some((file) => file.type.startsWith("video/") && file.size > SEEDANCE_REFERENCE_LIMITS.videoMaxBytes)) input.notice.warning("已忽略超过 50MB 的参考视频");
-        if (selectedFiles.some((file) => isSupportedAudioFile(file) && file.size > SEEDANCE_REFERENCE_LIMITS.audioMaxBytes)) input.notice.warning("已忽略超过 15MB 的参考音频");
+        if (selectedFiles.some((file) => file.type.startsWith("image/") && file.size > SEEDANCE_REFERENCE_LIMITS.imageMaxBytes)) input.notice.warning(t("ignoredImageOversize"));
+        if (selectedFiles.some((file) => file.type.startsWith("video/") && file.size > SEEDANCE_REFERENCE_LIMITS.videoMaxBytes)) input.notice.warning(t("ignoredVideoOversize"));
+        if (selectedFiles.some((file) => isSupportedAudioFile(file) && file.size > SEEDANCE_REFERENCE_LIMITS.audioMaxBytes)) input.notice.warning(t("ignoredAudioOversize"));
         const nextReferences = await Promise.all(
             imageFiles.map(async (file) => {
                 const image = await uploadImage(file);
-                return { id: nanoid(), name: file.name, type: image.mimeType, dataUrl: image.url, storageKey: image.storageKey, width: image.width, height: image.height };
+                return { id: nanoid(), name: file.name, type: image.mimeType, dataUrl: image.url, storageKey: image.storageKey };
             }),
         );
         const nextVideoReferences = await Promise.all(
@@ -79,17 +81,17 @@ export function useVideoReferenceInputs(input: {
         try {
             const items = await navigator.clipboard.read();
             const blobs = await Promise.all(items.flatMap((item) => item.types.filter((type) => type.startsWith("image/")).map((type) => item.getType(type))));
-            if (!blobs.length) return input.notice.error("剪切板里没有可读取的图片");
+            if (!blobs.length) return input.notice.error(t("noClipboardImage"));
             const next = await Promise.all(
                 blobs.slice(0, SEEDANCE_REFERENCE_LIMITS.images - input.references.length).map(async (blob, index) => {
                     const image = await uploadImage(blob);
-                    return { id: nanoid(), name: `clipboard-${index + 1}.png`, type: image.mimeType, dataUrl: image.url, storageKey: image.storageKey, width: image.width, height: image.height };
+                    return { id: nanoid(), name: `clipboard-${index + 1}.png`, type: image.mimeType, dataUrl: image.url, storageKey: image.storageKey };
                 }),
             );
             input.setReferences((value) => [...value, ...next].slice(0, SEEDANCE_REFERENCE_LIMITS.images));
-            input.notice.success(`已读取 ${next.length} 张参考图`);
+            input.notice.success(t("clipboardImagesReadCount", { count: next.length }));
         } catch {
-            input.notice.error("剪切板里没有可读取的图片");
+            input.notice.error(t("noClipboardImage"));
         }
     };
     const referenceDropZoneClass = (target: ReferenceDropTarget) =>

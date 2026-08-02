@@ -10,12 +10,12 @@ type Context = { params: Promise<{ slug: string }> };
 
 export async function POST(request: Request, context: Context) {
     const user = await getCurrentUser();
-    if (!user) return unauthorized();
+    if (!user) return await unauthorized();
     const body = await readJsonBody<{ category?: unknown; description?: unknown }>(request);
     try {
         const item = await submitPublicWorkReport(user.id, (await context.params).slug, body);
-        return workPublicationOk({ item }, "举报已提交");
+        return await workPublicationOk({ item }, "举报已提交");
     } catch (error) {
-        return workPublicationError(error, "提交举报失败", "Submit work report failed");
+        return await workPublicationError(error, "提交举报失败", "Submit work report failed");
     }
 }

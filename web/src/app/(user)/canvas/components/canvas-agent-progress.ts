@@ -13,20 +13,36 @@ export type CanvasAgentProgressStep = {
     status: "pending" | "running" | "completed" | "paused";
 };
 
-const definitions: Array<Pick<CanvasAgentProgressStep, "key" | "label">> = [
-    { key: "canvas", label: "理解当前需求" },
-    { key: "skills", label: "检查素材与能力" },
-    { key: "plan", label: "准备执行任务" },
-    { key: "execute", label: "执行生成任务" },
-    { key: "review", label: "检查生成结果" },
-    { key: "deliver", label: "整理生成结果" },
-];
+export type CanvasAgentProgressLabels = Record<CanvasAgentProgressStep["key"], string>;
 
-export function canvasAgentProgressSteps(stage: CanvasAgentRunStage): CanvasAgentProgressStep[] {
+export const DEFAULT_CANVAS_AGENT_PROGRESS_LABELS: CanvasAgentProgressLabels = {
+    canvas: "理解当前需求",
+    skills: "检查素材与能力",
+    plan: "准备执行任务",
+    execute: "执行生成任务",
+    review: "检查生成结果",
+    deliver: "整理生成结果",
+};
+
+export function canvasAgentProgressLabelsFromT(t: (key: string) => string): CanvasAgentProgressLabels {
+    return {
+        canvas: t("progress.canvas"),
+        skills: t("progress.skills"),
+        plan: t("progress.plan"),
+        execute: t("progress.execute"),
+        review: t("progress.review"),
+        deliver: t("progress.deliver"),
+    };
+}
+
+const STEP_KEYS: Array<CanvasAgentProgressStep["key"]> = ["canvas", "skills", "plan", "execute", "review", "deliver"];
+
+export function canvasAgentProgressSteps(stage: CanvasAgentRunStage, labels: CanvasAgentProgressLabels = DEFAULT_CANVAS_AGENT_PROGRESS_LABELS): CanvasAgentProgressStep[] {
     const activeKey = stage.key === "reconnecting" ? stage.resumeKey || "planning" : stage.key;
     const activeIndex = activeKey === "planning" ? 0 : activeKey === "skills" ? 1 : activeKey === "plan" ? 2 : activeKey === "executing" || activeKey === "paused" ? 3 : activeKey === "reviewing" ? 4 : 5;
-    return definitions.map((step, index) => ({
-        ...step,
+    return STEP_KEYS.map((key, index) => ({
+        key,
+        label: labels[key],
         status: index < activeIndex ? "completed" : index > activeIndex ? "pending" : activeKey === "paused" ? "paused" : "running",
     }));
 }

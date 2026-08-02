@@ -2,6 +2,7 @@
 
 import { App, Button, Input, Modal, Pagination, Segmented, Select, Tag } from "antd";
 import { ArrowUpFromLine, Ban, Compass, Copy, Eye, Film, GalleryVerticalEnd, Image as ImageIcon, Pencil, Plus, RefreshCw, Scale, Search, Send, Trash2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -20,11 +21,13 @@ import {
 } from "@/services/api/work-publications";
 import { submitWorkAppeal } from "@/services/api/work-governance";
 import { WorkPublicationEditor } from "./components/work-publication-editor";
-import { formatWorkTime, SOURCE_TYPE_LABELS, VISIBILITY_LABELS, workSharePath, workStatusLabel, WORK_STATUS_OPTIONS } from "./work-publication-values";
+import { formatWorkTime, sourceTypeLabels, visibilityLabels, workSharePath, workStatusLabel, workStatusOptions } from "./work-publication-values";
 
 const PAGE_SIZE = 10;
 
 export default function WorksPage() {
+    const t = useTranslations("public.works.myWorks");
+    const locale = useLocale();
     const { message, modal } = App.useApp();
     const copyText = useCopyText();
     const searchParams = useSearchParams();
@@ -44,6 +47,9 @@ export default function WorksPage() {
     const [editingWorkId, setEditingWorkId] = useState<string>();
     const [appealWork, setAppealWork] = useState<WorkPublication>();
     const [appealDescription, setAppealDescription] = useState("");
+    const statusOptions = useMemo(() => workStatusOptions(t), [t]);
+    const sourceLabels = useMemo(() => sourceTypeLabels(t), [t]);
+    const visibilityLabelMap = useMemo(() => visibilityLabels(t), [t]);
 
     useEffect(() => {
         const timer = window.setTimeout(() => setDebouncedKeyword(keyword.trim()), 300);
@@ -63,11 +69,11 @@ export default function WorksPage() {
             if (requestId !== requestIdRef.current) return;
             setItems([]);
             setTotal(0);
-            setError(loadError instanceof Error ? loadError.message : "作品列表加载失败");
+            setError(loadError instanceof Error ? loadError.message : t("loadFailed"));
         } finally {
             if (requestId === requestIdRef.current) setLoading(false);
         }
-    }, [debouncedKeyword, page, status]);
+    }, [debouncedKeyword, page, status, t]);
 
     useEffect(() => {
         void load();
@@ -89,10 +95,10 @@ export default function WorksPage() {
         setActionId(work.id);
         try {
             await submitWorkPublication(work.id);
-            message.success("作品已提交审核");
+            message.success(t("submitSuccess"));
             await load();
         } catch (submitError) {
-            message.error(submitError instanceof Error ? submitError.message : "提交审核失败");
+            message.error(submitError instanceof Error ? submitError.message : t("submitFailed"));
         } finally {
             setActionId("");
         }
@@ -100,19 +106,19 @@ export default function WorksPage() {
 
     const takeDown = (work: WorkPublication) => {
         modal.confirm({
-            title: "下架这个作品？",
-            content: "下架后公开链接和媒体将立即不可访问；需要彻底移除时，可在下架后继续删除作品。",
-            okText: "确认下架",
-            cancelText: "取消",
+            title: t("takeDownTitle"),
+            content: t("takeDownContent"),
+            okText: t("confirmTakeDown"),
+            cancelText: t("cancel"),
             okButtonProps: { danger: true },
             onOk: async () => {
                 setActionId(work.id);
                 try {
                     await revokeWorkPublication(work.id);
-                    message.success("作品已下架");
+                    message.success(t("takeDownSuccess"));
                     await load();
                 } catch (takeDownError) {
-                    message.error(takeDownError instanceof Error ? takeDownError.message : "下架失败");
+                    message.error(takeDownError instanceof Error ? takeDownError.message : t("takeDownFailed"));
                     throw takeDownError;
                 } finally {
                     setActionId("");
@@ -123,18 +129,18 @@ export default function WorksPage() {
 
     const relist = (work: WorkPublication) => {
         modal.confirm({
-            title: "重新上架这个作品？",
-            content: "将恢复最近一次已审核通过的公开版本，作品链接和广场展示会重新生效。",
-            okText: "确认上架",
-            cancelText: "取消",
+            title: t("relistTitle"),
+            content: t("relistContent"),
+            okText: t("confirmRelist"),
+            cancelText: t("cancel"),
             onOk: async () => {
                 setActionId(work.id);
                 try {
                     await relistWorkPublication(work.id);
-                    message.success("作品已重新上架");
+                    message.success(t("relistSuccess"));
                     await load();
                 } catch (relistError) {
-                    message.error(relistError instanceof Error ? relistError.message : "重新上架失败");
+                    message.error(relistError instanceof Error ? relistError.message : t("relistFailed"));
                     throw relistError;
                 } finally {
                     setActionId("");
@@ -145,19 +151,19 @@ export default function WorksPage() {
 
     const remove = (work: WorkPublication) => {
         modal.confirm({
-            title: "永久删除这个作品？",
-            content: "作品发布记录、全部版本快照和互动记录会被永久删除，原始素材、画布或短剧项目不会删除。此操作无法撤销。",
-            okText: "永久删除",
-            cancelText: "取消",
+            title: t("deleteTitle"),
+            content: t("deleteContent"),
+            okText: t("confirmDelete"),
+            cancelText: t("cancel"),
             okButtonProps: { danger: true },
             onOk: async () => {
                 setActionId(work.id);
                 try {
                     await deleteWorkPublication(work.id);
-                    message.success("作品已永久删除");
+                    message.success(t("deleteSuccess"));
                     await load();
                 } catch (deleteError) {
-                    message.error(deleteError instanceof Error ? deleteError.message : "删除失败");
+                    message.error(deleteError instanceof Error ? deleteError.message : t("deleteFailed"));
                     throw deleteError;
                 } finally {
                     setActionId("");
@@ -170,15 +176,15 @@ export default function WorksPage() {
         const work = appealWork;
         const version = work?.currentVersion;
         if (!work || !version) return;
-        if (appealDescription.trim().length < 5) return message.warning("请至少填写 5 个字的申诉说明");
+        if (appealDescription.trim().length < 5) return message.warning(t("appealMinLength"));
         setActionId(work.id);
         try {
             await submitWorkAppeal(work.id, { versionId: version.id, description: appealDescription.trim() });
-            message.success("申诉已提交，管理员会进行复核");
+            message.success(t("appealSuccess"));
             setAppealWork(undefined);
             setAppealDescription("");
         } catch (appealError) {
-            message.error(appealError instanceof Error ? appealError.message : "提交申诉失败");
+            message.error(appealError instanceof Error ? appealError.message : t("appealFailed"));
         } finally {
             setActionId("");
         }
@@ -191,18 +197,18 @@ export default function WorksPage() {
                     <div className="min-w-0">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <GalleryVerticalEnd className="size-4" />
-                            发布中心
+                            {t("eyebrow")}
                         </div>
-                        <h1 className="mt-1.5 text-xl font-semibold sm:mt-2 sm:text-2xl">作品管理</h1>
-                        <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm">管理草稿、审核状态和当前公开版本</p>
+                        <h1 className="mt-1.5 text-xl font-semibold sm:mt-2 sm:text-2xl">{t("title")}</h1>
+                        <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm">{t("subtitle")}</p>
                     </div>
                     <div className="flex items-center justify-end gap-2">
-                        <Button className="!size-9 !p-0 sm:!size-auto sm:!h-8 sm:!px-3" href="/community" icon={<Compass className="size-4" />} aria-label="浏览作品广场">
-                            <span className="hidden sm:inline">作品广场</span>
+                        <Button className="!size-9 !p-0 sm:!size-auto sm:!h-8 sm:!px-3" href="/community" icon={<Compass className="size-4" />} aria-label={t("browseGalleryAria")}>
+                            <span className="hidden sm:inline">{t("browseGallery")}</span>
                         </Button>
-                        <Button className="!size-9 !p-0 sm:!size-auto sm:!h-8 sm:!px-3" icon={<RefreshCw className="size-4" />} loading={loading} onClick={() => void load()} aria-label="刷新作品列表" />
+                        <Button className="!size-9 !p-0 sm:!size-auto sm:!h-8 sm:!px-3" icon={<RefreshCw className="size-4" />} loading={loading} onClick={() => void load()} aria-label={t("refreshAria")} />
                         <Button className="!h-9 !px-3 sm:!h-8" type="primary" icon={<Plus className="size-4" />} onClick={openCreate}>
-                            发布作品
+                            {t("publishWork")}
                         </Button>
                     </div>
                 </header>
@@ -211,7 +217,7 @@ export default function WorksPage() {
                     <div className="hidden shrink-0 sm:block">
                         <Segmented
                             value={status}
-                            options={WORK_STATUS_OPTIONS}
+                            options={statusOptions}
                             onChange={(value) => {
                                 setStatus(value as typeof status);
                                 setPage(1);
@@ -222,7 +228,7 @@ export default function WorksPage() {
                         <Select
                             className="w-full"
                             value={status}
-                            options={WORK_STATUS_OPTIONS}
+                            options={statusOptions}
                             onChange={(value) => {
                                 setStatus(value);
                                 setPage(1);
@@ -233,7 +239,7 @@ export default function WorksPage() {
                         className="min-w-0 flex-1 sm:max-w-sm"
                         allowClear
                         prefix={<Search className="size-4 text-stone-400" />}
-                        placeholder="搜索标题或作品链接"
+                        placeholder={t("searchPlaceholder")}
                         value={keyword}
                         onChange={(event) => {
                             setKeyword(event.target.value);
@@ -246,11 +252,11 @@ export default function WorksPage() {
                     <section className="mt-4 flex min-h-40 flex-col items-center justify-center gap-3 border-y border-rose-200 px-4 text-center dark:border-rose-900/70">
                         <p className="text-sm text-rose-700 dark:text-rose-300">{error}</p>
                         <Button icon={<RefreshCw className="size-4" />} onClick={() => void load()}>
-                            重新加载
+                            {t("reload")}
                         </Button>
                     </section>
                 ) : loading && !items.length ? (
-                    <section className="grid min-h-40 place-items-center text-sm text-muted-foreground">正在加载作品...</section>
+                    <section className="grid min-h-40 place-items-center text-sm text-muted-foreground">{t("loading")}</section>
                 ) : items.length ? (
                     <section className="grid min-w-0 gap-2 py-3 sm:gap-3 sm:py-5">
                         {items.map((work) => (
@@ -258,6 +264,10 @@ export default function WorksPage() {
                                 key={work.id}
                                 work={work}
                                 busy={actionId === work.id}
+                                sourceLabels={sourceLabels}
+                                visibilityLabels={visibilityLabelMap}
+                                locale={locale}
+                                t={t}
                                 onEdit={() => {
                                     setEditingWorkId(work.id);
                                     setEditorOpen(true);
@@ -266,7 +276,7 @@ export default function WorksPage() {
                                 onTakeDown={() => takeDown(work)}
                                 onRelist={() => relist(work)}
                                 onDelete={() => remove(work)}
-                                onCopy={() => copyText(new URL(workSharePath(work.slug), window.location.origin).toString(), "作品链接已复制")}
+                                onCopy={() => copyText(new URL(workSharePath(work.slug), window.location.origin).toString(), t("linkCopied"))}
                                 onPreview={() => window.open(workSharePath(work.slug), "_blank", "noopener,noreferrer")}
                                 onAppeal={() => {
                                     setAppealDescription("");
@@ -279,11 +289,11 @@ export default function WorksPage() {
                     <CompactEmptyState
                         className="mt-3 min-h-44 sm:mt-6 sm:min-h-64"
                         icon={<GalleryVerticalEnd className="size-4" />}
-                        title={keyword || status !== "all" ? "没有匹配的作品" : "还没有发布作品"}
-                        description={keyword || status !== "all" ? "调整筛选条件后再试一次。" : "从素材、画布或短剧项目创建第一个可审核版本。"}
+                        title={keyword || status !== "all" ? t("emptyFilteredTitle") : t("emptyTitle")}
+                        description={keyword || status !== "all" ? t("emptyFilteredDesc") : t("emptyDesc")}
                         action={
                             <Button className="!h-9 !px-3" type="primary" icon={<Plus className="size-4" />} onClick={openCreate}>
-                                发布第一个作品
+                                {t("publishFirst")}
                             </Button>
                         }
                     />
@@ -303,17 +313,17 @@ export default function WorksPage() {
                 }}
             />
             <Modal
-                title="申诉恢复作品"
+                title={t("appealTitle")}
                 open={Boolean(appealWork)}
-                okText="提交申诉"
-                cancelText="取消"
+                okText={t("appealSubmit")}
+                cancelText={t("cancel")}
                 confirmLoading={Boolean(appealWork && actionId === appealWork.id)}
                 okButtonProps={{ disabled: appealDescription.trim().length < 5 }}
                 onOk={() => void appeal()}
                 onCancel={() => !actionId && setAppealWork(undefined)}
             >
-                <p className="mb-3 text-sm leading-6 text-muted-foreground">请说明下架判断需要复核的原因和可验证信息。申诉通过后，仅在没有其他线上版本时恢复该版本。</p>
-                <Input.TextArea value={appealDescription} rows={5} maxLength={1000} showCount placeholder="例如：作品使用的素材均为本人原创，可提供创作记录进行核验" onChange={(event) => setAppealDescription(event.target.value)} />
+                <p className="mb-3 text-sm leading-6 text-muted-foreground">{t("appealHint")}</p>
+                <Input.TextArea value={appealDescription} rows={5} maxLength={1000} showCount placeholder={t("appealPlaceholder")} onChange={(event) => setAppealDescription(event.target.value)} />
             </Modal>
         </main>
     );
@@ -322,6 +332,10 @@ export default function WorksPage() {
 function WorkListItem({
     work,
     busy,
+    sourceLabels,
+    visibilityLabels,
+    locale,
+    t,
     onEdit,
     onSubmit,
     onTakeDown,
@@ -333,6 +347,10 @@ function WorkListItem({
 }: {
     work: WorkPublication;
     busy: boolean;
+    sourceLabels: Record<WorkPublicationSourceType, string>;
+    visibilityLabels: Record<"private" | "unlisted" | "public", string>;
+    locale: string;
+    t: ReturnType<typeof useTranslations>;
     onEdit: () => void;
     onSubmit: () => void;
     onTakeDown: () => void;
@@ -358,19 +376,19 @@ function WorkListItem({
                         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                             <h2 className="min-w-0 max-w-full truncate text-sm font-semibold">{version.title}</h2>
                             <span className={`inline-flex h-6 items-center rounded-md border px-2 text-xs font-medium leading-none ${workStatusToneClass(active ? version.moderationStatus : "revoked")}`}>
-                                {active ? workStatusLabel(version.moderationStatus) : "已下架"}
+                                {active ? workStatusLabel(version.moderationStatus, t) : t("statusRevoked")}
                             </span>
-                            {work.publishedVersion && work.publishedVersion.id !== version.id ? <Tag color="success">线上 v{work.publishedVersion.versionNumber}</Tag> : null}
+                            {work.publishedVersion && work.publishedVersion.id !== version.id ? <Tag color="success">{t("liveVersion", { version: work.publishedVersion.versionNumber })}</Tag> : null}
                         </div>
-                        <p className="mt-0.5 line-clamp-1 text-xs leading-5 text-muted-foreground">{version.description || "暂未填写作品说明"}</p>
+                        <p className="mt-0.5 line-clamp-1 text-xs leading-5 text-muted-foreground">{version.description || t("noDescription")}</p>
                         <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-muted-foreground">
-                            <span>{SOURCE_TYPE_LABELS[work.sourceType]}来源</span>
+                            <span>{t("sourceLabel", { source: sourceLabels[work.sourceType] })}</span>
                             <span>v{version.versionNumber}</span>
-                            <span>{VISIBILITY_LABELS[version.visibility]}</span>
-                            <span>{work.viewCount} 次访问</span>
-                            <span>更新于 {formatWorkTime(work.updatedAt)}</span>
+                            <span>{visibilityLabels[version.visibility]}</span>
+                            <span>{t("viewCount", { count: work.viewCount })}</span>
+                            <span>{t("updatedAt", { time: formatWorkTime(work.updatedAt, locale, t) })}</span>
                         </div>
-                        {version.rejectionReason ? <div className="mt-1.5 border-l-2 border-rose-400 pl-2 text-xs leading-5 text-rose-700 dark:text-rose-300">驳回原因：{version.rejectionReason}</div> : null}
+                        {version.rejectionReason ? <div className="mt-1.5 border-l-2 border-rose-400 pl-2 text-xs leading-5 text-rose-700 dark:text-rose-300">{t("rejectionReason", { reason: version.rejectionReason })}</div> : null}
                         {version.tags.length ? (
                             <div className="mt-1.5 flex min-w-0 flex-wrap gap-1">
                                 {version.tags.slice(0, 4).map((tag) => (
@@ -386,40 +404,40 @@ function WorkListItem({
                     {shareable ? (
                         <>
                             <Button size="small" icon={<Eye className="size-3.5" />} onClick={onPreview}>
-                                预览
+                                {t("preview")}
                             </Button>
                             <Button size="small" icon={<Copy className="size-3.5" />} onClick={onCopy}>
-                                复制链接
+                                {t("copyLink")}
                             </Button>
                         </>
                     ) : null}
                     {canEdit ? (
                         <Button size="small" icon={<Pencil className="size-3.5" />} onClick={onEdit} disabled={busy}>
-                            {version.moderationStatus === "approved" ? "创建新版本" : "编辑"}
+                            {version.moderationStatus === "approved" ? t("createNewVersion") : t("edit")}
                         </Button>
                     ) : null}
                     {active && version.moderationStatus === "taken_down" ? (
                         <Button size="small" icon={<Scale className="size-3.5" />} onClick={onAppeal} disabled={busy}>
-                            提交申诉
+                            {t("submitAppeal")}
                         </Button>
                     ) : null}
                     {canSubmit ? (
                         <Button size="small" type="primary" icon={<Send className="size-3.5" />} onClick={onSubmit} loading={busy}>
-                            提交审核
+                            {t("submitReview")}
                         </Button>
                     ) : null}
                     {active && work.publishedVersionId ? (
                         <Button size="small" danger icon={<Ban className="size-3.5" />} onClick={onTakeDown} disabled={busy}>
-                            下架
+                            {t("takeDown")}
                         </Button>
                     ) : null}
                     {!active ? (
                         <>
                             <Button size="small" type="primary" icon={<ArrowUpFromLine className="size-3.5" />} onClick={onRelist} loading={busy}>
-                                上架
+                                {t("relist")}
                             </Button>
                             <Button size="small" danger icon={<Trash2 className="size-3.5" />} onClick={onDelete} disabled={busy}>
-                                删除
+                                {t("delete")}
                             </Button>
                         </>
                     ) : null}

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type DragEvent as ReactDragEvent } from "react";
 import { App, Button, Drawer, Image, Modal, Tooltip, Typography } from "antd";
 import { saveAs } from "file-saver";
+import { useTranslations } from "next-intl";
 
 import { ImageSettingsPanel } from "@/components/image-settings-panel";
 import { ModelPicker } from "@/components/model-picker";
@@ -68,6 +69,7 @@ import { useImageWorkbenchController } from "./use-image-workbench-controller";
 
 export default function ImagePage() {
     const controller = useImageWorkbenchController();
+    const t = useTranslations("workspace.image");
     const {
         searchParams,
         message,
@@ -206,7 +208,7 @@ export default function ImagePage() {
                 <section className="grid h-auto gap-3 sm:h-full lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] lg:overflow-hidden">
                     <div className="order-1 flex min-h-[9rem] flex-col overflow-hidden rounded-lg border border-border bg-card p-2 sm:min-h-[calc(100dvh-96px)] sm:rounded-xl sm:p-4 lg:order-2 lg:min-h-0">
                         <WorkbenchAgentHeader
-                            subtitle="图片创作助手"
+                            subtitle={t("assistantSubtitle")}
                             onNew={createSession}
                             historyContent={(query, closeHistory) => {
                                 const filteredLogs = logs.filter((log) => {
@@ -246,7 +248,7 @@ export default function ImagePage() {
                                 onEditMessage={(editedMessage) => {
                                     setPrompt(editedMessage.text);
                                     setReferences(workbenchReferencesFromAttachments(editedMessage.attachments).images);
-                                    message.info("已回填消息，可修改后重新发送");
+                                    message.info(t("messageRefilled"));
                                 }}
                                 onRetryMessage={retryAgentMessage}
                             />
@@ -255,7 +257,7 @@ export default function ImagePage() {
                         )}
 
                         <WorkbenchComposerFrame
-                            summary={`${effectiveConfig.size} · ${effectiveConfig.count} 张`}
+                            summary={t("composerSummary", { size: effectiveConfig.size, count: effectiveConfig.count })}
                             onAdd={() => fileInputRef.current?.click()}
                             onLibrary={() => setAssetPickerOpen(true)}
                             settingsContent={
@@ -277,7 +279,7 @@ export default function ImagePage() {
                             onClearModels={enableSmartPlanning}
                             submit={
                                 agentRunning ? (
-                                    <Button danger shape="circle" className="!h-9 !w-9 !min-w-9" icon={<Square className="size-3.5 fill-current" />} onClick={cancelAgentRun} aria-label="停止 Agent 并取消本次生成" />
+                                    <Button danger shape="circle" className="!h-9 !w-9 !min-w-9" icon={<Square className="size-3.5 fill-current" />} onClick={cancelAgentRun} aria-label={t("stopAgentAriaLabel")} />
                                 ) : (
                                     <Button
                                         type="primary"
@@ -286,9 +288,9 @@ export default function ImagePage() {
                                         disabled={!canGenerate || activeImageTasks >= imageConcurrencyLimit}
                                         icon={<Sparkles className="size-4" />}
                                         onClick={() => void runAgentGenerate()}
-                                        aria-label={`开始生成，消耗 ${formatCreditAmount(pointsCost)} 积分`}
+                                        aria-label={t("generateAriaLabel", { cost: formatCreditAmount(pointsCost) })}
                                     >
-                                        <span className="text-xs font-semibold">生成</span>
+                                        <span className="text-xs font-semibold">{t("generate")}</span>
                                         <span className="hidden text-xs font-semibold opacity-80 sm:inline">· {formatCreditAmount(pointsCost)}</span>
                                     </Button>
                                 )
@@ -296,7 +298,7 @@ export default function ImagePage() {
                         >
                             <WorkbenchPromptEditor
                                 value={prompt}
-                                placeholder="今天我们要创作什么，可直接粘贴文字或图片"
+                                placeholder={t("promptPlaceholder")}
                                 onChange={setPrompt}
                                 onSubmit={() => {
                                     if (canGenerate) void runAgentGenerate();
@@ -308,13 +310,13 @@ export default function ImagePage() {
 
                             <div className={cn("order-1 min-w-0", !references.length && "hidden")}>
                                 <div className="hidden">
-                                    <span className="text-base font-semibold">参考图</span>
+                                    <span className="text-base font-semibold">{t("referenceImages")}</span>
                                     <div className="flex gap-2">
                                         <Button size="small" icon={<ClipboardPaste className="size-3.5" />} onClick={() => void addReferencesFromClipboard()}>
-                                            剪切板
+                                            {t("clipboardButton")}
                                         </Button>
                                         <Button size="small" icon={<Upload className="size-3.5" />} onClick={() => fileInputRef.current?.click()}>
-                                            上传
+                                            {t("uploadButton")}
                                         </Button>
                                     </div>
                                 </div>
@@ -340,18 +342,18 @@ export default function ImagePage() {
                                             {item.uploadStatus === "uploading" ? (
                                                 <span className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-black/45 text-[10px] font-medium text-white backdrop-blur-[1px]" title={item.uploadError}>
                                                     <LoaderCircle className="size-4 animate-spin" />
-                                                    上传中
+                                                    {t("uploading")}
                                                 </span>
                                             ) : item.uploadStatus === "failed" ? (
                                                 <button
                                                     type="button"
                                                     className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-red-950/70 text-[10px] font-medium text-white backdrop-blur-[1px] transition hover:bg-red-950/80"
-                                                    title={item.uploadError || "参考图上传失败"}
+                                                    title={item.uploadError || t("referenceUploadFailed")}
                                                     onClick={() => void retryReferenceUpload(item.id)}
-                                                    aria-label={`重试上传参考图：${item.name}`}
+                                                    aria-label={t("retryUploadAria", { name: item.name })}
                                                 >
                                                     <CircleAlert className="size-4" />
-                                                    点击重试
+                                                    {t("retryUpload")}
                                                 </button>
                                             ) : null}
                                             <ReferenceOrderButtons index={index} total={references.length} onMove={(offset) => setReferences((value) => moveListItem(value, index, offset))} />
@@ -359,7 +361,7 @@ export default function ImagePage() {
                                                 type="button"
                                                 className="absolute right-1 top-1 z-20 flex size-6 items-center justify-center rounded bg-white/95 text-red-600 opacity-90 shadow-sm ring-1 ring-red-200 transition hover:opacity-100 dark:bg-black/70 dark:text-red-200 dark:ring-red-900/60"
                                                 onClick={() => setReferences((value) => value.filter((ref) => ref.id !== item.id))}
-                                                aria-label="移除参考图"
+                                                aria-label={t("removeReferenceImage")}
                                             >
                                                 <Trash2 className="size-3.5" />
                                             </button>
@@ -376,12 +378,12 @@ export default function ImagePage() {
                                         <Sparkles className="size-[17px]" />
                                         <span className="text-sm font-semibold leading-none">{formatCreditAmount(pointsCost)}</span>
                                     </span>
-                                    <span>开始生成</span>
+                                    <span>{t("startGeneration")}</span>
                                 </span>
                             </Button>
                             {activeImageTasks ? (
                                 <div className="mt-2 text-center text-xs text-stone-500 dark:text-stone-400">
-                                    当前用户运行 {activeImageTasks}/{imageConcurrencyLimit}
+                                    {t("currentUserRunning", { active: activeImageTasks, limit: imageConcurrencyLimit })}
                                 </div>
                             ) : null}
                         </div>
@@ -390,24 +392,24 @@ export default function ImagePage() {
                     <div className="thin-scrollbar order-2 rounded-xl border border-border bg-card p-2.5 lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:p-5 sm:p-4">
                         <div className="mb-2.5 flex items-center justify-between gap-2 sm:mb-4 sm:gap-3">
                             <div>
-                                <h2 className="text-lg font-semibold sm:text-xl">生成结果</h2>
+                                <h2 className="text-lg font-semibold sm:text-xl">{t("resultsTitle")}</h2>
                             </div>
                             <div className="flex flex-wrap items-center justify-end gap-2">
                                 <Button size="small" icon={<CheckSquare className="size-3.5" />} disabled={!results.length} onClick={toggleAllResults}>
-                                    {allResultsSelected ? "取消" : "全选"}
+                                    {allResultsSelected ? t("cancel") : t("selectAll")}
                                 </Button>
                                 <Button size="small" danger icon={<Trash2 className="size-3.5" />} disabled={!selectedVisibleResultIds.length} onClick={() => void deleteSelectedResults()}>
-                                    删除{selectedVisibleResultIds.length ? ` ${selectedVisibleResultIds.length}` : ""}
+                                    {t("deleteCount", { count: selectedVisibleResultIds.length ? ` ${selectedVisibleResultIds.length}` : "" })}
                                 </Button>
                                 {missingVisibleResultIds.length ? (
                                     <Button size="small" icon={<Trash2 className="size-3.5" />} onClick={() => void deleteMissingResults()}>
-                                        清理丢失 {missingVisibleResultIds.length}
+                                        {t("cleanupMissingCount", { count: missingVisibleResultIds.length })}
                                     </Button>
                                 ) : null}
                                 {previewPendingCount ? <WorkbenchGenerationActivity kind="image" count={previewPendingCount} /> : null}
                                 {activeImageTasks ? (
                                     <span className="inline-flex h-7 items-center rounded-md bg-stone-100 px-2 text-xs font-medium text-stone-700 ring-1 ring-stone-200 dark:bg-white/10 dark:text-stone-200 dark:ring-white/10">
-                                        运行 {activeImageTasks}/{imageConcurrencyLimit}
+                                        {t("runningCount", { active: activeImageTasks, limit: imageConcurrencyLimit })}
                                     </span>
                                 ) : null}
                             </div>
@@ -432,7 +434,7 @@ export default function ImagePage() {
                                             />
                                         ) : result.status === "failed" ? (
                                             <FailedImageCard
-                                                error={result.error || "生成失败"}
+                                                error={result.error || t("generationFailed")}
                                                 large={results.length === 1}
                                                 selected={selectedResultIds.includes(result.id)}
                                                 onSelectedChange={(checked) => toggleResultSelected(result.id, checked)}
@@ -445,13 +447,13 @@ export default function ImagePage() {
                                 ))}
                             </div>
                         ) : (
-                            <CompactEmptyState title="还没有生成图片" description="完成一次生成后，结果会按时间保留在这里。" icon={<ImagePlus className="size-4" />} className="min-h-20 sm:min-h-40 lg:min-h-[360px]" />
+                            <CompactEmptyState title={t("emptyResultsTitle")} description={t("emptyResultsDescription")} icon={<ImagePlus className="size-4" />} className="min-h-20 sm:min-h-40 lg:min-h-[360px]" />
                         )}
                     </div>
                 </section>
             </main>
             <WorkbenchFileInput inputRef={fileInputRef} accept="image/*" onFiles={(files) => void addReferences(files)} />
-            <Drawer title="生成记录" placement="bottom" size="min(86dvh, 720px)" open={logsOpen} onClose={() => setLogsOpen(false)} styles={{ body: { padding: 0, overflow: "hidden" } }}>
+            <Drawer title={t("generationHistory")} placement="bottom" size="min(86dvh, 720px)" open={logsOpen} onClose={() => setLogsOpen(false)} styles={{ body: { padding: 0, overflow: "hidden" } }}>
                 <div className="thin-scrollbar h-full overflow-y-auto px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4">
                     <LogPanel
                         logs={logs}
@@ -473,8 +475,8 @@ export default function ImagePage() {
                 onAssetInsert={(payload) => void insertPickedAsset(payload)}
                 onAssetClose={() => setAssetPickerOpen(false)}
             />
-            <Modal title="删除生成记录" open={deleteConfirmOpen} onCancel={() => setDeleteConfirmOpen(false)} onOk={deleteSelectedLogs} okText="删除" okButtonProps={{ danger: true }} cancelText="取消">
-                确定删除选中的 {selectedLogIds.length} 条生成记录吗？
+            <Modal title={t("deleteLogsModalTitle")} open={deleteConfirmOpen} onCancel={() => setDeleteConfirmOpen(false)} onOk={deleteSelectedLogs} okText={t("delete")} okButtonProps={{ danger: true }} cancelText={t("cancel")}>
+                {t("deleteLogsConfirm", { count: selectedLogIds.length })}
             </Modal>
         </div>
     );

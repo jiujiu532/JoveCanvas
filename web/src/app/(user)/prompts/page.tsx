@@ -3,6 +3,7 @@
 import { FolderPlus, RotateCcw, Search } from "lucide-react";
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 import { App, Button, Input, Pagination, Select, Spin } from "antd";
+import { useTranslations } from "next-intl";
 
 import { PromptCard } from "@/components/prompts/prompt-card";
 import { CompactEmptyState } from "@/components/compact-empty-state";
@@ -27,6 +28,7 @@ export default function PromptsPage() {
     const addAsset = useAssetStore((state) => state.addAsset);
     const copyText = useCopyText();
     const deferredKeyword = useDeferredValue(titleKeyword.trim());
+    const t = useTranslations("workspace.prompts");
     const {
         query,
         items: promptItems,
@@ -44,7 +46,7 @@ export default function PromptsPage() {
 
     useEffect(() => {
         if (query.isError) {
-            message.error(query.error instanceof Error ? query.error.message : "获取提示词失败");
+            message.error(query.error instanceof Error ? query.error.message : t("fetchFailed"));
         }
     }, [message, query.error, query.isError]);
 
@@ -73,9 +75,9 @@ export default function PromptsPage() {
     const savePromptAsset = async (item: Prompt) => {
         try {
             await addAsset({ kind: "text", title: item.title, coverUrl: item.coverUrl, tags: item.tags, source: item.category, data: { content: item.prompt }, metadata: { source: "prompt-library", promptId: item.id, githubUrl: item.githubUrl || "" } });
-            message.success("已加入我的素材");
+            message.success(t("addedToAssets"));
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "素材保存失败");
+            message.error(error instanceof Error ? error.message : t("assetSaveFailed"));
         }
     };
 
@@ -84,8 +86,8 @@ export default function PromptsPage() {
             <main ref={scrollContainerRef} className="min-h-0 flex-1 overflow-y-auto bg-background px-3 py-3 sm:px-6 sm:py-8">
                 <div className="mx-auto max-w-7xl">
                     <div>
-                        <h1 className="text-xl font-semibold text-stone-950 sm:text-2xl dark:text-stone-100">提示词库</h1>
-                        <p className="mt-1.5 text-xs leading-5 text-stone-500 sm:mt-2 sm:text-sm dark:text-stone-400">浏览公共提示词，复制使用或保存到我的素材。</p>
+                        <h1 className="text-xl font-semibold text-stone-950 sm:text-2xl dark:text-stone-100">{t("title")}</h1>
+                        <p className="mt-1.5 text-xs leading-5 text-stone-500 sm:mt-2 sm:text-sm dark:text-stone-400">{t("subtitlePlain")}</p>
                     </div>
 
                     <section className="mt-2.5 rounded-xl border border-border bg-card p-2 sm:mt-6 sm:p-3.5">
@@ -96,7 +98,7 @@ export default function PromptsPage() {
                                     className="!h-9 w-full"
                                     prefix={<Search className="size-4 text-stone-400" />}
                                     value={titleKeyword}
-                                    placeholder="搜索标题或提示词"
+                                    placeholder={t("searchPlaceholder")}
                                     onChange={(event) => {
                                         setTitleKeyword(event.target.value);
                                         setPage(1);
@@ -104,16 +106,14 @@ export default function PromptsPage() {
                                 />
                             </div>
                             <div className="min-w-0">
-                                <Select aria-label="提示词分类" className="w-full" value={selectedCategory} options={promptCategoryOptions.map((category) => ({ label: category, value: category }))} onChange={updateCategory} />
+                                <Select aria-label={t("categoryAriaLabel")} className="w-full" value={selectedCategory} options={promptCategoryOptions.map((category) => ({ label: category, value: category }))} onChange={updateCategory} />
                             </div>
                             <div className="min-w-0">
-                                <Select showSearch aria-label="提示词标签" className="w-full" optionFilterProp="label" value={selectedTag} options={promptTags.map((tag) => ({ label: tag, value: tag }))} onChange={updateTag} />
+                                <Select showSearch aria-label={t("tagAriaLabel")} className="w-full" optionFilterProp="label" value={selectedTag} options={promptTags.map((tag) => ({ label: tag, value: tag }))} onChange={updateTag} />
                             </div>
                             <div className="col-span-2 flex min-h-8 items-center justify-between gap-2 sm:col-span-1 sm:justify-end">
-                                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">共 {totalPrompts} 条</span>
-                                <Button aria-label="清除提示词筛选" icon={<RotateCcw className="size-3.5" />} disabled={!hasFilters} onClick={clearFilters}>
-                                    清除
-                                </Button>
+                                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{t("totalCount", { total: totalPrompts })}</span>
+                                <Button aria-label={t("clearFiltersAria")} icon={<RotateCcw className="size-3.5" />} disabled={!hasFilters} onClick={clearFilters}>{t("clearFilters")}</Button>
                             </div>
                         </div>
                     </section>
@@ -134,17 +134,15 @@ export default function PromptsPage() {
                                             setSelectedPrompt(item);
                                             setSelectedPromptPreviewUrl(previewUrl || "");
                                         }}
-                                        onCopy={() => copyText(item.prompt, "提示词已复制")}
+                                        onCopy={() => copyText(item.prompt, t("promptCopied"))}
                                         extraAction={
-                                            <Button size="small" icon={<FolderPlus className="size-3.5" />} onClick={() => savePromptAsset(item)}>
-                                                加入我的素材
-                                            </Button>
+                                            <Button size="small" icon={<FolderPlus className="size-3.5" />} onClick={() => savePromptAsset(item)}>{t("addToMyAssets")}</Button>
                                         }
                                     />
                                 ))}
                             </div>
                         ) : null}
-                        {!query.isLoading && promptItems.length === 0 ? <CompactEmptyState title="没有找到匹配的提示词" description="尝试清除搜索词，或切换分类和标签。" /> : null}
+                        {!query.isLoading && promptItems.length === 0 ? <CompactEmptyState title={t("emptyTitle")} description={t("emptyDescription")} /> : null}
                         {totalPrompts > PAGE_SIZE ? (
                             <div className="flex justify-center py-5 sm:py-8">
                                 <Pagination current={page} pageSize={PAGE_SIZE} total={totalPrompts} showSizeChanger={false} showLessItems responsive onChange={changePage} />
@@ -161,7 +159,7 @@ export default function PromptsPage() {
                     setSelectedPrompt(null);
                     setSelectedPromptPreviewUrl("");
                 }}
-                onCopy={(prompt) => copyText(prompt, "提示词已复制")}
+                onCopy={(prompt) => copyText(prompt, t("promptCopied"))}
                 onSaveAsset={savePromptAsset}
             />
         </div>

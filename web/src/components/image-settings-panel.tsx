@@ -160,7 +160,7 @@ export function ImageSettingsTheme({ theme, children }: { theme: CanvasTheme; ch
 }
 
 export function imageQualityLabel(value: string, labels?: { auto: string; high: string; medium: string; low: string }) {
-    const map = labels || { auto: "自动", high: "高", medium: "中", low: "低" };
+    const map = labels || { auto: "Auto", high: "High", medium: "Medium", low: "Low" };
     return ({ auto: map.auto, high: map.high, medium: map.medium, low: map.low } as Record<string, string>)[value] || value;
 }
 

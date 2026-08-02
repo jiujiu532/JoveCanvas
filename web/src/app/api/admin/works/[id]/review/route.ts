@@ -24,7 +24,7 @@ export async function POST(request: Request, context: Context) {
             target: { type: "published_work", id: work.id, label: work.currentVersion?.title },
             metadata: { versionId: body.versionId, reason: body.decision === "rejected" ? body.reason : undefined },
         });
-        return workPublicationOk({ work }, body.decision === "approved" ? "作品已通过审核" : "作品已驳回");
+        return await workPublicationOk({ work }, body.decision === "approved" ? "作品已通过审核" : "作品已驳回");
     } catch (error) {
         await safeRecordAuditLog({
             action: body.decision === "approved" ? "admin.work.approve" : "admin.work.reject",
@@ -33,6 +33,6 @@ export async function POST(request: Request, context: Context) {
             target: { type: "published_work", id },
             metadata: { versionId: body.versionId, error: error instanceof Error ? error.message : "unknown" },
         });
-        return workPublicationError(error, "审核作品失败", "Review work publication failed");
+        return await workPublicationError(error, "审核作品失败", "Review work publication failed");
     }
 }

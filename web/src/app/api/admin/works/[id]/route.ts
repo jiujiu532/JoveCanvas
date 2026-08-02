@@ -16,9 +16,9 @@ export async function DELETE(request: Request, context: Context) {
     try {
         const deleted = await deleteWorkPublicationForAdmin(user.id, id);
         await safeRecordAuditLog({ action: "admin.work.delete", actor: auditActorFromRequest(request, user), target: { type: "published_work", id: deleted.id, label: deleted.title } });
-        return workPublicationOk({ deletedId: deleted.id }, "作品已删除");
+        return await workPublicationOk({ deletedId: deleted.id }, "作品已删除");
     } catch (error) {
         await safeRecordAuditLog({ action: "admin.work.delete", status: "failure", actor: auditActorFromRequest(request, user), target: { type: "published_work", id }, metadata: { error: error instanceof Error ? error.message : "unknown" } });
-        return workPublicationError(error, "删除作品失败", "Delete work publication failed");
+        return await workPublicationError(error, "删除作品失败", "Delete work publication failed");
     }
 }

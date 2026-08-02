@@ -98,6 +98,15 @@ describe("server-messages", () => {
         await expect(localizeErrorMessage({ message: "当前任务无法取消" })).resolves.toBe("当前任务无法取消");
     });
 
+    it("maps works/commerce/avatar Chinese messages for localizeErrorMessage", async () => {
+        await expect(localizeErrorMessage({ message: "作品不存在" })).resolves.toBe("作品不存在");
+        await expect(localizeErrorMessage({ message: "作品状态已变化，请刷新后重试" })).resolves.toBe("作品状态已变化，请刷新后重试");
+        await expect(localizeErrorMessage({ message: "优惠券已领完" })).resolves.toBe("优惠券已领完");
+        await expect(localizeErrorMessage({ message: "邀请码无效或已停用" })).resolves.toBe("邀请码无效或已停用");
+        await expect(localizeErrorMessage({ message: "仅支持 PNG、JPG 或 WebP 头像" })).resolves.toBe("仅支持 PNG、JPG 或 WebP 头像");
+        await expect(localizeErrorMessage({ message: "创建作品失败" })).resolves.toBe("创建作品失败");
+    });
+
     it("resolves English creative/agent messages when getLocale returns en", async () => {
         vi.resetModules();
         vi.doMock("next-intl/server", () => ({
@@ -114,5 +123,22 @@ describe("server-messages", () => {
         await expect(enLocalize({ message: "fallback", messageKey: "agent.invalidCreationPlan" })).resolves.toBe(
             "The model returned an invalid creation plan",
         );
+    });
+
+    it("resolves English works/commerce messages when getLocale returns en", async () => {
+        vi.resetModules();
+        vi.doMock("next-intl/server", () => ({
+            getLocale: async () => "en",
+        }));
+        const { serverMessage: enServerMessage, localizeErrorMessage: enLocalize } = await import("./server-messages");
+
+        await expect(enServerMessage("works.notFound")).resolves.toBe("Work not found");
+        await expect(enLocalize({ message: "作品不存在" })).resolves.toBe("Work not found");
+        await expect(enLocalize({ message: "优惠券已领完" })).resolves.toBe("Coupon is sold out");
+        await expect(enLocalize({ message: "邀请码无效或已停用" })).resolves.toBe("Referral code is invalid or disabled");
+        await expect(enLocalize({ message: "仅支持 PNG、JPG 或 WebP 头像" })).resolves.toBe(
+            "Only PNG, JPG, or WebP avatars are supported",
+        );
+        await expect(enLocalize({ message: "创建作品失败" })).resolves.toBe("Failed to create work");
     });
 });

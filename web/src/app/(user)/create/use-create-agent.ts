@@ -2,6 +2,7 @@
 
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { isCreativeProjectHandoff, type CreativeAsset, type CreativeConversation, type CreativeMessage, type CreativeProjectHandoff } from "@/lib/creative-runtime-contract";
 import {
@@ -36,6 +37,7 @@ type PendingCreateSubmission = {
 };
 
 export function useCreateAgent() {
+    const t = useTranslations("workspace.create");
     const streamRef = useRef<(() => void) | null>(null);
     const conversationGenerationRef = useRef(0);
     const activeConversationRef = useRef<string | undefined>(undefined);
@@ -178,7 +180,7 @@ export function useCreateAgent() {
             setConversationId(id);
             try {
                 const conversation = await getCreativeConversation(id);
-                if (conversation.surface !== "chat" || conversation.source !== "agent") throw new Error("该记录不属于创作 Agent 工作台");
+                if (conversation.surface !== "chat" || conversation.source !== "agent") throw new Error(t("recordNotAgentWorkbench"));
                 await refreshConversation(id, generation);
                 setConversations((current) => [conversation, ...current.filter((item) => item.id !== conversation.id)].sort((a, b) => b.updatedAt - a.updatedAt));
             } catch (error) {
@@ -203,7 +205,7 @@ export function useCreateAgent() {
             setProjectLinks((current) => ({ ...current, [handoff.id]: result }));
             return result;
         } catch (error) {
-            const text = error instanceof Error ? error.message : "项目创建失败";
+            const text = error instanceof Error ? error.message : t("projectCreateFailed");
             setProjectErrors((current) => ({ ...current, [handoff.id]: text }));
             throw error;
         } finally {
@@ -214,8 +216,8 @@ export function useCreateAgent() {
     const ensureConversation = useCallback(async () => {
         if (activeConversationRef.current) return activeConversationRef.current;
         const generation = conversationGenerationRef.current;
-        const conversation = await createCreativeConversation({ surface: "chat", source: "agent", title: "新对话" });
-        if (generation !== conversationGenerationRef.current) throw new Error("创作入口已切换，请重试");
+        const conversation = await createCreativeConversation({ surface: "chat", source: "agent", title: t("newConversationTitle") });
+        if (generation !== conversationGenerationRef.current) throw new Error(t("createEntrySwitched"));
         activeConversationRef.current = conversation.id;
         setConversationId(conversation.id);
         setConversations((current) => [conversation, ...current.filter((item) => item.id !== conversation.id)]);
@@ -329,7 +331,7 @@ export function useCreateAgent() {
                 return true;
             } catch (error) {
                 failedSubmissionsRef.current.set(snapshot.temporaryAssistantId, snapshot);
-                updateAssistant(snapshot.temporaryAssistantId, error instanceof Error ? error.message : "创作请求失败", "failed");
+                updateAssistant(snapshot.temporaryAssistantId, error instanceof Error ? error.message : t("createRequestFailed"), "failed");
                 setSending(false);
                 submittingRef.current = false;
                 return false;
@@ -391,7 +393,7 @@ export function useCreateAgent() {
             submittingRef.current = true;
             stopWatching();
             setSending(true);
-            updateAssistant(assistantMessageId, "正在重新提交创作请求", "running");
+            updateAssistant(assistantMessageId, t("resubmitting"), "running");
             return executeSubmission(snapshot);
         },
         [executeSubmission, sending, stopWatching, updateAssistant],
@@ -424,7 +426,7 @@ export function useCreateAgent() {
             setRunDetails((current) => ({ ...current, [runId]: result }));
             const assistantMessage = messages.find((item) => item.runId === runId && item.role === "assistant");
             if (assistantMessage) {
-                updateAssistant(assistantMessage.id, "正在重新生成失败任务…");
+                updateAssistant(assistantMessage.id, t("regeneratingFailedTask"));
                 setSending(true);
                 submittingRef.current = true;
                 watchRun(result, assistantMessage.id, conversationGenerationRef.current);
@@ -441,7 +443,7 @@ export function useCreateAgent() {
             setActiveRunStatus(result.run.status);
             const assistantMessage = messages.find((item) => item.runId === runId && item.role === "assistant");
             if (assistantMessage) {
-                updateAssistant(assistantMessage.id, "正在重新分析并执行这次请求…", "running");
+                updateAssistant(assistantMessage.id, t("reanalyzing"), "running");
                 setSending(true);
                 submittingRef.current = true;
                 watchRun(result.run, assistantMessage.id, conversationGenerationRef.current);
@@ -461,7 +463,7 @@ export function useCreateAgent() {
             const results = await Promise.allSettled(uniqueIds.map((id) => archiveCreativeConversation(id)));
             if (uniqueIds.includes(activeConversationRef.current || "")) newConversation();
             await refreshConversations();
-            if (results.some((result) => result.status === "rejected")) throw new Error("部分对话删除失败，请重试");
+            if (results.some((result) => result.status === "rejected")) throw new Error(t("partialDeleteFailed"));
         },
         [newConversation, refreshConversations],
     );

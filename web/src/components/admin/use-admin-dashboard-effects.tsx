@@ -191,7 +191,7 @@ export function useAdminDashboardEffects({ state, data, settingsActions }: { sta
         void fetch("/api/admin/agent-readiness", { cache: "no-store" })
             .then((response) => (response.ok ? response.json() : null))
             .then((payload) => setAgentReadiness(payload?.data || localAgentReadiness(settings)));
-    }, [activeSection, settingsLoading]);
+    }, [activeSection, settings, settingsLoading, setAgentReadiness]);
 
     useEffect(() => {
         const timer = window.setTimeout(() => setDebouncedPromptSearch(promptSearch.trim()), PROMPT_SEARCH_DEBOUNCE_MS);

@@ -5,6 +5,7 @@ import type { TextAreaRef } from "antd/es/input/TextArea";
 import { Clapperboard, History, Play, Plus, ScanFace, ShoppingBag, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { SiteLogo } from "@/components/layout/site-logo";
 import { CREATIVE_UPLOAD_ACCEPT, CREATIVE_UPLOAD_MAX_BYTES, isCreativeUploadMimeType } from "@/lib/creative-upload";
@@ -55,6 +56,7 @@ export default function CreatePage() {
     const modelOptions = useCreativeAgentModels();
     const selectedModels = modelOptions.filter((model) => selectedModelIds.includes(model.id));
 
+    const t = useTranslations("workspace.create");
     useEffect(() => {
         let active = true;
         void listAgentSkills("all")
@@ -78,7 +80,7 @@ export default function CreatePage() {
         const conversationId = createConversationIdFromSearch(window.location.search);
         if (!conversationId) return;
         void openAgentConversation(conversationId).catch((error) => {
-            message.error(error instanceof Error ? error.message : "恢复对话失败");
+            message.error(error instanceof Error ? error.message : t("restoreConversationFailed"));
             router.replace("/create");
         });
     }, [message, openAgentConversation, router]);
@@ -91,13 +93,13 @@ export default function CreatePage() {
         setPrompt(incomingPrompt);
         router.replace("/create");
         window.requestAnimationFrame(() => inputRef.current?.focus());
-        message.success("已填入作品提示词");
+        message.success(t("promptFilledFromWork"));
     }, [message, router]);
 
     const openConversation = (id: string) => {
         router.push(createConversationHref(id));
         void openAgentConversation(id).catch((error) => {
-            message.error(error instanceof Error ? error.message : "打开对话失败");
+            message.error(error instanceof Error ? error.message : t("openConversationFailed"));
             router.replace("/create");
         });
     };
@@ -109,7 +111,7 @@ export default function CreatePage() {
 
     const submit = async () => {
         if (!prompt.trim()) {
-            message.warning("请先描述你的创作需求");
+            message.warning(t("promptRequired"));
             inputRef.current?.focus();
             return;
         }
@@ -122,20 +124,20 @@ export default function CreatePage() {
     const uploadAttachments = async (files: File[], successMessage?: string) => {
         const unsupported = files.find((file) => !isCreativeUploadMimeType(file.type));
         if (unsupported) {
-            message.error(`${unsupported.name} 不是支持的图片、视频或音频格式`);
+            message.error(t("unsupportedFileFormat", { name: unsupported.name }));
             return false;
         }
         const oversized = files.find((file) => file.size > CREATIVE_UPLOAD_MAX_BYTES);
         if (oversized) {
-            message.error(`${oversized.name} 超过 20MB`);
+            message.error(t("fileTooLarge", { name: oversized.name }));
             return false;
         }
         try {
             const items = await agent.uploadAttachments(files);
-            if (items.length) message.success(successMessage || `已上传 ${items.length} 份素材`);
+            if (items.length) message.success(successMessage || t("attachmentsUploaded", { count: items.length }));
             return items.length > 0;
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "素材上传失败");
+            message.error(error instanceof Error ? error.message : t("attachmentUploadFailed"));
             return false;
         }
     };
@@ -143,21 +145,21 @@ export default function CreatePage() {
     const usePublicPrompt = (value: string) => {
         setPrompt(value);
         window.requestAnimationFrame(() => inputRef.current?.focus());
-        message.success("已填入公开提示词");
+        message.success(t("promptFilledFromPublic"));
     };
 
     const importReferenceMedia = async (input: { url: string; mimeType?: string; fileStem: string }) => {
         try {
             const response = await fetch(input.url);
-            if (!response.ok) throw new Error("读取参考素材失败");
+            if (!response.ok) throw new Error(t("referenceReadFailed"));
             const blob = await response.blob();
             const mimeType = blob.type || input.mimeType || "";
-            if (!isCreativeUploadMimeType(mimeType)) throw new Error("该媒体格式暂不支持作为参考素材");
+            if (!isCreativeUploadMimeType(mimeType)) throw new Error(t("referenceFormatUnsupported"));
             const extension = mimeType.split("/")[1]?.replace("jpeg", "jpg") || "png";
-            const referenced = await uploadAttachments([new File([blob], `${input.fileStem}.${extension}`, { type: mimeType })], "已引用到 Agent 输入框");
+            const referenced = await uploadAttachments([new File([blob], `${input.fileStem}.${extension}`, { type: mimeType })], t("referencedToAgent"));
             if (referenced) window.requestAnimationFrame(() => inputRef.current?.focus());
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "引用素材失败");
+            message.error(error instanceof Error ? error.message : t("referenceImportFailed"));
         }
     };
 
@@ -193,7 +195,7 @@ export default function CreatePage() {
             centered={!showConversation}
             onChange={setPrompt}
             onSubmit={() => void submit()}
-            onCancel={() => void agent.cancel().catch((error) => message.error(error instanceof Error ? error.message : "停止任务失败"))}
+            onCancel={() => void agent.cancel().catch((error) => message.error(error instanceof Error ? error.message : t("cancelTaskFailed")))}
             attachments={agent.selectedAssets}
             skills={skills}
             skillsLoading={skillsLoading}
@@ -224,8 +226,8 @@ export default function CreatePage() {
     return (
         <main className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[#fafbfc] text-[#20242a] dark:bg-[#111316] dark:text-[#f3f5f7]">
             <div className="absolute right-3 top-3 z-10 flex items-center gap-1 sm:right-5 sm:top-4">
-                {hasConversation ? <Button type="text" shape="circle" icon={<Plus className="size-4" />} onClick={newConversation} aria-label="新建对话" title="新建对话" /> : null}
-                <Button type="text" shape="circle" icon={<History className="size-4" />} onClick={() => setHistoryOpen(true)} aria-label="创作历史" title="创作历史" />
+                {hasConversation ? <Button type="text" shape="circle" icon={<Plus className="size-4" />} onClick={newConversation} aria-label={t("newConversation")} title={t("newConversation")} /> : null}
+                <Button type="text" shape="circle" icon={<History className="size-4" />} onClick={() => setHistoryOpen(true)} aria-label={t("creationHistory")} title={t("creationHistory")} />
             </div>
 
             <section className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
@@ -239,15 +241,15 @@ export default function CreatePage() {
                         runDetails={agent.runDetails}
                         materializingProjectId={agent.materializingProjectId}
                         onMaterializeProject={agent.materializeProject}
-                        onRetryTask={(runId, taskId) => void agent.retryTask(runId, taskId).catch((error) => message.error(error instanceof Error ? error.message : "重试任务失败"))}
-                        onRetryRun={(runId) => void agent.retryRun(runId).catch((error) => message.error(error instanceof Error ? error.message : "重新分析失败"))}
-                        onRetrySubmission={(messageId) => void agent.retrySubmission(messageId).catch((error) => message.error(error instanceof Error ? error.message : "重试请求失败"))}
+                        onRetryTask={(runId, taskId) => void agent.retryTask(runId, taskId).catch((error) => message.error(error instanceof Error ? error.message : t("retryTaskFailed")))}
+                        onRetryRun={(runId) => void agent.retryRun(runId).catch((error) => message.error(error instanceof Error ? error.message : t("reanalyzeFailed")))}
+                        onRetrySubmission={(messageId) => void agent.retrySubmission(messageId).catch((error) => message.error(error instanceof Error ? error.message : t("retryRequestFailed")))}
                         onEditMessage={(editedMessage) => {
                             const assetIds = Array.isArray(editedMessage.metadata.assetIds) ? editedMessage.metadata.assetIds.filter((id): id is string => typeof id === "string") : [];
                             setPrompt(editedMessage.content);
                             agent.restoreAttachments(assetIds);
                             window.requestAnimationFrame(() => inputRef.current?.focus());
-                            message.info("已回填消息和本轮参考素材，可修改后重新发送");
+                            message.info(t("messageAndAssetsRefilled"));
                         }}
                         selectedAssetIds={agent.selectedAssetIds}
                         onToggleAsset={agent.toggleAsset}
@@ -259,12 +261,12 @@ export default function CreatePage() {
                     <div className="mx-auto flex min-h-full w-full min-w-0 max-w-[1320px] flex-col items-center px-2.5 pb-3 pt-3 sm:px-8 sm:pb-8 sm:pt-12 lg:pt-[9vh] xl:pt-[11vh]">
                         <div className="text-center">
                             <SiteLogo logoUrl={site.logoUrl} className="mx-auto size-8" />
-                            <h1 className="mt-2.5 text-[22px] font-semibold leading-tight sm:mt-5 sm:text-[30px]">{site.title} 创作 Agent</h1>
-                            <p className="mt-2 text-sm text-[#8b949f] dark:text-[#7f8996]">从一个想法开始</p>
+                            <h1 className="mt-2.5 text-[22px] font-semibold leading-tight sm:mt-5 sm:text-[30px]">{t("heroTitleWithSite", { title: site.title })}</h1>
+                            <p className="mt-2 text-sm text-[#8b949f] dark:text-[#7f8996]">{t("heroSubtitle")}</p>
                         </div>
                         <div className="mt-3 w-full sm:mt-6">{composer}</div>
                         <div className="mt-2 flex w-full min-w-0 flex-wrap justify-center gap-1.5 sm:mt-3 sm:gap-2">
-                            {skillsLoading ? <span className="px-2 py-2 text-xs text-[#9aa2ad]">正在加载创作 Skill...</span> : null}
+                            {skillsLoading ? <span className="px-2 py-2 text-xs text-[#9aa2ad]">{t("loadingSkills")}</span> : null}
                             {skills.map((skill, index) => {
                                 const visual = skillVisual(skill, index);
                                 const Icon = visual.icon;
@@ -272,7 +274,7 @@ export default function CreatePage() {
                                     <button
                                         key={skill.id}
                                         type="button"
-                                        aria-label={`使用 ${skill.name} Skill`}
+                                        aria-label={t("useSkill", { name: skill.name })}
                                         title={skill.description}
                                         className="inline-flex h-9 items-center gap-2 rounded-full border border-[#e3e7eb] bg-white px-3 text-sm font-medium text-[#343b44] transition hover:border-[#cfd6dd] hover:bg-[#f7f8fa] dark:border-[#343a42] dark:bg-[#181b20] dark:text-[#dce1e7] dark:hover:border-[#4a525d] dark:hover:bg-[#20242a]"
                                         onClick={() => selectSkill(skill)}
@@ -303,7 +305,7 @@ export default function CreatePage() {
                 }}
             />
 
-            <Drawer title="创作历史" placement="right" size="min(92vw, 380px)" open={historyOpen} onClose={() => setHistoryOpen(false)} styles={{ body: { padding: 0, overflow: "hidden" } }}>
+            <Drawer title={t("creationHistory")} placement="right" size="min(92vw, 380px)" open={historyOpen} onClose={() => setHistoryOpen(false)} styles={{ body: { padding: 0, overflow: "hidden" } }}>
                 <CreativeConversationList
                     items={agent.conversations}
                     activeId={agent.conversationId}
@@ -322,18 +324,18 @@ export default function CreatePage() {
                     onRename={async (id, title) => {
                         try {
                             await agent.renameConversation(id, title);
-                            message.success("标题已更新");
+                            message.success(t("titleUpdated"));
                         } catch (error) {
-                            message.error(error instanceof Error ? error.message : "修改标题失败");
+                            message.error(error instanceof Error ? error.message : t("titleUpdateFailed"));
                             throw error;
                         }
                     }}
                     onArchive={async (ids) => {
                         try {
                             await agent.archiveConversations(ids);
-                            message.success(ids.length > 1 ? `已删除 ${ids.length} 条对话` : "对话已删除");
+                            message.success(ids.length > 1 ? t("conversationsDeletedCount", { count: ids.length }) : t("conversationDeleted"));
                         } catch (error) {
-                            message.error(error instanceof Error ? error.message : "删除对话失败");
+                            message.error(error instanceof Error ? error.message : t("conversationDeleteFailed"));
                             throw error;
                         }
                     }}

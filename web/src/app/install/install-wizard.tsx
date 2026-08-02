@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, ArrowRight, CheckCircle2, Circle, Database, RefreshCw, ServerCrash, ShieldCheck, Sparkles } from "lucide-react";
 
 import { AuthForm } from "@/components/auth/auth-form";
@@ -11,26 +12,30 @@ import { usePublicSessionStore } from "@/stores/use-public-session-store";
 import { DatabaseConfigBuilder } from "./database-config-builder";
 
 type InstallStepId = "intro" | "database" | "admin";
+type InstallTranslator = ReturnType<typeof useTranslations<"public.install">>;
 
 const primaryButtonClass =
     "inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-semibold !text-white shadow-sm shadow-slate-950/15 transition enabled:hover:bg-black disabled:cursor-not-allowed disabled:bg-slate-300 disabled:!text-white disabled:shadow-none [&_svg]:!text-white";
 const secondaryButtonClass = "inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white/80 px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-white";
 const ghostButtonClass = "inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900";
 
-const steps = [
-    { id: "intro" as const, title: "安装说明", description: "确认部署方式和准备事项" },
-    { id: "database" as const, title: "配置数据库", description: "生成配置并初始化 PostgreSQL" },
-    { id: "admin" as const, title: "创建管理员", description: "创建第一个后台账号" },
-];
-
 export function InstallWizard({ install }: { install: InstallStatus }) {
+    const t = useTranslations("public.install");
     const [activeStep, setActiveStep] = useState<InstallStepId>("intro");
     const [currentInstall, setCurrentInstall] = useState(install);
     const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", logoUrl: "/logo.svg" };
     const databaseReady = currentInstall.database.healthy && currentInstall.database.schemaReady;
     const schemaPending = currentInstall.database.healthy && !currentInstall.database.schemaReady;
     const runtimeReady = databaseReady && currentInstall.security.encryptionReady;
-    const status = useMemo(() => installStatusView(currentInstall), [currentInstall]);
+    const status = useMemo(() => installStatusView(currentInstall, t), [currentInstall, t]);
+    const steps = useMemo(
+        () => [
+            { id: "intro" as const, title: t("steps.intro.title"), description: t("steps.intro.description") },
+            { id: "database" as const, title: t("steps.database.title"), description: t("steps.database.description") },
+            { id: "admin" as const, title: t("steps.admin.title"), description: t("steps.admin.description") },
+        ],
+        [t],
+    );
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -47,8 +52,8 @@ export function InstallWizard({ install }: { install: InstallStatus }) {
                 <Link href="/" className="inline-flex min-w-0 items-center gap-3">
                     <SiteLogo logoUrl={site.logoUrl} className="size-11" />
                     <span className="min-w-0">
-                        <span className="block text-2xl font-semibold tracking-normal text-slate-950">{site.title} 安装向导</span>
-                        <span className="mt-1 block text-sm text-slate-500">三步完成服务器初始化</span>
+                        <span className="block text-2xl font-semibold tracking-normal text-slate-950">{t("wizardTitle", { site: site.title })}</span>
+                        <span className="mt-1 block text-sm text-slate-500">{t("wizardSubtitle")}</span>
                     </span>
                 </Link>
                 <span className={`inline-flex w-fit items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-medium shadow-sm backdrop-blur ${status.className}`}>
@@ -79,7 +84,7 @@ export function InstallWizard({ install }: { install: InstallStatus }) {
                                     </span>
                                     <span className="min-w-0">
                                         <span className="block text-sm font-semibold">{step.title}</span>
-                                        <span className="mt-0.5 block truncate text-xs opacity-70">{locked ? "先完成数据库和加密配置" : step.description}</span>
+                                        <span className="mt-0.5 block truncate text-xs opacity-70">{locked ? t("stepLockedHint") : step.description}</span>
                                     </span>
                                 </button>
                             );
@@ -88,9 +93,9 @@ export function InstallWizard({ install }: { install: InstallStatus }) {
 
                     <div className="mt-4 rounded-lg border border-slate-200/80 bg-white/70 p-4">
                         <div className="grid grid-cols-3 gap-3">
-                            <StatusMetric label="数据库" value={databaseReady ? "已初始化" : schemaPending ? "待初始化" : currentInstall.database.configured ? "连接失败" : "未配置"} />
-                            <StatusMetric label="加密" value={currentInstall.security.encryptionReady ? "已就绪" : "未就绪"} />
-                            <StatusMetric label="用户" value={currentInstall.userCount ? `${currentInstall.userCount} 个` : "未创建"} />
+                            <StatusMetric label={t("metricDatabaseLabel")} value={databaseReady ? t("databaseInitialized") : schemaPending ? t("databasePending") : currentInstall.database.configured ? t("databaseFailed") : t("databaseUnconfigured")} />
+                            <StatusMetric label={t("metricEncryptionLabel")} value={currentInstall.security.encryptionReady ? t("encryptionReady") : t("encryptionNotReady")} />
+                            <StatusMetric label={t("metricUserLabel")} value={currentInstall.userCount ? t("userCount", { count: currentInstall.userCount }) : t("userNone")} />
                         </div>
                         <p className="mt-3 text-xs leading-5 text-slate-500">{currentInstall.database.message}</p>
                     </div>
@@ -107,20 +112,22 @@ export function InstallWizard({ install }: { install: InstallStatus }) {
 }
 
 function IntroStep({ onNext }: { onNext: () => void }) {
+    const t = useTranslations("public.install");
+    const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", logoUrl: "/logo.svg" };
     return (
         <section className="p-5 sm:p-8">
-            <StepHeader step="步骤 1 / 3" title="先确认安装流程" description="JoveCanvas 面向服务器部署，商业数据会进入 PostgreSQL。安装向导会引导你生成配置、检查初始化状态，并创建第一个管理员账号。" />
+            <StepHeader step={t("intro.stepLabel")} title={t("intro.title")} description={t("intro.description", { site: site.title })} />
 
             <div className="mt-7 overflow-hidden rounded-lg border border-slate-200/80 bg-white/75 shadow-sm">
-                <ProcessRow index="01" title="准备 PostgreSQL" text="本机使用 localhost；Docker 内置数据库使用 postgres；宝塔宿主机数据库使用 127.0.0.1；云数据库使用服务商连接地址。" />
-                <ProcessRow index="02" title="写入部署配置" text="安装页不会保存数据库密码。复制的环境变量包含加密密钥与维护令牌，Compose 模板同时包含 App 和生成 Worker。" />
-                <ProcessRow index="03" title="让配置生效并初始化" text="根据所选部署方式执行页面给出的重启命令，等待服务恢复后刷新检查；连接成功后手动初始化表结构，再创建管理员。" last />
+                <ProcessRow index="01" title={t("intro.process1Title")} text={t("intro.process1Text")} />
+                <ProcessRow index="02" title={t("intro.process2Title")} text={t("intro.process2Text")} />
+                <ProcessRow index="03" title={t("intro.process3Title")} text={t("intro.process3Text")} last />
             </div>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="max-w-xl text-sm leading-6 text-slate-500">如果你已经完成数据库配置，本页会直接显示当前初始化状态。</p>
+                <p className="max-w-xl text-sm leading-6 text-slate-500">{t("intro.footerHint")}</p>
                 <button type="button" onClick={onNext} className={primaryButtonClass}>
-                    下一步：配置数据库
+                    {t("intro.nextButton")}
                     <ArrowRight className="size-4" />
                 </button>
             </div>
@@ -129,6 +136,7 @@ function IntroStep({ onNext }: { onNext: () => void }) {
 }
 
 function DatabaseStep({ install, runtimeReady, onInstallChange, onPrev, onNext }: { install: InstallStatus; runtimeReady: boolean; onInstallChange: (install: InstallStatus) => void; onPrev: () => void; onNext: () => void }) {
+    const t = useTranslations("public.install");
     const [initializing, setInitializing] = useState(false);
     const [initializeError, setInitializeError] = useState("");
     const canInitialize = install.database.configured && install.database.healthy && !install.database.schemaReady && install.security.encryptionReady;
@@ -140,10 +148,10 @@ function DatabaseStep({ install, runtimeReady, onInstallChange, onPrev, onNext }
         try {
             const response = await fetch("/api/install/initialize", { method: "POST" });
             const payload = (await response.json().catch(() => ({}))) as { data?: { install?: InstallStatus }; msg?: string };
-            if (!response.ok || !payload.data?.install) throw new Error(payload.msg || "数据库初始化失败");
+            if (!response.ok || !payload.data?.install) throw new Error(payload.msg || t("database.initFailedDefault"));
             onInstallChange(payload.data.install);
         } catch (error) {
-            setInitializeError(error instanceof Error ? error.message : "数据库初始化失败");
+            setInitializeError(error instanceof Error ? error.message : t("database.initFailedDefault"));
         } finally {
             setInitializing(false);
         }
@@ -152,7 +160,7 @@ function DatabaseStep({ install, runtimeReady, onInstallChange, onPrev, onNext }
     return (
         <section className="grid gap-0 xl:grid-cols-[minmax(0,1fr)_300px]">
             <div className="min-w-0 p-5 sm:p-8">
-                <StepHeader step="步骤 2 / 3" title="配置并初始化数据库" description="填写数据库信息后复制配置，写入服务器环境变量并重启 Web 服务。状态检查只验证连接；确认无误后由你显式初始化表结构。" />
+                <StepHeader step={t("database.stepLabel")} title={t("database.title")} description={t("database.description")} />
                 <div className="mt-6">
                     <DatabaseConfigBuilder />
                 </div>
@@ -162,7 +170,7 @@ function DatabaseStep({ install, runtimeReady, onInstallChange, onPrev, onNext }
                 <div className={`rounded-lg border p-4 shadow-sm ${runtimeReady ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
                     <div className="flex items-center gap-2 text-sm font-semibold">
                         {runtimeReady ? <CheckCircle2 className="size-4" /> : <Database className="size-4" />}
-                        {runtimeReady ? "运行环境已就绪" : schemaPending ? "数据库连接成功，等待初始化" : "等待数据库与密钥就绪"}
+                        {runtimeReady ? t("database.runtimeReadyTitle") : schemaPending ? t("database.schemaPendingTitle") : t("database.waitingTitle")}
                     </div>
                     <p className="mt-2 text-xs leading-5">{install.database.message}</p>
                     {install.database.detail ? <p className="mt-2 break-words text-xs leading-5 opacity-80">{install.database.detail}</p> : null}
@@ -171,40 +179,40 @@ function DatabaseStep({ install, runtimeReady, onInstallChange, onPrev, onNext }
                 <div className={`mt-3 rounded-lg border p-4 text-sm ${install.security.encryptionReady ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-rose-200 bg-rose-50 text-rose-900"}`}>
                     <div className="flex items-center gap-2 font-semibold">
                         <ShieldCheck className="size-4" />
-                        敏感配置加密
+                        {t("database.encryptionTitle")}
                     </div>
                     <p className="mt-2 text-xs leading-5">{install.security.message}</p>
                 </div>
 
                 <div className="mt-5 border-l-2 border-slate-300 pl-4">
-                    <div className="text-sm font-semibold text-slate-900">配置生效后的操作</div>
+                    <div className="text-sm font-semibold text-slate-900">{t("database.nextStepsTitle")}</div>
                     <ol className="mt-2 space-y-2 text-xs leading-5 text-slate-500">
-                        <li>1. 按左侧当前部署方式的命令重新启动应用。</li>
-                        <li>2. 等待 10-30 秒，再点击下方“刷新检查”。</li>
-                        <li>3. 看到“数据库连接成功”后点击“初始化表结构”。</li>
-                        <li>4. 初始化成功后再进入下一步创建管理员。</li>
+                        <li>1. {t("database.nextStep1")}</li>
+                        <li>2. {t("database.nextStep2")}</li>
+                        <li>3. {t("database.nextStep3")}</li>
+                        <li>4. {t("database.nextStep4")}</li>
                     </ol>
                 </div>
 
                 <div className="mt-5 grid gap-2">
                     <Link href="/install" className={secondaryButtonClass}>
                         <RefreshCw className="size-4" />
-                        刷新检查
+                        {t("database.refreshCheck")}
                     </Link>
                     {!install.database.schemaReady ? (
                         <button type="button" onClick={() => void initializeDatabase()} disabled={!canInitialize || initializing} className={primaryButtonClass}>
                             <Database className={`size-4 ${initializing ? "animate-pulse" : ""}`} />
-                            {initializing ? "正在初始化" : "初始化表结构"}
+                            {initializing ? t("database.initializing") : t("database.initSchema")}
                         </button>
                     ) : null}
                     {initializeError ? <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">{initializeError}</p> : null}
                     <button type="button" onClick={onNext} disabled={!runtimeReady} className={primaryButtonClass}>
-                        下一步：创建管理员
+                        {t("database.nextAdmin")}
                         <ArrowRight className="size-4" />
                     </button>
                     <button type="button" onClick={onPrev} className={ghostButtonClass}>
                         <ArrowLeft className="size-4" />
-                        返回安装说明
+                        {t("database.backIntro")}
                     </button>
                 </div>
             </aside>
@@ -213,13 +221,14 @@ function DatabaseStep({ install, runtimeReady, onInstallChange, onPrev, onNext }
 }
 
 function AdminStep({ install, runtimeReady, onPrev }: { install: InstallStatus; runtimeReady: boolean; onPrev: () => void }) {
+    const t = useTranslations("public.install");
     if (!runtimeReady) {
         return (
             <section className="p-5 sm:p-8">
-                <StepHeader step="步骤 3 / 3" title="先完成运行环境配置" description="数据库表结构或敏感配置加密密钥尚未就绪，暂时不能创建管理员账号。" />
+                <StepHeader step={t("admin.notReadyStepLabel")} title={t("admin.notReadyTitle")} description={t("admin.notReadyDescription")} />
                 <button type="button" onClick={onPrev} className={`mt-6 ${secondaryButtonClass}`}>
                     <ArrowLeft className="size-4" />
-                    返回配置数据库
+                    {t("admin.backDatabase")}
                 </button>
             </section>
         );
@@ -228,9 +237,9 @@ function AdminStep({ install, runtimeReady, onPrev }: { install: InstallStatus; 
     if (install.ready) {
         return (
             <section className="p-5 sm:p-8">
-                <StepHeader step="步骤 3 / 3" title="管理员账号已创建" description="站点已经完成初始化，可以进入后台继续配置模型渠道、套餐权益和支付渠道。" />
+                <StepHeader step={t("admin.readyStepLabel")} title={t("admin.readyTitle")} description={t("admin.readyDescription")} />
                 <Link href="/login?next=/admin" className={`mt-6 ${primaryButtonClass}`}>
-                    登录后台
+                    {t("admin.loginBackend")}
                     <ArrowRight className="size-4" />
                 </Link>
             </section>
@@ -246,13 +255,13 @@ function AdminStep({ install, runtimeReady, onPrev }: { install: InstallStatus; 
                 <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-900 shadow-sm">
                     <div className="flex items-center gap-2 text-sm font-semibold">
                         <ShieldCheck className="size-4" />
-                        首个账号自动成为管理员
+                        {t("admin.firstAdminNoteTitle")}
                     </div>
-                    <p className="mt-2 text-xs leading-5">创建成功后会直接进入后台。后续普通用户注册会按后台注册策略控制。</p>
+                    <p className="mt-2 text-xs leading-5">{t("admin.firstAdminNoteText")}</p>
                 </div>
                 <button type="button" onClick={onPrev} className={`mt-5 ${ghostButtonClass}`}>
                     <ArrowLeft className="size-4" />
-                    返回配置数据库
+                    {t("admin.backDatabase")}
                 </button>
             </aside>
         </section>
@@ -290,17 +299,17 @@ function StatusMetric({ label, value }: { label: string; value: string }) {
     );
 }
 
-function installStatusView(install: InstallStatus) {
+function installStatusView(install: InstallStatus, t: InstallTranslator) {
     if (install.ready) {
         return {
-            label: "安装完成",
+            label: t("statusReady"),
             icon: <CheckCircle2 className="size-4" />,
             className: "border-emerald-200 bg-emerald-50/80 text-emerald-700",
         };
     }
     if (install.firstAdminRequired) {
         return {
-            label: "等待创建管理员",
+            label: t("statusWaitingAdmin"),
             icon: <Sparkles className="size-4" />,
             className: "border-slate-200 bg-slate-50/80 text-slate-700",
         };
@@ -308,19 +317,19 @@ function installStatusView(install: InstallStatus) {
     if (install.database.configured) {
         if (install.database.healthy && !install.database.schemaReady) {
             return {
-                label: "等待初始化",
+                label: t("statusWaitingSchema"),
                 icon: <Database className="size-4" />,
                 className: "border-amber-200 bg-amber-50/80 text-amber-700",
             };
         }
         return {
-            label: "数据库需检查",
+            label: t("statusDatabaseError"),
             icon: <ServerCrash className="size-4" />,
             className: "border-rose-200 bg-rose-50/80 text-rose-700",
         };
     }
     return {
-        label: "等待配置数据库",
+        label: t("statusWaitingDatabase"),
         icon: <Circle className="size-4" />,
         className: "border-amber-200 bg-amber-50/80 text-amber-700",
     };

@@ -1,0 +1,133 @@
+---
+title: Quick start
+description: Start JoveCanvas with PostgreSQL, Docker Compose, or source
+---
+
+# Quick start
+
+JoveCanvas defaults to PostgreSQL. Recommended path: Docker Compose for app + PostgreSQL, then the install wizard for the first admin.
+
+## Minimum server sizing
+
+Models are called via external APIs—no GPU required. The host still runs Next.js, PostgreSQL, media transfer, and optional FFmpeg.
+
+| Scenario | CPU | Memory | Disk | DB & media guidance |
+| --- | --- | --- | --- | --- |
+| Barely runnable | 1 vCPU | 1GB + 1GB swap | 10GB SSD | External PostgreSQL + S3/OSS; pull release images only; install trial / low concurrency |
+| Small standard | 2 vCPU | 2GB + 1GB swap | 20GB SSD | PostgreSQL can be co-located; local volume OK for small media |
+| Recommended daily | 2–4 vCPU | 4GB | 40GB+ SSD | Main workbenches + admin + light concurrency; object storage for long video |
+| Short drama / heavy local video | 4+ vCPU | 8GB+ | 80GB+ SSD | Extra CPU/RAM/disk for FFmpeg, subtitles, voice mix, long temp files |
+
+Base environment: 64-bit Linux (amd64 or arm64), Docker Engine + Compose v2, PostgreSQL 16, ports 80/443, HTTPS domain, outbound access to models, object storage, SMTP, and payments. Source runs need Node.js 22 and pnpm 10+.
+
+Minimum means “can start and try”, not “stable concurrent video or short drama”. Size local media disks by volume and retention.
+
+## Docker Compose
+
+### 1. Prepare config
+
+```bash
+git clone https://github.com/jiujiu532/JoveCanvas.git
+cd JoveCanvas
+cp .env.example .env
+```
+
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Edit `.env` at least:
+
+```dotenv
+NEXT_PUBLIC_SITE_URL=https://vozeb-pro.example.com
+POSTGRES_PASSWORD=replace-with-a-strong-database-password
+VOZEB_PRO_ENCRYPTION_KEY=output-of-openssl-rand-hex-32
+```
+
+Local trial may use `NEXT_PUBLIC_SITE_URL=http://localhost:3000`. Production needs a real HTTPS domain.
+
+### 2. Start services
+
+```bash
+docker compose pull
+docker compose up -d
+docker compose ps
+```
+
+Default stack:
+
+- `postgres:16-alpine`
+- `ghcr.io/jiujiu532/jovecanvas:latest`
+- volume `vozeb-pro-postgres`
+- volume `vozeb-pro-data`
+
+### 3. Initialize
+
+Open:
+
+```text
+http://SERVER_IP:3000/install
+```
+
+The wizard first read-checks PostgreSQL. When DB and encryption key are ready, click “Initialize schema” to create `vozeb_pro_`-prefixed tables, then create the first admin.
+
+If PostgreSQL is already on Baota, set `DATABASE_URL` host to `127.0.0.1` and start app only:
+
+```bash
+docker compose -f docker-compose.baota.yml up -d
+```
+
+Host networking; no bundled PostgreSQL; app port not published publicly.
+
+### 4. Configure admin
+
+After first login, in order:
+
+1. System model channels and channel capability tests.
+2. Logical model bindings for text / image / video / audio.
+3. Default model per capability.
+4. Registration, email, and initial plan / points.
+5. Local media directories and temp cleanup policy.
+6. Commerce: products, payment channels, and webhooks when needed.
+
+## Source start
+
+Requires Node.js 22, pnpm 10+, PostgreSQL 16.
+
+```bash
+git clone https://github.com/jiujiu532/JoveCanvas.git
+cd JoveCanvas
+cp .env.example web/.env.local
+```
+
+Point `web/.env.local` at local PostgreSQL:
+
+```dotenv
+VOZEB_PRO_DATABASE_PROVIDER=postgres
+DATABASE_URL=postgres://vozeb_pro:password@localhost:5432/vozeb_pro
+VOZEB_PRO_DATABASE_SSL=0
+VOZEB_PRO_ENCRYPTION_KEY=64-hex-or-32-byte-base64-key
+VOZEB_PRO_INTERNAL_ORIGIN=http://127.0.0.1:3000
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+```bash
+cd web
+pnpm install --frozen-lockfile
+pnpm run dev
+```
+
+Open `http://localhost:3000/install`.
+
+## Where data lives
+
+- PostgreSQL: users, creative sessions, workbench history, Canvas, assets, short drama, settings, tasks, ops metadata.
+- `VOZEB_PRO_DATA_DIR/generation-assets`: long-lived media linked to generation logs.
+- `VOZEB_PRO_DATA_DIR/reference-assets`: temp references and permanent uploads/creative assets.
+- File provider: entities in `.data/*.json`; media still under the server data dir.
+
+On Docker updates, never `docker compose down -v` or you wipe DB and media volumes.
+
+Next: [Configuration](./configuration) and [Docker deployment](./docker).

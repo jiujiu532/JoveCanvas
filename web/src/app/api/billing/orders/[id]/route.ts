@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth/session";
 import { getBillingOrderForUser, isBillingInputError } from "@/lib/server/billing-service";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ type RouteContext = {
 
 export async function GET(_request: Request, context: RouteContext) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     try {
         const { id } = await context.params;
@@ -20,6 +21,6 @@ export async function GET(_request: Request, context: RouteContext) {
     } catch (error) {
         if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
         console.error("Get billing order failed", error);
-        return NextResponse.json({ error: "获取订单失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.getOrderFailed") }, { status: 500 });
     }
 }

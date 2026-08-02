@@ -3,6 +3,7 @@
 import { Copy } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button, Card, Tag } from "antd";
+import { useTranslations } from "next-intl";
 
 import { LazyMediaImage } from "@/components/media/lazy-media-image";
 import { imagePreviewUrl } from "@/lib/media-image-url";
@@ -12,7 +13,7 @@ export function PromptCard({
     item,
     onOpen,
     onCopy,
-    actionLabel = "复制",
+    actionLabel,
     actionIcon = <Copy className="size-3.5" />,
     actionType = "text",
     extraAction,
@@ -25,6 +26,8 @@ export function PromptCard({
     actionType?: "text" | "primary";
     extraAction?: ReactNode;
 }) {
+    const t = useTranslations("layout");
+    const resolvedActionLabel = actionLabel ?? t("prompts.copy");
     return (
         <>
             <article className="overflow-hidden rounded-xl border border-border bg-card text-card-foreground sm:hidden">
@@ -51,7 +54,7 @@ export function PromptCard({
                 </button>
                 <div className="flex items-center gap-1.5 border-t border-border px-2 py-1">
                     <Button block={actionType === "primary"} type={actionType} size="small" icon={actionIcon} onClick={onCopy}>
-                        {actionLabel}
+                        {resolvedActionLabel}
                     </Button>
                     {extraAction}
                 </div>
@@ -89,7 +92,7 @@ export function PromptCard({
                 </button>
                 <div className="flex items-center gap-1.5 px-3 pb-3">
                     <Button block={actionType === "primary"} type={actionType} size="small" icon={actionIcon} onClick={onCopy}>
-                        {actionLabel}
+                        {resolvedActionLabel}
                     </Button>
                     {extraAction}
                 </div>

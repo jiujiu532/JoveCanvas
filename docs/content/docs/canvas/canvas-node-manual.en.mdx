@@ -1,0 +1,65 @@
+---
+title: Canvas node manual
+description: Main uses and workflows for current canvas nodes
+---
+
+# Canvas node manual
+
+Main uses and flows for canvas nodes (for operators and maintainers). Text nodes are covered first.
+
+## Text nodes
+
+Text nodes hold prompts, drafts, notes, and AI-generated text. They can stand alone or feed downstream generation-config nodes.
+
+### Edit text
+
+- Double-click the content area to edit in place.
+- With a text node selected, use the top toolbar “Edit text”.
+- Toolbar “Smaller” / “Larger” change font size.
+
+### Generate or rewrite via the under-node dialog
+
+- Select a text node, then toolbar “Edit” to open the dialog under the node.
+- That dialog is for text generation/rewrite only—not image generation.
+- Empty node: enter what to generate; send fills the current node.
+- Existing content: describe the desired rewrite; send creates a **new** text node on the right and auto-connects old → new.
+- Input can be typed or picked from the prompt library.
+- Model dropdown comes from models already loaded in global config; the choice is node-local and does not change other nodes or global defaults.
+- If the list is empty, an admin must pull models in system settings and set default image/text models. If Volcengine Ark Agent Plan reports no `/models` support, enter model names manually in admin.
+
+### Generate images from a text node
+
+1. Prepare the prompt text in the text node.
+2. Click toolbar “Generate image”.
+3. A generation-config node is created to the right and connected automatically.
+4. That node uses upstream text as the image prompt and starts generation immediately.
+5. Adjust model, aspect ratio, count, etc. on the config node and regenerate as needed.
+
+### Continue image generation from an image node
+
+- On an empty image node, “Generate” writes into the same node (no extra empty frame).
+- Count `1`: result fills the current image node.
+- Count `> 1`: current node is the root; child image nodes are created on the right.
+- If the image node already has content, it is used as a reference for a new batch.
+- Each generated image node stores prompt, generation type, model, size, quality, count, and reference refs under its `metadata` for retry.
+- If a reference is missing on retry, the system errors instead of sending an empty image-to-image request.
+
+### Video nodes
+
+- Create via toolbar, or drop/upload local video files.
+- Native player supports play, pause, and scrubbing in-node.
+- Empty video node dialog generates video into the current node.
+- Creating video from text/image/config nodes adds a new video node on the right with auto-connect.
+- Video mode on a config node reads upstream text as prompt, images as references, video as reference video (shown in input preview).
+- Video API supports OpenAI-style `POST /v1/videos`, `GET /v1/videos/{id}`, and `GET /v1/videos/{id}/content`.
+- For Volcengine Ark Agent Plan / Seedance 2.0, set Base URL to `https://ark.cn-beijing.volces.com/api/plan/v3` and use Seedance 2.0 model names; the app uses `POST /contents/generations/tasks` and polls `GET /contents/generations/tasks/{id}`.
+- Agent Plan `/api/plan/v3` does not expose OpenAI `/models`; admin pull does not invent a list—enter `doubao-seedance-2.0` or other documented models manually.
+- Channels that only accept reachable URLs get short-lived signed URLs for in-site assets; assets stay on the server—the browser never uploads local files or long-lived public storage URLs to upstream.
+
+### Recommended flow
+
+1. Create a text node with the creative idea.
+2. Open the under-node dialog and let AI refine/expand the prompt.
+3. Rewrite lands in a new text node so the original remains for comparison.
+4. Confirm text, then toolbar “Generate image”.
+5. Tune parameters or regenerate on the auto-created config node.

@@ -1,7 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import { NextIntlClientProvider } from "next-intl";
+import type { ReactElement } from "react";
 
 import { canvasThemes } from "@/lib/canvas-theme";
+import canvasMessages from "../../../../../messages/zh/canvas.json";
 import { AgentChatComposer } from "./canvas-agent-chat-ui";
 
 const baseProps = {
@@ -12,9 +15,17 @@ const baseProps = {
     onSubmit: vi.fn(),
 };
 
+function renderComposer(ui: ReactElement) {
+    return renderToStaticMarkup(
+        <NextIntlClientProvider locale="zh" messages={{ canvas: canvasMessages }}>
+            {ui}
+        </NextIntlClientProvider>,
+    );
+}
+
 describe("Canvas Agent image attachments", () => {
     it("shows an immediate upload preview and blocks submission until it is ready", () => {
-        const markup = renderToStaticMarkup(<AgentChatComposer {...baseProps} attachments={[{ id: "upload", name: "clipboard-image.png", url: "blob:preview", status: "uploading" }]} onAddFiles={vi.fn()} onRemoveAttachment={vi.fn()} />);
+        const markup = renderComposer(<AgentChatComposer {...baseProps} attachments={[{ id: "upload", name: "clipboard-image.png", url: "blob:preview", status: "uploading" }]} onAddFiles={vi.fn()} onRemoveAttachment={vi.fn()} />);
 
         expect(markup).toContain('aria-label="clipboard-image.png 上传中"');
         expect(markup).toContain('aria-label="正在上传图片"');
@@ -22,7 +33,7 @@ describe("Canvas Agent image attachments", () => {
     });
 
     it("keeps a failed preview in place with retry and remove actions", () => {
-        const markup = renderToStaticMarkup(
+        const markup = renderComposer(
             <AgentChatComposer {...baseProps} attachments={[{ id: "failed", name: "reference.png", url: "blob:failed", status: "failed", error: "上传失败" }]} onAddFiles={vi.fn()} onRetryAttachment={vi.fn()} onRemoveAttachment={vi.fn()} />,
         );
 

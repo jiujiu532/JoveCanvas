@@ -1,0 +1,182 @@
+---
+title: Configuration
+description: JoveCanvas environment variables, model channels, server media, and payments
+---
+
+# Configuration
+
+Two layers: server environment variables and admin console settings. Deploy-level items (DB connection, encryption key, data dir, proxies) use env vars; model channels, logical models, SMTP, points, plans, and payments are maintained in admin.
+
+## Core environment variables
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | Production yes | Public site origin; HTTPS in prod; no trailing `/` |
+| `VOZEB_PRO_DATABASE_PROVIDER` | Yes | Production `postgres`; `file` only for single-host file-mode trials |
+| `DATABASE_URL` | When PostgreSQL | Connection string; Docker DB host is `postgres` |
+| `VOZEB_PRO_DATABASE_POOL_MAX` | No | Pool max, default 10; low-memory/hosted DB may use 5 |
+| `VOZEB_PRO_DATABASE_SSL` | No | Local/Docker usually 0; cloud PG often 1 |
+| `VOZEB_PRO_ENCRYPTION_KEY` | Production yes | 64-hex or exact 32-byte Base64; must stay stable after deploy |
+| `VOZEB_PRO_INTERNAL_ORIGIN` | Recommended | Server self-callback; Docker default `http://127.0.0.1:3000` |
+| `VOZEB_PRO_DATA_DIR` | No | Server media and file-mode data directory |
+| `VOZEB_PRO_COOKIE_SECURE` | No | Empty = auto; force `true`/`false` behind special proxies |
+| `VOZEB_PRO_TRUSTED_PROXY_HOPS` | No | Proxy hops trusted for rate-limit IP; direct `0`, single Nginx/Caddy `1` |
+| `VOZEB_PRO_MAINTENANCE_TOKEN` | Production recommended | Bearer for generation Worker and external schedulers; ≥32 chars |
+| `VOZEB_PRO_WORKER_API_ORIGIN` | Optional for remote Worker | Origin Worker uses to call the app; Compose `http://app:3000`; Render injects private hostport |
+| `VOZEB_PRO_GENERATION_WORKER_ID` | No | Stable Worker id; empty → hostname + pid |
+| `VOZEB_PRO_GENERATION_WORKER_INTERVAL_MS` | No | Recovery poll interval, default 2000ms |
+| `VOZEB_PRO_GENERATION_WORKER_LANES` | No | Parallel recovery lanes, default 2 |
+| `VOZEB_PRO_GENERATION_WORKER_HEARTBEAT_MS` | No | Heartbeat interval, default 15000ms |
+| `VOZEB_PRO_GENERATION_WORKER_STALE_MS` | No | Ready check stale window, default 90000ms |
+| `VOZEB_PRO_GENERATION_WEBHOOK_SECRET` | Optional for webhooks | HMAC-SHA256 secret for generic generation callbacks; ≥32 chars when set |
+| `VOZEB_PRO_APP_URL` | Optional for docs | Main app URL for docs favicon to follow admin site icon |
+| `FFMPEG_PATH` | No | When FFmpeg not on PATH; Docker image includes FFmpeg |
+| `FFPROBE_PATH` | No | Optional FFprobe; defaults beside `FFMPEG_PATH` or PATH |
+| `VOZEB_PRO_CONTENT_MODERATION_PROVIDER` | No | Works review signals: `manual`, `keywords`, or `http` (default manual) |
+| `VOZEB_PRO_CONTENT_MODERATION_KEYWORDS` | keywords optional | Comma/newline risk keywords; only produce admin review signals |
+| `VOZEB_PRO_CONTENT_MODERATION_URL` | http required | External moderation HTTP URL; server posts public draft fields with 3s timeout |
+| `VOZEB_PRO_CONTENT_MODERATION_API_KEY` | http optional | External Bearer token; server env only |
+
+## PostgreSQL
+
+Source example:
+
+```dotenv
+VOZEB_PRO_DATABASE_PROVIDER=postgres
+DATABASE_URL=postgres://vozeb_pro:password@localhost:5432/vozeb_pro
+VOZEB_PRO_DATABASE_POOL_MAX=10
+VOZEB_PRO_DATABASE_SSL=0
+```
+
+Main Compose creates the DB from:
+
+```dotenv
+POSTGRES_DB=vozeb_pro
+POSTGRES_USER=vozeb_pro
+POSTGRES_PASSWORD=replace-with-a-strong-database-password
+```
+
+The install page never stores the DB password. GET status only connects and checks tables; only “Initialize schema” creates `vozeb_pro_`-prefixed tables. Invalid encryption keys block init and first admin registration.
+
+With Baota host PostgreSQL, the app uses host networking in `docker-compose.baota.yml` to `127.0.0.1:5432`—do not also start the default Compose PostgreSQL service.
+
+## 0.0.3 release deploy requirements
+
+Users who ran 0.0.2 must stop old services and **delete** the old database or DB volume, then pull 0.0.3 and reinstall. 0.0.3 does not support reusing an old DB or in-place upgrade; deleting the old DB wipes its data.
+
+After starting 0.0.3, open `/install`, initialize schema, create the first admin, and confirm `/api/health/ready` returns 200 with a Worker heartbeat. Regenerate a ≥32-char `VOZEB_PRO_MAINTENANCE_TOKEN` shared by App and `generation-worker`. Reset and securely store `VOZEB_PRO_ENCRYPTION_KEY` in production.
+
+0.0.3 only initializes fixed `vozeb_pro_` tables for the current schema—no 0.0.2 data migration or legacy task repair. Render’s 0.0.3 Blueprint uses paid Web/Worker and durable DB/disk; confirm platform cost before install.
+
+## Works content-moderation signals
+
+After a work is submitted for review, an admin must still approve or reject under **Content ops → Works**. Default `manual` only records “awaiting human review”; `keywords` tags risk from a custom list; `http` posts title/description/category/tags to a deployer-configured neutral HTTP provider. None of the three auto-publish works; external provider failure falls back to human-review signals.
+
+```dotenv
+VOZEB_PRO_CONTENT_MODERATION_PROVIDER=keywords
+VOZEB_PRO_CONTENT_MODERATION_KEYWORDS=risk-term-1,risk-term-2
+```
+
+With `http`, confirm data-processing scope against region, privacy policy, and vendor terms. API keys must never enter ordinary user settings or browser requests.
+
+## Site URL & proxies
+
+For payment webhooks, upstream reading of in-site references, or secure cookies, set a real domain:
+
+```dotenv
+NEXT_PUBLIC_SITE_URL=https://vozeb-pro.example.com
+```
+
+For a standalone docs container, point at the main app:
+
+```dotenv
+VOZEB_PRO_APP_URL=https://vozeb-pro.example.com
+```
+
+Docs `/favicon.ico` loads the admin-configured site icon via the main app when possible; otherwise the docs image built-in logo is used—docs never open the main app database.
+
+Admin “Using docs” is in-app admin guidance on port `3000`; user `/help` is a separate creative tutorial; technical install/deploy/DB docs stay on the independent docs site (`3001`). Do not mix the three.
+
+Upstream model proxy (server-side only, never sent to the browser):
+
+```dotenv
+HTTPS_PROXY=http://proxy-host:7890
+HTTP_PROXY=http://proxy-host:7890
+ALL_PROXY=http://proxy-host:7890
+```
+
+## Model channels & logical models
+
+Open **Admin → Upstream → Model channels**.
+
+Four workspaces: channel management, protocol center, logical models, verification history. New channels use a fixed six-step wizard:
+
+1. Pick a built-in or custom protocol. Seedance 2.0 (SD2), Volcengine Ark video, Seedance 2.0 special pricing, and Stable Diffusion (SD) are separate—do not mix.
+2. Enter channel name, Base URL, and protocol credentials. SD A1111/Forge usually needs no API key; custom protocols may use none / Bearer / X-API-Key / custom headers.
+3. Pull and merge model catalogs; when upstream has no catalog, enter model IDs by hand (later sync does not delete manual models).
+4. Run real capability probes for text/image/video/audio (media probes may incur upstream cost).
+5. Bind upstream models to existing logical models or create stable logical IDs; optionally set as capability defaults.
+6. Review protocol, models, probes, and bindings; enable only after at least one capability passes and a binding exists—or save disabled as a draft.
+
+Unknown upstreams: choose **custom protocol**, paste docs URL, full cURL, request JSON, and success response JSON. Deterministic parsing runs first; when a default text model is available a schema-constrained draft is generated. Drafts still need admin review and real probes. Drafts are channel-local—no global cross-channel version publish/rollback.
+
+The default text model also powers workbench Agent, Canvas planning, and creative review. Channel API keys stay server-side; ordinary users only see logical model names.
+
+## Generation Worker & webhooks
+
+Page reads only cheaply wake the current task. Production also needs a durable `generation-worker` so closed pages still poll saved upstream task IDs and register results. Default, Baota, low-memory, external-db, and local Compose declare a Worker service; source `dev` / `npm start` supervise Worker via the app, or run:
+
+```bash
+cd web
+npm run worker:generation
+```
+
+Worker and app must share the same ≥32-char `VOZEB_PRO_MAINTENANCE_TOKEN`. Set `VOZEB_PRO_WORKER_API_ORIGIN` when the Worker is remote. Keep Worker ID stable per instance for readiness and diagnostics. `/api/health/ready` reports generation Worker not ready when the maintenance token is missing, heartbeat never seen, or heartbeat stale.
+
+When upstream supports callbacks, set `VOZEB_PRO_GENERATION_WEBHOOK_SECRET` and point upstream at `/api/generation-webhooks/{channelId}`. Raw JSON is HMAC-SHA256-signed with that secret; event IDs and upstream task IDs must be stable. Callbacks only advance existing image/video/audio tasks—they never create tasks. Unmatched events are retained for reconciliation. Idempotency requires PostgreSQL.
+
+## Media storage
+
+With external storage off, media writes to `VOZEB_PRO_DATA_DIR`. User uploads and long-lived outputs live under `reference-assets/permanent/YYYY/MM/DD/{images|videos|audio}`; generation-log media under `generation-assets/permanent/YYYY/MM/DD/...`; temporary references under `reference-assets/temporary/...` (default 24h). Container deploys must persist the whole data directory.
+
+Admins use **System → Local media** for local files, size, source, refs, and temp expiry (single/batch/expired cleanup). **System → External storage** configures generic S3-compatible endpoint, region, bucket, access/secret keys, object prefix, path-style (AWS S3, Aliyun OSS, Tencent COS, MinIO, etc.). **System → Data backup** provides redacted business import/export.
+
+With external storage on, new uploads/generation write only to object storage (no new local durable copy); turning it off restores local writes for new media. Historical media always reads via its registered provider. Admin can batch-migrate local media; local source files are deleted only after object upload and registration succeed.
+
+## SMTP & registration
+
+Configure SMTP under **Account & email**. Test mail first, then enable email registration. Registration OTP, password recovery, and email rebinding share that SMTP config.
+
+## Payments
+
+Admin supports Stripe, Alipay, WeChat Pay, PayPly, and manual confirmation. Alipay is one user-facing channel with admin “access mode” either **official** (PC website checkout) or **face-to-face** (QR)—shared App ID, RSA2 webhook verify, and refund config; not both at once. Mainland Alipay products use `CNY`; non-CNY orders are rejected before upstream. Secrets may live in encrypted admin config or env fallbacks; `VOZEB_PRO_ALIPAY_MODE` may be `official` (default) or `face_to_face`. Webhook, success, and cancel return URLs may be left empty (auto site origin); override only for other domains/pages. Face-to-face does not use a sync return URL. Webhook paths:
+
+```text
+/api/billing/webhooks/stripe
+/api/billing/webhooks/alipay
+/api/billing/webhooks/wechat
+/api/billing/webhooks/payply
+/api/billing/webhooks/custom
+```
+
+Full payment variables: root `.env.example`. Before production enablement, verify order, webhook signature, entitlement open, refund, and statement recon.
+
+Pending orders auto-check and close when user/admin reads them. Production should also schedule every 5 minutes so cleanup happens without traffic:
+
+```bash
+curl -fsS -X POST \
+  -H "Authorization: Bearer $VOZEB_PRO_MAINTENANCE_TOKEN" \
+  https://vozeb-pro.example.com/api/maintenance/billing-orders/expire
+```
+
+Baota: planned task → shell script; Docker: host cron; cloud: platform scheduler. Same token + idempotent batch; no single-process timer. Without a token the maintenance route stays closed. System-timeout closes can still complete safely if the PSP later confirms payment; admin-closed orders are not reopened.
+
+## Configuration check order
+
+1. `/install` shows PostgreSQL and schema healthy.
+2. Admin can log in.
+3. Default text model passes capability check.
+4. Image/video/audio checked per enabled capability.
+5. If references are needed, confirm the site origin is readable by upstream channels.
+6. Confirm `VOZEB_PRO_DATA_DIR` is writable and a durable volume is mounted.
+7. SMTP and payments each pass their admin test entry points.

@@ -1,0 +1,9 @@
+{
+  "title": "User guide",
+  "root": true,
+  "defaultOpen": true,
+  "pages": [
+    "canvas-node-manual",
+    "canvas-shortcuts"
+  ]
+}

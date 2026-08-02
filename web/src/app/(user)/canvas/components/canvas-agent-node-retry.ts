@@ -2,9 +2,9 @@ import { retryCreativeAgentTask } from "@/services/api/creative";
 
 import type { CanvasNodeData } from "../types";
 import type { CanvasAgentOp } from "../utils/canvas-agent-ops";
-import { watchCanvasAgentRun } from "./canvas-agent-run-client";
+import { watchCanvasAgentRun, type CanvasAgentRunLabels } from "./canvas-agent-run-client";
 
-export async function retryCanvasAgentNode(node: CanvasNodeData, applyOps: (ops?: CanvasAgentOp[]) => unknown) {
+export async function retryCanvasAgentNode(node: CanvasNodeData, applyOps: (ops?: CanvasAgentOp[]) => unknown, labels?: CanvasAgentRunLabels) {
     const runId = node.metadata?.agentRunId?.trim();
     const taskId = node.metadata?.agentTaskId?.trim();
     if (!runId || !taskId) return false;
@@ -19,7 +19,7 @@ export async function retryCanvasAgentNode(node: CanvasNodeData, applyOps: (ops?
         onStage: () => undefined,
         onPaused: () => undefined,
         onOps: (ops) => applyOps(ops),
-    });
+    }, labels);
     if (failure) throw new Error(failure);
     return true;
 }

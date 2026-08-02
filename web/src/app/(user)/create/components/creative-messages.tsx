@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 import { downloadAgentMedia, type AgentMediaDownload } from "@/components/agent/agent-media-download";
 import { AgentMarkdown } from "@/components/agent/agent-markdown";
 import { AgentMessageActions } from "@/components/agent/agent-message-actions";
-import { formatAgentMessageText } from "@/components/agent/agent-message-format";
+import { agentMessageFormatLabelsFromT, formatAgentMessageText } from "@/components/agent/agent-message-format";
 import { AgentMediaPreview } from "@/components/agent/agent-media-preview";
 import { SiteLogo } from "@/components/layout/site-logo";
 import { useCopyText } from "@/hooks/use-copy-text";
@@ -62,6 +62,7 @@ export function CreativeMessages({
     onLoadOlder?: () => void;
 }) {
     const t = useTranslations("workspace.create.messages");
+    const formatLabels = agentMessageFormatLabelsFromT(useTranslations("layout"));
     const endRef = useRef<HTMLDivElement>(null);
     const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", logoUrl: "/logo.svg" };
     const user = usePublicSessionStore((state) => state.payload?.user || null);
@@ -97,7 +98,7 @@ export function CreativeMessages({
                 const referencedAssets = item.role === "user" ? messageAssetIds(item).flatMap((id) => assetById.get(id) || []) : [];
                 const itemAssets = [...referencedAssets, ...(assetsByMessage.get(item.id) || []), ...(item.runId ? assetsByMessage.get(item.runId) || [] : [])].filter((asset, index, list) => list.findIndex((current) => current.id === asset.id) === index);
                 const handoff = isCreativeProjectHandoff(item.metadata.projectHandoff) ? item.metadata.projectHandoff : null;
-                const displayContent = formatAgentMessageText(item.content);
+                const displayContent = formatAgentMessageText(item.content, formatLabels);
                 const downloads = agentAssetDownloads(itemAssets, t);
                 const run = item.runId ? runDetails[item.runId] : undefined;
                 const failedTasks = run?.tasks.filter((task) => task.status === "failed") || [];

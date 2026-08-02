@@ -16,7 +16,7 @@ import { imagePreviewUrl } from "@/lib/media-image-url";
 import { userAvatarFallback } from "@/lib/user-avatar";
 import { usePublicSessionStore } from "@/stores/use-public-session-store";
 import type { LocalUser } from "@/stores/use-user-store";
-import { canvasAgentProgressSteps, type CanvasAgentRunStage } from "./canvas-agent-progress";
+import { canvasAgentProgressLabelsFromT, canvasAgentProgressSteps, type CanvasAgentRunStage } from "./canvas-agent-progress";
 
 export type CanvasAgentChatAttachment = {
     id: string;
@@ -220,7 +220,8 @@ function AgentToolCard({ title, text, detail, theme }: { title: string; text: st
 }
 
 export function AgentWorkingMessage({ theme, stage }: { theme: (typeof canvasThemes)[keyof typeof canvasThemes]; stage: CanvasAgentRunStage }) {
-    const steps = canvasAgentProgressSteps(stage);
+    const t = useTranslations("canvas");
+    const steps = canvasAgentProgressSteps(stage, canvasAgentProgressLabelsFromT(t));
     return (
         <div className="flex items-start gap-3" aria-live="polite">
             <AgentAvatar theme={theme} />

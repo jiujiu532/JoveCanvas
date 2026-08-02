@@ -6,6 +6,7 @@ import { resolveInternalOrigin } from "@/lib/server/internal-origin";
 import { getTextTask, transitionTextTask } from "@/lib/server/text-task-store";
 import { pointsResponseHeaders } from "@/lib/server/points-response";
 import { generationModelId } from "@/lib/server/generation-channel";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,11 +17,11 @@ type RouteContext = {
 
 export async function GET(request: Request, context: RouteContext) {
     const currentUser = await getCurrentUser(request);
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const { id } = await context.params;
     const task = await getTextTask(id);
-    if (!task || (task.userId !== currentUser.id && currentUser.role !== "admin")) return NextResponse.json({ error: "任务不存在或已过期" }, { status: 404 });
+    if (!task || (task.userId !== currentUser.id && currentUser.role !== "admin")) return NextResponse.json({ error: await serverMessage("tasks.notFoundOrExpired") }, { status: 404 });
     if ((task.status === "pending" || task.status === "running") && task.executionPhase !== "needs_review") {
         const origin = resolveInternalOrigin(new URL(request.url).origin);
         after(() => runGenerationTaskRecoveryBatch({ origin, cookie: request.headers.get("cookie") || "", limit: 1, taskIds: [task.id] }));
@@ -45,10 +46,10 @@ export async function GET(request: Request, context: RouteContext) {
 export async function PATCH(request: Request, context: RouteContext) {
     const user = await getCurrentUser(request);
     const task = user ? await getTextTask((await context.params).id) : null;
-    if (!user || !task || (task.userId !== user.id && user.role !== "admin")) return NextResponse.json({ error: "任务不存在或已过期" }, { status: user ? 404 : 401 });
+    if (!user || !task || (task.userId !== user.id && user.role !== "admin")) return NextResponse.json({ error: await serverMessage("tasks.notFoundOrExpired") }, { status: user ? 404 : 401 });
     const body = (await request.json().catch(() => ({}))) as { status?: string };
-    if (body.status !== "cancelled" || !["pending", "running"].includes(task.status)) return NextResponse.json({ error: "当前任务无法取消" }, { status: 409 });
-    const cancelled = await transitionTextTask(task, ["pending", "running"], { status: "cancelled", error: "任务已取消", messages: [], config: { ...task.config, apiKey: "" } });
-    if (!cancelled) return NextResponse.json({ error: "当前任务无法取消" }, { status: 409 });
+    if (body.status !== "cancelled" || !["pending", "running"].includes(task.status)) return NextResponse.json({ error: await serverMessage("tasks.cannotCancel") }, { status: 409 });
+    const cancelled = await transitionTextTask(task, ["pending", "running"], { status: "cancelled", error: await serverMessage("tasks.cancelled"), messages: [], config: { ...task.config, apiKey: "" } });
+    if (!cancelled) return NextResponse.json({ error: await serverMessage("tasks.cannotCancel") }, { status: 409 });
     return NextResponse.json({ task: { id: cancelled.id, status: cancelled.status, model: generationModelId(cancelled.config), result: cancelled.result, error: cancelled.error } }, { headers: pointsResponseHeaders(user) });
 }

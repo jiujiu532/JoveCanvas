@@ -25,6 +25,7 @@ import { buildSeedanceSpecialRequest } from "@/lib/seedance-special";
 import { systemAiBillingHeaders } from "@/lib/server/system-ai-billing";
 import { maintenanceWorkerContextHeaders, requestRuntimeCredential } from "@/lib/server/maintenance-auth";
 import { buildOpenAiVideoFormData } from "./video-task-openai";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,12 +35,12 @@ type CreateVideoTaskBody = { config?: Record<string, unknown>; prompt?: string; 
 
 export async function POST(request: Request) {
     const user = await getCurrentUser(request);
-    if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
     let body: CreateVideoTaskBody;
     try {
         body = await readJsonBody(request);
     } catch (error) {
-        if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         throw error;
     }
     if (body.context?.clientRequestId) {
@@ -47,13 +48,13 @@ export async function POST(request: Request) {
         if (existing) return NextResponse.json({ task: publicTask(existing) });
     }
     const rate = await checkGenerationRateLimit(user.id, request, "video");
-    if (!rate.allowed) return NextResponse.json({ error: "视频生成请求过于频繁，请稍后重试" }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.videoGen") }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const settings = await getAuthSettings();
     const response = await withGenerationConcurrencyLimit(user.id, "video", 30 * 60_000, settings.generationConcurrency.video, async () => {
         const requestedModel = typeof body.config?.model === "string" && body.config.model.trim() ? body.config.model : settings.defaultModels.videoModel;
         const channels = resolveLogicalModelCandidates(settings, "video", requestedModel).map(toSystemGenerationChannel);
         const prompt = String(body.prompt || "").trim();
-        if (!channels.length || !prompt) return NextResponse.json({ error: "视频任务参数不完整或渠道不支持" }, { status: 400 });
+        if (!channels.length || !prompt) return NextResponse.json({ error: await serverMessage("tasks.videoParamsOrChannel") }, { status: 400 });
         const publicOrigin = requestPublicOrigin(request);
         const references = (Array.isArray(body.references) ? body.references : []).map((reference) => ({ ...reference, url: signReferenceAssetInputUrl(String(reference.url || ""), publicOrigin) }));
         const providerPrompt = withVideoReferenceFidelity(prompt, references);
@@ -177,7 +178,7 @@ export async function POST(request: Request) {
         }
         return NextResponse.json({ error: toSafeGenerationErrorMessage(lastError, "视频任务创建失败"), canRetry: lastError instanceof SafeCandidateFailure }, { status: 502 });
     });
-    return response || NextResponse.json({ error: "当前用户视频任务已达到并发上限" }, { status: 429 });
+    return response || NextResponse.json({ error: await serverMessage("tasks.videoConcurrencyLimit") }, { status: 429 });
 }
 
 function ratioValue(value: unknown) {

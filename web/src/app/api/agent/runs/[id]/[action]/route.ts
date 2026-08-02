@@ -7,22 +7,23 @@ import { runGenerationTaskRecoveryBatch } from "@/lib/server/generation-task-rec
 import { scheduleGenerationTask } from "@/lib/server/generation-task-scheduler";
 import { withGenerationConcurrencyLimit } from "@/lib/server/generation-task-store";
 import { fetchInternalApi, resolveInternalOrigin } from "@/lib/server/internal-origin";
+import { serverMessage } from "@/lib/server/server-messages";
 
 const actions: Record<string, AgentRunStatus> = { pause: "paused", resume: "running", cancel: "cancelled" };
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string; action: string }> }) {
     const user = await getCurrentUser(request);
-    if (!user) return NextResponse.json({ code: 401, data: null, msg: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const { id, action } = await params;
     const status = actions[action];
-    if (!status && action !== "retry") return NextResponse.json({ code: 400, data: null, msg: "不支持的 Agent 操作" }, { status: 400 });
+    if (!status && action !== "retry") return NextResponse.json({ code: 400, data: null, msg: await serverMessage("agent.unsupportedAction") }, { status: 400 });
     const run = await getAgentRun(id);
-    if (!run || (run.userId !== user.id && user.role !== "admin")) return NextResponse.json({ code: 404, data: null, msg: "Agent 任务不存在" }, { status: 404 });
-    if (action === "retry" && (run.status !== "failed" || run.tasks.length)) return NextResponse.json({ code: 409, data: null, msg: "只有规划阶段失败的任务可以整体重试" }, { status: 409 });
-    if (action === "pause" && !["planning", "running"].includes(run.status)) return NextResponse.json({ code: 409, data: null, msg: "当前任务无法暂停" }, { status: 409 });
-    if (action === "resume" && run.status !== "paused") return NextResponse.json({ code: 409, data: null, msg: "只有暂停中的任务可以恢复" }, { status: 409 });
+    if (!run || (run.userId !== user.id && user.role !== "admin")) return NextResponse.json({ code: 404, data: null, msg: await serverMessage("tasks.agentNotFound") }, { status: 404 });
+    if (action === "retry" && (run.status !== "failed" || run.tasks.length)) return NextResponse.json({ code: 409, data: null, msg: await serverMessage("agent.onlyPlanFailedCanRetryAll") }, { status: 409 });
+    if (action === "pause" && !["planning", "running"].includes(run.status)) return NextResponse.json({ code: 409, data: null, msg: await serverMessage("agent.cannotPause") }, { status: 409 });
+    if (action === "resume" && run.status !== "paused") return NextResponse.json({ code: 409, data: null, msg: await serverMessage("agent.onlyPausedCanResume") }, { status: 409 });
     const limit = action === "resume" || action === "retry" ? (await getAuthSettings()).generationConcurrency.agent : 0;
-    if (action === "cancel" && ["completed", "failed", "cancelled"].includes(run.status)) return NextResponse.json({ code: 409, data: null, msg: "当前任务无法取消" }, { status: 409 });
+    if (action === "cancel" && ["completed", "failed", "cancelled"].includes(run.status)) return NextResponse.json({ code: 409, data: null, msg: await serverMessage("tasks.cannotCancel") }, { status: 409 });
     if (action !== "resume") abortAgentRun(run.id);
     const mutate = async () => ({
         updated:
@@ -36,9 +37,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                 : await setAgentRunStatus(run, status!),
     });
     const result = action === "resume" || action === "retry" ? await withGenerationConcurrencyLimit(run.userId, "agent", 10 * 60 * 1000, limit, mutate) : await mutate();
-    if (result === null) return NextResponse.json({ code: 429, data: null, msg: `当前最多同时运行 ${limit} 个 Agent 任务` }, { status: 429 });
+    if (result === null) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("agent.concurrencyLimit", { limit }) }, { status: 429 });
     const { updated } = result;
-    if (!updated) return NextResponse.json({ code: 409, data: null, msg: "Agent 状态已变化，请刷新后重试" }, { status: 409 });
+    if (!updated) return NextResponse.json({ code: 409, data: null, msg: await serverMessage("tasks.agentStatusChanged") }, { status: 409 });
     const origin = resolveInternalOrigin(new URL(request.url).origin);
     const cookie = request.headers.get("cookie") || "";
     if (action === "cancel") await cancelChildTasks(run.tasks, origin, cookie);

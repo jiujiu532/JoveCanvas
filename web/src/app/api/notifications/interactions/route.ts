@@ -9,15 +9,15 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
     const user = await getCurrentUser();
-    if (!user) return unauthorized();
+    if (!user) return await unauthorized();
     try {
-        return workPublicationOk(
+        return await workPublicationOk(
             await listUserNotifications(user.id, {
                 limit: Number(request.nextUrl.searchParams.get("limit")) || 20,
                 cursor: request.nextUrl.searchParams.get("cursor"),
             }),
         );
     } catch (error) {
-        return workPublicationError(error, "获取互动通知失败", "List interaction notifications failed");
+        return await workPublicationError(error, "获取互动通知失败", "List interaction notifications failed");
     }
 }

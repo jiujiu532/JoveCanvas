@@ -6,21 +6,22 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-log-store";
 import { isBillingInputError } from "@/lib/server/billing-errors";
 import { getBillingReconciliationRun, importBillingStatement, listBillingReconciliationRuns } from "@/lib/server/payment-reconciliation-service";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     try {
         const params = request.nextUrl.searchParams;
         const runId = params.get("runId");
         if (runId) {
             const reconciliation = await getBillingReconciliationRun(runId);
-            if (!reconciliation) return NextResponse.json({ error: "对账批次不存在" }, { status: 404 });
+            if (!reconciliation) return NextResponse.json({ error: await serverMessage("billing.reconBatchNotFound") }, { status: 404 });
             return NextResponse.json({ reconciliation });
         }
         const result = await listBillingReconciliationRuns({
@@ -32,14 +33,14 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
         console.error("Admin billing reconciliation list failed", error);
-        return NextResponse.json({ error: "获取支付对账记录失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.reconListFailed") }, { status: 500 });
     }
 }
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     try {
         const body = await readJsonBody<{ provider?: unknown; csvText?: unknown; fileName?: unknown; note?: unknown }>(request);
@@ -69,6 +70,6 @@ export async function POST(request: Request) {
         });
         if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
         console.error("Admin billing reconciliation failed", error);
-        return NextResponse.json({ error: "支付账单对账失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("billing.reconFailed") }, { status: 500 });
     }
 }

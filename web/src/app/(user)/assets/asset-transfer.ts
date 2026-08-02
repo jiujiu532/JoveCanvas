@@ -22,7 +22,10 @@ type AssetExportItem = {
     bytes: number;
 };
 
-export async function exportAssets(assets: Asset[]) {
+export type ExportAssetsOptions = { zipName?: string };
+export type ReadAssetPackageOptions = { invalidPackageMessage?: string };
+
+export async function exportAssets(assets: Asset[], options: ExportAssetsOptions = {}) {
     const files: AssetExportItem[] = [];
     const zipFiles: { name: string; data: BlobPart }[] = [];
 
@@ -42,15 +45,15 @@ export async function exportAssets(assets: Asset[]) {
 
     const data: AssetExportFile = { app: APP_EXPORT_ID, version: 1, exportedAt: new Date().toISOString(), assets, files };
     const zip = await createZip([{ name: "assets.json", data: JSON.stringify(data, null, 2) }, ...zipFiles]);
-    saveAs(zip, "我的素材.zip");
+    saveAs(zip, options.zipName || "my-assets.zip");
 }
 
-export async function readAssetPackage(file: File): Promise<Asset[]> {
+export async function readAssetPackage(file: File, options: ReadAssetPackageOptions = {}): Promise<Asset[]> {
     const zip = await readZip(file);
     const assetFile = zip.get("assets.json");
     if (!assetFile) throw new Error("missing assets.json");
     const data = JSON.parse(await assetFile.text()) as AssetExportFile;
-    if (data.app !== APP_EXPORT_ID) throw new Error("不是当前应用的素材包");
+    if (data.app !== APP_EXPORT_ID) throw new Error(options.invalidPackageMessage || "invalid asset package");
     const uploaded = new Map<string, Awaited<ReturnType<typeof uploadImage>> | Awaited<ReturnType<typeof uploadMediaFile>>>();
     await Promise.all(
         data.files.map(async (item) => {

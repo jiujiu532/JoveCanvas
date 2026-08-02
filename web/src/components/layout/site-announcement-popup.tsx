@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { Button, Modal } from "antd";
 import { Megaphone } from "lucide-react";
 
@@ -12,12 +13,15 @@ import { useUserStore } from "@/stores/use-user-store";
 
 export function SiteAnnouncementPopup() {
     const pathname = usePathname();
+    const locale = useLocale();
+    const t = useTranslations("layout");
     const user = useUserStore((state) => state.user);
     const { data: announcements = [] } = useAnnouncements();
     const { markRead } = useAnnouncementReadState();
     const [open, setOpen] = useState(false);
     const [activeId, setActiveId] = useState("");
     const active = useMemo(() => announcements.find((item) => item.id === activeId) || null, [activeId, announcements]);
+    const dateLocale = locale === "zh" ? "zh-CN" : "en-US";
 
     useEffect(() => {
         if (!announcements.length) return;
@@ -54,16 +58,16 @@ export function SiteAnnouncementPopup() {
                         </span>
                         <div className="min-w-0">
                             <h2 className="truncate text-lg font-semibold text-stone-950 dark:text-stone-100">{active.title}</h2>
-                            <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{new Date(active.createdAt).toLocaleString("zh-CN")}</div>
+                            <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{new Date(active.createdAt).toLocaleString(dateLocale)}</div>
                         </div>
                     </div>
                     <div className="max-h-[50dvh] overflow-y-auto whitespace-pre-wrap rounded-lg border border-stone-200 bg-stone-50/70 p-4 text-sm leading-7 text-stone-700 dark:border-stone-800 dark:bg-stone-900/50 dark:text-stone-200">
                         {active.content}
                     </div>
                     <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
-                        <Button onClick={close}>我知道了</Button>
+                        <Button onClick={close}>{t("announcementPopup.gotIt")}</Button>
                         <Button type="primary" href="/announcements" onClick={close}>
-                            查看全部公告
+                            {t("announcementPopup.viewAll")}
                         </Button>
                     </div>
                 </div>

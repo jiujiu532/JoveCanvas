@@ -1,0 +1,125 @@
+---
+title: Docker deployment
+description: Deploy JoveCanvas with Docker Compose, PostgreSQL, and release images
+---
+
+# Docker deployment
+
+The main Compose file starts JoveCanvas and PostgreSQL 16. Copy and edit `.env` before production deploy.
+
+## Install
+
+```bash
+git clone https://github.com/jiujiu532/JoveCanvas.git
+cd JoveCanvas
+cp .env.example .env
+```
+
+Required:
+
+```dotenv
+NEXT_PUBLIC_SITE_URL=https://vozeb-pro.example.com
+POSTGRES_PASSWORD=replace-with-a-strong-database-password
+VOZEB_PRO_ENCRYPTION_KEY=output-of-openssl-rand-hex-32
+```
+
+Start:
+
+```bash
+docker compose pull
+docker compose up -d
+docker compose ps
+```
+
+Open `/install`, confirm the read-only connection check, then “Initialize schema” and create the admin.
+
+## Compose services
+
+```text
+postgres -> PostgreSQL 16, volume vozeb-pro-postgres
+app      -> JoveCanvas standalone, volume vozeb-pro-data
+```
+
+The app connects over the container network:
+
+```text
+postgres://user:password@postgres:5432/database
+```
+
+Do not set the Docker database host to `localhost`.
+
+## External database & Baota
+
+External PostgreSQL starts only the app; the port binds to the host loopback:
+
+```bash
+docker compose -f docker-compose.external-db.yml up -d
+```
+
+Baota PostgreSQL often listens on host `127.0.0.1:5432`. Use:
+
+```dotenv
+DATABASE_URL=postgres://user:password@127.0.0.1:5432/database
+```
+
+```bash
+docker compose -f docker-compose.baota.yml up -d
+```
+
+Baota Compose uses host networking, starts only `app`, and does not create a project PostgreSQL container. Default and external-db Compose also bind port 3000 to `127.0.0.1` only—Nginx or Baota reverse-proxy HTTPS externally.
+
+Baota single-layer Nginx defaults to `VOZEB_PRO_TRUSTED_PROXY_HOPS=1` for real-IP rate limits on login, generation, and media. Adjust for CDN/extra proxies; set `0` only when clients hit the app directly.
+
+## Build images locally
+
+```bash
+docker compose -f docker-compose.local.yml up -d --build
+```
+
+Build installs deps and runs a Next.js production build—plan at least 2GB RAM. Low-memory hosts should use release images.
+
+## Logs & checks
+
+```bash
+docker compose logs -f app
+docker compose logs -f postgres
+docker compose exec postgres pg_isready -U vozeb_pro -d vozeb_pro
+```
+
+On install-page DB errors, check `.env`, PostgreSQL health, password, and host. The browser only shows safe categories; full connection errors stay in server logs.
+
+## GHCR access
+
+Public images pull freely. Private images need login:
+
+```bash
+echo "GitHub Token" | docker login ghcr.io -u GitHubUser --password-stdin
+docker compose pull
+```
+
+Never commit tokens or print them in public logs.
+
+## HTTPS reverse proxy
+
+Preserve `Host`, `X-Forwarded-Proto`, and `X-Forwarded-For`. Use the real HTTPS origin:
+
+```dotenv
+NEXT_PUBLIC_SITE_URL=https://vozeb-pro.example.com
+```
+
+## Updates
+
+```bash
+git pull
+docker compose pull
+docker compose up -d
+```
+
+Do **not** run `docker compose down -v`. Back up PostgreSQL and `vozeb-pro-data` first.
+
+## Volumes
+
+- `vozeb-pro-postgres`: PostgreSQL primary data.
+- `vozeb-pro-data`: server media copies, file-mode data, runtime files.
+
+Canvas, “My assets”, short drama, and workbench records live in PostgreSQL; media lives on `vozeb-pro-data`. Production backups must cover **both**.

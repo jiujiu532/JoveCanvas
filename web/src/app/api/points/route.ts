@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 
 import { listPointRecordsPage } from "@/lib/auth/store";
 import { getCurrentUser } from "@/lib/auth/session";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
 
     const url = new URL(request.url);
     const page = Number(url.searchParams.get("page") || 1);

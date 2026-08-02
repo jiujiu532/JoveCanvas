@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import { cache } from "react";
 
 import { GalleryThemeToggle } from "@/app/gallery/gallery-theme-toggle";
@@ -33,11 +34,12 @@ const loadCreatorPage = cache(async (username: string, viewerUserId: string) => 
 
 export async function generateMetadata({ params }: CreatorPageProps): Promise<Metadata> {
     const { username } = await params;
-    const [profile, site] = await Promise.all([loadCreatorProfile(username), getPublicSiteSettings()]);
-    if (!profile) return { title: `创作者不存在 | ${site.title}`, robots: { index: false, follow: false } };
+    const [profile, site, t, locale] = await Promise.all([loadCreatorProfile(username), getPublicSiteSettings(), getTranslations("public.works.creator"), getLocale()]);
+    if (!profile) return { title: `${t("notFoundTitle")} | ${site.title}`, robots: { index: false, follow: false } };
     const canonical = `/u/${encodeURIComponent(profile.username)}`;
-    const title = `${profile.displayName || profile.username} (@${profile.username}) | ${site.title}`;
-    const description = profile.bio || `查看 ${profile.displayName || profile.username} 发布的图片与视频作品。`;
+    const displayName = profile.displayName || profile.username;
+    const title = `${displayName} (@${profile.username}) | ${site.title}`;
+    const description = profile.bio || t("defaultDescription", { name: displayName });
     const image = absoluteSiteUrl(profile.avatarUrl || site.logoUrl || "/logo.svg", siteMetadataBase());
     return {
         metadataBase: siteMetadataBase(),
@@ -45,7 +47,15 @@ export async function generateMetadata({ params }: CreatorPageProps): Promise<Me
         description,
         alternates: { canonical },
         robots: { index: true, follow: true },
-        openGraph: { type: "profile", title, description, siteName: site.title, url: canonical, images: [{ url: image, alt: profile.displayName || profile.username }], locale: "zh_CN" },
+        openGraph: {
+            type: "profile",
+            title,
+            description,
+            siteName: site.title,
+            url: canonical,
+            images: [{ url: image, alt: displayName }],
+            locale: locale === "en" ? "en_US" : "zh_CN",
+        },
         twitter: { card: "summary", title, description, images: [image] },
     };
 }
@@ -53,8 +63,9 @@ export async function generateMetadata({ params }: CreatorPageProps): Promise<Me
 export default async function CreatorPage({ params }: CreatorPageProps) {
     const { username } = await params;
     const sitePromise = getPublicSiteSettings();
+    const tPromise = getTranslations("public.works.creator");
     const viewer = await getCurrentUser();
-    const [site, data] = await Promise.all([sitePromise, loadCreatorPage(username, viewer?.id || "")]);
+    const [site, data, t] = await Promise.all([sitePromise, loadCreatorPage(username, viewer?.id || ""), tPromise]);
     if (!data) notFound();
 
     return (
@@ -67,7 +78,7 @@ export default async function CreatorPage({ params }: CreatorPageProps) {
                     </Link>
                     <div className="flex shrink-0 items-center gap-2">
                         <Link href="/gallery" className="inline-flex h-9 items-center rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition hover:bg-muted">
-                            作品广场
+                            {t("gallery")}
                         </Link>
                         <GalleryThemeToggle />
                     </div>

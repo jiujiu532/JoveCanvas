@@ -27,6 +27,7 @@ import { configureServerProxyDispatcher } from "@/lib/server/proxy-dispatcher";
 import { isSafeOutboundUrl } from "@/lib/server/security";
 import { channelProtocolDefinition, protocolAuthHeaders, protocolModelConfig, resolveChannelAuthMode } from "@/lib/channel-protocol-registry";
 import type { SystemChannelAdvancedConfig, SystemChannelProtocol } from "@/lib/auth/store";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -65,12 +66,12 @@ const modelFetchCooldowns = (globalCooldownStore.__vozebProModelFetchCooldowns ?
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     const [body, settings] = await Promise.all([readJsonBody<ModelsPayload>(request), getAuthSettings()]);
     const { baseUrl, apiKey, apiFormat, savedChannel } = resolveAdminChannelCredentials(settings, body);
-    if (!baseUrl) return NextResponse.json({ error: "请先填写 Base URL 和 API Key" }, { status: 400 });
+    if (!baseUrl) return NextResponse.json({ error: await serverMessage("admin.fillBaseUrlAndKey") }, { status: 400 });
 
     const advancedConfig = {
         ...(savedChannel?.advancedConfig || {}),
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
     const protocolDefinition = channelProtocolDefinition(protocol);
     advancedConfig.protocol = protocolDefinition.id;
     advancedConfig.authMode = resolveChannelAuthMode(advancedConfig);
-    if (!apiKey && advancedConfig.authMode !== "none") return NextResponse.json({ error: "请先填写 Base URL 和 API Key" }, { status: 400 });
+    if (!apiKey && advancedConfig.authMode !== "none") return NextResponse.json({ error: await serverMessage("admin.fillBaseUrlAndKey") }, { status: 400 });
 
     if (protocolDefinition.builtInModels?.length) {
         const builtInCatalog = protocolDefinition.builtInModels.map(({ id, capability }) => ({ id, capability, source: "official" as const }));
@@ -129,14 +130,14 @@ export async function POST(request: Request) {
             globalAiOpcPresets: selection.presetIds,
         });
     }
-    if (advancedConfig.protocol === "globalaiopc" || isGlobalAiOpcBaseUrl(baseUrl)) return NextResponse.json({ error: "未识别到 GlobalAiOpc 接口范围，请检查 Base URL 或重新选择接口范围" }, { status: 400 });
+    if (advancedConfig.protocol === "globalaiopc" || isGlobalAiOpcBaseUrl(baseUrl)) return NextResponse.json({ error: await serverMessage("admin.globalAiOpcScopeUnrecognized") }, { status: 400 });
 
     const modelCatalogUrls = buildModelCatalogUrls(baseUrl, apiFormat, body.modelCatalogPaths ?? savedChannel?.advancedConfig?.modelCatalogPaths ?? protocolDefinition.modelCatalogPaths);
-    if (!modelCatalogUrls.length || !(await Promise.all(modelCatalogUrls.map((url) => isSafeOutboundUrl(url)))).every(Boolean)) return NextResponse.json({ error: "模型目录地址不允许访问内网、保留地址或其他域名" }, { status: 400 });
+    if (!modelCatalogUrls.length || !(await Promise.all(modelCatalogUrls.map((url) => isSafeOutboundUrl(url)))).every(Boolean)) return NextResponse.json({ error: await serverMessage("admin.modelCatalogUrlBlocked") }, { status: 400 });
 
     const cooldownKey = `${currentUser.id}:${baseUrl.toLowerCase()}`;
     const waitMs = (modelFetchCooldowns.get(cooldownKey) || 0) - Date.now();
-    if (waitMs > 0) return NextResponse.json({ error: `拉取模型过于频繁，请 ${Math.ceil(waitMs / 1000)} 秒后再试` }, { status: 429 });
+    if (waitMs > 0) return NextResponse.json({ error: await serverMessage("common.rateLimitedWithSeconds", { feature: await serverMessage("features.pullModels"), seconds: Math.ceil(waitMs / 1000) }) }, { status: 429 });
     modelFetchCooldowns.set(cooldownKey, Date.now() + MODEL_FETCH_COOLDOWN_MS);
 
     try {
@@ -174,8 +175,8 @@ export async function POST(request: Request) {
         const merged = mergeModelCatalogEntries(configuredCatalog, providerCatalog, officialCatalog);
         if (!merged.length) {
             modelFetchCooldowns.delete(cooldownKey);
-            if (!catalogSucceeded) return NextResponse.json({ error: "该上游未提供模型列表接口，请在高级设置的“模型列表”手动填写模型名称；手工模型会在后续拉取时保留。" }, { status: 422 });
-            return NextResponse.json({ error: "接口请求成功，但返回内容中没有识别到模型列表" }, { status: 502 });
+            if (!catalogSucceeded) return NextResponse.json({ error: await serverMessage("admin.noModelListEndpointKeepManual") }, { status: 422 });
+            return NextResponse.json({ error: await serverMessage("admin.modelListEmpty") }, { status: 502 });
         }
 
         const agnes = isAgnesApiBaseUrl(baseUrl);

@@ -3,14 +3,15 @@ import { NextResponse } from "next/server";
 import { createAnnouncement, isAuthInputError, listAnnouncementsPage, type PublicAnnouncement } from "@/lib/auth/store";
 import { readJsonBody } from "@/lib/auth/request";
 import { getCurrentUser } from "@/lib/auth/session";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     const params = new URL(request.url).searchParams;
     const page = await listAnnouncementsPage(true, {
@@ -22,17 +23,17 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    if (currentUser.role !== "admin") return NextResponse.json({ error: "需要管理员权限" }, { status: 403 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
+    if (currentUser.role !== "admin") return NextResponse.json({ error: await serverMessage("common.adminRequired") }, { status: 403 });
 
     try {
         const body = await readJsonBody<Partial<PublicAnnouncement>>(request);
         const announcement = await createAnnouncement(body);
         return NextResponse.json({ announcement });
     } catch (error) {
-        if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Create announcement failed", error);
-        return NextResponse.json({ error: "创建公告失败" }, { status: 500 });
+        return NextResponse.json({ error: await serverMessage("auth.announcementCreateFailed") }, { status: 500 });
     }
 }
 

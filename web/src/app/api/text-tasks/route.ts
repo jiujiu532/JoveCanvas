@@ -12,6 +12,7 @@ import { resolveLogicalModelCandidates } from "@/lib/server/logical-model-router
 import { checkGenerationRateLimit, rateLimitHeaders } from "@/lib/server/security";
 import { createTextTask, type TextTask, type TextTaskConfig } from "@/lib/server/text-task-store";
 import type { AiTextMessage } from "@/types/ai";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,21 +24,21 @@ type CreateTextTaskBody = {
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser(request);
-    if (!currentUser) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!currentUser) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const rate = await checkGenerationRateLimit(currentUser.id, request, "text");
-    if (!rate.allowed) return NextResponse.json({ error: "文本生成请求过于频繁，请稍后重试" }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.textGen") }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const settings = await getAuthSettings();
     const response = await withGenerationConcurrencyLimit(currentUser.id, "text", 5 * 60 * 1000, settings.generationConcurrency.text, async () => {
         let body: CreateTextTaskBody;
         try {
             body = await readJsonBody(request);
         } catch (error) {
-            if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+            if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
             throw error;
         }
         const configs = sanitizeConfigs(body.config, settings);
         const messages = sanitizeMessages(body.messages);
-        if (!configs.length || !messages.length) return NextResponse.json({ error: "任务参数不完整" }, { status: 400 });
+        if (!configs.length || !messages.length) return NextResponse.json({ error: await serverMessage("tasks.paramsIncomplete") }, { status: 400 });
 
         const task = await createTextTask({ userId: currentUser.id, config: configs[0], candidateConfigs: configs.slice(1), messages });
         const cookie = request.headers.get("cookie") || "";
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
         after(() => runGenerationTaskRecoveryBatch({ origin, cookie, limit: 1, taskIds: [task.id] }));
         return NextResponse.json({ task: publicTask(task) });
     });
-    return response || NextResponse.json({ error: "当前用户文本任务已达到并发上限" }, { status: 429 });
+    return response || NextResponse.json({ error: await serverMessage("tasks.textConcurrencyLimit") }, { status: 429 });
 }
 
 function publicTask(task: TextTask) {

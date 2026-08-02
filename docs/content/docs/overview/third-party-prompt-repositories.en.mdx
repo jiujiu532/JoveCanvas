@@ -1,0 +1,14 @@
+---
+title: Third-party GitHub prompt repositories
+description: Sources, licenses, and image handling for the built-in public prompt library
+---
+
+# Third-party GitHub prompt repositories
+
+JoveCanvas’s built-in public prompt library comes from [`tigerowo/awesome-gpt-image-2-prompts`](https://github.com/tigerowo/awesome-gpt-image-2-prompts), pinned to commit `60e9c65baecfd6d6d51ac4e4d87f146af834bb64` so upstream churn cannot make a given release non-reproducible.
+
+The sync script reads seven Simplified Chinese category files from upstream and produces a repeatable built-in seed. Older multi-repo seeds are replaced; admin-maintained public prompts and users’ “My prompts” are never deleted. Upstream JSON, `{argument}` templates, and escaped text are converted at the sync boundary into readable outlines that can be copied directly—pages never present raw code structures as prompts.
+
+Upstream is licensed under `CC0 1.0 Universal`. Sync counts follow what the script actually validates. CC0 does **not** automatically grant rights to third-party likenesses, trademarks, privacy interests, or other rights—public operators must still review content for their use case.
+
+Upstream images are never copied into the project or asset library. Pages load fixed-commit GitHub remote images on demand through an in-app proxy, enforce size/pixel limits, convert to width-capped WebP, and use a small in-process cache only. While loading or on failure, the site “JoveCanvas” logo is shown. A personal text asset record is created only when the user actively saves a prompt.

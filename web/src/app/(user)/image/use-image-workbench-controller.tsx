@@ -5,6 +5,7 @@ import { saveAs } from "file-saver";
 import { nanoid } from "nanoid";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { InsertAssetPayload } from "@/app/(user)/canvas/components/asset-picker-modal";
 import { type WorkbenchAgentMessage } from "@/components/agent/workbench-agent-panel";
@@ -66,6 +67,7 @@ export function useImageWorkbenchController() {
     const userId = useUserStore((state) => state.user?.id || "");
     const publicSessionReady = usePublicSessionStore((state) => state.ready);
     const defaultSmartPlanning = usePublicSessionStore((state) => state.payload?.settings?.generationDefaults?.workbenchSmartPlanning?.image) !== false;
+    const t = useTranslations("workspace.image");
     const {
         prompt,
         setPrompt,
@@ -96,7 +98,7 @@ export function useImageWorkbenchController() {
     const planningDefaultKeyRef = useRef("");
     const requestModelSelection = useCallback(() => {
         setModelPickerRequest((value) => value + 1);
-        message.warning("当前生图工作台未启用智能规划，请先选择图片模型");
+        message.warning(t("smartPlanningRequired"));
     }, [message]);
     const resetPlanningToDefault = useCallback(
         (notify: boolean) => {
@@ -322,7 +324,7 @@ export function useImageWorkbenchController() {
                     .catch((error) => {
                         if (controller.signal.aborted) return;
                         const durationMs = Math.max(log.durationMs || 0, Date.now() - pendingTask.startedAt);
-                        patchLogResult(log.id, pendingTask.resultId, { status: "failed", error: error instanceof Error ? error.message : "生成失败", image: undefined, task: undefined }, snapshot, durationMs);
+                        patchLogResult(log.id, pendingTask.resultId, { status: "failed", error: error instanceof Error ? error.message : t("generationFailed"), image: undefined, task: undefined }, snapshot, durationMs);
                     })
                     .finally(() => taskControllersRef.current.remove(log.id, pendingTask.resultId, pendingTask.taskId));
             });
@@ -354,7 +356,7 @@ export function useImageWorkbenchController() {
     const generate = async ({ promptOverride, userPrompt, signal, parameterPatch, conversationId }: { promptOverride?: string; userPrompt?: string; signal?: AbortSignal; parameterPatch?: WorkbenchAgentParameterPatch; conversationId?: string } = {}) => {
         const text = (promptOverride ?? prompt).trim();
         if (!text) {
-            message.error("请输入生图提示词");
+            message.error(t("promptRequired"));
             return;
         }
 
@@ -365,11 +367,11 @@ export function useImageWorkbenchController() {
             sharedConversationId ||= await ensureCreativeConversation();
         } catch (error) {
             if (signal) throw error;
-            message.error(error instanceof Error ? error.message : "创作会话创建失败");
+            message.error(error instanceof Error ? error.message : t("conversationCreateFailed"));
             return;
         }
         const snapshotCount = snapshot.count;
-        if (signal?.aborted) throw new DOMException("请求已取消", "AbortError");
+        if (signal?.aborted) throw new DOMException(t("requestCancelled"), "AbortError");
 
         const baseResults: GenerationResult[] = [];
         const batchStartedAt = performance.now();
@@ -403,19 +405,19 @@ export function useImageWorkbenchController() {
             setPreviewLog(null);
             setLogResults(logId, []);
             await removeStoredImageLogs([logId]);
-            throw new DOMException("请求已取消", "AbortError");
+            throw new DOMException(t("requestCancelled"), "AbortError");
         }
 
         startedResults.slice(baseResults.length).forEach((result, offset) => {
             void runQueuedImageTask(logId, result.id, () => runGenerationSlot(logId, result.id, baseResults.length + offset, snapshot, batchStartedAt, baseDurationMs))
                 .then((image) => {
-                    if (image && mountedRef.current) message.success("图片已生成");
+                    if (image && mountedRef.current) message.success(t("imageGenerated"));
                 })
                 .catch((error) => {
-                    if (mountedRef.current && !deletedResultIdsRef.current.has(`${logId}:${result.id}`)) message.error(error instanceof Error ? error.message : "生成失败");
+                    if (mountedRef.current && !deletedResultIdsRef.current.has(`${logId}:${result.id}`)) message.error(error instanceof Error ? error.message : t("generationFailed"));
                 });
         });
-        if (mountedRef.current) message.success("已加入当前用户生成队列");
+        if (mountedRef.current) message.success(t("queuedForGeneration"));
         return logId;
     };
 
@@ -469,7 +471,7 @@ export function useImageWorkbenchController() {
 
     const downloadImage = (image: GeneratedImage, index: number) => {
         if (!image.dataUrl) {
-            message.error("图片不可用，无法下载");
+            message.error(t("imageUnavailableDownload"));
             return;
         }
         saveAs(originalImageDownloadUrl(image.dataUrl), mediaDownloadFileName(image.id || `image-${index + 1}`, image.mimeType, image.storageKey || image.serverUrl || image.dataUrl));
@@ -477,7 +479,7 @@ export function useImageWorkbenchController() {
 
     const addResultToReferences = async (image: GeneratedImage, index: number) => {
         if (!image.dataUrl) {
-            message.error("图片不可用，无法加入参考图");
+            message.error(t("imageUnavailableReference"));
             return;
         }
         const stored = await uploadImage(image.dataUrl);
@@ -496,25 +498,25 @@ export function useImageWorkbenchController() {
                 height: stored.height,
             },
         ]);
-        message.success("已加入参考图");
+        message.success(t("addedToReferences"));
     };
 
     const saveResultToAssets = async (image: GeneratedImage, index: number) => {
         if (!image.dataUrl) {
-            message.error("图片不可用，无法加入素材");
+            message.error(t("imageUnavailableAsset"));
             return;
         }
         const stored = await uploadImage(image.dataUrl);
         await addAsset({
             kind: "image",
-            title: `生成结果 ${index + 1}`,
+            title: t("resultTitleWithIndex", { index: index + 1 }),
             coverUrl: stored.url,
             tags: [],
-            source: "生图工作台",
+            source: t("imageWorkbenchSource"),
             data: imageAssetData(stored, image),
             metadata: { source: "image-page", prompt },
         });
-        message.success("已加入我的素材");
+        message.success(t("addedToMyAssets"));
     };
 
     const insertPickedAsset = async (payload: InsertAssetPayload) => {
@@ -524,7 +526,7 @@ export function useImageWorkbenchController() {
             const stored = await uploadImage(payload.dataUrl);
             setReferences((value) => [...value, referenceImageFromAsset(payload, stored, nanoid())]);
         } else {
-            message.warning("生图工作台只能使用文本或图片素材");
+            message.warning(t("onlyTextOrImageAssets"));
         }
         setAssetPickerOpen(false);
     };
@@ -551,8 +553,8 @@ export function useImageWorkbenchController() {
     };
 
     const createSession = () => {
-        if (agentRunning) return message.info("Agent 正在处理当前需求，请稍候");
-        if (logsRef.current.some((log) => log.status === "生成中")) message.info("后台生成任务会继续运行，可在历史记录中查看进度");
+        if (agentRunning) return message.info(t("agentBusy"));
+        if (logsRef.current.some((log) => log.status === "生成中")) message.info(t("backgroundTasksContinue"));
         setActiveAgentSessionId(nanoid());
         setActiveAgentRecordId(undefined);
         setActiveCreativeConversationId(undefined);
@@ -609,9 +611,9 @@ export function useImageWorkbenchController() {
         const results = await Promise.allSettled([deleteStoredImages(imageKeys), deleteServerGenerationLogs(serverIds), removeStoredImageLogs(deleteIds)]);
         const failed = results.filter((result) => result.status === "rejected");
         if (failed.length) {
-            message.warning("记录已移除，部分关联资源删除失败，请稍后重试");
+            message.warning(t("partialCleanupFailed"));
         } else {
-            message.success(`已删除 ${deleteIds.length} 条生成记录`);
+            message.success(t("logsDeletedCount", { count: deleteIds.length }));
         }
         await refreshLogs();
     };
@@ -630,7 +632,7 @@ export function useImageWorkbenchController() {
             {
                 id: `history-${currentLog.id}-assistant`,
                 role: currentLog.status === "失败" ? "error" : "assistant",
-                text: currentLog.status === "失败" ? currentLog.error || "该任务生成失败。" : currentLog.status === "生成中" ? "该任务仍在生成中。" : "已打开这条历史生成记录，可以继续修改或重新生成。",
+                text: currentLog.status === "失败" ? currentLog.error || t("taskFailedText") : currentLog.status === "生成中" ? t("taskPendingText") : t("historyRecordOpened"),
             },
         ];
         setActiveAgentRecordId(currentLog.id);
@@ -659,14 +661,14 @@ export function useImageWorkbenchController() {
                     setLastAgentPrompt(loaded.lastPrompt || publicPrompt);
                 })
                 .catch(() => {
-                    if (activeLogIdRef.current === currentLog.id) message.warning("完整对话加载失败，已显示当前生成记录");
+                    if (activeLogIdRef.current === currentLog.id) message.warning(t("conversationLoadFailed"));
                 });
     };
 
     const buildRequestSnapshot = (promptOverride?: string, parameterPatch?: WorkbenchAgentParameterPatch, userPromptOverride?: string) => {
         const text = (promptOverride ?? prompt).trim();
         if (!text) {
-            message.error("请输入生图提示词");
+            message.error(t("promptRequired"));
             return null;
         }
         const requestConfig = mergeWorkbenchAgentPatch(effectiveConfig, parameterPatch, "image");
@@ -680,7 +682,7 @@ export function useImageWorkbenchController() {
         });
         const requestModel = String(parameterPatch?.model || requestConfig.imageModel || requestConfig.model || "");
         if (!isAiConfigReady(requestConfig, requestModel)) {
-            message.warning("请联系管理员在后台配置可用生图模型");
+            message.warning(t("contactAdminForModel"));
             openConfigDialog(true);
             return null;
         }
@@ -690,7 +692,7 @@ export function useImageWorkbenchController() {
     const runGenerationSlot = async (logId: string, resultId: string, index: number, snapshot: GenerationSnapshot, batchStartedAt: number, baseDurationMs: number, retryRequest = false) => {
         const itemStartedAt = Date.now();
         try {
-            const latestTitle = getLatestLog(logId)?.title || snapshot.text.slice(0, 36) || "生图工作台";
+            const latestTitle = getLatestLog(logId)?.title || snapshot.text.slice(0, 36) || t("imageWorkbenchSource");
             const conversationId = getLatestLog(logId)?.creativeConversationId;
             const task = await createImageGenerationTask(snapshot.config, snapshot.text, snapshot.references, undefined, {
                 logSource: "image-workbench",
@@ -704,7 +706,7 @@ export function useImageWorkbenchController() {
             patchLogResult(logId, resultId, { status: "pending", task: pendingTask, error: undefined, image: undefined }, snapshot, baseDurationMs + performance.now() - batchStartedAt);
             return await completeGenerationTask(logId, resultId, index, snapshot, pendingTask, controller).finally(() => taskControllersRef.current.remove(logId, resultId, task.id));
         } catch (error) {
-            patchLogResult(logId, resultId, { status: "failed", error: error instanceof Error ? error.message : "生成失败", image: undefined, task: undefined }, snapshot, baseDurationMs + performance.now() - batchStartedAt);
+            patchLogResult(logId, resultId, { status: "failed", error: error instanceof Error ? error.message : t("generationFailed"), image: undefined, task: undefined }, snapshot, baseDurationMs + performance.now() - batchStartedAt);
             throw error;
         }
     };
@@ -719,10 +721,10 @@ export function useImageWorkbenchController() {
         patchLogResultAt(currentLog.id, index, { status: "pending", error: undefined, image: undefined, task: undefined }, snapshot, currentLog.durationMs || 0);
         void runQueuedImageTask(currentLog.id, currentResult.id, () => runGenerationSlot(currentLog.id, currentResult.id, index, snapshot, batchStartedAt, currentLog.durationMs || 0, true))
             .then((image) => {
-                if (image) message.success("图片已重新生成");
+                if (image) message.success(t("imageRegenerated"));
             })
             .catch((error) => {
-                if (!deletedResultIdsRef.current.has(`${currentLog.id}:${currentResult.id}`)) message.error(error instanceof Error ? error.message : "生成失败");
+                if (!deletedResultIdsRef.current.has(`${currentLog.id}:${currentResult.id}`)) message.error(error instanceof Error ? error.message : t("generationFailed"));
             });
     };
 
@@ -763,8 +765,8 @@ export function useImageWorkbenchController() {
         setMissingResultIds((value) => value.filter((id) => !selectedIds.has(id)));
         const cleanupResults = await Promise.allSettled([deleteStoredImages(storageKeys), deleteServerImageTaskLogsForResults(currentLog, removedResults, nextResults)]);
         await saveLog(nextLog);
-        if (cleanupResults.some((result) => result.status === "rejected")) message.warning("结果已从当前记录移除，部分关联资源清理失败，请稍后重试");
-        else message.success(successText || `已删除 ${removedResults.length} 个结果`);
+        if (cleanupResults.some((result) => result.status === "rejected")) message.warning(t("resultsCleanupPartialFailed"));
+        else message.success(successText || t("resultsDeletedCount", { count: removedResults.length }));
     };
 
     const deleteSelectedResults = async () => {
@@ -772,7 +774,7 @@ export function useImageWorkbenchController() {
     };
 
     const deleteMissingResults = async () => {
-        await deleteResultsByIds(missingVisibleResultIds, `已清理 ${missingVisibleResultIds.length} 个丢失图片`);
+        await deleteResultsByIds(missingVisibleResultIds, t("missingImagesCleanedCount", { count: missingVisibleResultIds.length }));
     };
 
     const renameGenerationLog = async (log: GenerationLog, title: string) => {

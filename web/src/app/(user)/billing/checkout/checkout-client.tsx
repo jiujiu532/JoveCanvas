@@ -128,7 +128,7 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
 
     const openCheckout = () => {
         if (!checkout) return;
-        const result = openPaymentCheckoutWindow(checkout);
+        const result = openPaymentCheckoutWindow(checkout, { title: t("openingPaymentTitle"), body: t("openingPaymentBody") });
         if (result.status === "opened") return;
         if (result.status === "manual") {
             message.info(t("needManualConfirm"));

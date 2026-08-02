@@ -9,10 +9,10 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
     const user = await getCurrentUser();
-    if (!user) return unauthorized();
+    if (!user) return await unauthorized();
     const params = request.nextUrl.searchParams;
     try {
-        return workPublicationOk(
+        return await workPublicationOk(
             await listUserCommunityActivity(user.id, {
                 view: params.get("view"),
                 page: Number(params.get("page")) || 1,
@@ -20,6 +20,6 @@ export async function GET(request: NextRequest) {
             }),
         );
     } catch (error) {
-        return workPublicationError(error, "获取社区互动记录失败", "List user community activity failed");
+        return await workPublicationError(error, "获取社区互动记录失败", "List user community activity failed");
     }
 }

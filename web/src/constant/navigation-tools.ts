@@ -1,5 +1,6 @@
 import { BookMarked, Clapperboard, Compass, FileText, GalleryVerticalEnd, ImagePlus, Images, Maximize2, Sparkles, UserRound, Video } from "lucide-react";
 
+// label/description 为结构兜底文案；布局侧边栏/顶栏/抽屉/落地页统一走 layout.nav / layout.navGroup / layout.landingNav 字典
 export const navigationGroups = [
     { id: "create", label: "创作" },
     { id: "projects", label: "项目" },

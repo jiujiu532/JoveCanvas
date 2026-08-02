@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
-import { findHelpArticle, helpArticles, searchHelpArticles, type HelpArticleId } from "./help-content";
+import { buildHelpArticles, findHelpArticle, searchHelpArticles, type HelpArticle, type HelpArticleId, type HelpTranslate } from "./help-content";
 import { HelpFaqList, HelpFlow, HelpGuideSteps } from "./help-elements";
 
 const icons: Record<HelpArticleId, LucideIcon> = {
@@ -40,14 +40,15 @@ const iconStyles: Record<HelpArticleId, string> = {
 export default function HelpPage() {
     const [activeId, setActiveId] = useState<HelpArticleId>("start");
     const [query, setQuery] = useState("");
-    const results = useMemo(() => searchHelpArticles(query), [query]);
-    const activeArticle = findHelpArticle(activeId) || helpArticles[0];
-
     const t = useTranslations("workspace.help");
+    const articles = useMemo(() => buildHelpArticles(t as unknown as HelpTranslate), [t]);
+    const results = useMemo(() => searchHelpArticles(query, articles), [query, articles]);
+    const activeArticle = findHelpArticle(articles, activeId) || articles[0];
+
     useEffect(() => {
-        const requested = findHelpArticle(new URLSearchParams(window.location.search).get("section"));
+        const requested = findHelpArticle(articles, new URLSearchParams(window.location.search).get("section"));
         if (requested) setActiveId(requested.id);
-    }, []);
+    }, [articles]);
 
     const selectArticle = (id: HelpArticleId) => {
         setActiveId(id);
@@ -63,7 +64,7 @@ export default function HelpPage() {
                 <header className="grid gap-4 border-b border-border pb-5 sm:pb-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)] lg:items-end">
                     <div className="min-w-0">
                         <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                            <CircleHelp className="size-4" /> 用户帮助中心
+                            <CircleHelp className="size-4" /> {t("eyebrow")}
                         </div>
                         <h1 className="mt-2 text-2xl font-semibold text-foreground sm:text-3xl">{t("title")}</h1>
                         <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{t("subtitle")}</p>
@@ -75,7 +76,7 @@ export default function HelpPage() {
                     <section className="border-b border-border py-4" aria-label={t("searchResultsAria")}>
                         <div className="flex items-center justify-between gap-3">
                             <h2 className="text-sm font-semibold">{t("searchResultsTitle")}</h2>
-                            <span className="text-xs text-muted-foreground">{results.length} 项</span>
+                            <span className="text-xs text-muted-foreground">{t("resultCount", { count: results.length })}</span>
                         </div>
                         {results.length ? (
                             <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
@@ -111,7 +112,7 @@ export default function HelpPage() {
                 <div className="grid min-w-0 gap-5 py-5 sm:py-6 lg:grid-cols-[232px_minmax(0,1fr)] lg:gap-8">
                     <aside className="hidden lg:block">
                         <nav className="sticky top-4 space-y-1" aria-label={t("categoriesAria")}>
-                            {helpArticles.map((article) => {
+                            {articles.map((article) => {
                                 const Icon = icons[article.id];
                                 const active = article.id === activeId;
                                 return (
@@ -136,9 +137,9 @@ export default function HelpPage() {
                     <main className="min-w-0">
                         <div className="mb-5 lg:hidden">
                             <label className="mb-2 block text-xs font-medium text-muted-foreground" htmlFor="help-mobile-section">
-                                选择教程
+                                {t("selectTutorial")}
                             </label>
-                            <Select id="help-mobile-section" className="w-full" size="large" value={activeId} options={helpArticles.map((article) => ({ label: article.label, value: article.id }))} onChange={(value) => selectArticle(value)} />
+                            <Select id="help-mobile-section" className="w-full" size="large" value={activeId} options={articles.map((article) => ({ label: article.label, value: article.id }))} onChange={(value) => selectArticle(value)} />
                         </div>
 
                         <article id="help-article" className="min-w-0 scroll-mt-4">
@@ -166,7 +167,7 @@ export default function HelpPage() {
     );
 }
 
-function ArticleHeader({ article }: { article: (typeof helpArticles)[number] }) {
+function ArticleHeader({ article }: { article: HelpArticle }) {
     const Icon = icons[article.id];
     return (
         <header className="border-b border-border pb-6">

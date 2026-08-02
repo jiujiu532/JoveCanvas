@@ -1,11 +1,16 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
-import { appName, gitConfig } from "./shared";
 import { ArrowUpRight } from "lucide-react";
+import { getDictionary } from "./dictionaries";
+import { localePath, normalizeLocale } from "./i18n";
+import { appName, gitConfig } from "./shared";
 
 const githubUrl = `https://github.com/${gitConfig.user}/${gitConfig.repo}`;
 const qqGroupUrl = "https://qm.qq.com/q/9MVLTxuRd6";
 
-export function baseOptions(): BaseLayoutProps {
+export function baseOptions(locale?: string | null): BaseLayoutProps {
+  const lang = normalizeLocale(locale);
+  const dict = getDictionary(lang);
+
   return {
     nav: {
       title: (
@@ -14,17 +19,18 @@ export function baseOptions(): BaseLayoutProps {
           <span>{appName}</span>
         </span>
       ),
+      url: localePath(lang, "/"),
     },
     links: [
       {
-        text: "文档导航",
-        url: "/docs/overview/quick-start",
+        text: dict.nav.docsNav,
+        url: localePath(lang, "/docs/overview/quick-start"),
         on: "nav",
       },
       {
         text: (
           <span className="inline-flex items-center gap-1.5">
-            <span>项目仓库</span>
+            <span>{dict.nav.projectRepo}</span>
             <ArrowUpRight className="size-4" />
           </span>
         ),
@@ -43,8 +49,8 @@ export function baseOptions(): BaseLayoutProps {
       },
       {
         type: "icon",
-        text: "VOZEB 开源交流 QQ 群",
-        label: "VOZEB 开源交流 QQ 群（1049777515）",
+        text: dict.nav.qqGroup,
+        label: dict.nav.qqGroupLabel,
         url: qqGroupUrl,
         external: true,
         on: "menu",

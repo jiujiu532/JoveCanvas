@@ -1,0 +1,34 @@
+---
+title: Vulnerability reporting
+description: Security vulnerability reporting and responsible disclosure
+---
+
+# Vulnerability reporting
+
+English security policy: [SECURITY.md](https://github.com/jiujiu532/JoveCanvas/blob/main/SECURITY.md).
+
+Do **not** post vulnerability details, exploit code, private API keys, sensitive screenshots, or real user data in public Issues.
+
+## Process
+
+Prefer GitHub private vulnerability reports or Security Advisories. If those are unavailable, email [csyqlz@gmail.com](mailto:csyqlz@gmail.com) with a subject like:
+
+```text
+[jovecanvas security]
+```
+
+If no private channel is available yet, open a public Issue only to ask maintainers for a private contact—do not include exploit details there.
+
+## Suggested information
+
+- Affected version, commit, branch, or deployment mode.
+- Clear reproduction steps.
+- Impact, attack scenario, and preconditions.
+- Redacted logs, screenshots, or PoC.
+- Whether server media directories, API keys, AI channel config, or proxy endpoints are involved.
+
+## Scope
+
+Priority goes to XSS, sensitive data leaks, server file handling, import/export, access control, and supply-chain issues caused by this repository’s code or default configuration.
+
+Third-party model services, hosting platforms, browser extensions, user-leaked API keys, pure security-header suggestions without exploit paths, social engineering/phishing, and account-recovery issues are usually out of scope.

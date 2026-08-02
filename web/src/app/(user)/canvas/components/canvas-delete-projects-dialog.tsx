@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { App, Button, Modal } from "antd";
+import { useTranslations } from "next-intl";
 
 import { useCanvasStore } from "../stores/use-canvas-store";
 import { useCanvasUiStore } from "../stores/use-canvas-ui-store";
 
 export function CanvasDeleteProjectsDialog() {
+    const t = useTranslations("canvas");
     const { message } = App.useApp();
     const [deleting, setDeleting] = useState(false);
     const ids = useCanvasUiStore((state) => state.deleteProjectIds);
@@ -20,7 +22,7 @@ export function CanvasDeleteProjectsDialog() {
             removeSelectedIds(ids);
             setDeleteIds([]);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "画布删除失败");
+            message.error(error instanceof Error ? error.message : t("list.deleteDialog.failed"));
         } finally {
             setDeleting(false);
         }
@@ -28,20 +30,20 @@ export function CanvasDeleteProjectsDialog() {
 
     return (
         <Modal
-            title="删除画布？"
+            title={t("list.deleteDialog.title")}
             open={ids.length > 0}
             centered
             onCancel={() => setDeleteIds([])}
             footer={
                 <>
-                    <Button onClick={() => setDeleteIds([])}>取消</Button>
+                    <Button onClick={() => setDeleteIds([])}>{t("list.deleteDialog.cancel")}</Button>
                     <Button danger type="primary" loading={deleting} onClick={() => void confirm()}>
-                        删除
+                        {t("list.deleteDialog.confirm")}
                     </Button>
                 </>
             }
         >
-            <p className="text-sm text-stone-500">将删除 {ids.length} 个画布，里面的节点和连线也会一起移除。</p>
+            <p className="text-sm text-stone-500">{t("list.deleteDialog.description", { count: ids.length })}</p>
         </Modal>
     );
 }

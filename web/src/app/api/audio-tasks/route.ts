@@ -13,28 +13,29 @@ import { getStoredGenerationTaskByRequest, linkStoredGenerationTask, withGenerat
 import { resolveInternalOrigin } from "@/lib/server/internal-origin";
 import { resolveLogicalModelCandidates } from "@/lib/server/logical-model-router";
 import { checkGenerationRateLimit, rateLimitHeaders } from "@/lib/server/security";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
     const user = await getCurrentUser(request);
-    if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    if (!user) return NextResponse.json({ error: await serverMessage("common.pleaseLogin") }, { status: 401 });
     const rate = await checkGenerationRateLimit(user.id, request, "audio");
-    if (!rate.allowed) return NextResponse.json({ error: "音频生成请求过于频繁，请稍后重试" }, { status: 429, headers: rateLimitHeaders(rate) });
+    if (!rate.allowed) return NextResponse.json({ error: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.audioGen") }) }, { status: 429, headers: rateLimitHeaders(rate) });
     const settings = await getAuthSettings();
     const response = await withGenerationConcurrencyLimit(user.id, "audio", 10 * 60 * 1000, settings.generationConcurrency.audio, async () => {
         let body: { config?: AudioTaskConfig; prompt?: string; source?: string; context?: GenerationTaskContext };
         try {
             body = await readJsonBody(request);
         } catch (error) {
-            if (isAuthInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+            if (isAuthInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
             throw error;
         }
         const channels = resolveLogicalModelCandidates(settings, "audio", body.config?.model || settings.defaultModels.audioModel).map((resolved) => ({ ...toSystemGenerationChannel(resolved), channelId: resolved.channelId }));
         const prompt = String(body.prompt || "").trim();
         const supportedChannels = channels.filter((channel) => channel.apiFormat !== "gemini");
-        if (!supportedChannels.length || !prompt) return NextResponse.json({ error: "音频任务参数不完整或渠道不支持" }, { status: 400 });
+        if (!supportedChannels.length || !prompt) return NextResponse.json({ error: await serverMessage("tasks.audioParamsOrChannel") }, { status: 400 });
         const configs: AudioTaskConfig[] = supportedChannels.map((channel) => ({ ...channel, ...resolveAudioTaskOptions(body.config, settings.generationDefaults), instructions: clean(body.config?.instructions, 2_000) }));
         const requestId = body.context?.clientRequestId?.trim();
         if (requestId) {
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
         after(() => runGenerationTaskRecoveryBatch({ origin, cookie, limit: 1, taskIds: [task.id] }));
         return NextResponse.json({ task: publicTask(task) });
     });
-    return response || NextResponse.json({ error: "当前用户音频任务已达到并发上限" }, { status: 429 });
+    return response || NextResponse.json({ error: await serverMessage("tasks.audioConcurrencyLimit") }, { status: 429 });
 }
 
 function publicTask(task: AudioTask) {

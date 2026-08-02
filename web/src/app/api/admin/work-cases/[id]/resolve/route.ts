@@ -11,8 +11,8 @@ type Context = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, context: Context) {
     const user = await getCurrentUser();
-    if (!user) return unauthorized();
-    if (user.role !== "admin") return forbidden();
+    if (!user) return await unauthorized();
+    if (user.role !== "admin") return await forbidden();
     const { id } = await context.params;
     const body = await readJsonBody<{ decision?: unknown; resolution?: unknown }>(request);
     try {
@@ -23,7 +23,7 @@ export async function POST(request: Request, context: Context) {
             target: { type: "published_work_case", id: item.id },
             metadata: { decision: body.decision, resolution: body.resolution, workId: item.workId, versionId: item.versionId },
         });
-        return workPublicationOk({ item }, "治理案件已处理");
+        return await workPublicationOk({ item }, "治理案件已处理");
     } catch (error) {
         await safeRecordAuditLog({
             action: "admin.work-governance.resolve",
@@ -32,6 +32,6 @@ export async function POST(request: Request, context: Context) {
             target: { type: "published_work_case", id },
             metadata: { decision: body.decision, error: error instanceof Error ? error.message : "unknown" },
         });
-        return workPublicationError(error, "处理举报申诉失败", "Resolve work governance case failed");
+        return await workPublicationError(error, "处理举报申诉失败", "Resolve work governance case failed");
     }
 }

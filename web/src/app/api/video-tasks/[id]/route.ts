@@ -9,6 +9,7 @@ import { canTransitionVideoTask } from "@/lib/server/video-task-registration";
 import { generationModelId } from "@/lib/server/generation-channel";
 import { providerTaskPath } from "@/lib/server/provider-task-config";
 import { runGenerationTaskRecoveryBatch } from "@/lib/server/generation-task-recovery-service";
+import { serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser(request);
     let task = user ? await getVideoTask((await params).id) : null;
-    if (!user || !task || (task.userId !== user.id && user.role !== "admin")) return NextResponse.json({ error: "视频任务不存在" }, { status: user ? 404 : 401 });
+    if (!user || !task || (task.userId !== user.id && user.role !== "admin")) return NextResponse.json({ error: await serverMessage("tasks.videoNotFound") }, { status: user ? 404 : 401 });
     if (canReconcileVideoTask(task)) {
         const origin = resolveInternalOrigin(new URL(request.url).origin);
         const cookie = request.headers.get("cookie") || "";
@@ -29,16 +30,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const user = await getCurrentUser(request);
     const id = (await params).id;
     const task = user ? await getVideoTask(id) : null;
-    if (!user || !task || (task.userId !== user.id && user.role !== "admin")) return NextResponse.json({ error: "视频任务不存在" }, { status: user ? 404 : 401 });
+    if (!user || !task || (task.userId !== user.id && user.role !== "admin")) return NextResponse.json({ error: await serverMessage("tasks.videoNotFound") }, { status: user ? 404 : 401 });
     const body = (await request.json().catch(() => ({}))) as { status?: VideoTaskStatus; result?: VideoTask["result"]; error?: string };
-    if (!body.status || !canTransitionVideoTask(task.status, body.status)) return NextResponse.json({ error: "当前任务状态无法修改" }, { status: 409 });
+    if (!body.status || !canTransitionVideoTask(task.status, body.status)) return NextResponse.json({ error: await serverMessage("tasks.cannotModifyStatus") }, { status: 409 });
     const status = body.status as Exclude<VideoTaskStatus, "running">;
     const next = await transitionVideoTask(task, {
         status,
         result: status === "success" ? sanitizeResult(body.result) : undefined,
         error: status === "error" ? String(body.error || "视频生成失败").slice(0, 500) : undefined,
     });
-    if (!next) return NextResponse.json({ error: "当前任务状态无法修改" }, { status: 409 });
+    if (!next) return NextResponse.json({ error: await serverMessage("tasks.cannotModifyStatus") }, { status: 409 });
     if (status === "cancelled") {
         if (task.upstream.pointsCost !== undefined && task.upstream.pointsRecordId)
             await refundUserPoints(task.userId, generationModelId(task.config), task.upstream.pointsCost, "video", task.upstream.pointsUnits || 1, `video-task:${task.id}:refund`, task.upstream.pointsRecordId);
