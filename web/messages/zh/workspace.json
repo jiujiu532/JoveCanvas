@@ -112,7 +112,16 @@
         "subtitlePlain": "浏览公共提示词，复制使用或保存到我的素材。",
         "totalCount": "共 {total} 条",
         "clearFilters": "清除",
-        "clearFiltersAria": "清除提示词筛选"
+        "clearFiltersAria": "清除提示词筛选",
+        "categories": {
+            "adCreative": "广告创意",
+            "characterDesign": "角色设计",
+            "comparison": "对比评测",
+            "ecommerce": "电商商品",
+            "portrait": "人像摄影",
+            "poster": "海报设计",
+            "uiSocial": "UI与社交媒体"
+        }
     },
     "billing": {
         "result": {

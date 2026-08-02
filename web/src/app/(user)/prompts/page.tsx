@@ -10,6 +10,7 @@ import { CompactEmptyState } from "@/components/compact-empty-state";
 import { PromptDetailDialog } from "@/components/prompts/prompt-detail-dialog";
 import { usePromptPage } from "@/components/prompts/use-prompt-list";
 import { useCopyText } from "@/hooks/use-copy-text";
+import { promptCategoryOptions } from "@/lib/prompts/prompt-category-labels";
 import { useAssetStore } from "@/stores/use-asset-store";
 import { ALL_PROMPTS_OPTION, type Prompt } from "@/services/api/prompts";
 
@@ -33,7 +34,7 @@ export default function PromptsPage() {
         query,
         items: promptItems,
         tags: promptTags,
-        categories: promptCategoryOptions,
+        categories: promptCategoryValues,
         total: totalPrompts,
     } = usePromptPage({
         keyword: deferredKeyword,
@@ -42,6 +43,7 @@ export default function PromptsPage() {
         page,
         pageSize: PAGE_SIZE,
     });
+    const categorySelectOptions = promptCategoryOptions(promptCategoryValues, t);
     const hasFilters = Boolean(titleKeyword.trim()) || selectedTag !== ALL_PROMPTS_OPTION || selectedCategory !== ALL_PROMPTS_OPTION;
 
     useEffect(() => {
@@ -106,10 +108,10 @@ export default function PromptsPage() {
                                 />
                             </div>
                             <div className="min-w-0">
-                                <Select aria-label={t("categoryAriaLabel")} className="w-full" value={selectedCategory} options={promptCategoryOptions.map((category) => ({ label: category, value: category }))} onChange={updateCategory} />
+                                <Select aria-label={t("categoryAriaLabel")} className="w-full" value={selectedCategory} options={categorySelectOptions} onChange={updateCategory} />
                             </div>
                             <div className="min-w-0">
-                                <Select showSearch aria-label={t("tagAriaLabel")} className="w-full" optionFilterProp="label" value={selectedTag} options={promptTags.map((tag) => ({ label: tag, value: tag }))} onChange={updateTag} />
+                                <Select showSearch aria-label={t("tagAriaLabel")} className="w-full" optionFilterProp="label" value={selectedTag} options={promptTags.map((tag) => ({ label: tag === ALL_PROMPTS_OPTION ? t("filterAll") : tag, value: tag }))} onChange={updateTag} />
                             </div>
                             <div className="col-span-2 flex min-h-8 items-center justify-between gap-2 sm:col-span-1 sm:justify-end">
                                 <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{t("totalCount", { total: totalPrompts })}</span>

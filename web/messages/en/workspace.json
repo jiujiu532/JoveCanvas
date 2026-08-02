@@ -112,7 +112,16 @@
         "subtitlePlain": "Browse public prompts, copy them, or save them to your assets.",
         "totalCount": "{total} total",
         "clearFilters": "Clear",
-        "clearFiltersAria": "Clear prompt filters"
+        "clearFiltersAria": "Clear prompt filters",
+        "categories": {
+            "adCreative": "Ad creative",
+            "characterDesign": "Character design",
+            "comparison": "Comparison",
+            "ecommerce": "E-commerce",
+            "portrait": "Portrait",
+            "poster": "Poster design",
+            "uiSocial": "UI & social"
+        }
     },
     "billing": {
         "result": {

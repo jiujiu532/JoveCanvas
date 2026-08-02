@@ -7,11 +7,13 @@ import { useTranslations } from "next-intl";
 
 import { ALL_PROMPTS_OPTION } from "@/services/api/prompts";
 import { cn } from "@/lib/utils";
+import { promptCategoryLabel } from "@/lib/prompts/prompt-category-labels";
 import { PromptCard } from "./prompt-card";
 import { usePromptList } from "./use-prompt-list";
 
 export function PromptSelectDialog({ open, onOpenChange, onSelect }: { open: boolean; onOpenChange: (open: boolean) => void; onSelect: (prompt: string) => void }) {
     const t = useTranslations("layout");
+    const tPrompts = useTranslations("workspace.prompts");
     const { message } = App.useApp();
     const [keyword, setKeyword] = useState("");
     const [selectedTag, setSelectedTag] = useState(ALL_PROMPTS_OPTION);
@@ -45,7 +47,7 @@ export function PromptSelectDialog({ open, onOpenChange, onSelect }: { open: boo
                         <div className="flex flex-wrap gap-2">
                             {promptCategories.map((category) => (
                                 <Tag.CheckableTag key={category} checked={selectedCategory === category} className={cn("prompt-filter-tag", selectedCategory === category && "is-active")} onChange={() => setSelectedCategory(category)}>
-                                    {category}
+                                    {promptCategoryLabel(category, tPrompts)}
                                 </Tag.CheckableTag>
                             ))}
                         </div>
@@ -57,7 +59,7 @@ export function PromptSelectDialog({ open, onOpenChange, onSelect }: { open: boo
                                 const active = tag === selectedTag;
                                 return (
                                     <Tag.CheckableTag key={tag} checked={active} className={cn("prompt-filter-tag", active && "is-active")} onChange={() => toggleTag(tag)}>
-                                        {tag}
+                                        {tag === ALL_PROMPTS_OPTION ? tPrompts("filterAll") : tag}
                                     </Tag.CheckableTag>
                                 );
                             })}

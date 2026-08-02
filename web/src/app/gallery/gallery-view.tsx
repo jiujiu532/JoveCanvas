@@ -9,7 +9,7 @@ import { Select } from "antd";
 import { PublicWorkPreviewModal } from "@/components/works/public-work-preview-modal";
 import { PublicWorkGalleryCard } from "@/components/works/public-work-gallery-card";
 import { PublicCreatorModal } from "@/components/works/public-creator-modal";
-import { WORK_CATEGORY_OPTIONS } from "@/lib/work-publication-options";
+import { workCategoryOptions } from "@/app/(user)/works/work-publication-values";
 import { cn } from "@/lib/utils";
 import type { GalleryFilters, GalleryResult } from "./gallery-data";
 import { GalleryPublishLink } from "./gallery-publish-link";
@@ -19,10 +19,12 @@ const primaryLinkClass = "inline-flex h-9 items-center justify-center gap-2 roun
 
 export function GalleryView({ filters, gallery, basePath, embedded = false }: { filters: GalleryFilters; gallery: GalleryResult; basePath: string; embedded?: boolean }) {
     const t = useTranslations("public.works.gallery");
+    const tWorks = useTranslations("public.works.myWorks");
     const filtered = hasFilters(filters);
     const [previewSlug, setPreviewSlug] = useState("");
     const [creatorUsername, setCreatorUsername] = useState("");
     const [sort, setSort] = useState(filters.sort);
+    const categoryOptions = workCategoryOptions(tWorks);
 
     useEffect(() => setSort(filters.sort), [filters.sort]);
     return (
@@ -41,7 +43,7 @@ export function GalleryView({ filters, gallery, basePath, embedded = false }: { 
                 <Link href={galleryFilterHref(basePath, filters, "")} className={categoryClass(!filters.category)}>
                     {t("all")}
                 </Link>
-                {WORK_CATEGORY_OPTIONS.map((option) => (
+                {categoryOptions.map((option) => (
                     <Link key={option.value} href={galleryFilterHref(basePath, filters, option.value)} className={categoryClass(filters.category === option.value)}>
                         {option.label}
                     </Link>

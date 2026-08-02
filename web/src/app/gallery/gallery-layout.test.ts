@@ -21,7 +21,8 @@ describe("gallery surfaces", () => {
         expect(publicPage).not.toContain("WORK_CATEGORY_OPTIONS.map");
         expect(communityPage).toContain('basePath="/community" embedded');
         expect(communityPage).toContain("h-full min-h-0 overflow-y-auto");
-        expect(sharedView).toContain("WORK_CATEGORY_OPTIONS.map");
+        expect(sharedView).toContain("workCategoryOptions(");
+        expect(sharedView).toContain("categoryOptions.map");
         expect(sharedView).toContain("action={basePath}");
         expect(sharedView).toContain('aria-label={t("categoryNav")}');
         expect(sharedView).toContain("columns-2");

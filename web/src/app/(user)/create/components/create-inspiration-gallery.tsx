@@ -14,13 +14,14 @@ import { imagePreviewUrl } from "@/lib/media-image-url";
 import { LazyMediaImage } from "@/components/media/lazy-media-image";
 import { PublicWorkCardTitle } from "@/components/works/public-work-card-title";
 import { userAvatarFallback } from "@/lib/user-avatar";
-import { WORK_CATEGORY_OPTIONS } from "@/lib/work-publication-options";
+import { workCategoryOptions } from "@/app/(user)/works/work-publication-values";
 import { cn } from "@/lib/utils";
 import { listPublicGallery, type PublicGalleryItem } from "@/services/api/work-governance";
 
 export function CreateInspirationGallery({ onUsePrompt, onUseImage }: { onUsePrompt: (prompt: string) => void; onUseImage: (item: PublicGalleryItem) => Promise<void> }) {
     const t = useTranslations("workspace.create");
-    const categories = useMemo(() => [{ value: "", label: t("categoryAll") }, ...WORK_CATEGORY_OPTIONS], [t]);
+    const tWorks = useTranslations("public.works.myWorks");
+    const categories = useMemo(() => [{ value: "", label: t("categoryAll") }, ...workCategoryOptions(tWorks)], [t, tWorks]);
     const [category, setCategory] = useState("");
     const [items, setItems] = useState<PublicGalleryItem[]>([]);
     const [loading, setLoading] = useState(true);

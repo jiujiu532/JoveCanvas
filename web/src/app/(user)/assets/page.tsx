@@ -303,9 +303,9 @@ export default function AssetsPage() {
                             />
                             <div className="min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                 <Segmented
-                                    block
                                     value={kindFilter}
                                     options={kindOptions(t)}
+                                    className="!w-max max-w-none [&_.ant-segmented-item-label]:px-3"
                                     onChange={(value) => {
                                         setPage(1);
                                         setKindFilter(value as AssetKind | "all");
