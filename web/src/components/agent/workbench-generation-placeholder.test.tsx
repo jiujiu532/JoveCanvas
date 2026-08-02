@@ -1,14 +1,25 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it } from "vitest";
 
+import layoutMessages from "../../../messages/zh/layout.json";
 import { GENERATION_PLACEHOLDER_TILE_COUNT, WorkbenchGenerationActivity, WorkbenchGenerationPlaceholder } from "./workbench-generation-placeholder";
+
+function renderWithIntl(node: ReactNode) {
+    return renderToStaticMarkup(
+        <NextIntlClientProvider locale="zh" messages={{ layout: layoutMessages }}>
+            {node}
+        </NextIntlClientProvider>,
+    );
+}
 
 describe("workbench generation placeholders", () => {
     it("keeps generation status accessible without visible status copy", () => {
-        const placeholder = renderToStaticMarkup(<WorkbenchGenerationPlaceholder kind="image" />);
-        const activity = renderToStaticMarkup(<WorkbenchGenerationActivity kind="video" count={2} />);
+        const placeholder = renderWithIntl(<WorkbenchGenerationPlaceholder kind="image" />);
+        const activity = renderWithIntl(<WorkbenchGenerationActivity kind="video" count={2} />);
 
         expect(placeholder).toContain('aria-label="图片正在生成"');
         expect(placeholder).toContain('aria-busy="true"');
@@ -21,7 +32,7 @@ describe("workbench generation placeholders", () => {
     });
 
     it("fills the card with a 12 by 8 animated GPT-style tile field and no logo", () => {
-        const placeholder = renderToStaticMarkup(<WorkbenchGenerationPlaceholder kind="image" />);
+        const placeholder = renderWithIntl(<WorkbenchGenerationPlaceholder kind="image" />);
         const stylesheet = readFileSync(resolve(process.cwd(), "src/components/agent/workbench-generation-placeholder.module.css"), "utf8");
 
         expect(placeholder).toContain("bg-muted");

@@ -1,8 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { canvasThemes } from "@/lib/canvas-theme";
 import { useThemeStore } from "@/stores/use-theme-store";
+import canvasMessages from "../../../../../messages/zh/canvas.json";
 import { CanvasNodeType, type CanvasNodeData } from "../types";
 import { CanvasNode } from "./canvas-node";
 
@@ -20,25 +22,27 @@ const noop = () => undefined;
 
 function renderImageNode(overrides: Partial<React.ComponentProps<typeof CanvasNode>> = {}) {
     return renderToStaticMarkup(
-        <CanvasNode
-            data={imageNode}
-            scale={1}
-            isSelected={false}
-            isRelated={false}
-            isFocusRelated={false}
-            isConnectionTarget={false}
-            isConnecting={false}
-            showPanel={false}
-            showImageInfo={false}
-            onMouseDown={noop}
-            onHoverStart={noop}
-            onHoverEnd={noop}
-            onConnectStart={noop}
-            onResize={noop}
-            onContentChange={noop}
-            onContextMenu={noop}
-            {...overrides}
-        />,
+        <NextIntlClientProvider locale="zh" messages={{ canvas: canvasMessages }}>
+            <CanvasNode
+                data={imageNode}
+                scale={1}
+                isSelected={false}
+                isRelated={false}
+                isFocusRelated={false}
+                isConnectionTarget={false}
+                isConnecting={false}
+                showPanel={false}
+                showImageInfo={false}
+                onMouseDown={noop}
+                onHoverStart={noop}
+                onHoverEnd={noop}
+                onConnectStart={noop}
+                onResize={noop}
+                onContentChange={noop}
+                onContextMenu={noop}
+                {...overrides}
+            />
+        </NextIntlClientProvider>,
     );
 }
 

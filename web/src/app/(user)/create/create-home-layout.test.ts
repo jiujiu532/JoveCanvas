@@ -12,7 +12,7 @@ describe("create Agent home layout", () => {
             readFile(resolve(process.cwd(), "src/components/works/public-work-preview-modal.tsx"), "utf8"),
         ]);
 
-        expect(page).toContain("创作 Agent");
+        expect(page).toContain('t("heroTitleWithSite"');
         expect(page).toContain("createAgentPromptFromHash");
         expect(page).not.toContain("最近创作");
         expect(page).toContain("<CreateInspirationGallery");
@@ -24,10 +24,10 @@ describe("create Agent home layout", () => {
         const pointerMoveHandler = composer.slice(composer.indexOf("const onPointerMove"), composer.indexOf("const finishDrag"));
         expect(pointerDownHandler).not.toContain("setPointerCapture");
         expect(pointerMoveHandler).toContain("setPointerCapture");
-        expect(inspiration).toContain("灵感发现");
-        expect(inspiration).toContain("使用提示词");
-        expect(inspiration).toContain("复制提示词");
-        expect(inspiration).toContain("使用图片");
+        expect(inspiration).toContain('t("inspirationTitle")');
+        expect(inspiration).toContain('t("usePrompt")');
+        expect(inspiration).toContain('t("copyPrompt")');
+        expect(inspiration).toContain('t("useImage")');
         expect(inspiration).toContain("listPublicGallery");
         expect(inspiration).toContain("columns-2");
         expect(inspiration).toContain("xl:columns-6");
@@ -37,7 +37,7 @@ describe("create Agent home layout", () => {
         expect(inspiration).toContain("<LazyMediaImage");
         expect(inspiration).toContain("<PublicWorkCardTitle");
         expect(inspiration).not.toContain("href={`/share/");
-        expect(overview).toContain('aria-label="引用到 Agent"');
+        expect(overview).toContain('aria-label={t("referenceToAgent")}');
         expect(overview.indexOf('aria-labelledby="create-assets-heading"')).toBeLessThan(overview.indexOf('aria-labelledby="create-projects-heading"'));
         expect(overview).toContain("recentAssets.slice(0, recentAssetVisibilityClasses.length)");
         expect(overview).toContain("grid-cols-2");
@@ -48,14 +48,14 @@ describe("create Agent home layout", () => {
         expect(overview).not.toContain("lg:grid-cols-5");
         expect(overview).toContain('"group grid h-32');
         expect(overview).toContain("sm:h-44");
-        expect(overview).toContain('title="引用到 Agent"');
+        expect(overview).toContain('title={t("referenceToAgent")}');
         expect(overview).not.toMatch(/>\s*引用\s*</);
         expect(overview).not.toContain("absolute bottom-2 right-2");
-        expect(previewModal).toContain('aria-label="引用提示词到 Agent"');
-        expect(previewModal).toContain('aria-label="引用图片到 Agent"');
+        expect(previewModal).toContain('aria-label={t("refPromptAgent")}');
+        expect(previewModal).toContain('aria-label={t("refImageAgent")}');
         expect(previewModal).not.toMatch(/>\s*引用到 Agent\s*</);
-        expect(previewModal).toContain("复制提示词");
-        expect(previewModal).toContain('aria-label="关闭作品详情"');
+        expect(previewModal).toContain('t("copyPrompt")');
+        expect(previewModal).toContain('aria-label={t("closeAria")}');
         expect(previewModal).toContain("lg:grid-cols-[minmax(0,1fr)_340px]");
         expect(previewModal).toContain("xl:grid-cols-[minmax(0,1fr)_360px]");
         expect(previewModal).toContain('asset.mediaType === "image" || asset.mediaType === "video"');

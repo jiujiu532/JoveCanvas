@@ -28,8 +28,8 @@ describe("public creator modal", () => {
 
         expect(personal).toContain('type ProfileTab = "published" | "likes"');
         expect(personal).toContain('view: "likes"');
-        expect(personal).toContain("我的喜欢");
-        expect(publicProfile).not.toContain("我的喜欢");
+        expect(personal).toContain('t("tabLikes")');
+        expect(publicProfile).not.toContain('t("tabLikes")');
         expect(publicProfile).not.toContain('view: "likes"');
     });
 
@@ -37,7 +37,8 @@ describe("public creator modal", () => {
         const page = await readFile(resolve(process.cwd(), "src/app/u/[username]/page.tsx"), "utf8");
 
         expect(page).toContain("generateMetadata");
-        expect(page).toContain('openGraph: { type: "profile"');
+        expect(page).toContain('type: "profile"');
+        expect(page).toContain("openGraph:");
         expect(page).toContain("alternates: { canonical }");
         expect(page).toContain('loadCreatorPage(username, viewer?.id || "")');
         expect(page).not.toContain("profile.email");

@@ -23,7 +23,7 @@ describe("gallery surfaces", () => {
         expect(communityPage).toContain("h-full min-h-0 overflow-y-auto");
         expect(sharedView).toContain("WORK_CATEGORY_OPTIONS.map");
         expect(sharedView).toContain("action={basePath}");
-        expect(sharedView).toContain('aria-label="作品分类"');
+        expect(sharedView).toContain('aria-label={t("categoryNav")}');
         expect(sharedView).toContain("columns-2");
         expect(sharedView).toContain("sm:columns-3");
         expect(sharedView).toContain("md:columns-4");
@@ -31,7 +31,7 @@ describe("gallery surfaces", () => {
         expect(sharedView).toContain("2xl:columns-6");
         expect(sharedView).not.toContain("max-h-[640px]");
         expect(sharedView).toContain("galleryFilterHref(basePath");
-        expect(sharedView).toContain("发布第一个作品");
+        expect(sharedView).toContain('t("publishFirst")');
         expect(sharedView).not.toContain('<span className="hidden sm:inline">发布作品</span>');
         expect(publishLink).toContain("state.ready");
         expect(publishLink).toContain("state.payload?.user");
@@ -55,7 +55,7 @@ describe("gallery surfaces", () => {
         expect(lazyImage).toContain("loading={loading}");
         expect(lazyImage).toContain('decoding="async"');
         expect(lazyImage).toContain('status === "error"');
-        expect(lazyImage).toContain("图片不可用");
+        expect(lazyImage).toContain('t("imageUnavailable")');
         expect(lazyImage).toContain("<SiteLogo");
         expect(lazyImage).not.toContain("animate-pulse");
     });

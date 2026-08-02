@@ -62,7 +62,7 @@ import {
 
 export type UpdateAiConfig = <K extends keyof AiConfig>(key: K, value: AiConfig[K]) => void;
 
-export function GenerationSettings({config, model, updateConfig, openConfigDialog, hideModel = false }: { config: AiConfig; model: string; updateConfig: UpdateAiConfig; openConfigDialog: (shouldPromptContinue?: boolean) => void; hideModel?: boolean }) {
+export function GenerationSettings({ config, model, updateConfig, openConfigDialog, hideModel = false }: { config: AiConfig; model: string; updateConfig: UpdateAiConfig; openConfigDialog: (shouldPromptContinue?: boolean) => void; hideModel?: boolean }) {
     const t = useTranslations("workspace.image");
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
 
@@ -158,7 +158,6 @@ export function resultImageCardWidth(width: number, height: number, large = fals
     const ratio = width > 0 && height > 0 ? width / height : 1;
     const maxWidth = large ? 320 : 280;
     const maxHeight = large ? 360 : 300;
-    const t = useTranslations("workspace.image");
     return Math.max(120, Math.round(Math.min(maxWidth, ratio * maxHeight)));
 }
 
@@ -166,7 +165,7 @@ export function PendingImageCard({ large }: { large?: boolean }) {
     return <WorkbenchGenerationPlaceholder kind="image" className={large ? "h-[156px] w-full max-w-[320px] sm:h-[240px]" : "h-[136px] w-full sm:h-[220px]"} />;
 }
 
-export function FailedImageCard({error, large, selected, onSelectedChange, onRetry }: { error: string; large?: boolean; selected?: boolean; onSelectedChange?: (checked: boolean) => void; onRetry: () => void }) {
+export function FailedImageCard({ error, large, selected, onSelectedChange, onRetry }: { error: string; large?: boolean; selected?: boolean; onSelectedChange?: (checked: boolean) => void; onRetry: () => void }) {
     const t = useTranslations("workspace.image");
     return (
         <div className={cn("relative w-full overflow-hidden rounded-lg border border-red-200 bg-red-50 dark:border-red-950 dark:bg-red-950/20", large && "max-w-[320px]")}>
@@ -178,7 +177,9 @@ export function FailedImageCard({error, large, selected, onSelectedChange, onRet
                 </Typography.Paragraph>
             </div>
             <div className="flex justify-end border-t border-red-200 p-2 sm:p-3 dark:border-red-950">
-                <Button size="small" danger onClick={onRetry}>{t("retry")}</Button>
+                <Button size="small" danger onClick={onRetry}>
+                    {t("retry")}
+                </Button>
             </div>
         </div>
     );
@@ -230,8 +231,12 @@ export function LogPanel({
             renderDetails={(log) => (
                 <div className="ml-6 mt-1 min-h-[62px] rounded-md border border-stone-200/70 bg-white/65 px-2.5 py-2 shadow-sm shadow-stone-200/30 dark:border-stone-800 dark:bg-stone-950/45 dark:shadow-black/10">
                     <div className="flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap">
-                        <span className="inline-flex h-6 shrink-0 items-center rounded-md bg-blue-50 px-1.5 text-xs font-medium leading-none text-blue-700 dark:bg-blue-500/15 dark:text-blue-200">{t("successPlain", { count: log.successCount ?? log.imageCount })}</span>
-                        {log.failCount ? <span className="inline-flex h-6 shrink-0 items-center rounded-md bg-rose-50 px-1.5 text-xs font-medium leading-none text-rose-700 dark:bg-rose-500/15 dark:text-rose-200">{t("failPlain", { count: log.failCount })}</span> : null}
+                        <span className="inline-flex h-6 shrink-0 items-center rounded-md bg-blue-50 px-1.5 text-xs font-medium leading-none text-blue-700 dark:bg-blue-500/15 dark:text-blue-200">
+                            {t("successPlain", { count: log.successCount ?? log.imageCount })}
+                        </span>
+                        {log.failCount ? (
+                            <span className="inline-flex h-6 shrink-0 items-center rounded-md bg-rose-50 px-1.5 text-xs font-medium leading-none text-rose-700 dark:bg-rose-500/15 dark:text-rose-200">{t("failPlain", { count: log.failCount })}</span>
+                        ) : null}
                         <span className="inline-flex h-6 shrink-0 items-center rounded-md bg-stone-100 px-1.5 text-xs font-medium leading-none text-stone-700 dark:bg-white/10 dark:text-stone-200">{t("sheetCount", { count: log.imageCount })}</span>
                         <span className="inline-flex h-6 shrink-0 items-center rounded-md bg-lime-50 px-1.5 text-xs font-medium leading-none text-lime-700 dark:bg-lime-500/15 dark:text-lime-200">{formatDuration(log.durationMs)}</span>
                     </div>

@@ -15,9 +15,9 @@ describe("image result card layout", () => {
         const source = await readFile(resolve(process.cwd(), "src/app/(user)/image/image-workbench-panels.tsx"), "utf8");
         const cardSource = source.slice(source.indexOf("export function ResultImageCard"), source.indexOf("export function PendingImageCard"));
 
-        expect(cardSource).toContain('aria-label="添加到素材"');
-        expect(cardSource).toContain('aria-label="加入参考图"');
-        expect(cardSource).toContain('aria-label="下载"');
+        expect(cardSource).toContain('aria-label={t("addToAssets")}');
+        expect(cardSource).toContain('aria-label={t("addToReferences")}');
+        expect(cardSource).toContain('aria-label={t("download")}');
         expect(cardSource).not.toContain("<Button className={RESULT_ACTION_BUTTON_CLASS}");
     });
 

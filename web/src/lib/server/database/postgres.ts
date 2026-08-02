@@ -161,6 +161,7 @@ const POSTGRES_SCHEMA_OBJECTS = [
     "cdk_redemptions_user_id_idx",
     "announcements_visible_idx",
     "prompts_scope_updated_idx",
+    "prompts_scope_locale_updated_idx",
     "prompts_owner_updated_idx",
     "prompts_tags_gin_idx",
     "generation_logs_user_created_idx",
