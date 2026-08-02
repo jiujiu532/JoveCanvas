@@ -80,6 +80,7 @@ import {
 
 export function BillingOperations({ initialTab = "orders", initialPaymentConfig, embedded = false, hideTabs = false }: { initialTab?: BillingTab; initialPaymentConfig?: PaymentConfigSummary; embedded?: boolean; hideTabs?: boolean }) {
     const t = useTranslations("admin.billingOps");
+    const tElements = useTranslations("admin.billingOps.elements");
     const tabOptions = useMemo(
         () => [
             { label: t("tabs.orders"), value: "orders" as const },
@@ -100,6 +101,27 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
             { label: t("status.refunded"), value: "refunded" as const },
             { label: t("status.refunding"), value: "refunding" as const },
         ],
+        [t],
+    );
+    const orderStatusLabels = useMemo(
+        () => ({
+            pending: t("status.pending"),
+            paid: t("status.paid"),
+            closed: t("status.closed"),
+            canceled: t("status.canceled"),
+            refunded: t("status.refunded"),
+            refunding: t("status.refunding"),
+        }),
+        [t],
+    );
+    const paymentProviderLabels = useMemo(
+        () => ({
+            alipay: t("provider.alipay"),
+            wechat: t("provider.wechat"),
+            manual: t("provider.manual"),
+            stripe: t("provider.stripe"),
+            payply: t("provider.payply"),
+        }),
         [t],
     );
     const { message, modal } = App.useApp();
@@ -366,13 +388,13 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
             title: t("columns.status"),
             dataIndex: "status",
             width: 110,
-            render: (value: BillingOrderStatus) => <Tag color={statusColor(value)}>{statusLabel(value)}</Tag>,
+            render: (value: BillingOrderStatus) => <Tag color={statusColor(value)}>{statusLabel(value, orderStatusLabels)}</Tag>,
         },
         {
             title: t("columns.channel"),
             dataIndex: "provider",
             width: 110,
-            render: (value: string) => <span className="text-sm text-stone-700 dark:text-stone-200">{providerLabel(value)}</span>,
+            render: (value: string) => <span className="text-sm text-stone-700 dark:text-stone-200">{providerLabel(value, paymentProviderLabels)}</span>,
         },
         {
             title: t("columns.amount"),
@@ -691,7 +713,15 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
 
             {activeTab === "coupons" ? <CouponTemplatePanel products={products} productsLoading={productsLoading} /> : null}
 
-            {activeTab === "payments" ? <PaymentConfigPanel paymentConfig={paymentConfig} loading={paymentConfigLoading} embedded={embedded} onRefresh={loadPaymentConfig} onCopy={(value) => void copyText(value, message)} /> : null}
+            {activeTab === "payments" ? (
+                <PaymentConfigPanel
+                    paymentConfig={paymentConfig}
+                    loading={paymentConfigLoading}
+                    embedded={embedded}
+                    onRefresh={loadPaymentConfig}
+                    onCopy={(value) => void copyText(value, message, { copied: tElements("copied"), copyFailed: tElements("copyFailed") })}
+                />
+            ) : null}
         </div>
     );
 }

@@ -20,13 +20,14 @@ import {
     removeStoredLogs,
     saveStoredLog,
     withLogOwner,
-    WORKBENCH_DEFAULT_ERROR,
-    WORKBENCH_DEFAULT_TITLE,
+    workbenchDefaultError,
+    workbenchDefaultTitle,
     type BaseGenerationFailure,
     type BaseGenerationLog,
     type BaseGenerationResult,
     type BaseGenerationSnapshot,
 } from "../shared/workbench-records-base";
+import { workspaceT } from "../shared/workspace-i18n-runtime";
 
 export type { BaseGenerationFailure, BaseGenerationLog, BaseGenerationResult, BaseGenerationSnapshot };
 export { withLogOwner };
@@ -163,7 +164,7 @@ export async function serverVideoLogToWorkbenchLog(record: StoredGenerationLogRe
         taskResultId: pendingSlot?.id,
         video: videos[videos.length - 1],
         videos,
-        failures: (snapshot?.slots || []).flatMap((slot) => (slot.status === "failed" ? [{ resultId: slot.id, error: slot.error || record.error || WORKBENCH_DEFAULT_ERROR, canRetry: slot.canRetry === true }] : [])),
+        failures: (snapshot?.slots || []).flatMap((slot) => (slot.status === "failed" ? [{ resultId: slot.id, error: slot.error || record.error || workbenchDefaultError(), canRetry: slot.canRetry === true }] : [])),
         requestSnapshot: snapshot,
         error: record.error,
         resultDeleted: !videos.length && record.status === "success",
@@ -198,7 +199,7 @@ export async function recordVideoGenerationLog(log: GenerationLog) {
             title: log.title,
             prompt: log.prompt,
             model: log.model || log.config.videoModel || log.config.model,
-            summary: log.status === "成功" ? "视频生成完成" : log.status === "失败" ? "视频生成失败" : "视频生成中",
+            summary: log.status === "成功" ? workspaceT()("video.videoGenerationCompleted") : log.status === "失败" ? workspaceT()("video.videoGenerationFailed") : workspaceT()("video.videoGenerationPending"),
             durationMs: log.durationMs,
             count: Math.max(1, resultsFromLog(log).length),
             successCount: videos.length,
@@ -225,7 +226,7 @@ export async function normalizeLog(log: Partial<GenerationLog>): Promise<Generat
         ownerUserId: log.ownerUserId,
         creativeConversationId: log.creativeConversationId,
         createdAt: log.createdAt || Date.now(),
-        title: log.title || log.model || WORKBENCH_DEFAULT_TITLE,
+        title: log.title || log.model || workbenchDefaultTitle(),
         prompt: log.prompt || "",
         time: log.time || formatWorkbenchTime(),
         model: log.model || config.videoModel || "",
@@ -303,7 +304,7 @@ export function filterAudioReferencesByDuration(existing: ReferenceAudio[], next
         total += item.durationMs || 0;
         accepted.push(item);
     }
-    if (skipped) warn("已忽略不符合时长要求的参考音频：单个 2-15 秒，总时长不超过 15 秒");
+    if (skipped) warn(workspaceT()("video.ignoredAudioDuration"));
     return accepted;
 }
 
@@ -319,7 +320,7 @@ export function replaceResult(results: GenerationResult[], resultId: string, nex
 
 export function buildLogFromVideoResults(baseLog: GenerationLog | null, snapshot: GenerationSnapshot, results: GenerationResult[], durationMs: number, error?: string, pending?: { task: VideoGenerationTask; taskResultId: string }): GenerationLog {
     const videos = results.flatMap((result) => (result.status === "success" && result.video ? [result.video] : []));
-    const failures = results.flatMap((result) => (result.status === "failed" ? [{ resultId: result.id, error: result.error || error || WORKBENCH_DEFAULT_ERROR, canRetry: result.canRetry === true }] : []));
+    const failures = results.flatMap((result) => (result.status === "failed" ? [{ resultId: result.id, error: result.error || error || workbenchDefaultError(), canRetry: result.canRetry === true }] : []));
     const hasPending = results.some((result) => result.status === "pending");
     const status: GenerationLog["status"] = hasPending ? "生成中" : videos.length ? "成功" : "失败";
     const latestVideo = videos[videos.length - 1];
@@ -428,7 +429,7 @@ export function buildLog({
         id: baseLog?.id || nanoid(),
         creativeConversationId: baseLog?.creativeConversationId,
         createdAt: baseLog?.createdAt || Date.now(),
-        title: baseLog?.title || requestSnapshot.userPrompt?.slice(0, 12) || prompt.slice(0, 12) || WORKBENCH_DEFAULT_TITLE,
+        title: baseLog?.title || requestSnapshot.userPrompt?.slice(0, 12) || prompt.slice(0, 12) || workbenchDefaultTitle(),
         prompt,
         time: formatWorkbenchTime(),
         model,
@@ -529,7 +530,7 @@ function mergeVideoRequestSnapshot(
             taskResultUrl: task?.resultUrl || previous?.taskResultUrl,
             serverTaskId: task?.serverTaskId || previous?.serverTaskId,
             startedAt: task ? Date.now() : previous?.startedAt,
-            error: result.status === "failed" ? result.error || error || previous?.error || WORKBENCH_DEFAULT_ERROR : undefined,
+            error: result.status === "failed" ? result.error || error || previous?.error || workbenchDefaultError() : undefined,
             canRetry: result.status === "failed" ? result.canRetry === true : undefined,
         };
         if (result.status === "success") assetIndex += 1;

@@ -6,7 +6,7 @@ import { isAuthInputError } from "@/lib/auth/store";
 import { AccountDeletionRequestError, getOwnAccountDeletionRequest, submitAccountDeletionRequest, withdrawOwnAccountDeletionRequest } from "@/lib/server/account-deletion-request-service";
 import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-log-store";
 import { checkRateLimit, rateLimitHeaders } from "@/lib/server/security";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
         });
         return NextResponse.json({ code: 0, data, msg: await serverMessage("auth.deletionSubmitted") });
     } catch (error) {
-        const mapped = mapError(error, "注销申请提交失败");
+        const mapped = await mapError(error, await serverMessage("auth.deletionSubmitFailed"));
         return NextResponse.json({ code: mapped.status, data: null, msg: mapped.message }, { status: mapped.status });
     }
 }
@@ -53,13 +53,15 @@ export async function DELETE(request: Request) {
         });
         return NextResponse.json({ code: 0, data, msg: await serverMessage("auth.deletionWithdrawn") });
     } catch (error) {
-        const mapped = mapError(error, "注销申请撤回失败");
+        const mapped = await mapError(error, await serverMessage("auth.deletionWithdrawFailed"));
         return NextResponse.json({ code: mapped.status, data: null, msg: mapped.message }, { status: mapped.status });
     }
 }
 
-function mapError(error: unknown, fallback: string) {
-    if (error instanceof AccountDeletionRequestError || isAuthInputError(error)) return { status: error.status, message: error.message };
+async function mapError(error: unknown, fallback: string) {
+    if (error instanceof AccountDeletionRequestError || isAuthInputError(error)) {
+        return { status: error.status, message: await localizeErrorMessage(error) };
+    }
     console.error(fallback, error);
     return { status: 500, message: fallback };
 }

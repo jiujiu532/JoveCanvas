@@ -4,7 +4,7 @@ import { readJsonBody } from "@/lib/auth/request";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getAuthSettings, type MailSettings } from "@/lib/auth/store";
 import { sendSmtpTestMail } from "@/lib/mail/smtp";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
         await sendSmtpTestMail({ mail, to: body.to });
         return NextResponse.json({ ok: true });
     } catch (error) {
-        const message = error instanceof Error ? error.message : "测试邮件发送失败";
+        const message = error instanceof Error ? await localizeErrorMessage(error) : await serverMessage("admin.mailTestFailed");
         return NextResponse.json({ error: message }, { status: 400 });
     }
 }

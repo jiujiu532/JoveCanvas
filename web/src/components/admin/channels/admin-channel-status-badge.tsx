@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { channelWorkspaceStatusLabel, type ChannelWorkspaceStatus } from "./admin-channel-workspace-model";
 
 const statusTone: Record<ChannelWorkspaceStatus, string> = {
@@ -9,5 +13,13 @@ const statusTone: Record<ChannelWorkspaceStatus, string> = {
 };
 
 export function ChannelStatusBadge({ status }: { status: ChannelWorkspaceStatus }) {
-    return <span className={`inline-flex h-6 shrink-0 items-center rounded border px-2 text-xs font-medium ${statusTone[status]}`}>{channelWorkspaceStatusLabel(status)}</span>;
+    const t = useTranslations("admin");
+    const labels = {
+        healthy: t("channelWorkspace.statusHealthy"),
+        warning: t("channelWorkspace.statusWarning"),
+        untested: t("channelWorkspace.statusUntested"),
+        draft: t("channelWorkspace.statusDraft"),
+        disabled: t("channelWorkspace.statusDisabled"),
+    };
+    return <span className={`inline-flex h-6 shrink-0 items-center rounded border px-2 text-xs font-medium ${statusTone[status]}`}>{channelWorkspaceStatusLabel(status, labels)}</span>;
 }

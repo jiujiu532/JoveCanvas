@@ -4,7 +4,7 @@ import { readJsonBody } from "@/lib/auth/request";
 import { getCurrentUser } from "@/lib/auth/session";
 import { CreativeRuntimeServiceError, registerGenerationLogAssetsForUser } from "@/lib/server/creative-runtime-service";
 import { deleteGenerationLogs, listGenerationLogs, listUserGenerationLogsForDelete, recordGenerationLog, type GenerationLogAsset, type GenerationLogInput } from "@/lib/server/generation-log-store";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
         }
         return NextResponse.json({ log });
     } catch (error) {
-        if (error instanceof CreativeRuntimeServiceError) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (error instanceof CreativeRuntimeServiceError) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         throw error;
     }
 }

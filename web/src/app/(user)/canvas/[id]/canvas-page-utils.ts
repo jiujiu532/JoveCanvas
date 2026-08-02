@@ -72,6 +72,7 @@ const CanvasAssistantPanel = dynamic(() => import("../components/canvas-assistan
 const loadAssetPickerModal = () => import("../components/asset-picker-modal").then((mod) => mod.AssetPickerModal);
 const AssetPickerModal = dynamic(loadAssetPickerModal, { ssr: false, loading: () => null });
 import type { ReferenceImage } from "@/types/image";
+import { canvasT } from "../canvas-i18n-runtime";
 
 import {
     CanvasClipboard,
@@ -126,7 +127,7 @@ export async function uploadGeneratedCanvasImage(url: string, remoteFallback = "
             // Try the next fallback source.
         }
     }
-    throw new Error("图片保存到服务器失败");
+    throw new Error(canvasT()("errors.saveImageFailed"));
 }
 
 export function imageMetadata(image: UploadedImage): CanvasNodeMetadata {
@@ -354,7 +355,10 @@ export function modelMatchesCanvasGenerationMode(model: string, mode: CanvasNode
 }
 
 export function isGenerationCanceled(error: unknown) {
-    return error instanceof Error && (error.message === "请求已取消" || error.name === "AbortError");
+    if (!(error instanceof Error)) return false;
+    if (error.name === "AbortError") return true;
+    // API 层仍可能抛中/英取消文案；检测两侧都接受，不依赖当前 UI locale
+    return error.message === "请求已取消" || error.message === "Request cancelled" || error.message === canvasT()("generation.requestCancelled");
 }
 
 export function findRetrySourceNode(nodeId: string, nodes: CanvasNodeData[], connections: CanvasConnection[]) {
@@ -396,11 +400,27 @@ export function isHiddenBatchConnectionEndpoint(node: CanvasNodeData, nodes: Can
 }
 
 export function buildAngleLabel(params: CanvasImageAngleParams) {
-    const horizontal = params.horizontalAngle === 0 ? "正面视角" : params.horizontalAngle > 0 ? `向右旋转 ${params.horizontalAngle} 度` : `向左旋转 ${Math.abs(params.horizontalAngle)} 度`;
-    const pitch = params.pitchAngle === 0 ? "水平视角" : params.pitchAngle > 0 ? `俯视 ${params.pitchAngle} 度` : `仰视 ${Math.abs(params.pitchAngle)} 度`;
-    return `AI 多角度：${horizontal}，${pitch}，镜头距离 ${params.cameraDistance.toFixed(1)}，${params.wideAngle ? "广角" : "标准"}镜头`;
+    const t = canvasT();
+    const horizontal =
+        params.horizontalAngle === 0
+            ? t("angle.front")
+            : params.horizontalAngle > 0
+              ? t("angle.rotateRight", { degrees: params.horizontalAngle })
+              : t("angle.rotateLeft", { degrees: Math.abs(params.horizontalAngle) });
+    const pitch =
+        params.pitchAngle === 0
+            ? t("angle.level")
+            : params.pitchAngle > 0
+              ? t("angle.pitchDown", { degrees: params.pitchAngle })
+              : t("angle.pitchUp", { degrees: Math.abs(params.pitchAngle) });
+    return t("angle.labelTemplate", {
+        horizontal,
+        pitch,
+        distance: params.cameraDistance.toFixed(1),
+        lens: params.wideAngle ? t("angle.lensWide") : t("angle.lensStandard"),
+    });
 }
 
 export function buildAnglePrompt(params: CanvasImageAngleParams) {
-    return `基于参考图重新生成同一主体的新视角，保持主体、颜色、材质和画面风格一致，不要只做透视变形。${buildAngleLabel(params)}。`;
+    return canvasT()("angle.promptPrefix", { label: buildAngleLabel(params) });
 }

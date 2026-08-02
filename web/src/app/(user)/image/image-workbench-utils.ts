@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import type { WorkbenchAgentMessage } from "@/components/agent/workbench-agent-panel";
 
 import type { GenerationLog, GenerationResult } from "./image-workbench-records";
+import { workspaceT } from "../shared/workspace-i18n-runtime";
 
 /** 结果多选：当前可见 id / 已选可见 id / 是否全选 */
 export function getResultSelectionState(results: Array<{ id: string }>, selectedResultIds: string[]) {
@@ -30,7 +31,7 @@ export function buildHistoryAgentFallbackMessages(log: Pick<GenerationLog, "id" 
         {
             id: `history-${log.id}-assistant`,
             role: log.status === "失败" ? "error" : "assistant",
-            text: log.status === "失败" ? log.error || "该任务生成失败。" : log.status === "生成中" ? "该任务仍在生成中。" : "已打开这条历史生成记录，可以继续修改或重新生成。",
+            text: log.status === "失败" ? log.error || workspaceT()("image.historyTaskFailed") : log.status === "生成中" ? workspaceT()("image.historyTaskPending") : workspaceT()("image.historyOpened"),
         },
     ];
 }

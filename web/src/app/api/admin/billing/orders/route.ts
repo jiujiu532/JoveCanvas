@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { isBillingInputError, listAdminBillingOrders } from "@/lib/server/billing-service";
 import type { BillingOrderStatus } from "@/lib/server/database";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         });
         return NextResponse.json({ orders: result.items, total: result.total, page: result.page, pageSize: result.pageSize });
     } catch (error) {
-        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin list billing orders failed", error);
         return NextResponse.json({ error: await serverMessage("billing.getOrderFailed") }, { status: 500 });
     }

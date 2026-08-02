@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-log-store";
 import { isBillingInputError, listBillingProducts, upsertBillingProduct } from "@/lib/server/billing-service";
 import type { BillingProductInput } from "@/lib/server/billing-service";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ export async function GET() {
     try {
         return NextResponse.json({ products: await listBillingProducts(true) });
     } catch (error) {
-        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin list billing products failed", error);
         return NextResponse.json({ error: await serverMessage("billing.getPlanProductsFailed") }, { status: 500 });
     }
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
             target: { type: "billing_product" },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin upsert billing product failed", error);
         return NextResponse.json({ error: await serverMessage("billing.saveProductFailed") }, { status: 500 });
     }

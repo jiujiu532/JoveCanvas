@@ -44,6 +44,12 @@ type Props = {
 
 export function AdminChannelWorkspace({ settings, fetchingModelId, testingChannelKey, healthResults, saving, onChange, onDeleteChannel, onFetchModels, onFetchAll, onTestHealth, onTestAll, onPersist }: Props) {
     const t = useTranslations("admin");
+    const capabilityLabels = {
+        text: t("channelEditor.kinds.text"),
+        image: t("channelEditor.kinds.image"),
+        video: t("channelEditor.kinds.video"),
+        audio: t("channelEditor.kinds.audio"),
+    };
     const [activeTab, setActiveTab] = useState("channels");
     const [query, setQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<ChannelWorkspaceStatus | "all">("all");
@@ -89,7 +95,7 @@ export function AdminChannelWorkspace({ settings, fetchingModelId, testingChanne
         },
         { title: t("channelWorkspace.columns.protocol"), key: "protocol", width: 190, render: (_, channel) => <span className="text-sm">{channelProtocolLabel(channel)}</span> },
         { title: t("channelWorkspace.columns.models"), key: "models", width: 90, align: "center", render: (_, channel) => channel.models.length },
-        { title: t("channelWorkspace.columns.capabilities"), key: "capabilities", width: 170, render: (_, channel) => <span className="text-xs text-stone-600 dark:text-stone-300">{channelCapabilityLabels(channel).join("、") || t("channelWorkspace.pendingDetect")}</span> },
+        { title: t("channelWorkspace.columns.capabilities"), key: "capabilities", width: 170, render: (_, channel) => <span className="text-xs text-stone-600 dark:text-stone-300">{channelCapabilityLabels(channel, capabilityLabels).join(" / ") || t("channelWorkspace.pendingDetect")}</span> },
         { title: t("channelWorkspace.columns.bindings"), key: "bindings", width: 80, align: "center", render: (_, channel) => channelBindingCount(channel.id, settings) },
         {
             title: t("channelWorkspace.columns.enabled"),
@@ -107,8 +113,8 @@ export function AdminChannelWorkspace({ settings, fetchingModelId, testingChanne
                     <Button size="small" onClick={() => setDetailId(channel.id)}>
                         {t("channelWorkspace.view")}
                     </Button>
-                    <Button size="small" icon={<RefreshCw className="size-3.5" />} loading={fetchingModelId === channel.id} aria-label={`同步 ${channel.name} 模型`} title={t("channelWorkspace.syncModelsTitle")} onClick={() => void onFetchModels(channel)} />
-                    <Button size="small" icon={<FlaskConical className="size-3.5" />} loading={testingChannelKey === `${channel.id}:all`} aria-label={`检测 ${channel.name}`} title={t("channelWorkspace.testChannelTitle")} onClick={() => void onTestAll(channel)} />
+                    <Button size="small" icon={<RefreshCw className="size-3.5" />} loading={fetchingModelId === channel.id} aria-label={t("channelWorkspace.syncModelsAria", { name: channel.name })} title={t("channelWorkspace.syncModelsTitle")} onClick={() => void onFetchModels(channel)} />
+                    <Button size="small" icon={<FlaskConical className="size-3.5" />} loading={testingChannelKey === `${channel.id}:all`} aria-label={t("channelWorkspace.testChannelAria", { name: channel.name })} title={t("channelWorkspace.testChannelTitle")} onClick={() => void onTestAll(channel)} />
                     <Popconfirm title={t("channelWorkspace.deleteTitle")} description={t("channelWorkspace.deleteDesc")} okText={t("channelWorkspace.delete")} cancelText={t("channelWorkspace.cancel")} onConfirm={() => onDeleteChannel(channel.id)}>
                         <Button size="small" danger icon={<Trash2 className="size-3.5" />} aria-label={t("channelWorkspace.deleteAria", { name: channel.name })} title={t("channelWorkspace.deleteAria", { name: channel.name })} />
                     </Popconfirm>
@@ -321,15 +327,20 @@ function ChannelList({
                         </div>
                         <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-500 dark:text-stone-400">
                             <span>{t("channelWorkspace.modelCount", { count: channel.models.length })}</span>
-                            <span>{channelCapabilityLabels(channel).join("、") || t("channelWorkspace.capabilityPending")}</span>
+                            <span>{channelCapabilityLabels(channel, {
+                                text: t("channelEditor.kinds.text"),
+                                image: t("channelEditor.kinds.image"),
+                                video: t("channelEditor.kinds.video"),
+                                audio: t("channelEditor.kinds.audio"),
+                            }).join(" / ") || t("channelWorkspace.capabilityPending")}</span>
                             <span>{t("channelWorkspace.bindingCount", { count: channelBindingCount(channel.id, settings) })}</span>
                         </div>
                         <div className="mt-3 flex items-center gap-2 border-t border-stone-100 pt-3 dark:border-stone-900">
                             <Button size="small" className="min-w-0 flex-1" onClick={() => onOpen(channel.id)}>
                                 {t("channelWorkspace.view")}
                             </Button>
-                            <Button size="small" icon={<RefreshCw className="size-3.5" />} loading={fetchingModelId === channel.id} aria-label={`同步 ${channel.name} 模型`} onClick={() => onFetch(channel)} />
-                            <Button size="small" icon={<FlaskConical className="size-3.5" />} loading={testingChannelKey === `${channel.id}:all`} aria-label={`检测 ${channel.name}`} onClick={() => onTest(channel)} />
+                            <Button size="small" icon={<RefreshCw className="size-3.5" />} loading={fetchingModelId === channel.id} aria-label={t("channelWorkspace.syncModelsAria", { name: channel.name })} onClick={() => onFetch(channel)} />
+                            <Button size="small" icon={<FlaskConical className="size-3.5" />} loading={testingChannelKey === `${channel.id}:all`} aria-label={t("channelWorkspace.testChannelAria", { name: channel.name })} onClick={() => onTest(channel)} />
                         </div>
                     </div>
                 ))}
@@ -347,8 +358,8 @@ function ProtocolCenter({ settings, onCreate, onOpenChannel }: { settings: Chann
         <div className="space-y-6">
             <section>
                 <div className="mb-3 flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">内置协议</div>
-                    <Tag>{definitions.length} 个</Tag>
+                    <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("channelWorkspace.builtInProtocols")}</div>
+                    <Tag>{t("channelWorkspace.countUnit", { count: definitions.length })}</Tag>
                 </div>
                 <div className="grid gap-2 lg:grid-cols-2">
                     {definitions.map((definition) => {
@@ -359,20 +370,25 @@ function ProtocolCenter({ settings, onCreate, onOpenChannel }: { settings: Chann
                                     <div className="min-w-0">
                                         <div className="flex flex-wrap items-center gap-2">
                                             <span className="text-sm font-semibold text-stone-950 dark:text-stone-100">{definition.label}</span>
-                                            <Tag className="m-0">内置</Tag>
-                                            {definition.strict ? <Tag className="m-0 !border-stone-300 !bg-stone-50 !text-stone-700 dark:!border-stone-700 dark:!bg-stone-900 dark:!text-stone-200">严格</Tag> : null}
+                                            <Tag className="m-0">{t("channelWorkspace.builtIn")}</Tag>
+                                            {definition.strict ? <Tag className="m-0 !border-stone-300 !bg-stone-50 !text-stone-700 dark:!border-stone-700 dark:!bg-stone-900 dark:!text-stone-200">{t("channelWorkspace.strict")}</Tag> : null}
                                         </div>
                                         <div className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">{definition.description}</div>
                                     </div>
                                     <Button size="small" onClick={() => onCreate(definition.id)}>
-                                        接入
+                                        {t("channelWorkspace.connect")}
                                     </Button>
                                 </div>
                                 <div className="mt-3 flex flex-wrap items-center gap-1.5">
                                     {definition.capabilities.map((capability) => (
-                                        <Tag key={capability}>{capabilityLabel(capability)}</Tag>
+                                        <Tag key={capability}>{capabilityLabel(capability, {
+                                            text: t("channelEditor.kinds.text"),
+                                            image: t("channelEditor.kinds.image"),
+                                            video: t("channelEditor.kinds.video"),
+                                            audio: t("channelEditor.kinds.audio"),
+                                        })}</Tag>
                                     ))}
-                                    <span className="ml-auto text-xs text-stone-500 dark:text-stone-400">{used} 个渠道使用</span>
+                                    <span className="ml-auto text-xs text-stone-500 dark:text-stone-400">{t("channelWorkspace.usedBy", { count: used })}</span>
                                 </div>
                             </div>
                         );
@@ -382,11 +398,11 @@ function ProtocolCenter({ settings, onCreate, onOpenChannel }: { settings: Chann
             <section>
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <div>
-                        <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">自定义协议草稿</div>
-                        <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">当前版本保存于具体渠道；完成 AdapterRevision 数据结构后再提供跨渠道发布与回滚。</div>
+                        <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("channelWorkspace.customDrafts")}</div>
+                        <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{t("channelWorkspace.customDraftsHint")}</div>
                     </div>
                     <Button icon={<Plus className="size-4" />} onClick={() => onCreate("custom")}>
-                        创建自定义协议
+                        {t("channelWorkspace.createCustom")}
                     </Button>
                 </div>
                 <div className="divide-y divide-stone-200 border-y border-stone-200 dark:divide-stone-800 dark:border-stone-800">
@@ -394,17 +410,17 @@ function ProtocolCenter({ settings, onCreate, onOpenChannel }: { settings: Chann
                         <div key={channel.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="min-w-0">
                                 <div className="truncate text-sm font-medium text-stone-950 dark:text-stone-100">{channel.name}</div>
-                                <div className="mt-1 truncate text-xs text-stone-500 dark:text-stone-400">{channel.advancedConfig?.documentationUrl || channel.baseUrl || "未填写文档和地址"}</div>
+                                <div className="mt-1 truncate text-xs text-stone-500 dark:text-stone-400">{channel.advancedConfig?.documentationUrl || channel.baseUrl || t("channelWorkspace.docUrlMissing")}</div>
                             </div>
                             <Space>
-                                <Tag>{channel.enabled ? "渠道已启用" : "渠道级草稿"}</Tag>
+                                <Tag>{channel.enabled ? t("channelWorkspace.channelEnabled") : t("channelWorkspace.channelDraft")}</Tag>
                                 <Button size="small" onClick={() => onOpenChannel(channel.id)}>
-                                    继续配置
+                                    {t("channelWorkspace.continueConfig")}
                                 </Button>
                             </Space>
                         </div>
                     ))}
-                    {!customChannels.length ? <div className="py-8 text-center text-sm text-stone-500 dark:text-stone-400">还没有自定义协议草稿</div> : null}
+                    {!customChannels.length ? <div className="py-8 text-center text-sm text-stone-500 dark:text-stone-400">{t("channelWorkspace.noCustomDrafts")}</div> : null}
                 </div>
             </section>
         </div>
@@ -417,26 +433,31 @@ function ValidationRecords({ settings, healthResults, onOpen }: { settings: Chan
     return (
         <div>
             <div className="mb-3 flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400">
-                <ListFilter className="size-4" /> 当前管理会话的能力检测结果
+                <ListFilter className="size-4" /> {t("channelWorkspace.sessionResults")}
             </div>
             <div className="divide-y divide-stone-200 border-y border-stone-200 dark:divide-stone-800 dark:border-stone-800">
                 {records.map(({ key, result, channel }) => (
                     <button key={key} type="button" className="flex w-full min-w-0 flex-col gap-2 py-3 text-left hover:bg-stone-50 sm:flex-row sm:items-center sm:justify-between dark:hover:bg-stone-900/60" onClick={() => onOpen(channel.id)}>
                         <div className="min-w-0 px-2">
                             <div className="truncate text-sm font-medium text-stone-950 dark:text-stone-100">
-                                {channel.name} · {capabilityLabel(result.kind)}
+                                {channel.name} · {capabilityLabel(result.kind, {
+                                    text: t("channelEditor.kinds.text"),
+                                    image: t("channelEditor.kinds.image"),
+                                    video: t("channelEditor.kinds.video"),
+                                    audio: t("channelEditor.kinds.audio"),
+                                })}
                             </div>
                             <div className="mt-1 truncate text-xs text-stone-500 dark:text-stone-400">
-                                {result.model || "未选择模型"} · {result.protocol || channelProtocolLabel(channel)}
+                                {result.model || t("channelWorkspace.modelUnset")} · {result.protocol || channelProtocolLabel(channel)}
                             </div>
                         </div>
                         <div className="flex shrink-0 items-center gap-2 px-2">
                             <span className="text-xs text-stone-500 dark:text-stone-400">HTTP {result.status || "-"}</span>
-                            <Tag color={result.ok ? "success" : "error"}>{result.ok ? "通过" : "失败"}</Tag>
+                            <Tag color={result.ok ? "success" : "error"}>{result.ok ? t("channelWorkspace.pass") : t("channelWorkspace.fail")}</Tag>
                         </div>
                     </button>
                 ))}
-                {!records.length ? <div className="py-12 text-center text-sm text-stone-500 dark:text-stone-400">还没有验证记录，请在渠道列表执行检测</div> : null}
+                {!records.length ? <div className="py-12 text-center text-sm text-stone-500 dark:text-stone-400">{t("channelWorkspace.noValidation")}</div> : null}
             </div>
         </div>
     );

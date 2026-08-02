@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth/session";
 import { CreativeRuntimeServiceError, getAssetForUser } from "@/lib/server/creative-runtime-service";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser();
@@ -11,7 +11,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
         const asset = await getAssetForUser(user.id, (await params).id);
         return NextResponse.json({ code: 0, data: { asset }, msg: "OK" });
     } catch (error) {
-        if (error instanceof CreativeRuntimeServiceError) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
+        if (error instanceof CreativeRuntimeServiceError) return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });
         throw error;
     }
 }

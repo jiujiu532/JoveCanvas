@@ -16,13 +16,14 @@ import {
     removeStoredLogs,
     saveStoredLog,
     withLogOwner,
-    WORKBENCH_DEFAULT_ERROR,
-    WORKBENCH_DEFAULT_TITLE,
+    workbenchDefaultError,
+    workbenchDefaultTitle,
     type BaseGenerationFailure,
     type BaseGenerationLog,
     type BaseGenerationResult,
     type BaseGenerationSnapshot,
 } from "../shared/workbench-records-base";
+import { workspaceT } from "../shared/workspace-i18n-runtime";
 
 export type { BaseGenerationFailure, BaseGenerationLog, BaseGenerationResult, BaseGenerationSnapshot };
 export { withLogOwner };
@@ -266,7 +267,7 @@ export async function serverImageLogToWorkbenchLog(record: StoredGenerationLogRe
             ? [{ resultId: slot.id, taskId: slot.taskId, kind: slot.taskKind === "edit" ? "edit" : "generation", model: slot.taskModel || parameters.model || record.model, index: slot.index, startedAt: slot.startedAt || createdAt }]
             : [],
     );
-    const failures = (snapshot?.slots || []).flatMap((slot): GenerationFailure[] => (slot.status === "failed" ? [{ resultId: slot.id, index: slot.index, error: slot.error || record.error || WORKBENCH_DEFAULT_ERROR }] : []));
+    const failures = (snapshot?.slots || []).flatMap((slot): GenerationFailure[] => (slot.status === "failed" ? [{ resultId: slot.id, index: slot.index, error: slot.error || record.error || workbenchDefaultError() }] : []));
     const references = (snapshot?.references || []).flatMap(imageReferenceFromSnapshot);
     const pendingCount = (snapshot?.slots || []).filter((slot) => slot.status === "pending").length;
     return normalizeLog({
@@ -333,7 +334,7 @@ export async function recordImageWorkbenchLog(log: GenerationLog) {
         title: log.title,
         prompt: log.prompt,
         model: log.model || log.config.imageModel || log.config.model,
-        summary: log.pendingCount ? "图片生成中" : log.failCount && !log.successCount ? "图片生成失败" : "图片生成完成",
+        summary: log.pendingCount ? workspaceT()("image.imageGenerating") : log.failCount && !log.successCount ? workspaceT()("image.imageFailed") : workspaceT()("image.imageCompleted"),
         durationMs: log.durationMs,
         count: log.imageCount || Math.max(1, assets.length + (log.failCount || 0)),
         successCount: log.successCount || assets.length,
@@ -369,7 +370,7 @@ async function normalizeLog(log: Partial<GenerationLog>): Promise<GenerationLog>
         ownerUserId: log.ownerUserId,
         creativeConversationId: log.creativeConversationId,
         createdAt: log.createdAt || Date.now(),
-        title: log.title || log.model || WORKBENCH_DEFAULT_TITLE,
+        title: log.title || log.model || workbenchDefaultTitle(),
         prompt: log.prompt || log.title || "",
         time: log.time || formatWorkbenchTime(),
         model: log.model || config.imageModel || "",
@@ -411,7 +412,7 @@ export async function normalizeGeneratedImage(url: string, remoteFallback = "", 
     const remoteUrl = isRemoteImageUrl(remoteFallback) ? remoteFallback : isRemoteImageUrl(url) ? url : "";
     const serverUrl = isServerImageUrl(serverFallback) ? serverFallback : isServerImageUrl(url) ? url : "";
     const fallbackUrl = serverUrl || (!isLocalImageUrl(url) ? url : "") || remoteUrl;
-    if (!fallbackUrl) throw new Error("生成结果未保存到服务器，请重试");
+    if (!fallbackUrl) throw new Error(workspaceT()("image.resultNotSaved"));
     if (!serverUrl) {
         const stored = await uploadImage(fallbackUrl);
         return { url: stored.url, remoteUrl: remoteUrl || undefined, serverUrl: stored.url, width: stored.width, height: stored.height, bytes: stored.bytes, mimeType: stored.mimeType, storageKey: stored.storageKey };
@@ -466,7 +467,7 @@ export function resultsFromLog(log: GenerationLog): GenerationResult[] {
     (log.failures || []).forEach((failure, fallbackIndex) => {
         if (usedResultIds.has(failure.resultId)) return;
         usedResultIds.add(failure.resultId);
-        entries.push({ index: failure.index ?? entries.length + fallbackIndex, result: { id: failure.resultId, status: "failed", error: failure.error || log.error || WORKBENCH_DEFAULT_ERROR } });
+        entries.push({ index: failure.index ?? entries.length + fallbackIndex, result: { id: failure.resultId, status: "failed", error: failure.error || log.error || workbenchDefaultError() } });
     });
     const knownPendingCount = entries.filter((entry) => entry.result.status === "pending").length;
     const missingPendingCount = Math.max(0, (log.pendingCount || 0) - knownPendingCount);
@@ -476,7 +477,7 @@ export function resultsFromLog(log: GenerationLog): GenerationResult[] {
     const knownFailureCount = entries.filter((entry) => entry.result.status === "failed").length;
     const missingFailureCount = Math.max(0, (log.failCount || 0) - knownFailureCount);
     for (let index = 0; index < missingFailureCount; index += 1) {
-        entries.push({ index: entries.length, result: { id: `${log.id}-failed-${index}`, status: "failed", error: log.error || WORKBENCH_DEFAULT_ERROR } });
+        entries.push({ index: entries.length, result: { id: `${log.id}-failed-${index}`, status: "failed", error: log.error || workbenchDefaultError() } });
     }
     return entries.sort((a, b) => a.index - b.index).map((entry) => entry.result);
 }
@@ -494,7 +495,7 @@ function normalizeLogConfig(log: Partial<GenerationLog>): GenerationLogConfig {
 export function buildLogFromResults(baseLog: GenerationLog | null, snapshot: GenerationSnapshot, results: GenerationResult[], durationMs: number, count: string, error?: string): GenerationLog {
     const images = results.flatMap((item, index) => (item.status === "success" && item.image ? [{ ...item.image, id: item.id, slotIndex: item.image.slotIndex ?? index }] : []));
     const imageTasks = results.flatMap((item, index) => (item.status === "pending" && item.task ? [{ ...item.task, resultId: item.id, index }] : []));
-    const failures = results.flatMap((item, index) => (item.status === "failed" ? [{ resultId: item.id, index, error: item.error || error || WORKBENCH_DEFAULT_ERROR }] : []));
+    const failures = results.flatMap((item, index) => (item.status === "failed" ? [{ resultId: item.id, index, error: item.error || error || workbenchDefaultError() }] : []));
     const pendingCount = results.filter((item) => item.status === "pending").length;
     const failCount = failures.length;
     const logConfig = buildLogConfig(snapshot.config, count);
@@ -567,7 +568,7 @@ function buildLog({
         id: baseLog?.id || nanoid(),
         creativeConversationId: baseLog?.creativeConversationId,
         createdAt: baseLog?.createdAt || Date.now(),
-        title: baseLog?.title || requestSnapshot.userPrompt?.slice(0, 12) || prompt.slice(0, 12) || WORKBENCH_DEFAULT_TITLE,
+        title: baseLog?.title || requestSnapshot.userPrompt?.slice(0, 12) || prompt.slice(0, 12) || workbenchDefaultTitle(),
         prompt,
         time: formatWorkbenchTime(),
         model,
@@ -647,7 +648,7 @@ function mergeImageRequestSnapshot(base: GenerationLogRequestSnapshot | undefine
             taskKind: task?.kind || previous?.taskKind,
             taskModel: task?.model || previous?.taskModel || parameters.model,
             startedAt: task?.startedAt || previous?.startedAt,
-            error: result.status === "failed" ? result.error || error || previous?.error || WORKBENCH_DEFAULT_ERROR : undefined,
+            error: result.status === "failed" ? result.error || error || previous?.error || workbenchDefaultError() : undefined,
         };
         if (result.status === "success") assetIndex += 1;
         return slot;

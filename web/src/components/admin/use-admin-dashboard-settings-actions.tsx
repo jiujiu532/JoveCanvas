@@ -187,7 +187,7 @@ export function useAdminDashboardSettingsActions({ state, data }: { state: Admin
     };
 
     const addChannel = () => {
-        setSettings((current) => ({ ...current, systemChannels: [...current.systemChannels, createSystemChannel()] }));
+        setSettings((current) => ({ ...current, systemChannels: [...current.systemChannels, createSystemChannel(t("dashboardElements.newChannelName"))] }));
     };
 
     const deleteChannel = (id: string) => {
@@ -413,7 +413,7 @@ export function useAdminDashboardSettingsActions({ state, data }: { state: Admin
         setFetchingModelId(channel.id);
         try {
             const result = await requestAdminModels(channel, t("dashboardElements.pullModelsFailed"));
-            updateChannel(channel.id, adminModelsChannelPatch(channel, result));
+            updateChannel(channel.id, adminModelsChannelPatch(channel, result, t));
             const discovered = result.discoveredCount ?? result.models.length;
             const total = result.totalCount ?? result.models.length;
             message.success(t("settingsActions.modelsPulled", { name: channel.name || t("settingsActions.channelFallback"), count: total }) + (result.warning ? `；${result.warning}` : ""));
@@ -440,7 +440,7 @@ export function useAdminDashboardSettingsActions({ state, data }: { state: Admin
                     ...current,
                     systemChannels: current.systemChannels.map((channel) => {
                         const result = modelMap.get(channel.id);
-                        return result ? { ...channel, ...adminModelsChannelPatch(channel, result) } : channel;
+                        return result ? { ...channel, ...adminModelsChannelPatch(channel, result, t) } : channel;
                     }),
                 }));
             }
@@ -534,8 +534,8 @@ export function useAdminDashboardSettingsActions({ state, data }: { state: Admin
             let detectedModels = channel.models;
             if (!detectedModels.length || (isGlobalAiOpcBaseUrl(channel.baseUrl) && channel.advancedConfig?.protocol !== "globalaiopc")) {
                 try {
-                    const catalog = await requestAdminModels(channel);
-                    const patch = adminModelsChannelPatch(channel, catalog);
+                    const catalog = await requestAdminModels(channel, t("dashboardElements.pullModelsFailed"));
+                    const patch = adminModelsChannelPatch(channel, catalog, t);
                     channelForTest = { ...channel, ...patch };
                     detectedModels = catalog.models;
                 } catch {
@@ -544,7 +544,7 @@ export function useAdminDashboardSettingsActions({ state, data }: { state: Admin
             }
             detectedModels = uniqueList([...detectedModels, ...suggestedChannelModels(channel)]);
             channelForTest = { ...channelForTest, models: detectedModels };
-            if (detectedModels.length) updateChannel(channel.id, adminModelsChannelPatch(channelForTest, { models: detectedModels, globalAiOpcPresets: channelForTest.advancedConfig?.globalAiOpcPresets }));
+            if (detectedModels.length) updateChannel(channel.id, adminModelsChannelPatch(channelForTest, { models: detectedModels, globalAiOpcPresets: channelForTest.advancedConfig?.globalAiOpcPresets }, t));
             const kinds = channelHealthKinds(channelForTest);
             if (!kinds.length) {
                 message.warning(t("settingsActions.noDetectableModel"));
@@ -605,7 +605,7 @@ export function useAdminDashboardSettingsActions({ state, data }: { state: Admin
 
 export type AdminDashboardSettingsActions = ReturnType<typeof useAdminDashboardSettingsActions>;
 
-function adminModelsChannelPatch(channel: SystemModelChannel, result: AdminModelsResult): Partial<SystemModelChannel> {
+function adminModelsChannelPatch(channel: SystemModelChannel, result: AdminModelsResult, t: (key: string) => string): Partial<SystemModelChannel> {
     const advanced = channel.advancedConfig || createDefaultChannelAdvancedConfig();
     const models = uniqueList([...channel.models, ...result.models]);
     const modelCapabilities = { ...(advanced.modelCapabilities || {}), ...(result.modelCapabilities || {}) };
@@ -638,7 +638,7 @@ function adminModelsChannelPatch(channel: SystemModelChannel, result: AdminModel
             queryPath: selection.queryPath,
             requestTemplate: "",
             durationRange: selection.durationRange,
-            referenceRule: "参考素材使用可被上游访问的公网 URL；由服务器在提交前生成受控访问地址。",
+            referenceRule: t("channelEditor.publicReferenceRule"),
             supportsReferenceImage: selection.supportsReferenceImage,
             supportsReferenceVideo: selection.supportsReferenceVideo,
             supportsReferenceAudio: selection.supportsReferenceAudio,

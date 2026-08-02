@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth/session";
 import { createLibraryAssetForUser, LibraryAssetServiceError, listLibraryAssetPageForUser, listLibraryAssetsForUser } from "@/lib/server/library-asset-service";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export async function GET(request: Request) {
     const user = await getCurrentUser();
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     }
 }
 
-function serviceError(error: unknown) {
-    if (error instanceof LibraryAssetServiceError) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
+async function serviceError(error: unknown) {
+    if (error instanceof LibraryAssetServiceError) return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });
     throw error;
 }

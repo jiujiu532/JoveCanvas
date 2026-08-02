@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-log-store";
 import { isBillingInputError } from "@/lib/server/billing-errors";
 import { getBillingReconciliationRun, importBillingStatement, listBillingReconciliationRuns } from "@/lib/server/payment-reconciliation-service";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
         });
         return NextResponse.json({ runs: result.items, total: result.total, page: result.page, pageSize: result.pageSize });
     } catch (error) {
-        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin billing reconciliation list failed", error);
         return NextResponse.json({ error: await serverMessage("billing.reconListFailed") }, { status: 500 });
     }
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
             target: { type: "billing_reconciliation" },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin billing reconciliation failed", error);
         return NextResponse.json({ error: await serverMessage("billing.reconFailed") }, { status: 500 });
     }

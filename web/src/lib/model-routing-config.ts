@@ -139,7 +139,8 @@ export function modelRoutingValidationErrors(logicalModels: LogicalModel[], chan
     return Array.from(new Set(errors));
 }
 
-export function capabilityLabel(capability: LogicalModelCapability) {
+export function capabilityLabel(capability: LogicalModelCapability, labels?: Partial<Record<LogicalModelCapability, string>>) {
+    if (labels?.[capability]) return labels[capability]!;
     return capability === "text" ? "文本" : capability === "image" ? "图片" : capability === "video" ? "视频" : "音频";
 }
 

@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { auditActorFromRequest, safeRecordAuditLog } from "@/lib/server/audit-log-store";
 import { deleteBillingProduct, isBillingInputError, updateBillingProduct } from "@/lib/server/billing-service";
 import type { BillingProductInput } from "@/lib/server/billing-service";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,7 +37,7 @@ export async function PATCH(request: Request, context: RouteContext) {
             target: { type: "billing_product" },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin update billing product failed", error);
         return NextResponse.json({ error: await serverMessage("billing.updateProductFailed") }, { status: 500 });
     }
@@ -65,7 +65,7 @@ export async function DELETE(request: Request, context: RouteContext) {
             target: { type: "billing_product" },
             metadata: { error: error instanceof Error ? error.message : "unknown" },
         });
-        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Admin disable billing product failed", error);
         return NextResponse.json({ error: await serverMessage("billing.deleteProductFailed") }, { status: 500 });
     }

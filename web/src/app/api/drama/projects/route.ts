@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth/session";
 import { createDramaProjectForUser, DramaProjectServiceError, listDramaProjectSummariesForUser } from "@/lib/server/drama-project-service";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export async function GET(request: Request) {
     const user = await getCurrentUser();
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
         const project = await createDramaProjectForUser(user.id, body);
         return NextResponse.json({ code: 0, data: { project }, msg: await serverMessage("drama.projectCreated") });
     } catch (error) {
-        if (error instanceof DramaProjectServiceError) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
+        if (error instanceof DramaProjectServiceError) return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });
         throw error;
     }
 }

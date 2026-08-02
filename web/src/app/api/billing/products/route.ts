@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { isBillingInputError, listBillingProducts } from "@/lib/server/billing-service";
 import { getPaymentConfigSummary } from "@/lib/server/payment-config-status";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export async function GET() {
             paymentProviders: paymentConfig.providers.filter((provider) => provider.enabled && provider.checkoutReady).map((provider) => provider.id),
         });
     } catch (error) {
-        if (isBillingInputError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (isBillingInputError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("List billing products failed", error);
         return NextResponse.json({ error: await serverMessage("billing.getPlanProductsFailed") }, { status: 500 });
     }

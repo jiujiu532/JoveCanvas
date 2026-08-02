@@ -1,6 +1,7 @@
 import { imageReferenceLabel } from "@/lib/image-reference-prompt";
 import { seedanceReferenceLabel } from "@/lib/seedance-video";
 import { CanvasNodeType, isCanvasImageNodeType, type CanvasConnection, type CanvasNodeData } from "../types";
+import { canvasT } from "../canvas-i18n-runtime";
 
 type CanvasResourceKind = "image" | "video" | "audio" | "text";
 
@@ -82,7 +83,7 @@ function labelForKind(kind: CanvasResourceKind, index: number) {
     if (kind === "image") return imageReferenceLabel(index);
     if (kind === "video") return seedanceReferenceLabel("video", index);
     if (kind === "audio") return seedanceReferenceLabel("audio", index);
-    return `文本${index + 1}`;
+    return canvasT()("kind.textIndexed", { index: index + 1 });
 }
 
 function isResourceNode(node: CanvasNodeData) {

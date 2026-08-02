@@ -30,7 +30,7 @@ import { AdminSectionNav, adminSections } from "@/components/admin/admin-section
 import type { AdminSectionKey } from "@/components/admin/admin-sections";
 import { UpdateCenterPanel } from "@/components/admin/admin-update-center";
 import { LabeledControl, SectionTitle, SettingInlineToggle, SettingToggle } from "@/components/admin/admin-settings-controls";
-import { SiteLogoPreview, SiteSettingStatus, SiteShowcasePreview, siteSocialItems } from "@/components/admin/admin-site-preview";
+import { SiteLogoPreview, SiteSettingStatus, SiteShowcasePreview, useSiteSocialItems } from "@/components/admin/admin-site-preview";
 import { createDefaultChannelAdvancedConfig, healthKindLabel, SystemChannelEditor } from "@/components/admin/admin-system-channel-editor";
 import type { ChannelHealthKind, ChannelHealthResult } from "@/components/admin/admin-system-channel-editor";
 import { formatAdminMoney, toNumberOrOne, toNumberOrZero, uniqueList } from "@/components/admin/admin-values";
@@ -103,6 +103,7 @@ import { PROMPT_PAGE_SIZE, PROMPT_SEARCH_DEBOUNCE_MS, CDK_PAGE_SIZE, GENERATION_
 
 export function AdminSiteSection({ controller }: { controller: AdminDashboardController }) {
     const t = useTranslations("admin");
+    const siteSocialItems = useSiteSocialItems();
     const {
         logoInputRef,
         iconInputRef,

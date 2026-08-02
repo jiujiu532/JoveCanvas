@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { App, Button, Checkbox, DatePicker, Form, Input, InputNumber, Modal, Pagination, Popconfirm, Segmented, Select, Space, Switch, Table, Tag } from "antd";
 import type { TableColumnsType } from "antd";
@@ -153,6 +154,7 @@ import type { AdminDashboardDataActions } from "./use-admin-dashboard-data-actio
 import type { AdminDashboardSettingsActions } from "./use-admin-dashboard-settings-actions";
 
 export function useAdminDashboardEffects({ state, data, settingsActions }: { state: AdminDashboardState; data: AdminDashboardDataActions; settingsActions: AdminDashboardSettingsActions }) {
+    const t = useTranslations("admin");
     const {
         initialSection,
         settings,
@@ -190,8 +192,8 @@ export function useAdminDashboardEffects({ state, data, settingsActions }: { sta
         if (activeSection !== "skills" || settingsLoading) return;
         void fetch("/api/admin/agent-readiness", { cache: "no-store" })
             .then((response) => (response.ok ? response.json() : null))
-            .then((payload) => setAgentReadiness(payload?.data || localAgentReadiness(settings)));
-    }, [activeSection, settings, settingsLoading, setAgentReadiness]);
+            .then((payload) => setAgentReadiness(payload?.data || localAgentReadiness(settings, t)));
+    }, [activeSection, settings, settingsLoading, setAgentReadiness, t]);
 
     useEffect(() => {
         const timer = window.setTimeout(() => setDebouncedPromptSearch(promptSearch.trim()), PROMPT_SEARCH_DEBOUNCE_MS);

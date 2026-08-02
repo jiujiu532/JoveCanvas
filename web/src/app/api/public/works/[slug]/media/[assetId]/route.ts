@@ -8,7 +8,7 @@ import { createExternalMediaReadUrl } from "@/lib/server/object-storage-service"
 import { readReferenceAsset } from "@/lib/server/reference-asset-store";
 import { checkPublicMediaRateLimit, rateLimitHeaders } from "@/lib/server/security";
 import { authorizePublicWorkPublicationAsset, WorkPublicationServiceError } from "@/lib/server/work-publication-service";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -75,7 +75,7 @@ async function servePublicWorkMedia(request: Request, context: Context) {
             throw error;
         }
     } catch (error) {
-        if (error instanceof WorkPublicationServiceError) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
+        if (error instanceof WorkPublicationServiceError) return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Public work media read failed", error);
         return NextResponse.json({ code: 500, data: null, msg: await serverMessage("media.readWorkMediaFailed") }, { status: 500 });
     }

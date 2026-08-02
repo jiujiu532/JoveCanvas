@@ -80,11 +80,26 @@ export function workbenchAgentProgressHeading(progress: WorkbenchAgentProgress) 
     return progress.shouldGenerate === false ? "已完成需求分析" : "创作任务已就绪";
 }
 
-export function createWorkbenchAgentProgressMessage(id: string, hasReferences: boolean, mediaLabel = "创作需求"): WorkbenchAgentMessage {
+export type WorkbenchAgentProgressMessageLabels = {
+    withReferences: (media: string) => string;
+    withoutReferences: (media: string) => string;
+};
+
+const DEFAULT_PROGRESS_MESSAGE_LABELS: WorkbenchAgentProgressMessageLabels = {
+    withReferences: (media) => `收到，我会根据当前参考素材完成这次${media}。`,
+    withoutReferences: (media) => `收到，我会按你的要求完成这次${media}。`,
+};
+
+export function createWorkbenchAgentProgressMessage(
+    id: string,
+    hasReferences: boolean,
+    mediaLabel = "创作需求",
+    labels: WorkbenchAgentProgressMessageLabels = DEFAULT_PROGRESS_MESSAGE_LABELS,
+): WorkbenchAgentMessage {
     return {
         id,
         role: "assistant",
-        text: hasReferences ? `收到，我会根据当前参考素材完成这次${mediaLabel}。` : `收到，我会按你的要求完成这次${mediaLabel}。`,
+        text: hasReferences ? labels.withReferences(mediaLabel) : labels.withoutReferences(mediaLabel),
         progress: { phase: "planning", hasReferences },
     };
 }

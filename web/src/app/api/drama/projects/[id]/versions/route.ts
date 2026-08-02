@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth/session";
 import { createDramaProjectVersionForUser, DramaProjectServiceError, listDramaProjectVersionsForUser } from "@/lib/server/drama-project-service";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -24,7 +24,7 @@ async function handle(context: Context, action: (userId: string, id: string) => 
     try {
         return await action(user.id, (await context.params).id);
     } catch (error) {
-        if (error instanceof DramaProjectServiceError) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
+        if (error instanceof DramaProjectServiceError) return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });
         throw error;
     }
 }

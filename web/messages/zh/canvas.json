@@ -328,7 +328,9 @@
     "referenceImages": "本轮参考图片",
     "uploadingName": "{name} 上传中",
     "retryUploadName": "重试上传图片：{name}",
-    "uploadingImage": "正在上传图片"
+    "uploadingImage": "正在上传图片",
+    "pasteImage": "粘贴图片",
+    "uploadFailed": "图片上传失败"
   },
   "assets": {
     "selectTitle": "选择素材",
@@ -424,7 +426,17 @@
     "wideLens": "广角镜头",
     "standard": "标准",
     "wide": "广角",
-    "generate": "AI 生成"
+    "generate": "AI 生成",
+    "front": "正面视角",
+    "level": "水平视角",
+    "rotateRight": "向右旋转 {degrees} 度",
+    "rotateLeft": "向左旋转 {degrees} 度",
+    "pitchDown": "俯视 {degrees} 度",
+    "pitchUp": "仰视 {degrees} 度",
+    "lensWide": "广角",
+    "lensStandard": "标准",
+    "labelTemplate": "AI 多角度：{horizontal}，{pitch}，镜头距离 {distance}，{lens}镜头",
+    "promptPrefix": "基于参考图重新生成同一主体的新视角，保持主体、颜色、材质和画面风格一致，不要只做透视变形。{label}。"
   },
   "promptPanel": {
     "stopGenerate": "停止生成",
@@ -497,7 +509,8 @@
     "importTitle": "导入画布",
     "saveFailed": "画布项目保存失败",
     "pleaseLogin": "请先登录",
-    "sessionChanged": "登录会话已变更，请重试"
+    "sessionChanged": "登录会话已变更，请重试",
+    "renameFailed": "画布项目重命名失败"
   },
   "panorama": {
     "preparing": "正在准备全景查看器...",
@@ -564,7 +577,8 @@
     "audioFailed": "音频生成失败",
     "maskEditFailed": "局部修改失败",
     "emptyResponse": "没有返回内容",
-    "videoCompleteSummary": "画布视频生成完成"
+    "videoCompleteSummary": "画布视频生成完成",
+    "requestCancelled": "请求已取消"
   },
   "toast": {
     "cannotConnectConfigNodes": "配置节点之间不能连接",
@@ -589,7 +603,8 @@
   "errors": {
     "noSavableText": "没有可保存的文本",
     "noSavableVideo": "没有可保存的视频",
-    "noSavableImage": "没有可保存的图片"
+    "noSavableImage": "没有可保存的图片",
+    "saveImageFailed": "图片保存到服务器失败"
   },
   "modal": {
     "stopGenerationTitle": "停止生成？",

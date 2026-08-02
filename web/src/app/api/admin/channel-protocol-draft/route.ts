@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { readJsonBody } from "@/lib/auth/request";
 import { getCurrentUser } from "@/lib/auth/session";
 import { createChannelProtocolDraft, ProtocolDraftError } from "@/lib/server/channel-protocol-assistant";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
         const draft = await createChannelProtocolDraft({ requestUrl: request.url, cookie: request.headers.get("cookie") || "", userId: currentUser.id, ...body });
         return NextResponse.json({ draft }, { headers: { "Cache-Control": "private, no-store" } });
     } catch (error) {
-        if (error instanceof ProtocolDraftError) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (error instanceof ProtocolDraftError) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Channel protocol draft failed", error instanceof Error ? error.message : error);
         return NextResponse.json({ error: await serverMessage("admin.protocolAnalyzeFailed") }, { status: 502 });
     }

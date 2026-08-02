@@ -301,7 +301,12 @@ function ProtocolSelection({ protocols, selected, onSelect }: { protocols: Retur
                                         key={capability}
                                         className={`rounded border px-1.5 py-0.5 text-[11px] ${active ? "border-stone-400 bg-white text-stone-800 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-200" : "border-stone-200 text-stone-700 dark:border-stone-700 dark:text-stone-300"}`}
                                     >
-                                        {capabilityLabel(capability)}
+                                        {capabilityLabel(capability, {
+                                        text: t("channelEditor.kinds.text"),
+                                        image: t("channelEditor.kinds.image"),
+                                        video: t("channelEditor.kinds.video"),
+                                        audio: t("channelEditor.kinds.audio"),
+                                    })}
                                     </span>
                                 ))}
                             </div>
@@ -396,17 +401,22 @@ function ModelStep({ channel, fetching, onChange, onFetch }: { channel: SystemMo
                     {t("channelOnboarding.syncModels")}
                 </Button>
             </div>
-            <LabeledControl label="模型列表">
-                <Select mode="tags" className="w-full" maxTagCount="responsive" value={channel.models} placeholder="同步失败时可手动输入模型 ID" onChange={(models) => onChange({ models })} />
+            <LabeledControl label={t("channelOnboarding.modelsList")}>
+                <Select mode="tags" className="w-full" maxTagCount="responsive" value={channel.models} placeholder={t("channelOnboarding.manualModelsPlaceholder")} onChange={(models) => onChange({ models })} />
             </LabeledControl>
             <div className="mt-4 divide-y divide-stone-200 border-y border-stone-200 dark:divide-stone-800 dark:border-stone-800">
                 {channel.models.map((model) => (
                     <div key={model} className="flex min-w-0 items-center justify-between gap-3 py-2.5">
                         <span className="min-w-0 truncate text-sm font-medium text-stone-900 dark:text-stone-100">{model}</span>
-                        <Tag className="m-0">{capabilityLabel(channelModelCapability(channel, model))}</Tag>
+                        <Tag className="m-0">{capabilityLabel(channelModelCapability(channel, model), {
+                            text: t("channelEditor.kinds.text"),
+                            image: t("channelEditor.kinds.image"),
+                            video: t("channelEditor.kinds.video"),
+                            audio: t("channelEditor.kinds.audio"),
+                        })}</Tag>
                     </div>
                 ))}
-                {!channel.models.length ? <div className="py-8 text-center text-sm text-stone-500 dark:text-stone-400">尚未获得模型</div> : null}
+                {!channel.models.length ? <div className="py-8 text-center text-sm text-stone-500 dark:text-stone-400">{t("channelOnboarding.noModelsYet")}</div> : null}
             </div>
         </div>
     );
@@ -419,11 +429,11 @@ function ValidationStep({ channel, entries, testing, onTest }: { channel: System
         <div>
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 pb-3 dark:border-stone-800">
                 <div>
-                    <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">能力验证</div>
-                    <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">检测会调用真实上游，图片、视频或音频测试可能产生费用。</div>
+                    <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("channelOnboarding.validateTitle")}</div>
+                    <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{t("channelOnboarding.validateHint")}</div>
                 </div>
                 <Button type="primary" icon={<FlaskConical className="size-4" />} loading={testing} onClick={onTest}>
-                    执行全部检测
+                    {t("channelOnboarding.runAllTests")}
                 </Button>
             </div>
             <div className="mt-4 divide-y divide-stone-200 border-y border-stone-200 dark:divide-stone-800 dark:border-stone-800">
@@ -432,10 +442,15 @@ function ValidationStep({ channel, entries, testing, onTest }: { channel: System
                     return (
                         <div key={kind} className="flex items-center justify-between gap-3 py-3">
                             <div>
-                                <div className="text-sm font-medium text-stone-900 dark:text-stone-100">{capabilityLabel(kind)}</div>
-                                <div className="mt-0.5 text-xs text-stone-500 dark:text-stone-400">{result?.model || "等待检测"}</div>
+                                <div className="text-sm font-medium text-stone-900 dark:text-stone-100">{capabilityLabel(kind, {
+                                    text: t("channelEditor.kinds.text"),
+                                    image: t("channelEditor.kinds.image"),
+                                    video: t("channelEditor.kinds.video"),
+                                    audio: t("channelEditor.kinds.audio"),
+                                })}</div>
+                                <div className="mt-0.5 text-xs text-stone-500 dark:text-stone-400">{result?.model || t("channelOnboarding.awaitTest")}</div>
                             </div>
-                            <Tag color={result ? (result.ok ? "success" : "error") : "default"}>{result ? (result.ok ? "通过" : "失败") : "未检测"}</Tag>
+                            <Tag color={result ? (result.ok ? "success" : "error") : "default"}>{result ? (result.ok ? t("channelOnboarding.pass") : t("channelOnboarding.fail")) : t("channelOnboarding.notTested")}</Tag>
                         </div>
                     );
                 })}
@@ -445,11 +460,16 @@ function ValidationStep({ channel, entries, testing, onTest }: { channel: System
                     className="mt-4"
                     type="warning"
                     showIcon
-                    message="部分能力需要检查"
+                    message={t("channelOnboarding.partialFail")}
                     description={entries
                         .filter(({ result }) => !result.ok)
-                        .map(({ result }) => result.error || `${capabilityLabel(result.kind)}检测失败`)
-                        .join("；")}
+                        .map(({ result }) => result.error || t("channelOnboarding.testFailed", { capability: capabilityLabel(result.kind, {
+                            text: t("channelEditor.kinds.text"),
+                            image: t("channelEditor.kinds.image"),
+                            video: t("channelEditor.kinds.video"),
+                            audio: t("channelEditor.kinds.audio"),
+                        }) }))
+                        .join("; ")}
                 />
             ) : null}
         </div>
@@ -491,43 +511,53 @@ function BindingStep({
     return (
         <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
-                <LabeledControl label="上游模型">
+                <LabeledControl label={t("channelOnboarding.upstreamModel")}>
                     <Select showSearch optionFilterProp="label" className="w-full" value={selectedUpstreamModel || undefined} options={channel.models.map((model) => ({ label: model, value: model }))} onChange={onSelectUpstream} />
                 </LabeledControl>
-                <LabeledControl label="识别能力">
-                    <Input value={capabilityLabel(capability)} disabled />
+                <LabeledControl label={t("channelOnboarding.detectedCapability")}>
+                    <Input value={capabilityLabel(capability, {
+                        text: t("channelEditor.kinds.text"),
+                        image: t("channelEditor.kinds.image"),
+                        video: t("channelEditor.kinds.video"),
+                        audio: t("channelEditor.kinds.audio"),
+                    })} disabled />
                 </LabeledControl>
             </div>
             <div className="border-y border-stone-200 py-4 dark:border-stone-800">
-                <LabeledControl label="绑定已有逻辑模型">
+                <LabeledControl label={t("channelOnboarding.bindExisting")}>
                     <Select
                         allowClear
                         showSearch
                         optionFilterProp="label"
                         className="w-full"
                         value={selectedLogicalId || undefined}
-                        placeholder="不选择则创建新逻辑模型"
+                        placeholder={t("channelOnboarding.bindExistingPlaceholder")}
                         options={candidates.map((model) => ({ label: `${model.name} (${model.id})`, value: model.id }))}
                         onChange={(value) => onSelectLogical(value || "")}
                     />
                 </LabeledControl>
                 {!selectedLogicalId ? (
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        <LabeledControl label="新逻辑模型 ID">
-                            <Input value={newLogicalId} placeholder="例如：video-pro" onChange={(event) => onNewLogicalId(event.target.value)} />
+                        <LabeledControl label={t("channelOnboarding.newLogicalId")}>
+                            <Input value={newLogicalId} placeholder={t("channelOnboarding.newLogicalIdPlaceholder")} onChange={(event) => onNewLogicalId(event.target.value)} />
                         </LabeledControl>
-                        <LabeledControl label="展示名称">
-                            <Input value={newLogicalName} placeholder="例如：专业视频模型" onChange={(event) => onNewLogicalName(event.target.value)} />
+                        <LabeledControl label={t("channelOnboarding.displayName")}>
+                            <Input value={newLogicalName} placeholder={t("channelOnboarding.newLogicalNamePlaceholder")} onChange={(event) => onNewLogicalName(event.target.value)} />
                         </LabeledControl>
                     </div>
                 ) : null}
             </div>
             <div className="flex min-h-10 items-center justify-between gap-3 border-b border-stone-200 pb-4 dark:border-stone-800">
-                <span className="text-sm text-stone-700 dark:text-stone-300">设为默认{capabilityLabel(capability)}模型</span>
+                <span className="text-sm text-stone-700 dark:text-stone-300">{t("channelOnboarding.setDefault", { capability: capabilityLabel(capability, {
+                    text: t("channelEditor.kinds.text"),
+                    image: t("channelEditor.kinds.image"),
+                    video: t("channelEditor.kinds.video"),
+                    audio: t("channelEditor.kinds.audio"),
+                }) })}</span>
                 <Switch checked={setAsDefault} onChange={onSetAsDefault} />
             </div>
             <Button type="primary" icon={<Link2 className="size-4" />} onClick={onBind}>
-                绑定模型
+                {t("channelOnboarding.bindAction")}
             </Button>
         </div>
     );
@@ -539,15 +569,15 @@ function ReviewStep({ channel, settings, validations }: { channel: SystemModelCh
     return (
         <div className="space-y-5">
             <div className="grid gap-x-6 gap-y-4 border-y border-stone-200 py-4 sm:grid-cols-2 dark:border-stone-800">
-                <ReviewValue label="渠道" value={channel.name} />
-                <ReviewValue label="协议" value={channelProtocolDefinition(channel.advancedConfig?.protocol || "auto").label} />
+                <ReviewValue label={t("channelOnboarding.channel")} value={channel.name} />
+                <ReviewValue label={t("channelOnboarding.protocol")} value={channelProtocolDefinition(channel.advancedConfig?.protocol || "auto").label} />
                 <ReviewValue label="Base URL" value={channel.baseUrl} />
-                <ReviewValue label="上游模型" value={`${channel.models.length} 个`} />
-                <ReviewValue label="能力检测" value={`${validations.filter(({ result }) => result.ok).length}/${Math.max(validations.length, 1)} 通过`} />
-                <ReviewValue label="逻辑绑定" value={`${bindings.length} 个`} />
+                <ReviewValue label={t("channelOnboarding.upstreamModel")} value={t("channelOnboarding.upstreamModelCount", { count: channel.models.length })} />
+                <ReviewValue label={t("channelOnboarding.capabilityCheck")} value={t("channelOnboarding.passCount", { ok: validations.filter(({ result }) => result.ok).length, total: Math.max(validations.length, 1) })} />
+                <ReviewValue label={t("channelOnboarding.logicalBindings")} value={t("channelOnboarding.bindingCount", { count: bindings.length })} />
             </div>
             <div>
-                <div className="mb-2 text-sm font-semibold text-stone-950 dark:text-stone-100">模型绑定</div>
+                <div className="mb-2 text-sm font-semibold text-stone-950 dark:text-stone-100">{t("channelOnboarding.modelBindings")}</div>
                 <div className="divide-y divide-stone-200 border-y border-stone-200 dark:divide-stone-800 dark:border-stone-800">
                     {bindings.map(({ logical, binding }) => (
                         <div key={binding.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
@@ -557,10 +587,10 @@ function ReviewStep({ channel, settings, validations }: { channel: SystemModelCh
                     ))}
                 </div>
             </div>
-            {!validations.some(({ result }) => result.ok) ? <Alert type="warning" showIcon message="尚未通过能力检测" description="可以保存为停用草稿；通过至少一项真实能力检测后才能启用。" /> : null}
+            {!validations.some(({ result }) => result.ok) ? <Alert type="warning" showIcon message={t("channelOnboarding.notValidated")} description={t("channelOnboarding.notValidatedDesc")} /> : null}
             <div className="flex items-start gap-2 text-xs leading-5 text-stone-500 dark:text-stone-400">
                 <CircleDollarSign className="mt-0.5 size-4 shrink-0" />
-                <span>用户积分仍按逻辑模型配置；上游模型名只用于真实请求。</span>
+                <span>{t("channelOnboarding.pointsNote")}</span>
             </div>
         </div>
     );
@@ -571,7 +601,7 @@ function ReviewValue({ label, value }: { label: string; value: string }) {
     return (
         <div className="min-w-0">
             <div className="text-xs text-stone-500 dark:text-stone-400">{label}</div>
-            <div className="mt-1 break-all text-sm font-medium text-stone-950 dark:text-stone-100">{value || "未设置"}</div>
+            <div className="mt-1 break-all text-sm font-medium text-stone-950 dark:text-stone-100">{value || t("channelOnboarding.unset")}</div>
         </div>
     );
 }

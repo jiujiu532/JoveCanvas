@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { GenerationTaskReviewError, reviewGenerationTask, type GenerationTaskReviewInput, type ReviewableGenerationTaskType } from "@/lib/server/generation-task-review-service";
 import { resolveInternalOrigin } from "@/lib/server/internal-origin";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export async function POST(request: Request, { params }: { params: Promise<{ type: string; id: string }> }) {
     const user = await getCurrentUser(request);
@@ -40,7 +40,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ typ
         const data = await reviewGenerationTask(type, id, reviewInput);
         return NextResponse.json({ code: 0, data, msg: await serverMessage("admin.taskTakeoverUpdated") });
     } catch (error) {
-        if (error instanceof GenerationTaskReviewError) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
+        if (error instanceof GenerationTaskReviewError) return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });
         console.error("Generation task review failed", { type, id, error: error instanceof Error ? error.message : "unknown" });
         return NextResponse.json({ code: 500, data: null, msg: await serverMessage("admin.taskTakeoverFailed") }, { status: 500 });
     }

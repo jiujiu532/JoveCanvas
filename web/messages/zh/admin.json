@@ -1598,9 +1598,34 @@
             "reference": "参考图：{hint}",
             "remote": "远程地址：",
             "task": "任务：",
-            "reason": "原因："
+            "reason": "原因：",
+            "imageToImageOk": "图生图：成功",
+            "imageToImageFail": "图生图：失败（{detail}）",
+            "statusCode": "状态码 {status}"
         },
-        "examplePlaceholder": "例如：curl https://api.example.com/v1/images/edits ... -d {\"model\":\"gpt-image-2\",\"prompt\":\"...\",\"image\":\"https://...\"}"
+        "examplePlaceholder": "例如：curl https://api.example.com/v1/images/edits ... -d {\"model\":\"gpt-image-2\",\"prompt\":\"...\",\"image\":\"https://...\"}",
+        "fallbackDuration": "兜底时长规则",
+        "fallbackCreatePath": "兜底创建路径",
+        "fallbackEditPath": "兜底图生图路径",
+        "fallbackImageToVideoPath": "兜底图生视频路径",
+        "fallbackQueryPath": "兜底查询路径",
+        "modelRouteTitle": "模型级路由",
+        "modelRouteHint": "同一公司接口包含多种能力时，每个模型独立保存协议与路径。",
+        "apiFormat": "API 格式",
+        "pathText": "文本生成路径",
+        "pathImage": "文生图路径",
+        "pathVideo": "文生视频路径",
+        "pathAudio": "语音生成路径",
+        "editPathLabel": "图生图路径",
+        "imageToVideoPathLabel": "图生视频路径",
+        "cancelPath": "取消路径",
+        "cancelMethod": "取消方式",
+        "durationRule": "时长规则",
+        "durationRulePlaceholder": "5、8、10 秒或 4-15 秒",
+        "requestTemplateAndRef": "请求模板与参考素材",
+        "modelRouteEmpty": "拉取或手动添加模型后可设置独立路由。",
+        "fixedProtocolHint": "当前协议的路径、请求字段、结果字段和{capability}由协议注册表固定；如需非标准字段，请在模型级路由中选择“自定义协议”。",
+        "fetchMergeHint": "拉取会合并上游模型、官方目录和已有手工模型，不会覆盖手工配置；混合接口优先使用模型级路由，上方兜底字段只在模型没有专属配置时生效。"
     },
     "externalStorage": {
         "loadFilesFailed": "外部存储文件加载失败",
@@ -2141,7 +2166,8 @@
             "title": "兑换明细",
             "totalCount": "共 {count} 条",
             "totalCountTruncated": "共 {count} 条，展示最近 20 条"
-        }
+        },
+        "newChannelName": "新接口"
     },
     "dataBackup": {
         "export": "导出备份",
@@ -3666,7 +3692,15 @@
         "noValidation": "还没有验证记录，请在渠道列表执行检测",
         "noMatch": "没有匹配的渠道",
         "noChannels": "还没有模型渠道",
-        "onboardFirst": "接入第一个渠道"
+        "onboardFirst": "接入第一个渠道",
+        "syncModelsAria": "同步 {name} 模型",
+        "testChannelAria": "检测 {name}",
+        "connect": "接入",
+        "strict": "严格",
+        "docUrlMissing": "未填写文档和地址",
+        "modelUnset": "未选择模型",
+        "pass": "通过",
+        "fail": "失败"
     },
     "channelDetail": {
         "title": "渠道详情",
@@ -3772,6 +3806,19 @@
         "notValidated": "尚未通过能力检测",
         "notValidatedDesc": "可以保存为停用草稿；通过至少一项真实能力检测后才能启用。",
         "pointsNote": "用户积分仍按逻辑模型配置；上游模型名只用于真实请求。",
-        "unset": "未设置"
+        "unset": "未设置",
+        "modelsList": "模型列表",
+        "displayName": "展示名称",
+        "channel": "渠道",
+        "protocol": "协议",
+        "upstreamModel": "上游模型",
+        "logicalBindings": "逻辑绑定",
+        "passCount": "{ok}/{total} 通过",
+        "upstreamModelCount": "{count} 个",
+        "bindingCount": "{count} 个",
+        "testFailed": "{capability}检测失败",
+        "pass": "通过",
+        "fail": "失败",
+        "notTested": "未检测"
     }
 }

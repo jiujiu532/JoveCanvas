@@ -60,7 +60,12 @@ export function SystemChannelEditor({
     const visibleHealthResults = healthKinds.map((kind) => healthResults[`${channel.id}:${kind}`] || channel.healthResults?.[kind]).filter((item): item is ChannelHealthResult => Boolean(item));
     const advanced = channel.advancedConfig || createDefaultChannelAdvancedConfig();
     const protocolDefinition = channelProtocolDefinition(advanced.protocol);
-    const capabilitySummary = channelCapabilitySummary(channel);
+    const capabilitySummary = channelCapabilitySummary(channel, {
+        text: t("channelEditor.kinds.text"),
+        image: t("channelEditor.kinds.image"),
+        video: t("channelEditor.kinds.video"),
+        audio: t("channelEditor.kinds.audio"),
+    });
     const detectedCapabilities = channelDetectedCapabilities(channel);
     const selectedGlobalPresets = resolveGlobalAiOpcPresets(advanced);
     const multipleGlobalPresets = advanced.protocol === "globalaiopc" && selectedGlobalPresets.length > 1;
@@ -242,7 +247,7 @@ export function SystemChannelEditor({
                                 className="mt-3"
                                 value={exampleText}
                                 rows={5}
-                                placeholder='例如：curl https://api.example.com/v1/images/edits ... -d {"model":"gpt-image-2","prompt":"...","image":"https://..."}'
+                                placeholder={t("channelEditor.examplePlaceholder")}
                                 onChange={(event) => setExampleText(event.target.value)}
                             />
                         </div>
@@ -308,7 +313,7 @@ export function SystemChannelEditor({
                     {protocolDefinition.advanced ? (
                         <>
                             {detectedCapabilities.has("video") ? (
-                                <LabeledControl label="兜底时长规则">
+                                <LabeledControl label={t("channelEditor.fallbackDuration")}>
                                     <Input
                                         disabled={multipleGlobalPresets}
                                         value={advanced.durationRange}
@@ -317,17 +322,17 @@ export function SystemChannelEditor({
                                     />
                                 </LabeledControl>
                             ) : null}
-                            <LabeledControl label="兜底创建路径">
+                            <LabeledControl label={t("channelEditor.fallbackCreatePath")}>
                                 <Input disabled={multipleGlobalPresets} value={advanced.createPath} placeholder={multipleGlobalPresets ? t("channelEditor.autoRoute") : "/video/generations"} onChange={(event) => updateAdvanced({ createPath: event.target.value })} />
                             </LabeledControl>
                             {detectedCapabilities.has("image") ? (
-                                <LabeledControl label="兜底图生图路径">
+                                <LabeledControl label={t("channelEditor.fallbackEditPath")}>
                                     <Input disabled={multipleGlobalPresets} value={advanced.editPath} placeholder={multipleGlobalPresets ? t("channelEditor.autoRoute") : "/images/edits"} onChange={(event) => updateAdvanced({ editPath: event.target.value })} />
                                 </LabeledControl>
                             ) : null}
                             {detectedCapabilities.has("video") ? (
                                 <>
-                                    <LabeledControl label="兜底图生视频路径">
+                                    <LabeledControl label={t("channelEditor.fallbackImageToVideoPath")}>
                                         <Input
                                             disabled={multipleGlobalPresets}
                                             value={advanced.imageToVideoPath}
@@ -335,7 +340,7 @@ export function SystemChannelEditor({
                                             onChange={(event) => updateAdvanced({ imageToVideoPath: event.target.value })}
                                         />
                                     </LabeledControl>
-                                    <LabeledControl label="兜底查询路径">
+                                    <LabeledControl label={t("channelEditor.fallbackQueryPath")}>
                                         <Input
                                             disabled={multipleGlobalPresets}
                                             value={advanced.queryPath}
@@ -377,7 +382,9 @@ export function SystemChannelEditor({
                             </div>
                         </>
                     ) : (
-                        <div className="md:col-span-2 text-xs leading-5 text-stone-500 dark:text-stone-400">当前协议的路径、请求字段、结果字段和{t("channelEditor.referenceCapability")}由协议注册表固定；如需非标准字段，请在模型级路由中选择“自定义协议”。</div>
+                        <div className="md:col-span-2 text-xs leading-5 text-stone-500 dark:text-stone-400">
+                            {t("channelEditor.fixedProtocolHint", { capability: t("channelEditor.referenceCapability") })}
+                        </div>
                     )}
                     <div className="flex flex-wrap gap-2 md:col-span-2">
                         <Button size="small" icon={<RefreshCw className="size-3.5" />} loading={fetching} onClick={onFetchModels}>
@@ -389,7 +396,7 @@ export function SystemChannelEditor({
                             </Button>
                         ))}
                     </div>
-                    <div className="text-xs leading-5 text-stone-500 md:col-span-2 dark:text-stone-400">拉取会合并上游模型、官方目录和已有手工模型，不会覆盖手工配置；混合接口优先使用模型级路由，上方兜底字段只在模型没有专属配置时生效。</div>
+                    <div className="text-xs leading-5 text-stone-500 md:col-span-2 dark:text-stone-400">{t("channelEditor.fetchMergeHint")}</div>
                 </div>
             </details>
         </div>
@@ -435,8 +442,8 @@ function ModelRouteConfigEditor({ channel, advanced, onChange }: { channel: Syst
         <div className="rounded-md border border-stone-200 bg-white/70 p-3 md:col-span-2 dark:border-stone-800 dark:bg-stone-950/50">
             <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                    <div className="text-xs font-semibold text-stone-800 dark:text-stone-100">模型级路由</div>
-                    <div className="mt-1 text-[11px] leading-5 text-stone-500 dark:text-stone-400">同一公司接口包含多种能力时，每个模型独立保存协议与路径。</div>
+                    <div className="text-xs font-semibold text-stone-800 dark:text-stone-100">{t("channelEditor.modelRouteTitle")}</div>
+                    <div className="mt-1 text-[11px] leading-5 text-stone-500 dark:text-stone-400">{t("channelEditor.modelRouteHint")}</div>
                 </div>
                 {stored ? (
                     <Button type="text" size="small" onClick={clearRoutes}>
@@ -453,7 +460,7 @@ function ModelRouteConfigEditor({ channel, advanced, onChange }: { channel: Syst
                         <LabeledControl label={t("logicalModels.capabilityType")}>
                             <Select className="w-full" value={config.capability} options={definition.strict ? modelCapabilityOptions.filter((item) => definition.capabilities.includes(item.value)) : modelCapabilityOptions} onChange={selectCapability} />
                         </LabeledControl>
-                        <LabeledControl label="API 格式">
+                        <LabeledControl label={t("channelEditor.apiFormat")}>
                             <Select
                                 className="w-full"
                                 allowClear
@@ -469,7 +476,17 @@ function ModelRouteConfigEditor({ channel, advanced, onChange }: { channel: Syst
                         <LabeledControl label={t("channelEditor.protocol")}>
                             <Select className="w-full" allowClear placeholder={t("settingsActions.channelFallback")} value={config.protocol} options={protocolOptions} onChange={selectProtocol} />
                         </LabeledControl>
-                        <LabeledControl label={config.capability === "text" ? "文本生成路径" : config.capability === "image" ? "文生图路径" : config.capability === "video" ? "文生视频路径" : "语音生成路径"}>
+                        <LabeledControl
+                            label={
+                                config.capability === "text"
+                                    ? t("channelEditor.pathText")
+                                    : config.capability === "image"
+                                      ? t("channelEditor.pathImage")
+                                      : config.capability === "video"
+                                        ? t("channelEditor.pathVideo")
+                                        : t("channelEditor.pathAudio")
+                            }
+                        >
                             <Input
                                 disabled={definition.strict}
                                 value={config.createPath || ""}
@@ -478,12 +495,12 @@ function ModelRouteConfigEditor({ channel, advanced, onChange }: { channel: Syst
                             />
                         </LabeledControl>
                         {showImageEditPath ? (
-                            <LabeledControl label="图生图路径">
+                            <LabeledControl label={t("channelEditor.editPathLabel")}>
                                 <Input disabled={definition.strict} value={config.editPath || ""} placeholder="/images/edits" onChange={(event) => update({ editPath: event.target.value })} />
                             </LabeledControl>
                         ) : null}
                         {showImageToVideoPath ? (
-                            <LabeledControl label="图生视频路径">
+                            <LabeledControl label={t("channelEditor.imageToVideoPathLabel")}>
                                 <Input disabled={definition.strict} value={config.imageToVideoPath || ""} placeholder="/videos" onChange={(event) => update({ imageToVideoPath: event.target.value })} />
                             </LabeledControl>
                         ) : null}
@@ -493,12 +510,12 @@ function ModelRouteConfigEditor({ channel, advanced, onChange }: { channel: Syst
                             </LabeledControl>
                         ) : null}
                         {showAsyncFields ? (
-                            <LabeledControl label="取消路径">
+                            <LabeledControl label={t("channelEditor.cancelPath")}>
                                 <Input disabled={definition.strict} value={config.cancelPath || ""} placeholder="/videos/:task_id/cancel" onChange={(event) => update({ cancelPath: event.target.value })} />
                             </LabeledControl>
                         ) : null}
                         {showAsyncFields && config.cancelPath ? (
-                            <LabeledControl label="取消方式">
+                            <LabeledControl label={t("channelEditor.cancelMethod")}>
                                 <Select
                                     className="w-full"
                                     disabled={definition.strict}
@@ -520,13 +537,13 @@ function ModelRouteConfigEditor({ channel, advanced, onChange }: { channel: Syst
                             </LabeledControl>
                         ) : null}
                         {config.capability === "video" ? (
-                            <LabeledControl label="时长规则">
-                                <Input disabled={definition.strict} value={config.durationRange || ""} placeholder="5、8、10 秒或 4-15 秒" onChange={(event) => update({ durationRange: event.target.value })} />
+                            <LabeledControl label={t("channelEditor.durationRule")}>
+                                <Input disabled={definition.strict} value={config.durationRange || ""} placeholder={t("channelEditor.durationRulePlaceholder")} onChange={(event) => update({ durationRange: event.target.value })} />
                             </LabeledControl>
                         ) : null}
                     </div>
                     <details className="mt-3 border-t border-stone-200 pt-2 dark:border-stone-800">
-                        <summary className="cursor-pointer text-xs font-medium text-stone-600 dark:text-stone-300">请求模板与参考素材</summary>
+                        <summary className="cursor-pointer text-xs font-medium text-stone-600 dark:text-stone-300">{t("channelEditor.requestTemplateAndRef")}</summary>
                         <div className="mt-3 grid gap-3 sm:grid-cols-2">
                             <div className="sm:col-span-2">
                                 <LabeledControl label={t("channelEditor.requestTemplate")}>
@@ -554,20 +571,20 @@ function ModelRouteConfigEditor({ channel, advanced, onChange }: { channel: Syst
                     </details>
                 </>
             ) : (
-                <div className="mt-3 text-xs text-stone-500 dark:text-stone-400">拉取或手动添加模型后可设置独立路由。</div>
+                <div className="mt-3 text-xs text-stone-500 dark:text-stone-400">{t("channelEditor.modelRouteEmpty")}</div>
             )}
         </div>
     );
 }
 
-function channelCapabilitySummary(channel: SystemModelChannel) {
+function channelCapabilitySummary(channel: SystemModelChannel, labels?: Partial<Record<LogicalModelCapability, string>>) {
     const counts = channel.models.reduce((result, model) => ({ ...result, [channelModelCapability(channel, model)]: result[channelModelCapability(channel, model)] + 1 }), { text: 0, image: 0, video: 0, audio: 0 } as Record<
         LogicalModelCapability,
         number
     >);
     return modelCapabilityOptionValues
         .filter((value) => counts[value])
-        .map((value) => `${capabilityLabel(value)} ${counts[value]}`)
+        .map((value) => `${capabilityLabel(value, labels)} ${counts[value]}`)
         .join(" · ");
 }
 
@@ -635,10 +652,10 @@ function referenceImageText(result: ChannelHealthResult | undefined, advanced: S
 }
 
 function referenceVideoText(result: ChannelHealthResult | undefined, advanced: SystemChannelAdvancedConfig, needsPublicReference: boolean, t?: ReturnType<typeof useTranslations<"admin">>) {
-    if (!result) return "未检测";
-    if (!result.ok) return "需检查";
-    if (!advanced.supportsReferenceImage) return "不支持";
-    return needsPublicReference ? "需公网图，未实测" : "未实测";
+    if (!result) return t ? t("channelEditor.state.notTested") : "未检测";
+    if (!result.ok) return t ? t("channelEditor.state.needsCheck") : "需检查";
+    if (!advanced.supportsReferenceImage) return t ? t("channelEditor.state.unsupported") : "不支持";
+    return needsPublicReference ? (t ? t("channelEditor.state.needsPublicImage") : "需公网图，未实测") : t ? t("channelEditor.state.notMeasured") : "未实测";
 }
 
 function referenceImageTone(result: ChannelHealthResult | undefined) {
@@ -648,9 +665,9 @@ function referenceImageTone(result: ChannelHealthResult | undefined) {
 }
 
 function referenceMediaText(result: ChannelHealthResult | undefined, advanced: SystemChannelAdvancedConfig, t?: ReturnType<typeof useTranslations<"admin">>) {
-    if (!result) return "未检测";
-    if (!result.ok) return "需检查";
-    return advanced.supportsReferenceVideo || advanced.supportsReferenceAudio ? "未实测" : "不支持";
+    if (!result) return t ? t("channelEditor.state.notTested") : "未检测";
+    if (!result.ok) return t ? t("channelEditor.state.needsCheck") : "需检查";
+    return advanced.supportsReferenceVideo || advanced.supportsReferenceAudio ? (t ? t("channelEditor.state.notMeasured") : "未实测") : t ? t("channelEditor.state.unsupported") : "不支持";
 }
 
 function ChannelHealthResultRow({ result }: { result: ChannelHealthResult }) {
@@ -667,9 +684,17 @@ function ChannelHealthResultRow({ result }: { result: ChannelHealthResult }) {
             <span>{t("channelEditor.result.status", { status: result.status || "-" })}</span>
             <span>{t("channelEditor.result.cost", { cost: typeof result.pointsCost === "number" ? formatCreditAmount(result.pointsCost) : "-" })}</span>
             {result.referenceHint ? <span className="min-w-0 flex-1 basis-full truncate sm:basis-auto">{t("channelEditor.result.reference", { hint: result.referenceHint })}</span> : null}
-            {result.referenceImageTest ? <span className="min-w-0 basis-full truncate">图生图：{result.referenceImageTest.ok ? "成功" : `失败（${result.referenceImageTest.error || `状态码 ${result.referenceImageTest.status || "-"}`}）`}</span> : null}
+            {result.referenceImageTest ? (
+                <span className="min-w-0 basis-full truncate">
+                    {result.referenceImageTest.ok
+                        ? t("channelEditor.result.imageToImageOk")
+                        : t("channelEditor.result.imageToImageFail", {
+                              detail: result.referenceImageTest.error || t("channelEditor.result.statusCode", { status: result.referenceImageTest.status || "-" }),
+                          })}
+                </span>
+            ) : null}
             <span className="min-w-0 flex-1 truncate">
-                {result.remoteUrl ? "远程地址：" : result.taskId ? "任务：" : result.error ? "原因：" : ""}
+                {result.remoteUrl ? t("channelEditor.result.remote") : result.taskId ? t("channelEditor.result.task") : result.error ? t("channelEditor.result.reason") : ""}
                 {detail}
             </span>
         </div>

@@ -328,7 +328,9 @@
     "referenceImages": "Reference images for this turn",
     "uploadingName": "Uploading {name}",
     "retryUploadName": "Retry image upload: {name}",
-    "uploadingImage": "Uploading image"
+    "uploadingImage": "Uploading image",
+    "pasteImage": "Pasted image",
+    "uploadFailed": "Image upload failed"
   },
   "assets": {
     "selectTitle": "Select asset",
@@ -424,7 +426,17 @@
     "wideLens": "Wide-angle lens",
     "standard": "Standard",
     "wide": "Wide",
-    "generate": "AI generate"
+    "generate": "AI generate",
+    "front": "Front view",
+    "level": "Eye level",
+    "rotateRight": "Rotate right {degrees}°",
+    "rotateLeft": "Rotate left {degrees}°",
+    "pitchDown": "High angle {degrees}°",
+    "pitchUp": "Low angle {degrees}°",
+    "lensWide": "wide-angle",
+    "lensStandard": "standard",
+    "labelTemplate": "AI multi-angle: {horizontal}, {pitch}, camera distance {distance}, {lens} lens",
+    "promptPrefix": "Regenerate the same subject from a new angle based on the reference image. Keep the subject, colors, materials, and style consistent — do not only warp the perspective. {label}."
   },
   "promptPanel": {
     "stopGenerate": "Stop generation",
@@ -497,7 +509,8 @@
     "importTitle": "Imported canvas",
     "saveFailed": "Failed to save canvas project",
     "pleaseLogin": "Please sign in first",
-    "sessionChanged": "Login session changed, please try again"
+    "sessionChanged": "Login session changed, please try again",
+    "renameFailed": "Failed to rename canvas project"
   },
   "panorama": {
     "preparing": "Preparing panorama viewer...",
@@ -564,7 +577,8 @@
     "audioFailed": "Audio generation failed",
     "maskEditFailed": "Inpaint failed",
     "emptyResponse": "No content returned",
-    "videoCompleteSummary": "Canvas video generation completed"
+    "videoCompleteSummary": "Canvas video generation completed",
+    "requestCancelled": "Request cancelled"
   },
   "toast": {
     "cannotConnectConfigNodes": "Config nodes cannot connect to each other",
@@ -589,7 +603,8 @@
   "errors": {
     "noSavableText": "No savable text",
     "noSavableVideo": "No savable video",
-    "noSavableImage": "No savable image"
+    "noSavableImage": "No savable image",
+    "saveImageFailed": "Failed to save image to the server"
   },
   "modal": {
     "stopGenerationTitle": "Stop generation?",

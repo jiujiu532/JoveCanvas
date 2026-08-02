@@ -1,6 +1,7 @@
 import type { WorkbenchAgentMessage } from "@/components/agent/workbench-agent-panel";
 
 import type { GenerationLog, GenerationResult } from "./video-workbench-records";
+import { workspaceT } from "../shared/workspace-i18n-runtime";
 
 /** 结果多选：当前可见 id / 已选可见 id / 是否全选 */
 export function getResultSelectionState(results: Array<{ id: string }>, selectedResultIds: string[]) {
@@ -28,7 +29,7 @@ export function buildHistoryAgentFallbackMessages(log: Pick<GenerationLog, "id" 
         {
             id: `history-${log.id}-assistant`,
             role: log.status === "失败" ? "error" : "assistant",
-            text: log.status === "失败" ? log.error || "该任务生成失败。" : log.status === "生成中" ? "该任务仍在生成中。" : "已打开这条历史生成记录，可以继续修改或重新生成。",
+            text: log.status === "失败" ? log.error || workspaceT()("video.historyTaskFailed") : log.status === "生成中" ? workspaceT()("video.historyTaskPending") : workspaceT()("video.historyOpened"),
         },
     ];
 }
@@ -46,7 +47,7 @@ export function buildLogAfterDeletingResults(currentLog: GenerationLog, nextResu
         taskResultId: pendingResult ? currentLog.taskResultId : undefined,
         video: keptVideo,
         videos: keptVideos,
-        failures: nextResults.flatMap((result) => (result.status === "failed" ? [{ resultId: result.id, error: result.error || "未知错误" }] : [])),
+        failures: nextResults.flatMap((result) => (result.status === "failed" ? [{ resultId: result.id, error: result.error || workspaceT()("video.unknownError") }] : [])),
         error: failedResult?.error,
         resultDeleted: !nextResults.length,
     };

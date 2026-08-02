@@ -1598,9 +1598,34 @@
             "reference": "Reference: {hint}",
             "remote": "Remote: ",
             "task": "Task: ",
-            "reason": "Reason: "
+            "reason": "Reason: ",
+            "imageToImageOk": "Image-to-image: OK",
+            "imageToImageFail": "Image-to-image: failed ({detail})",
+            "statusCode": "status {status}"
         },
-        "examplePlaceholder": "e.g. curl https://api.example.com/v1/images/edits ... -d {\"model\":\"gpt-image-2\",\"prompt\":\"...\",\"image\":\"https://...\"}"
+        "examplePlaceholder": "e.g. curl https://api.example.com/v1/images/edits ... -d {\"model\":\"gpt-image-2\",\"prompt\":\"...\",\"image\":\"https://...\"}",
+        "fallbackDuration": "Fallback duration rules",
+        "fallbackCreatePath": "Fallback create path",
+        "fallbackEditPath": "Fallback image-edit path",
+        "fallbackImageToVideoPath": "Fallback image-to-video path",
+        "fallbackQueryPath": "Fallback query path",
+        "modelRouteTitle": "Per-model routing",
+        "modelRouteHint": "When one vendor endpoint serves multiple capabilities, each model keeps its own protocol and paths.",
+        "apiFormat": "API format",
+        "pathText": "Text generation path",
+        "pathImage": "Text-to-image path",
+        "pathVideo": "Text-to-video path",
+        "pathAudio": "Audio generation path",
+        "editPathLabel": "Image-edit path",
+        "imageToVideoPathLabel": "Image-to-video path",
+        "cancelPath": "Cancel path",
+        "cancelMethod": "Cancel method",
+        "durationRule": "Duration rules",
+        "durationRulePlaceholder": "5, 8, 10 seconds or 4-15 seconds",
+        "requestTemplateAndRef": "Request template and reference media",
+        "modelRouteEmpty": "Fetch or manually add models before setting per-model routes.",
+        "fixedProtocolHint": "Paths, request fields, result fields, and {capability} for this protocol are fixed by the registry. For nonstandard fields, choose Custom protocol in per-model routing.",
+        "fetchMergeHint": "Fetching merges upstream models, the official catalog, and existing manual models without overwriting manual config. Mixed endpoints prefer per-model routes; fallback fields apply only when a model has no dedicated config."
     },
     "externalStorage": {
         "loadFilesFailed": "Failed to load external storage files",
@@ -2141,7 +2166,8 @@
             "title": "Redemption details",
             "totalCount": "{count} total",
             "totalCountTruncated": "{count} total, showing latest 20"
-        }
+        },
+        "newChannelName": "New channel"
     },
     "dataBackup": {
         "export": "Export Backup",
@@ -3666,7 +3692,15 @@
         "noValidation": "No validation records yet. Run checks from the channel list.",
         "noMatch": "No matching channels",
         "noChannels": "No model channels yet",
-        "onboardFirst": "Connect first channel"
+        "onboardFirst": "Connect first channel",
+        "syncModelsAria": "Sync models for {name}",
+        "testChannelAria": "Test {name}",
+        "connect": "Connect",
+        "strict": "Strict",
+        "docUrlMissing": "Docs URL and base URL not set",
+        "modelUnset": "No model selected",
+        "pass": "Pass",
+        "fail": "Fail"
     },
     "channelDetail": {
         "title": "Channel details",
@@ -3772,6 +3806,19 @@
         "notValidated": "No capability check passed yet",
         "notValidatedDesc": "You can save a disabled draft; enable only after at least one real capability check passes.",
         "pointsNote": "User points still use logical model pricing; upstream model names are only for real requests.",
-        "unset": "Not set"
+        "unset": "Not set",
+        "modelsList": "Models",
+        "displayName": "Display name",
+        "channel": "Channel",
+        "protocol": "Protocol",
+        "upstreamModel": "Upstream model",
+        "logicalBindings": "Logical bindings",
+        "passCount": "{ok}/{total} passed",
+        "upstreamModelCount": "{count}",
+        "bindingCount": "{count}",
+        "testFailed": "{capability} check failed",
+        "pass": "Pass",
+        "fail": "Fail",
+        "notTested": "Not tested"
     }
 }

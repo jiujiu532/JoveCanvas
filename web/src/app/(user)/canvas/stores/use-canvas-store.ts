@@ -5,6 +5,7 @@ import type { CanvasProject, CanvasProjectSummary, CreateCanvasProjectInput } fr
 import { summarizeCanvasProjectRecord } from "@/lib/canvas-project-summary";
 import { createCanvasProject, deleteCanvasProjects as deleteCanvasProjectsRequest, getCanvasProject, listCanvasProjectSummaries, saveCanvasProject } from "@/services/api/canvas-projects";
 import { useUserStore } from "@/stores/use-user-store";
+import { canvasT } from "../canvas-i18n-runtime";
 
 export type { CanvasProject, CanvasProjectSummary } from "@/lib/canvas-project-contract";
 
@@ -57,7 +58,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
                 set({ summaries, hydrated: true, hydratedUserId: userId });
             })
             .catch((error) => {
-                if (isActiveHydrate(session, requestId)) set({ summaries: [], hydrated: false, hydratedUserId: userId, syncError: error instanceof Error ? error.message : "画布项目加载失败" });
+                if (isActiveHydrate(session, requestId)) set({ summaries: [], hydrated: false, hydratedUserId: userId, syncError: error instanceof Error ? error.message : canvasT()("store.loadFailed") });
             })
             .finally(() => {
                 if (hydrateRequest?.requestId === requestId) hydrateRequest = null;
@@ -85,7 +86,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
         projectRequests.set(key, request);
         return request;
     },
-    createProject: async (title = "未命名画布") => {
+    createProject: async (title = canvasT()("store.untitled")) => {
         const session = requireSession();
         const project = await createCanvasProject({ title });
         assertCurrent(session);
@@ -94,7 +95,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     },
     importProject: async (project, sourceHandoffId) => {
         const session = requireSession();
-        const created = await createCanvasProject({ title: project.title || "导入画布", sourceHandoffId, project });
+        const created = await createCanvasProject({ title: project.title || canvasT()("store.importTitle"), sourceHandoffId, project });
         assertCurrent(session);
         set((state) => ({ projects: [created, ...state.projects.filter((item) => item.id !== created.id)], summaries: upsertSummary(state.summaries, created), syncError: undefined }));
         return created.id;
@@ -109,7 +110,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
         void get()
             .loadProject(id)
             .then(() => mutateProject(id, (project) => ({ ...project, title: nextTitle })))
-            .catch((error) => set({ syncError: error instanceof Error ? error.message : "画布项目重命名失败" }));
+            .catch((error) => set({ syncError: error instanceof Error ? error.message : canvasT()("store.renameFailed") }));
     },
     deleteProjects: async (ids) => {
         const session = requireSession();
@@ -165,7 +166,7 @@ function queueSave(session: ClientSessionStamp, project: CanvasProject) {
                 } catch (error) {
                     if (!sessionEpoch.isCurrent(session)) return;
                     const latest = useCanvasStore.getState().projects.find((item) => item.id === project.id);
-                    if (latest?.updatedAt === project.updatedAt) useCanvasStore.setState({ syncError: error instanceof Error ? error.message : "画布项目保存失败" });
+                    if (latest?.updatedAt === project.updatedAt) useCanvasStore.setState({ syncError: error instanceof Error ? error.message : canvasT()("store.saveFailed") });
                 }
             });
             saveQueues.set(key, operation);
@@ -197,12 +198,12 @@ function isActiveHydrate(session: ClientSessionStamp, requestId: number) {
 
 function requireSession() {
     const session = sessionEpoch.capture();
-    if (!session.userId) throw new Error("请先登录");
+    if (!session.userId) throw new Error(canvasT()("store.pleaseLogin"));
     return session;
 }
 
 function assertCurrent(session: ClientSessionStamp) {
-    if (!sessionEpoch.isCurrent(session)) throw new Error("登录会话已变更，请重试");
+    if (!sessionEpoch.isCurrent(session)) throw new Error(canvasT()("store.sessionChanged"));
 }
 
 function invalidateSession() {

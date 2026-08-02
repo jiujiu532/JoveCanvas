@@ -18,7 +18,11 @@ export type ChannelBindingDraft = {
     newLogicalName: string;
 };
 
-const capabilityLabels: Record<LogicalModelCapability, string> = { text: "文本", image: "图片", video: "视频", audio: "音频" };
+export type CapabilityLabelMap = Partial<Record<LogicalModelCapability, string>>;
+export type ChannelWorkspaceStatusLabelMap = Partial<Record<ChannelWorkspaceStatus, string>>;
+
+const DEFAULT_CAPABILITY_LABELS: Record<LogicalModelCapability, string> = { text: "文本", image: "图片", video: "视频", audio: "音频" };
+const DEFAULT_STATUS_LABELS: Record<ChannelWorkspaceStatus, string> = { healthy: "正常", warning: "需检查", untested: "待检测", draft: "草稿", disabled: "已停用" };
 
 export function channelWorkspaceStatus(channel: SystemModelChannel, healthResults: Record<string, ChannelHealthResult>): ChannelWorkspaceStatus {
     if (!channel.enabled) return channel.baseUrl.trim() ? "disabled" : "draft";
@@ -27,16 +31,17 @@ export function channelWorkspaceStatus(channel: SystemModelChannel, healthResult
     return results.every((result) => result.ok) ? "healthy" : "warning";
 }
 
-export function channelWorkspaceStatusLabel(status: ChannelWorkspaceStatus) {
-    return { healthy: "正常", warning: "需检查", untested: "待检测", draft: "草稿", disabled: "已停用" }[status];
+export function channelWorkspaceStatusLabel(status: ChannelWorkspaceStatus, labels?: ChannelWorkspaceStatusLabelMap) {
+    return labels?.[status] || DEFAULT_STATUS_LABELS[status];
 }
 
 export function channelWorkspaceStatusColor(status: ChannelWorkspaceStatus) {
     return { healthy: "success", warning: "warning", untested: "processing", draft: "default", disabled: "default" }[status];
 }
 
-export function channelCapabilityLabels(channel: SystemModelChannel) {
-    return Array.from(channelDetectedCapabilities(channel)).map((capability) => capabilityLabels[capability]);
+export function channelCapabilityLabels(channel: SystemModelChannel, labels?: CapabilityLabelMap) {
+    const map = { ...DEFAULT_CAPABILITY_LABELS, ...labels };
+    return Array.from(channelDetectedCapabilities(channel)).map((capability) => map[capability]);
 }
 
 export function channelProtocolLabel(channel: SystemModelChannel) {

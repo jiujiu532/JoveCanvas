@@ -141,4 +141,55 @@ describe("server-messages", () => {
         );
         await expect(enLocalize({ message: "创建作品失败" })).resolves.toBe("Failed to create work");
     });
+
+    it("localizes Seedance special validation errors via message reverse lookup and messageKey", async () => {
+        await expect(localizeErrorMessage({ message: "Seedance 2.0 特价版模型不在接口文档允许列表中" })).resolves.toBe(
+            "Seedance 2.0 特价版模型不在接口文档允许列表中",
+        );
+        await expect(localizeErrorMessage({ message: "当前 Seedance 模型要求至少一个参考视频" })).resolves.toBe(
+            "当前 Seedance 模型要求至少一个参考视频",
+        );
+        await expect(
+            localizeErrorMessage({
+                message: "Seedance 2.0 特价版不支持画幅 2:1",
+                messageKey: "tasks.seedance.unsupportedRatio",
+                messageParams: { ratio: "2:1" },
+            }),
+        ).resolves.toBe("Seedance 2.0 特价版不支持画幅 2:1");
+        await expect(
+            localizeErrorMessage({
+                message: "参考图片最多 9 个",
+                messageKey: "tasks.seedance.refImagesLimit",
+                messageParams: { limit: 9 },
+            }),
+        ).resolves.toBe("参考图片最多 9 个");
+
+        vi.resetModules();
+        vi.doMock("next-intl/server", () => ({
+            getLocale: async () => "en",
+        }));
+        const { localizeErrorMessage: enLocalize, serverMessage: enServerMessage } = await import("./server-messages");
+
+        await expect(enLocalize({ message: "Seedance 2.0 特价版模型不在接口文档允许列表中" })).resolves.toBe(
+            "Seedance 2.0 special model is not in the documented allowlist",
+        );
+        await expect(enLocalize({ message: "Seedance 参考音频不能单独使用，请同时添加参考图片或参考视频" })).resolves.toBe(
+            "Seedance reference audio cannot be used alone; add a reference image or video as well",
+        );
+        await expect(
+            enLocalize({
+                message: "Seedance 2.0 特价版不支持画幅 2:1",
+                messageKey: "tasks.seedance.unsupportedRatio",
+                messageParams: { ratio: "2:1" },
+            }),
+        ).resolves.toBe("Seedance 2.0 special does not support aspect ratio 2:1");
+        await expect(
+            enLocalize({
+                message: "参考图片最多 9 个",
+                messageKey: "tasks.seedance.refImagesLimit",
+                messageParams: { limit: 9 },
+            }),
+        ).resolves.toBe("At most 9 reference images are allowed");
+        await expect(enServerMessage("tasks.seedance.promptRequired")).resolves.toBe("Seedance 2.0 special requires a text prompt");
+    });
 });

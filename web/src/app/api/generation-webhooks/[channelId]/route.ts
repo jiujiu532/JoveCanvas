@@ -4,7 +4,7 @@ import { getAuthSettings } from "@/lib/auth/store";
 import { readProviderString } from "@/lib/server/provider-task-config";
 import { GenerationWebhookError, isGenerationWebhookConfigured, recordGenerationWebhook, verifyGenerationWebhookSignature } from "@/lib/server/generation-task-webhook";
 import { readRequestBodyText, RequestBodyTooLargeError } from "@/lib/server/request-body-limit";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,9 +36,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ cha
             resultUrl: readProviderString(payload, channel.advancedConfig?.resultField, RESULT_KEYS),
             rawBody,
         });
-        return NextResponse.json({ code: 0, data: result, msg: result.duplicate ? "回调事件已处理" : result.matched ? "生成任务已更新" : "回调已登记，等待任务对账" });
+        const msg = result.duplicate
+            ? await serverMessage("tasks.webhookDuplicate")
+            : result.matched
+              ? await serverMessage("tasks.webhookMatched")
+              : await serverMessage("tasks.webhookRegistered");
+        return NextResponse.json({ code: 0, data: result, msg });
     } catch (error) {
-        if (error instanceof RequestBodyTooLargeError || error instanceof GenerationWebhookError) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
+        if (error instanceof RequestBodyTooLargeError || error instanceof GenerationWebhookError) return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });
         if (error instanceof SyntaxError) return NextResponse.json({ code: 400, data: null, msg: await serverMessage("tasks.webhookBodyInvalidJson") }, { status: 400 });
         console.error("Generation webhook failed", error);
         return NextResponse.json({ code: 500, data: null, msg: await serverMessage("tasks.webhookHandleFailed") }, { status: 500 });

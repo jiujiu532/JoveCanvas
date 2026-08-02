@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { exportDramaEpisodeAsJianying, DramaJianyingExportError } from "@/lib/server/drama-jianying-export";
 import { getDramaProjectForUser, DramaProjectServiceError } from "@/lib/server/drama-project-service";
 import { resolveInternalOrigin } from "@/lib/server/internal-origin";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 
@@ -34,7 +34,7 @@ export async function POST(request: Request, context: Context) {
             },
         });
     } catch (error) {
-        if (error instanceof DramaProjectServiceError || error instanceof DramaJianyingExportError) return NextResponse.json({ code: error.status, data: null, msg: error.message }, { status: error.status });
+        if (error instanceof DramaProjectServiceError || error instanceof DramaJianyingExportError) return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });
         console.error("jianying draft export failed", error);
         return NextResponse.json({ code: 500, data: null, msg: await serverMessage("drama.jianyingExportFailed") }, { status: 500 });
     }

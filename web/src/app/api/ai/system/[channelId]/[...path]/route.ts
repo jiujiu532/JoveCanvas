@@ -14,7 +14,7 @@ import { SYSTEM_AI_LOGICAL_MODEL_HEADER, SYSTEM_AI_POINTS_IDEMPOTENCY_HEADER, SY
 import { isAgnesApiBaseUrl } from "@/lib/agnes-model-catalog";
 import { channelConnectionReady, protocolAuthHeaders, resolveChannelModelConfig } from "@/lib/channel-protocol-registry";
 import { authorizedMaintenanceUserId } from "@/lib/server/maintenance-auth";
-import { serverMessage } from "@/lib/server/server-messages";
+import { localizeErrorMessage, serverMessage } from "@/lib/server/server-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -79,7 +79,7 @@ async function proxySystemRequest(request: Request, context: RouteContext) {
     try {
         requestBody = await readProxyRequestBody(request, isMultipart);
     } catch (error) {
-        if (error instanceof RequestBodyTooLargeError) return NextResponse.json({ error: error.message }, { status: error.status });
+        if (error instanceof RequestBodyTooLargeError) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
         throw error;
     }
     const upstreamModel = requestModel(requestBody.pointsPayload) || request.headers.get(SYSTEM_AI_UPSTREAM_MODEL_HEADER)?.trim() || "";
@@ -130,7 +130,7 @@ async function proxySystemRequest(request: Request, context: RouteContext) {
         try {
             pointsResult = await consumeUserPoints(userId, billingModel || pointsRequest.model, pointsRequest.amount, pointsRequest.usageKind, pointsIdempotencyKey);
         } catch (error) {
-            if (isQuotaExceededError(error)) return NextResponse.json({ error: error.message }, { status: error.status });
+            if (isQuotaExceededError(error)) return NextResponse.json({ error: await localizeErrorMessage(error) }, { status: error.status });
             throw error;
         }
     }
