@@ -23,7 +23,8 @@
         top: 0 !important;
         transform: translate(-50%) !important;
     }
-    .landing-home-v2 .landing-moon-theme {
+    .landing-home-v2 .landing-moon-theme,
+    .landing-home-v2 .landing-moon-locale {
         border-radius: 10px !important;
         flex: 0 0 34px !important;
         width: 34px !important;

@@ -153,25 +153,29 @@
     outline-color: rgba(125, 211, 252, 0.7);
 }
 
-.landing-moon-theme {
+.landing-moon-theme,
+.landing-moon-locale {
     background: rgba(255, 255, 255, 0.78) !important;
     border-color: rgba(12, 10, 9, 0.1) !important;
     color: #0c0a09 !important;
 }
 
-.dark .landing-moon-theme {
+.dark .landing-moon-theme,
+.dark .landing-moon-locale {
     background: rgba(255, 255, 255, 0.08) !important;
     border-color: rgba(255, 255, 255, 0.14) !important;
     color: #ffffff !important;
 }
 
-.landing-moon-theme:hover {
+.landing-moon-theme:hover,
+.landing-moon-locale:hover {
     background: #ffffff !important;
     border-color: rgba(12, 10, 9, 0.16) !important;
     color: #0c0a09 !important;
 }
 
-.dark .landing-moon-theme:hover {
+.dark .landing-moon-theme:hover,
+.dark .landing-moon-locale:hover {
     background: rgba(255, 255, 255, 0.14) !important;
     border-color: rgba(255, 255, 255, 0.22) !important;
     color: #ffffff !important;

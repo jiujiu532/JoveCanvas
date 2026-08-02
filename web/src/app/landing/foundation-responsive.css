@@ -86,7 +86,8 @@
         top: 14px;
     }
 
-    .landing-moon-theme {
+    .landing-moon-theme,
+    .landing-moon-locale {
         width: 44px;
         height: 44px;
         min-width: 44px !important;
