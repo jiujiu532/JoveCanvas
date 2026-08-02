@@ -238,7 +238,10 @@
       "chooseDesc": "确认方案后进入独立安全结算页。",
       "loadFailed": "套餐加载失败",
       "empty": "暂无已上架套餐"
-    }
+    },
+    "listPrice": "日常价 ¥ {amount}",
+    "saveAmount": "省 ¥ {amount}",
+    "brandPass": "JOVECANVAS PASS · {index}"
   },
   "agent": {
     "errors": {

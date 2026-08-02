@@ -1,1240 +1,1690 @@
 {
-    "assets": {
-        "title": "我的素材",
-        "subtitle": "收藏常用文本、图片、视频和音频，按类型、标题和标签快速查找。",
-        "searchPlaceholder": "搜索标题、内容、标签或来源",
-        "typeLabel": "类型",
-        "kindAll": "全部",
-        "kindText": "文本",
-        "kindImage": "图片",
-        "kindVideo": "视频",
-        "kindAudio": "音频",
-        "exportButton": "导出素材",
-        "importButton": "导入素材",
-        "importing": "正在导入",
-        "addButton": "新增素材",
-        "emptyTitle": "没有找到素材",
-        "emptyDescription": "调整筛选条件，或新增一条常用素材。",
-        "editModalTitle": "编辑素材",
-        "createModalTitle": "新增素材",
-        "save": "保存",
-        "cancel": "取消",
-        "fieldType": "类型",
-        "fieldTitle": "标题",
-        "titleRequired": "请输入标题",
-        "titlePlaceholder": "给素材起一个容易检索的名字",
-        "fieldCover": "封面 URL",
-        "coverPlaceholder": "可粘贴图片 URL，也可以上传本地封面",
-        "upload": "上传",
-        "fieldTags": "标签",
-        "tagsPlaceholder": "输入标签后回车",
-        "fieldSource": "来源",
-        "sourcePlaceholder": "手动添加 / 画布 / 提示词库",
-        "fieldNote": "备注",
-        "notePlaceholder": "可选",
-        "fieldContent": "文本内容",
-        "contentRequired": "请输入文本内容",
-        "contentPlaceholder": "保存提示词、说明文案、参考描述等文本素材",
-        "contentLabelWithKind": "{kind}内容",
-        "chooseFileWithKind": "选择{kind}文件",
-        "selectFileRequired": "请选择{kind}文件",
-        "selectFormatRequired": "请选择{kind}格式文件",
-        "noFileSelected": "未选择文件",
-        "preview": "预览",
-        "noCover": "暂无封面",
-        "unnamedAsset": "未命名素材",
-        "noTag": "未打标签",
-        "cardNoTag": "无标签",
-        "deleteModalTitle": "删除素材",
-        "deleteConfirm": "确定删除「{title}」吗？删除后会从我的素材中移除。",
-        "delete": "删除",
-        "manualAdd": "手动添加",
-        "assetUpdated": "素材已更新",
-        "assetSaved": "素材已保存",
-        "assetSaveFailed": "素材保存失败",
-        "textCopied": "文本已复制",
-        "noAssetsToExport": "暂无素材可导出",
-        "exportZipName": "我的素材.zip",
-        "importedCount": "已导入 {count} 个素材",
-        "importFailed": "导入失败，请选择有效的素材压缩包",
-        "assetDeleted": "素材已删除",
-        "assetDeleteFailed": "素材删除失败",
-        "assetDetailTitle": "素材详情",
-        "noSource": "未标注来源",
-        "view": "查看",
-        "edit": "编辑",
-        "copy": "复制",
-        "download": "下载",
-        "content": "内容",
-        "copyText": "复制文本",
-        "downloadVideo": "下载视频",
-        "downloadAudio": "下载音频",
-        "downloadImage": "下载图片",
-        "unknownDuration": "未知时长"
+  "assets": {
+    "title": "我的素材",
+    "subtitle": "收藏常用文本、图片、视频和音频，按类型、标题和标签快速查找。",
+    "searchPlaceholder": "搜索标题、内容、标签或来源",
+    "typeLabel": "类型",
+    "kindAll": "全部",
+    "kindText": "文本",
+    "kindImage": "图片",
+    "kindVideo": "视频",
+    "kindAudio": "音频",
+    "exportButton": "导出素材",
+    "importButton": "导入素材",
+    "importing": "正在导入",
+    "addButton": "新增素材",
+    "emptyTitle": "没有找到素材",
+    "emptyDescription": "调整筛选条件，或新增一条常用素材。",
+    "editModalTitle": "编辑素材",
+    "createModalTitle": "新增素材",
+    "save": "保存",
+    "cancel": "取消",
+    "fieldType": "类型",
+    "fieldTitle": "标题",
+    "titleRequired": "请输入标题",
+    "titlePlaceholder": "给素材起一个容易检索的名字",
+    "fieldCover": "封面 URL",
+    "coverPlaceholder": "可粘贴图片 URL，也可以上传本地封面",
+    "upload": "上传",
+    "fieldTags": "标签",
+    "tagsPlaceholder": "输入标签后回车",
+    "fieldSource": "来源",
+    "sourcePlaceholder": "手动添加 / 画布 / 提示词库",
+    "fieldNote": "备注",
+    "notePlaceholder": "可选",
+    "fieldContent": "文本内容",
+    "contentRequired": "请输入文本内容",
+    "contentPlaceholder": "保存提示词、说明文案、参考描述等文本素材",
+    "contentLabelWithKind": "{kind}内容",
+    "chooseFileWithKind": "选择{kind}文件",
+    "selectFileRequired": "请选择{kind}文件",
+    "selectFormatRequired": "请选择{kind}格式文件",
+    "noFileSelected": "未选择文件",
+    "preview": "预览",
+    "noCover": "暂无封面",
+    "unnamedAsset": "未命名素材",
+    "noTag": "未打标签",
+    "cardNoTag": "无标签",
+    "deleteModalTitle": "删除素材",
+    "deleteConfirm": "确定删除「{title}」吗？删除后会从我的素材中移除。",
+    "delete": "删除",
+    "manualAdd": "手动添加",
+    "assetUpdated": "素材已更新",
+    "assetSaved": "素材已保存",
+    "assetSaveFailed": "素材保存失败",
+    "textCopied": "文本已复制",
+    "noAssetsToExport": "暂无素材可导出",
+    "exportZipName": "我的素材.zip",
+    "importedCount": "已导入 {count} 个素材",
+    "importFailed": "导入失败，请选择有效的素材压缩包",
+    "assetDeleted": "素材已删除",
+    "assetDeleteFailed": "素材删除失败",
+    "assetDetailTitle": "素材详情",
+    "noSource": "未标注来源",
+    "view": "查看",
+    "edit": "编辑",
+    "copy": "复制",
+    "download": "下载",
+    "content": "内容",
+    "copyText": "复制文本",
+    "downloadVideo": "下载视频",
+    "downloadAudio": "下载音频",
+    "downloadImage": "下载图片",
+    "unknownDuration": "未知时长",
+    "publish": "发布",
+    "publishWork": "发布作品",
+    "publishAria": "发布 {title}",
+    "viewWithTitle": "查看 {title}",
+    "copyWithTitle": "复制 {title}",
+    "downloadWithTitle": "下载 {title}",
+    "noTags": "未添加标签",
+    "noteLabel": "备注"
+  },
+  "prompts": {
+    "title": "提示词中心",
+    "subtitle": "共 {total} 条提示词，按标题、标签与分类快速查找灵感。",
+    "searchPlaceholder": "按标题查询",
+    "categoryAriaLabel": "提示词分类",
+    "tagAriaLabel": "提示词标签",
+    "categoryLabel": "分类",
+    "tagLabel": "标签",
+    "currentFilter": "当前筛选",
+    "filterAll": "全部",
+    "searchFilterLabel": "搜索：{keyword}",
+    "matchCount": "匹配 {total} 条",
+    "fetchFailed": "获取提示词失败",
+    "addedToAssets": "已加入我的素材",
+    "assetSaveFailed": "素材保存失败",
+    "addToMyAssets": "加入我的素材",
+    "promptCopied": "提示词已复制",
+    "emptyTitle": "没有找到匹配的提示词",
+    "emptyDescription": "尝试清除搜索词，或切换分类和标签。",
+    "loadingMore": "加载中...",
+    "scrollForMore": "继续向下滚动加载更多",
+    "reachedEnd": "已经到底了"
+  },
+  "billing": {
+    "result": {
+      "confirming": "正在确认支付结果…",
+      "successTitle": "支付成功",
+      "canceledTitle": "支付已取消",
+      "pendingTitle": "支付结果确认中",
+      "successDesc": "套餐权益和积分已经更新。",
+      "canceledDesc": "订单已取消，你可以重新选择套餐和支付方式。",
+      "pendingDesc": "支付回调可能稍有延迟，可前往订单记录继续查看状态。",
+      "missingOrderId": "支付结果缺少订单编号",
+      "loadFailed": "支付结果加载失败",
+      "orderNoLabel": "订单号",
+      "statusLabel": "当前状态",
+      "statusPaid": "已支付",
+      "statusCanceled": "已取消",
+      "statusPending": "待确认",
+      "backToBilling": "返回充值中心",
+      "viewOrders": "查看订单记录"
     },
-    "prompts": {
-        "title": "提示词中心",
-        "subtitle": "共 {total} 条提示词，按标题、标签与分类快速查找灵感。",
-        "searchPlaceholder": "按标题查询",
-        "categoryAriaLabel": "提示词分类",
-        "tagAriaLabel": "提示词标签",
-        "categoryLabel": "分类",
-        "tagLabel": "标签",
-        "currentFilter": "当前筛选",
-        "filterAll": "全部",
-        "searchFilterLabel": "搜索：{keyword}",
-        "matchCount": "匹配 {total} 条",
-        "fetchFailed": "获取提示词失败",
-        "addedToAssets": "已加入我的素材",
-        "assetSaveFailed": "素材保存失败",
-        "addToMyAssets": "加入我的素材",
-        "promptCopied": "提示词已复制",
-        "emptyTitle": "没有找到匹配的提示词",
-        "emptyDescription": "尝试清除搜索词，或切换分类和标签。",
-        "loadingMore": "加载中...",
-        "scrollForMore": "继续向下滚动加载更多",
-        "reachedEnd": "已经到底了"
-    },
-    "billing": {
-        "result": {
-            "confirming": "正在确认支付结果…",
-            "successTitle": "支付成功",
-            "canceledTitle": "支付已取消",
-            "pendingTitle": "支付结果确认中",
-            "successDesc": "套餐权益和积分已经更新。",
-            "canceledDesc": "订单已取消，你可以重新选择套餐和支付方式。",
-            "pendingDesc": "支付回调可能稍有延迟，可前往订单记录继续查看状态。",
-            "missingOrderId": "支付结果缺少订单编号",
-            "loadFailed": "支付结果加载失败",
-            "orderNoLabel": "订单号",
-            "statusLabel": "当前状态",
-            "statusPaid": "已支付",
-            "statusCanceled": "已取消",
-            "statusPending": "待确认",
-            "backToBilling": "返回充值中心",
-            "viewOrders": "查看订单记录"
-        },
-        "checkout": {
-            "providerStripeDesc": "国际银行卡与数字钱包",
-            "providerAlipay": "支付宝",
-            "providerAlipayDesc": "支付宝网页支付",
-            "providerWechat": "微信支付",
-            "providerWechatDesc": "微信扫码支付",
-            "providerPayplyDesc": "自定义支付接口",
-            "providerManual": "人工确认",
-            "providerManualDesc": "线下转账或人工开通",
-            "loadFailed": "支付信息加载失败",
-            "createOrderFailed": "创建支付订单失败",
-            "popupBlocked": "浏览器阻止了支付窗口，请允许弹窗后重试",
-            "needManualConfirm": "该订单需要管理员人工确认",
-            "productNotFound": "套餐不存在或已下架",
-            "backToPlans": "返回套餐中心",
-            "securityBadge": "{brand} 安全结算",
-            "checkoutStepsAriaLabel": "结算步骤",
-            "tabOrderDetail": "订单明细",
-            "tabPaymentMethod": "支付方式",
-            "payTodayLabel": "今日需支付",
-            "unitPriceLabel": "套餐单价",
-            "quantityLabel": "购买数量",
-            "pointsRecharge": "充值积分",
-            "pointsCreative": "创作积分",
-            "pointsValue": "{amount} 积分",
-            "periodLabel": "权益周期",
-            "periodOneTime": "一次性到账",
-            "periodDays": "{days} 天",
-            "periodLongTerm": "长期有效",
-            "orderNote": "订单创建后可在个人中心查看状态；支付成功后套餐与积分自动更新。",
-            "currentOrderLabel": "当前订单",
-            "amountDueLabel": "应付金额",
-            "choosePaymentMethod": "选择支付方式",
-            "secureEncryption": "安全加密",
-            "quantityHint": "积分和权益按数量累计",
-            "decreaseQuantity": "减少购买数量",
-            "decreaseQuantityTitle": "减少数量",
-            "increaseQuantity": "增加购买数量",
-            "increaseQuantityTitle": "增加数量",
-            "confirmAndPay": "确认订单并继续支付",
-            "payHint": "仅创建支付订单，支付成功后才会开通权益。",
-            "orderCreated": "支付订单已创建",
-            "orderNoDisplay": "订单号 {orderNo}",
-            "copyPaymentInfo": "复制支付信息",
-            "paymentInfoCopied": "支付信息已复制",
-            "viewOrderInstructions": "查看订单说明",
-            "goToPay": "前往支付",
-            "backToProfileOrders": "返回个人中心查看订单"
-        }
-    },
-    "create": {
-        "allConversations": "全部会话 →",
-        "attachmentUploadFailed": "素材上传失败",
-        "attachmentsUploaded": "已上传 {count} 份素材",
-        "cancelTaskFailed": "停止任务失败",
-        "continueCreating": "继续创作",
-        "continueCreatingHint": "回到最近的会话继续完善",
-        "conversationDeleteFailed": "删除对话失败",
-        "conversationDeleted": "对话已删除",
-        "conversationsDeletedCount": "已删除 {count} 条对话",
-        "createEntrySwitched": "创作入口已切换，请重试",
-        "createRequestFailed": "创作请求失败",
-        "creationHistory": "创作历史",
-        "fileTooLarge": "{name} 超过 20MB",
-        "heroSubtitle": "从一个想法开始",
-        "heroTitle": "今天想创作什么？",
-        "loadingRecent": "正在读取最近创作...",
-        "loadingSkills": "正在加载创作 Skill...",
-        "messageRefilled": "已回填消息，可修改后重新发送",
-        "newConversation": "新建对话",
-        "newConversationTitle": "新对话",
-        "noConversationsYet": "完成第一次创作后，会话会出现在这里",
-        "openConversationFailed": "打开对话失败",
-        "overviewLoadFailed": "工作台概览加载失败",
-        "partialDeleteFailed": "部分对话删除失败，请重试",
-        "projectCreateFailed": "项目创建失败",
-        "promptRequired": "请先描述你的创作需求",
-        "recordNotAgentWorkbench": "该记录不属于创作 Agent 工作台",
-        "regeneratingFailedTask": "正在重新生成失败任务…",
-        "restoreConversationFailed": "恢复对话失败",
-        "retryTaskFailed": "重试任务失败",
-        "titleUpdateFailed": "修改标题失败",
-        "titleUpdated": "标题已更新",
-        "understandingRequest": "正在理解你的需求",
-        "unsupportedFileFormat": "{name} 不是支持的图片、视频或音频格式",
-        "useSkill": "使用 {name} Skill",
-        "composer": {
-            "addAttachment": "添加素材",
-            "autoMatchBySmartPlanning": "默认由智能规划自动匹配",
-            "capabilityAudio": "音频",
-            "capabilityImage": "图片",
-            "capabilityVideo": "视频",
-            "categoryAll": "全部",
-            "categoryCanvas": "画布",
-            "categoryDrama": "短剧",
-            "categoryEdit": "编辑",
-            "categoryImage": "图片",
-            "categoryVideo": "视频",
-            "chooseCreativeSkill": "选择创作 Skill",
-            "clearSelectionRestoreSmart": "清除选择并恢复智能规划",
-            "closeAutoSmartPlanning": "关闭自动智能规划",
-            "disabled": "已关闭",
-            "enabled": "已开启",
-            "generationModel": "生成模型",
-            "inputPlaceholder": "描述你的想法，或添加参考素材",
-            "loadingEllipsis": "正在加载...",
-            "modelCapabilityHint": "{capability}模型 · 可与其他模型同时生成",
-            "noModelsForCapability": "当前未配置可用的{capability}模型",
-            "noSkillsAvailable": "暂无可用 Skill",
-            "noSkillsInCategory": "当前分类暂无可用 Skill",
-            "openAutoSmartPlanning": "开启自动智能规划",
-            "removeAttachmentWithName": "移除{name}",
-            "removeSkill": "移除 Skill",
-            "removeSkillWithName": "移除 Skill {name}",
-            "scrollLeftSkillCategories": "向左查看更多 Skill 分类",
-            "scrollRightSkillCategories": "向右查看更多 Skill 分类",
-            "selectGenerationModel": "选择生成模型",
-            "selectedModelsCount": "已选择 {count} 个模型",
-            "send": "发送",
-            "skillCategoriesAriaLabel": "Skill 分类，可左右滑动查看更多",
-            "smartPlanningOff": "智能规划：已关闭",
-            "smartPlanningOffAria": "智能规划已关闭，点击开启",
-            "smartPlanningOn": "智能规划：已开启",
-            "smartPlanningOnAria": "智能规划已开启，点击关闭",
-            "stopGeneration": "停止生成",
-            "uploading": "上传中"
-        },
-        "conversationList": {
-            "batchDelete": "批量删除",
-            "batchManage": "批量管理",
-            "cancel": "取消",
-            "cancelEdit": "取消修改",
-            "conversationCount": "{count} 条对话",
-            "conversationTitle": "对话标题",
-            "delete": "删除",
-            "deleteConfirmDescription": "删除后会从创作历史中移除，当前对话中的消息和生成记录将不再显示。",
-            "deleteCountConfirmTitle": "删除 {count} 条对话？",
-            "deleteOneConfirmTitle": "删除这条对话？",
-            "exitManage": "退出管理",
-            "loadMoreConversations": "加载更多对话",
-            "loadingEllipsis": "正在读取...",
-            "manageConversation": "管理对话",
-            "manageItem": "管理{title}",
-            "newConversation": "新建对话",
-            "noConversations": "暂无创作会话",
-            "rename": "重命名",
-            "saveTitle": "保存标题",
-            "selectAll": "全选",
-            "selectItem": "选择{title}",
-            "selectedCount": "已选择 {count} 条"
-        },
-        "overview": {
-            "allProjects": "全部项目",
-            "canvasProject": "Canvas 项目",
-            "continueEditing": "继续编辑",
-            "createFirstCanvasProject": "创建第一个 Canvas 项目后，会在这里继续",
-            "imageGeneration": "图片生成",
-            "justNow": "刚刚",
-            "loadingCanvasProjects": "正在读取画布项目...",
-            "loadingOverview": "正在加载工作台概览",
-            "loadingRecentGenerations": "正在读取最近生成...",
-            "loadingRunningTasks": "正在读取运行任务...",
-            "noRecentGenerations": "完成一次图片或视频生成后，结果会出现在这里",
-            "noRunningTasks": "当前没有运行中的任务",
-            "nodeConnectionCount": "{nodes} 个节点 · {connections} 条连线",
-            "projectsAndTasks": "项目与任务",
-            "projectsAndTasksHint": "回到最近的项目，或查看仍在运行的任务",
-            "recentGenerations": "最近生成",
-            "recentGenerationsHint": "点击图片或视频可直接放大查看",
-            "recentlyEdited": "最近编辑 · {time}",
-            "retryLoading": "重新读取",
-            "runningAt": "{time} · 运行中",
-            "runningTasks": "运行任务",
-            "untitledProject": "未命名项目",
-            "videoGeneration": "视频生成",
-            "viewAssetLibrary": "查看素材库"
-        },
-        "messages": {
-            "userFallback": "用户",
-            "loadingConversation": "正在读取会话...",
-            "loadOlderMessages": "加载更早消息",
-            "retryTaskTitle": "重试「{title}」",
-            "retryTaskAria": "重试 {title}",
-            "canvasProject": "画布项目",
-            "dramaProject": "短剧项目",
-            "handoffAssetsReady": "{count} 份资产已交接到{label}",
-            "openProject": "打开",
-            "retry": "重试",
-            "createProject": "创建项目",
-            "generatedAudio": "生成音频",
-            "generatedVideo": "生成视频",
-            "generatedImage": "生成图片",
-            "referenced": "已引用",
-            "referenceAsset": "引用素材"
-        }
-    },
-    "image": {
-        "addedToMyAssets": "已加入我的素材",
-        "addedToReferences": "已加入参考图",
-        "addToAssets": "添加到素材",
-        "addToReferences": "加入参考图",
-        "agentBusy": "Agent 正在处理当前需求，请稍候",
-        "assistantSubtitle": "图片创作助手",
-        "backgroundTasksContinue": "后台生成任务会继续运行，可在历史记录中查看进度",
-        "cancel": "取消",
-        "cleanupMissingCount": "清理丢失 {count}",
-        "clipboardButton": "剪切板",
-        "clipboardImagesReadCount": "已读取 {count} 张参考图",
-        "composerSummary": "{size} · {count} 张",
-        "contactAdminForModel": "请联系管理员在后台配置可用生图模型",
-        "conversationCreateFailed": "创作会话创建失败",
-        "conversationLoadFailed": "完整对话加载失败，已显示当前生成记录",
-        "currentUserRunning": "当前用户运行 {active}/{limit}",
-        "delete": "删除",
-        "deleteLogsConfirm": "确定删除选中的 {count} 条生成记录吗？",
-        "deleteLogsModalTitle": "删除生成记录",
-        "download": "下载",
-        "emptyResultsDescription": "完成一次生成后，结果会按时间保留在这里。",
-        "emptyResultsTitle": "还没有生成图片",
-        "failCount": "失败 {count}",
-        "generate": "生成",
-        "generateAriaLabel": "开始生成，消耗 {cost} 积分",
-        "generationFailed": "生成失败",
-        "generationHistory": "生成记录",
-        "historyRecordOpened": "已打开这条历史生成记录，可以继续修改或重新生成。",
-        "imageCountUnit": "{count} 张",
-        "imageGenerated": "图片已生成",
-        "imageLost": "图片已丢失",
-        "imageRegenerated": "图片已重新生成",
-        "imageUnavailableAsset": "图片不可用，无法加入素材",
-        "imageUnavailableDownload": "图片不可用，无法下载",
-        "imageUnavailableReference": "图片不可用，无法加入参考图",
-        "imageWorkbenchSource": "生图工作台",
-        "logsDeletedCount": "已删除 {count} 条生成记录",
-        "messageRefilled": "已回填消息，可修改后重新发送",
-        "missingImagesCleanedCount": "已清理 {count} 个丢失图片",
-        "modelLabel": "模型",
-        "noClipboardImage": "剪切板里没有可读取的图片",
-        "onlyTextOrImageAssets": "生图工作台只能使用文本或图片素材",
-        "partialCleanupFailed": "记录已移除，部分关联资源删除失败，请稍后重试",
-        "pendingCount": "生成中 {count}",
-        "promptPlaceholder": "今天我们要创作什么，可直接粘贴文字或图片",
-        "promptRequired": "请输入生图提示词",
-        "queuedForGeneration": "已加入当前用户生成队列",
-        "referenceImages": "参考图",
-        "removeReferenceImage": "移除参考图",
-        "requestCancelled": "请求已取消",
-        "resultAltWithIndex": "生成结果 {index}",
-        "resultTitleWithIndex": "生成结果 {index}",
-        "resultsCleanupPartialFailed": "结果已从当前记录移除，部分关联资源清理失败，请稍后重试",
-        "resultsDeletedCount": "已删除 {count} 个结果",
-        "resultsTitle": "生成结果",
-        "retry": "重试",
-        "runningCount": "运行 {active}/{limit}",
-        "selectAll": "全选",
-        "smartPlanningRequired": "当前生图工作台未启用智能规划，请先选择图片模型",
-        "startGeneration": "开始生成",
-        "stopAgentAriaLabel": "停止 Agent 并取消本次生成",
-        "successCount": "成功 {count}",
-        "taskFailedText": "该任务生成失败。",
-        "taskPendingText": "该任务仍在生成中。",
-        "uploadButton": "上传"
-    },
-    "video": {
-        "addedToMyAssets": "已加入我的素材",
-        "addToAssets": "添加到素材",
-        "agentBusy": "Agent 正在处理当前需求，请稍候",
-        "assistantSubtitle": "视频创作助手",
-        "audioSettings": "音频设置",
-        "backgroundTasksContinue": "后台生成任务会继续运行，可在历史记录中查看进度",
-        "cancel": "取消",
-        "clipboardButton": "剪切板",
-        "clipboardImagesReadCount": "已读取 {count} 张参考图",
-        "composerSummary": "{size} · {seconds} 秒",
-        "concurrencyLimitReached": "当前用户视频生成已达到并发上限，请稍后再试",
-        "contactAdminForModel": "请联系管理员在后台配置可用视频模型",
-        "conversationCreateFailed": "创作会话创建失败",
-        "currentUserRunning": "当前用户运行 {active}/{limit}",
-        "delete": "删除",
-        "deleteLogsConfirm": "确定删除选中的 {count} 条生成记录吗？",
-        "deleteLogsModalTitle": "删除生成记录",
-        "download": "下载",
-        "emptyAudioHint": "暂无参考音频，最多 3 个，mp3/wav，单个 15MB 内",
-        "emptyImageHint": "暂无参考图，最多 9 张",
-        "emptyResultsDescription": "完成一次生成后，结果会按时间保留在这里。",
-        "emptyResultsTitle": "还没有生成视频",
-        "emptyVideoHint": "暂无参考视频，最多 3 个",
-        "failureCreateHint": "当前请求未能成功创建生成任务。",
-        "failureCreateTitle": "任务创建失败",
-        "failureDefaultHint": "请检查模型、额度和接口返回。",
-        "failureDefaultTitle": "生成失败",
-        "failurePollHint": "任务已提交后，轮询上游状态失败。",
-        "failurePollTitle": "任务查询失败",
-        "failureUpstreamHint": "任务已创建，但上游生成阶段失败。",
-        "failureUpstreamTitle": "上游生成失败",
-        "generate": "生成",
-        "generateAriaLabel": "开始生成，消耗 {cost} 积分",
-        "generationFailed": "生成失败",
-        "generationHistory": "生成记录",
-        "ignoredAudioOversize": "已忽略超过 15MB 的参考音频",
-        "ignoredImageOversize": "已忽略超过 30MB 的参考图",
-        "ignoredUnsupportedReference": "已忽略不支持的参考素材，请使用图片、mp4/mov 视频或 mp3/wav 音频",
-        "ignoredVideoOversize": "已忽略超过 50MB 的参考视频",
-        "logsDeletedCount": "已删除 {count} 条生成记录",
-        "messageRefilled": "已回填消息，可修改后重新发送",
-        "modelLabel": "模型",
-        "noClipboardImage": "剪切板里没有可读取的图片",
-        "originalTaskMissing": "找不到原任务记录，无法重试",
-        "partialCleanupFailed": "记录已移除，部分关联资源删除失败，请稍后重试",
-        "promptPlaceholder": "今天我们要创作什么，可直接粘贴文字或素材",
-        "promptRequired": "请输入视频提示词",
-        "referenceAudio": "参考音频",
-        "referenceImages": "参考图",
-        "referenceVideos": "参考视频",
-        "removeReferenceAudio": "移除参考音频",
-        "removeReferenceImage": "移除参考图",
-        "removeReferenceVideo": "移除参考视频",
-        "resultTitle": "生成视频",
-        "resultsTitle": "生成结果",
-        "retry": "重试",
-        "runningCount": "运行 {active}/{limit}",
-        "selectAll": "全选",
-        "smartPlanningRequired": "当前视频工作台未启用智能规划，请先选择视频模型",
-        "startGeneration": "开始生成",
-        "statusFailed": "失败",
-        "statusPending": "生成中",
-        "statusSuccess": "成功",
-        "stopAgentAriaLabel": "停止 Agent 并取消本次生成",
-        "timeoutError": "视频生成超时，请稍后重试",
-        "uploadButton": "上传",
-        "videoGenerated": "视频已生成",
-        "videoWorkbenchSource": "视频创作台",
-        "taskFailedText": "该任务生成失败。",
-        "taskPendingText": "该任务仍在生成中。",
-        "historyRecordOpened": "已打开这条历史生成记录，可以继续修改或重新生成。",
-        "ignoredAudioDuration": "已忽略不符合时长要求的参考音频：单个 2-15 秒，总时长不超过 15 秒",
-        "untitled": "未命名",
-        "videoGenerationCompleted": "视频生成完成",
-        "videoGenerationFailed": "视频生成失败",
-        "videoGenerationPending": "视频生成中",
-        "conversationLoadFailed": "完整对话加载失败，已显示当前生成记录",
-        "unknownError": "未知错误",
-        "resultsDeletedCount": "已删除 {count} 个结果"
-    },
-    "profile": {
-        "title": "个人中心",
-        "subtitle": "个人资料、套餐购买、订单记录、消费记录和积分流水统一放在一个用户后台里。",
-        "refresh": "刷新",
-        "refreshRecords": "刷新记录",
-        "planShort": "套餐",
-        "buyPlan": "购买套餐",
-        "metricPlan": "当前套餐",
-        "metricPlanNotLoaded": "未加载",
-        "metricPoints": "积分余额",
-        "metricPointsValue": "{amount} 积分",
-        "metricPointsDetail": "今日 {daily} · 永久 {permanent}",
-        "metricOrders": "充值订单",
-        "metricOrdersValue": "{count} 笔",
-        "metricPointsFlow": "积分流水",
-        "metricPointsFlowValue": "{count} 条",
-        "navAria": "个人中心分区",
-        "currentSection": "当前分区",
-        "switchSectionAria": "切换个人中心分区",
-        "sections": {
-            "overview": {
-                "label": "账户概览",
-                "description": "查看当前套餐、积分余额、最近订单和最近积分流水。",
-                "shortDescription": "资产摘要"
-            },
-            "profile": {
-                "label": "个人资料",
-                "description": "维护登录用户名、显示昵称和绑定邮箱。",
-                "shortDescription": "资料与邮箱"
-            },
-            "billing": {
-                "label": "套餐中心",
-                "description": "在个人中心内选择套餐，支付时进入独立安全结算页。",
-                "shortDescription": "购买套餐"
-            },
-            "orders": {
-                "label": "订单记录",
-                "description": "查看所有充值订单、支付状态和开通结果。",
-                "shortDescription": "收款状态"
-            },
-            "consume": {
-                "label": "消费记录",
-                "description": "查看模型调用、生成任务和接口消费扣除。",
-                "shortDescription": "积分扣除"
-            },
-            "points": {
-                "label": "积分记录",
-                "description": "查看每日积分、充值赠送、退款退回和管理员调整流水。",
-                "shortDescription": "余额流水"
-            },
-            "security": {
-                "label": "账号安全",
-                "description": "修改登录密码，修改后需要重新登录。",
-                "shortDescription": "密码设置"
-            }
-        },
-        "billingCenterTitle": "套餐中心",
-        "billingCenterDesc": "选择适合当前创作频率的方案，结算时进入独立安全支付页。",
-        "availablePlans": "可选套餐",
-        "availablePlansDesc": "价格、积分与有效期均同步后台已上架商品。",
-        "plansCount": "共 {count} 个方案",
-        "emptyProductsTitle": "暂无已上架套餐商品",
-        "emptyProductsDesc": "管理员上架商品后会显示在这里。",
-        "recentPointsTitle": "最近积分流水",
-        "recentPointsDesc": "展示最近的积分变化，更多记录在积分记录分区。",
-        "recentOrdersTitle": "最近订单",
-        "recentOrdersDesc": "展示最近的充值订单，支付完成后权益会自动或由管理员确认开通。",
-        "profilePanelTitle": "个人资料",
-        "profilePanelDesc": "修改昵称、绑定邮箱，邮箱可用于找回密码和登录。",
-        "ordersPanelTitle": "订单记录",
-        "ordersPanelDesc": "查看充值订单、支付渠道、订单状态和套餐开通结果。",
-        "consumePanelTitle": "消费记录",
-        "consumePanelDesc": "展示最近扣除积分的模型调用、生成任务和接口消费。",
-        "pointsPanelTitle": "积分记录",
-        "pointsPanelDesc": "每日积分、充值赠送、管理员调整和失败退回都会出现在这里。",
-        "securityPanelTitle": "账号安全",
-        "securityPanelDesc": "修改密码后会退出当前登录，需要重新登录。",
-        "emptyPointsTitle": "暂无积分记录",
-        "emptyPointsDesc": "每日积分、充值和模型消费记录会显示在这里。",
-        "emptyPointsDescAlt": "积分变化会按时间记录在这里。",
-        "emptyConsumeTitle": "暂无消费记录",
-        "emptyConsumeDesc": "产生模型调用或生成任务后会显示在这里。",
-        "emptyOrdersTitle": "暂无订单记录",
-        "emptyOrdersDesc": "购买套餐后可在这里查看支付状态。",
-        "emailBound": "当前绑定邮箱",
-        "emailUnbound": "当前未绑定邮箱",
-        "emailUnboundHint": "绑定邮箱后可用于找回密码和接收验证码。",
-        "usernameLabel": "登录用户名",
-        "displayNameLabel": "显示昵称",
-        "changeEmailLabel": "修改邮箱",
-        "bindEmailLabel": "绑定邮箱",
-        "emailCodeLabel": "邮箱验证码",
-        "emailCodeRequiredPlaceholder": "修改邮箱时必填",
-        "emailCodeOptionalPlaceholder": "邮箱未变化时无需填写",
-        "getEmailCode": "获取验证码",
-        "saveProfile": "保存资料",
-        "balanceAfter": "余额 {amount}",
-        "pointTypeConsume": "模型消费",
-        "pointTypeRefund": "消费退款",
-        "pointTypeCredit": "积分充值",
-        "pointTypeAdjust": "后台调整",
-        "orderStatusPending": "待支付",
-        "orderStatusPaid": "已开通",
-        "orderStatusRefunding": "退款处理中",
-        "orderStatusClosed": "已关闭",
-        "orderStatusCanceled": "已取消",
-        "orderStatusRefunded": "已退款",
-        "saveProfileFailed": "保存个人资料失败",
-        "saveProfileSuccess": "个人资料已保存",
-        "emailUnchanged": "邮箱未变化，无需获取验证码",
-        "codeSendFailed": "验证码发送失败",
-        "codeSendSuccess": "验证码已发送，请查看邮箱",
-        "passwordChangeFailed": "修改密码失败",
-        "passwordChangeSuccess": "密码已修改，请重新登录",
-        "exportSuccess": "个人数据已导出",
-        "exportFailed": "个人数据导出失败",
-        "currentPassword": "当前密码",
-        "newPassword": "新密码",
-        "passwordMinPlaceholder": "至少 8 位",
-        "changePasswordAndRelogin": "修改密码并重新登录",
-        "personalDataTitle": "个人数据",
-        "personalDataDesc": "导出账户、积分、订单和创作记录。媒体原文件与安全凭据不包含在 JSON 中。",
-        "exportMyData": "导出我的数据",
-        "productsLoadFailed": "充值套餐加载失败",
-        "ordersLoadFailed": "订单记录加载失败",
-        "pointsLoadFailed": "积分记录加载失败",
-        "consumeLoadFailed": "消费记录加载失败",
-        "deletion": {
-            "loadFailed": "注销申请状态加载失败",
-            "submitSuccess": "注销申请已提交",
-            "submitFailed": "注销申请提交失败",
-            "withdrawSuccess": "注销申请已撤回",
-            "withdrawFailed": "注销申请撤回失败",
-            "title": "账号注销",
-            "description": "提交后由管理员人工核验。受理只代表进入注销处理，不会立即删除订单、支付记录或仍需保留的数据。",
-            "requestedAt": "申请时间：{time}",
-            "reviewNote": "处理备注：{note}",
-            "withdrawConfirmTitle": "撤回注销申请？",
-            "withdrawConfirmDesc": "撤回后账号继续正常使用，之后仍可重新提交。",
-            "withdrawOk": "撤回",
-            "cancel": "取消",
-            "withdrawButton": "撤回申请",
-            "processing": "已进入处理",
-            "requestButton": "申请注销",
-            "modalTitle": "申请注销账号",
-            "submitButton": "提交申请",
-            "modalWarning": "管理员会核对创作数据、媒体引用和订单保留要求。正式执行前可能需要进一步身份复核。",
-            "passwordPlaceholder": "用于确认是本人操作",
-            "noteLabel": "补充说明（选填）",
-            "notePlaceholder": "可填写注销原因或需要管理员注意的事项",
-            "statusPending": "待处理",
-            "statusAccepted": "已受理",
-            "statusRejected": "已拒绝",
-            "statusWithdrawn": "已撤回"
-        }
-    },
-    "help": {
-        "eyebrow": "用户帮助中心",
-        "title": "从操作到交付，按真实流程完成创作",
-        "subtitle": "选择一个任务，查看完整流程、逐步操作、结果处理和常见问题。",
-        "searchPlaceholder": "搜索功能、按钮或问题",
-        "searchAria": "搜索帮助内容",
-        "searchResultsAria": "帮助搜索结果",
-        "searchResultsTitle": "搜索结果",
-        "resultCount": "{count} 项",
-        "emptySearch": "没有找到相关教程，尝试搜索“画布”“参考图”“订单”或“下载”。",
-        "categoriesAria": "帮助分类",
-        "selectTutorial": "选择教程",
-        "flowTitle": "完整流程",
-        "flowDescription": "先看清各阶段，再进入逐步操作。",
-        "stepsTitle": "详细教程",
-        "stepsDescription": "按顺序完成，每一步都包含检查项。",
-        "faqTitle": "常见问题",
-        "faqDescription": "优先按当前功能的真实状态处理。",
-        "flowAria": "操作流程",
-        "articles": {
-            "start": {
-                "label": "快速开始",
-                "title": "从一个想法开始创作",
-                "summary": "第一次使用时，优先从创作 Agent 开始。它会理解目标、参考素材和交付形式，再把任务交给对应的图片、视频、画布或短剧能力。",
-                "routeLabel": "打开创作 Agent",
-                "keywords": ["开始", "新手", "创作", "流程", "结果", "下载"],
-                "outcomes": ["知道从哪个入口开始", "理解智能规划与手动模型的区别", "能预览、下载并继续引用结果"],
-                "flow": [
-                    {
-                        "title": "描述目标",
-                        "detail": "说明要做什么、给谁看、用于哪里"
-                    },
-                    {
-                        "title": "添加参考",
-                        "detail": "上传人物、商品、风格图或已有素材"
-                    },
-                    {
-                        "title": "确认规划",
-                        "detail": "保持智能规划，或选择 Skill 与模型"
-                    },
-                    {
-                        "title": "检查结果",
-                        "detail": "预览媒体，下载或引用到下一轮"
-                    }
-                ],
-                "steps": [
-                    {
-                        "title": "把目标写完整",
-                        "description": "不要只写一个风格词。至少补充主体、用途、画面或镜头要求以及最终希望得到的内容。",
-                        "checklist": ["主体：人物、商品、场景或故事", "用途：电商、社媒、短剧、提案或个人创作", "约束：尺寸、时长、数量、文字、品牌色和必须保留的细节"],
-                        "tip": "不确定参数时保持智能规划开启，Agent 会先给出可验证的选择摘要。"
-                    },
-                    {
-                        "title": "需要一致性时先放参考素材",
-                        "description": "点击输入框附件入口上传图片或引用已有素材。人物脸部、商品外观、Logo 和既有画风都应在发送前提供。",
-                        "checklist": ["人物一致性：上传清晰正脸或角色设定", "商品一致性：上传多角度实拍或白底图", "风格一致性：选择一到三张最接近目标的参考图"]
-                    },
-                    {
-                        "title": "选择执行方式",
-                        "description": "默认智能规划会自动匹配可执行模型与参数。只有明确知道模型差异时，才关闭智能规划并手动选择一个或多个模型。",
-                        "checklist": ["Skill 是执行能力，不会把一段提示词塞进输入框", "手动选择模型会关闭智能规划", "清空手动模型后会恢复智能规划"]
-                    },
-                    {
-                        "title": "处理生成结果",
-                        "description": "点击图片或视频可打开预览。素材操作区提供下载和引用，引用后可以继续要求改版、扩展镜头或制作配套内容。",
-                        "checklist": ["先放大检查人物、文字、边缘和运动连贯性", "满意结果直接下载", "需要续作时点击引用素材，再描述下一步变化"]
-                    }
-                ],
-                "faqs": [
-                    {
-                        "question": "我不知道该选图片、视频还是画布怎么办？",
-                        "answer": "直接从创作 Agent 描述最终用途。保持智能规划开启，系统会先判断交付类型并给出选择摘要。"
-                    },
-                    {
-                        "question": "生成以后还能继续修改吗？",
-                        "answer": "可以。打开结果预览检查后，使用结果下方的引用素材操作继续对话；需要精确参数时再进入对应专业工作台。"
-                    }
-                ]
-            },
-            "agent": {
-                "label": "创作 Agent",
-                "title": "用 Agent 完成从需求到交付",
-                "summary": "适合一句需求、多物料方案和跨图片、视频、画布、短剧的连续创作。对话与结果会保存在服务器会话中。",
-                "routeLabel": "进入 Agent 工作台",
-                "keywords": ["agent", "对话", "skill", "模型", "智能规划", "附件", "历史", "暂停"],
-                "outcomes": ["会选择 Skill 和智能规划", "会管理会话与历史", "会对生成结果继续迭代"],
-                "flow": [
-                    {
-                        "title": "输入需求",
-                        "detail": "写明目标、受众、用途和交付物"
-                    },
-                    {
-                        "title": "选择能力",
-                        "detail": "按需添加 Skill、参考素材或手动模型"
-                    },
-                    {
-                        "title": "Agent 规划",
-                        "detail": "查看方向、模型、参数与产物理由"
-                    },
-                    {
-                        "title": "执行任务",
-                        "detail": "对话内生成并持续显示任务状态"
-                    },
-                    {
-                        "title": "继续迭代",
-                        "detail": "引用结果、补充约束或编辑原消息"
-                    }
-                ],
-                "steps": [
-                    {
-                        "title": "组织一条可执行需求",
-                        "description": "用自然语言说明最终要交付什么。复杂任务可以列清单，但不要自己拆成模型参数。",
-                        "checklist": ["目标：例如完成一组新品发布素材", "交付：例如主视觉、三张详情图和一条短视频", "一致性：指定必须复用的人物、商品和色彩", "判断标准：说明什么情况算完成"]
-                    },
-                    {
-                        "title": "添加 Skill、参考素材与模型",
-                        "description": "Skill 位于输入区左侧，选中后显示为可移除卡片。灯泡控制智能规划；模型按钮支持多选可执行模型。",
-                        "checklist": ["只有任务需要特定能力时才选 Skill", "默认保持智能规划开启", "手动对比模型时最多选择六个", "参考素材在发送前确认已显示在输入区"]
-                    },
-                    {
-                        "title": "阅读 Agent 的选择摘要",
-                        "description": "Agent 会先解释创作方向以及为什么选择当前模型和参数。若方向不对，先补充约束，不必等待错误方案全部生成。",
-                        "checklist": ["检查主体与用途是否理解正确", "检查交付数量和格式", "检查参考素材是否被引用", "检查模型和画幅是否符合任务"]
-                    },
-                    {
-                        "title": "管理消息和会话",
-                        "description": "用户消息提供复制和编辑；重新编辑后可按新要求继续。历史入口用于打开、改名、选择和删除服务器会话。",
-                        "checklist": ["复制：复用完整需求", "编辑：修正原需求后重新执行", "新对话：开始不相关项目时使用", "历史：恢复之前的上下文和结果"]
-                    },
-                    {
-                        "title": "预览、下载与引用媒体",
-                        "description": "点击媒体本体打开大图或视频预览。下载按钮位于素材下方；引用按钮把当前结果带回输入区，用于下一轮变化。",
-                        "checklist": ["预览后再决定是否下载", "引用时说明保留什么、修改什么", "需要专业参数时进入图片或视频工作台"]
-                    }
-                ],
-                "faqs": [
-                    {
-                        "question": "Skill 会不会自动改写我的输入？",
-                        "answer": "不会。选中的 Skill 作为执行能力单独提交，并在输入框上方显示卡片；你的原始文字保持不变。"
-                    },
-                    {
-                        "question": "为什么选择模型后智能规划关闭了？",
-                        "answer": "手动模型代表你明确指定执行范围，因此会关闭自动匹配。清空模型选择即可恢复智能规划。"
-                    }
-                ]
-            },
-            "image": {
-                "label": "生图工作台",
-                "title": "生成、精调并复用图片",
-                "summary": "生图工作台适合需要明确画幅、数量、质量和参考图控制的单图或成组图片任务。",
-                "keywords": ["图片", "生图", "参考图", "画幅", "数量", "质量", "历史", "下载"],
-                "outcomes": ["会使用参考图", "会确认图片参数", "会从历史结果继续创作"],
-                "flow": [
-                    {
-                        "title": "描述画面",
-                        "detail": "主体、环境、构图、光线和用途"
-                    },
-                    {
-                        "title": "提供参考",
-                        "detail": "人物、商品、风格或上一张结果"
-                    },
-                    {
-                        "title": "确认参数",
-                        "detail": "模型、画幅、质量与生成数量"
-                    },
-                    {
-                        "title": "生成检查",
-                        "detail": "查看 Agent 决策和任务进度"
-                    },
-                    {
-                        "title": "复用结果",
-                        "detail": "预览、下载、引用或继续精调"
-                    }
-                ],
-                "steps": [
-                    {
-                        "title": "选择文生图或参考图流程",
-                        "description": "没有固定主体时直接描述画面；需要保留人物、商品或构图时先添加参考图。",
-                        "checklist": ["人物参考尽量清晰、无遮挡", "商品参考保留真实比例与关键结构", "风格参考不要与主体参考互相冲突"]
-                    },
-                    {
-                        "title": "让 Agent 先规划",
-                        "description": "输入需求后，Agent 会判断是普通单图还是成套任务，并选择匹配模型与参数。",
-                        "checklist": ["检查推荐画幅是否匹配投放位置", "检查数量是否满足对比选择", "检查是否需要文字、Logo 或留白区域"]
-                    },
-                    {
-                        "title": "按需调整生成参数",
-                        "description": "设置入口集中展示当前模型、尺寸、质量和数量。手机端参数面板可纵向滚动，不需要横向拖动。",
-                        "checklist": ["社媒方图常用 1:1", "封面与横幅优先横向画幅", "人物海报和竖屏内容优先竖向画幅", "批量数量越高，积分消耗通常越高"]
-                    },
-                    {
-                        "title": "检查并处理结果",
-                        "description": "生成完成后点击图片打开预览，检查主体一致性、文字、手部、边缘和材质。",
-                        "checklist": ["满意：点击下载", "方向正确但细节不足：引用结果继续修改", "方向错误：回到需求说明中修正目标或参考图"]
-                    }
-                ],
-                "faqs": [
-                    {
-                        "question": "为什么参考图没有被使用？",
-                        "answer": "确认参考素材已经出现在输入区，并在需求中明确说明要保留的人物、商品或构图。只上传但不说明用途时，Agent 可能按风格参考处理。"
-                    },
-                    {
-                        "question": "图片历史在哪里？",
-                        "answer": "工作台历史区域会显示当前用户的服务器生成记录。打开历史结果后可预览、下载或作为下一轮参考。"
-                    }
-                ],
-                "routeLabel": "打开生图工作台"
-            },
-            "video": {
-                "label": "视频创作台",
-                "title": "完成文生视频与图生视频",
-                "summary": "视频创作台用于控制首帧参考、镜头运动、时长、画幅和音频选项，适合单镜头短视频和图片动效。",
-                "keywords": ["视频", "图生视频", "文生视频", "首帧", "时长", "镜头", "音频", "下载"],
-                "outcomes": ["会区分文生与图生视频", "会描述镜头和运动", "会处理任务失败与结果下载"],
-                "flow": [
-                    {
-                        "title": "选择起点",
-                        "detail": "纯文字创作，或添加图片作为首帧"
-                    },
-                    {
-                        "title": "描述运动",
-                        "detail": "主体动作、镜头、节奏和禁止变化"
-                    },
-                    {
-                        "title": "确认设置",
-                        "detail": "模型、时长、画幅、质量与音频"
-                    },
-                    {
-                        "title": "等待任务",
-                        "detail": "查看提交、生成和规范化进度"
-                    },
-                    {
-                        "title": "检查成片",
-                        "detail": "播放预览、下载或引用续作"
-                    }
-                ],
-                "steps": [
-                    {
-                        "title": "决定是否使用首帧图片",
-                        "description": "希望保留具体人物、商品或构图时使用图生视频；只需要自由生成镜头时使用文生视频。",
-                        "checklist": ["首帧比例尽量接近目标视频比例", "避免上传模糊或严重裁切的图片", "图生视频要写清哪些元素保持不变"]
-                    },
-                    {
-                        "title": "把动作和镜头分开描述",
-                        "description": "先说主体发生什么，再说摄影机如何移动，最后补充节奏、光线和禁止项。",
-                        "checklist": ["主体动作：转身、行走、表情或产品运动", "镜头：推进、拉远、环绕、跟拍或固定", "节奏：缓慢、自然、快速或分段", "稳定性：禁止变脸、变形、文字漂移或多余物体"]
-                    },
-                    {
-                        "title": "确认时长、画幅与音频",
-                        "description": "设置面板显示当前视频参数；音频区域默认收起，需要声音时再展开。",
-                        "checklist": ["竖屏内容选择适合手机的画幅", "时长越长越需要明确分镜变化", "不需要声音时保持音频关闭", "手动模型仅显示当前已启用且可执行的渠道"]
-                    },
-                    {
-                        "title": "处理任务状态",
-                        "description": "视频生成时间通常长于图片。对话暂停会停止当前 Agent 流程；任务失败时按错误提示修改输入或重试。",
-                        "checklist": ["不要连续重复提交同一请求", "失败先查看模型、参考图和时长提示", "成功后播放完整视频再下载"]
-                    }
-                ],
-                "faqs": [
-                    {
-                        "question": "为什么模型列表为空？",
-                        "answer": "前端只展示当前真正可执行的视频模型。如果没有可用模型，页面会明确提示暂无已启用的视频能力。"
-                    },
-                    {
-                        "question": "生成时长和设置不一致怎么办？",
-                        "answer": "服务器会按目标时长规范化结果；无法规范化时任务会明确失败，不会把错误时长的媒体登记为成功。"
-                    }
-                ],
-                "routeLabel": "打开视频创作台"
-            },
-            "canvas": {
-                "label": "我的画布",
-                "title": "用节点连接完整创作流程",
-                "summary": "Canvas 适合把文本、图片、视频、音频和全景图放进同一项目，通过连接关系组织参考、生成和后续编辑。",
-                "keywords": ["画布", "节点", "连接", "双击", "全景", "沉浸", "导入", "agent"],
-                "outcomes": ["会创建和连接节点", "会调用 Canvas Agent", "会生成并沉浸查看全景图"],
-                "flow": [
-                    {
-                        "title": "创建项目",
-                        "detail": "从画布列表新建或继续已有项目"
-                    },
-                    {
-                        "title": "添加节点",
-                        "detail": "双击空白或从连接菜单选择类型"
-                    },
-                    {
-                        "title": "组织引用",
-                        "detail": "连接文本、图片、视频和音频节点"
-                    },
-                    {
-                        "title": "生成编辑",
-                        "detail": "使用 Agent 或节点工具执行任务"
-                    },
-                    {
-                        "title": "检查交付",
-                        "detail": "预览、下载、复制提示词或继续连接"
-                    }
-                ],
-                "steps": [
-                    {
-                        "title": "创建节点并整理空间",
-                        "description": "进入项目后双击画布空白处创建节点，也可以从已有节点的连接入口选择下一种节点。",
-                        "checklist": ["文字节点：保存提示词、脚本和说明", "图片节点：导入或生成图片", "视频与音频节点：组织媒体结果", "全景节点：生成 2:1 环境全景"]
-                    },
-                    {
-                        "title": "用连接表达参考关系",
-                        "description": "把参考节点连接到目标节点。目标节点输入中可以使用 @ 引用已连接素材，发送前会按当前连接重新编号。",
-                        "checklist": ["先连接，再在目标节点发起生成", "删除连接前确认后续节点不再需要该参考", "复杂项目按上游参考到下游结果的方向排列"]
-                    },
-                    {
-                        "title": "使用 Canvas Agent",
-                        "description": "右上角 Agent 面板支持当前项目上下文、Skill、智能规划和多模型选择，可根据需求创建或更新节点。",
-                        "checklist": ["说明要新增还是修改现有节点", "需要引用时点选当前节点或素材", "检查 Agent 的计划与目标节点类型", "暂停对话会统一停止当前执行流程"]
-                    },
-                    {
-                        "title": "生成并查看全景节点",
-                        "description": "选择全景图节点后输入环境描述，系统按 2:1 等距柱状投影生成。成功结果会在节点中提供可拖动的沉浸查看。",
-                        "checklist": ["推荐尺寸为 2048×1024", "地平线和场景中心写清楚", "避免普通横幅、鱼眼圆框和明显接缝", "生成后拖动视角检查左右衔接和顶部、地面完整性"]
-                    },
-                    {
-                        "title": "使用节点结果工具",
-                        "description": "选中或悬停媒体节点可预览、下载、复制提示词、局部编辑、放大或继续连接生成。",
-                        "checklist": ["重要结果先下载留存", "复制提示词用于复盘参数", "继续生成前保留原节点，便于比较版本"]
-                    }
-                ],
-                "faqs": [
-                    {
-                        "question": "为什么 @ 列表里没有素材？",
-                        "answer": "只有已经连接到当前目标节点的图片或文本才会出现在引用列表中。先建立连接，再打开输入框选择。"
-                    },
-                    {
-                        "question": "全景图为什么不能沉浸查看？",
-                        "answer": "全景素材需要接近 2:1 比例并成功登记为全景节点。普通图片节点即使很宽，也不会自动切换为全景查看器。"
-                    }
-                ],
-                "routeLabel": "打开我的画布"
-            },
-            "drama": {
-                "label": "短剧项目",
-                "title": "从故事梗概推进到可交付短剧",
-                "summary": "短剧工作区按项目组织剧本结构、角色与场景、分镜审核、镜头生成、配音、字幕和成片导出。",
-                "keywords": ["短剧", "剧本", "角色", "场景", "分镜", "镜头", "配音", "字幕", "导出", "版本"],
-                "outcomes": ["理解短剧完整阶段", "会审核后再批量生成", "会保存版本并导出字幕或成片"],
-                "flow": [
-                    {
-                        "title": "建立项目",
-                        "detail": "填写项目目标、受众和故事方向"
-                    },
-                    {
-                        "title": "结构提取",
-                        "detail": "Agent 整理剧本、角色、场景和分集"
-                    },
-                    {
-                        "title": "内容审核",
-                        "detail": "确认镜头、对白、字幕和视觉方案"
-                    },
-                    {
-                        "title": "批量生产",
-                        "detail": "生成分镜、镜头视频和配音"
-                    },
-                    {
-                        "title": "合成导出",
-                        "detail": "调整字幕时间轴并输出成片或草稿"
-                    }
-                ],
-                "steps": [
-                    {
-                        "title": "创建项目并明确生产目标",
-                        "description": "从短剧列表创建项目，先写清题材、受众、平台、时长和集数。已有故事文本可直接交给短剧 Agent 整理。",
-                        "checklist": ["每集目标时长", "主要角色与关系", "故事冲突和结尾方向", "平台画幅与内容限制"]
-                    },
-                    {
-                        "title": "用 Agent 提取结构",
-                        "description": "Agent 会把输入整理为可编辑的项目结构，而不是只返回一段聊天内容。生成后逐项检查角色、场景、分集和镜头。",
-                        "checklist": ["角色名称与外观保持唯一", "场景名称避免重复含义", "每集有明确起承转合", "镜头对白和字幕与剧情一致"]
-                    },
-                    {
-                        "title": "先审核内容，再开始批量生成",
-                        "description": "在内容审核阶段修正镜头顺序、景别、动作、对白和视觉提示。确认完整视觉方案后再进入生产。",
-                        "checklist": ["镜头是否能在目标时长内完成", "角色和场景引用是否正确", "对白是否适合配音", "字幕是否需要与对白不同"],
-                        "tip": "批量生成前保存一个版本，后续重做时可以快速恢复。"
-                    },
-                    {
-                        "title": "生成分镜、镜头和配音",
-                        "description": "可以逐镜头生成，也可以批量生成未完成项。项目内队列会按顺序提交，避免同时创建过多任务。",
-                        "checklist": ["先完成分镜图再生成视频镜头", "失败镜头使用重试，不重复新建相同任务", "有对白的镜头再生成配音", "生成期间可取消当前任务"]
-                    },
-                    {
-                        "title": "处理字幕、版本与导出",
-                        "description": "在字幕时间轴中检查每句出现时间，可导出 SRT；所有镜头和必要配音完成后再合成成片。项目还支持版本历史和剪映草稿导出。",
-                        "checklist": ["检查字幕是否超出镜头时长", "恢复版本前确认当前修改已保存", "成片生成后完整播放一次", "需要继续剪辑时导出剪映 ZIP 草稿"]
-                    }
-                ],
-                "faqs": [
-                    {
-                        "question": "为什么不能直接生成成片？",
-                        "answer": "成片依赖已审核的镜头视频、必要配音和字幕时间轴。页面会指出尚未完成的生产环节，避免合成缺失素材。"
-                    },
-                    {
-                        "question": "重新生成会覆盖旧版本吗？",
-                        "answer": "关键重生成前会保存项目快照，也可以在版本历史中手动保存。需要回退时打开版本历史并恢复指定版本。"
-                    }
-                ],
-                "routeLabel": "打开短剧项目"
-            },
-            "assets": {
-                "label": "我的素材",
-                "title": "整理并复用创作素材",
-                "summary": "素材库保存当前用户的文本、图片、视频和音频，可按类型、标题、标签和来源检索，并在画布与创作流程中引用。",
-                "keywords": ["素材", "上传", "标签", "搜索", "预览", "下载", "引用"],
-                "outcomes": ["会新增和整理素材", "会预览与下载", "会在其他创作流程引用素材"],
-                "flow": [
-                    {
-                        "title": "收集素材",
-                        "detail": "上传文件、添加 URL 或保存生成结果"
-                    },
-                    {
-                        "title": "补充信息",
-                        "detail": "填写标题、来源和可搜索标签"
-                    },
-                    {
-                        "title": "查找预览",
-                        "detail": "按类型、关键词和标签筛选"
-                    },
-                    {
-                        "title": "复用交付",
-                        "detail": "复制文本、下载媒体或插入画布"
-                    }
-                ],
-                "steps": [
-                    {
-                        "title": "新增正确的素材类型",
-                        "description": "新增素材弹窗支持文本、图片、视频和音频。选择类型后再填写对应内容或上传文件。",
-                        "checklist": ["标题写成以后能搜索到的名称", "来源说明素材来自上传、生成或项目", "标签使用人物、商品、项目、风格等稳定词", "不要把密钥或隐私信息保存成文本素材"]
-                    },
-                    {
-                        "title": "预览、编辑和下载",
-                        "description": "素材卡提供预览和管理操作。文本可复制，媒体可下载；标题、标签和来源信息可以继续编辑。",
-                        "checklist": ["下载前先打开预览确认文件", "编辑只修改素材记录，不会自动修改已引用的历史项目", "删除前确认没有项目继续依赖该素材"]
-                    },
-                    {
-                        "title": "在创作中引用素材",
-                        "description": "Agent 结果下方可直接引用当前媒体；Canvas 的素材选择弹窗会在首次打开时加载当前用户素材。",
-                        "checklist": ["引用后确认素材卡出现在输入区", "说明素材用于主体、风格还是首帧", "大型项目使用清晰标签保持检索效率"]
-                    }
-                ],
-                "faqs": [
-                    {
-                        "question": "素材为什么刚打开还没显示？",
-                        "answer": "素材按当前用户从服务器加载。首次打开会显示紧凑加载状态；失败时使用页面提供的重试操作。"
-                    },
-                    {
-                        "question": "删除素材会影响项目吗？",
-                        "answer": "服务器会检查创作会话、Canvas、短剧和生成记录引用。仍被使用的媒体不会被直接删除，以免项目出现失效文件。"
-                    }
-                ],
-                "routeLabel": "打开我的素材"
-            },
-            "prompts": {
-                "label": "提示词",
-                "title": "查找、保存并复用提示词",
-                "summary": "公共提示词库用于发现结构和灵感；我的提示词用于保存个人模板。两者都支持复制，个人提示词通过弹窗新增。",
-                "keywords": ["提示词", "分类", "标签", "搜索", "复制", "添加提示词", "我的提示词"],
-                "outcomes": ["会筛选公共提示词", "会保存个人模板", "知道提示词与 Skill 的区别"],
-                "flow": [
-                    {
-                        "title": "搜索灵感",
-                        "detail": "按标题、分类和标签筛选公共内容"
-                    },
-                    {
-                        "title": "查看详情",
-                        "detail": "打开提示词确认结构和适用场景"
-                    },
-                    {
-                        "title": "复制改写",
-                        "detail": "替换主体、用途、风格和约束"
-                    },
-                    {
-                        "title": "保存模板",
-                        "detail": "在我的提示词弹窗中记录个人版本"
-                    }
-                ],
-                "steps": [
-                    {
-                        "title": "从分类和标签缩小范围",
-                        "description": "公共提示词数量较多，先选分类，再用标签和关键词定位具体用途。手机端使用下拉筛选，不需要横向滑动查找。",
-                        "checklist": ["先按图片、视频或其他用途选择分类", "用行业、风格和主体标签继续筛选", "打开详情后再复制完整内容"]
-                    },
-                    {
-                        "title": "把示例改成自己的需求",
-                        "description": "公共提示词是结构参考，不应原样提交。替换占位内容，并补充真实主体、参考素材和交付限制。",
-                        "checklist": ["替换品牌、人物、商品和场景", "删除不适合当前项目的风格词", "补充画幅、数量、时长和禁止项", "涉及参考图时在创作输入区实际添加素材"]
-                    },
-                    {
-                        "title": "保存到我的提示词",
-                        "description": "进入我的提示词，点击添加提示词打开弹窗，填写标题、分类、标签、正文和备注。",
-                        "checklist": ["标题体现用途而不是随意编号", "分类和标签保持统一", "备注记录使用场景或替换规则", "列表操作可复制和编辑已有提示词"]
-                    }
-                ],
-                "faqs": [
-                    {
-                        "question": "提示词和 Skill 有什么区别？",
-                        "answer": "提示词是你输入给模型的文字内容；Skill 是 Agent 的执行能力。选择 Skill 不会把一段固定文字自动填入输入框。"
-                    },
-                    {
-                        "question": "为什么添加提示词不是常驻大表单？",
-                        "answer": "添加操作使用弹窗，列表页面保持用于搜索和管理；完成保存或取消后会回到原列表位置。"
-                    }
-                ],
-                "routeLabel": "打开提示词库"
-            },
-            "account": {
-                "label": "账户与购买",
-                "title": "管理套餐、积分与订单",
-                "summary": "右上角头像进入个人中心，可查看当前套餐、积分余额、个人资料、套餐购买、订单、消费记录、积分流水和账户安全。",
-                "keywords": ["个人中心", "套餐", "积分", "每日免费积分", "购买", "支付", "订单", "密码"],
-                "outcomes": ["知道个人中心各分区", "会完成套餐购买", "会核对积分和订单状态"],
-                "flow": [
-                    {
-                        "title": "选择商品",
-                        "detail": "在个人中心打开套餐中心并比较权益"
-                    },
-                    {
-                        "title": "确认订单",
-                        "detail": "选择数量与支付方式，核对金额和积分"
-                    },
-                    {
-                        "title": "完成支付",
-                        "detail": "进入安全结算页并按渠道继续"
-                    },
-                    {
-                        "title": "核对权益",
-                        "detail": "回到订单、套餐和积分记录确认结果"
-                    }
-                ],
-                "steps": [
-                    {
-                        "title": "从头像进入个人中心",
-                        "description": "右上角头像菜单保留个人中心入口。侧边栏底部帮助中心不再重复跳转个人资料。",
-                        "checklist": ["账户概览：套餐、余额和最近记录", "个人资料：显示名称和邮箱", "账户安全：修改密码", "订单与积分分区：核对每笔变化"]
-                    },
-                    {
-                        "title": "选择并购买套餐",
-                        "description": "在套餐中心点击升级或购买，先从套餐选择弹层比较价格、积分与权益，再进入独立安全支付页面。",
-                        "checklist": ["确认套餐名称和有效权益", "确认购买数量", "确认支付方式和总金额", "只有完成支付后才会开通权益"]
-                    },
-                    {
-                        "title": "检查支付和积分结果",
-                        "description": "支付完成后返回个人中心查看订单状态。到账积分、套餐变更、消费扣除和失败退回会分别进入对应记录。",
-                        "checklist": ["订单记录：查看待支付、已支付、已取消或人工确认", "积分记录：查看余额增加与调整", "消费记录：查看生成任务和模型调用扣除", "结果延迟时先刷新记录，不要重复支付同一订单"]
-                    }
-                ],
-                "faqs": [
-                    {
-                        "question": "为什么升级套餐是弹窗，支付不是弹窗？",
-                        "answer": "套餐比较需要快速完成，因此使用工作台内弹层；涉及金额、数量和支付渠道时进入独立安全结算页面，便于完整核对订单。"
-                    },
-                    {
-                        "question": "订单已支付但权益还没变化怎么办？",
-                        "answer": "先在订单记录刷新状态。部分支付渠道回调可能稍有延迟，人工渠道则需要等待订单确认；不要为同一需求重复创建多个订单。"
-                    }
-                ],
-                "routeLabel": "打开个人中心"
-            },
-            "troubleshooting": {
-                "label": "常见问题",
-                "title": "加载、生成与显示异常排查",
-                "summary": "遇到页面空白、数据加载慢、模型不可选或媒体无法打开时，先按问题所在环节排查，避免重复提交和重复扣费。",
-                "keywords": ["问题", "加载", "失败", "空白", "模型", "媒体", "预览", "重试"],
-                "outcomes": ["能判断页面问题还是任务问题", "知道何时重试", "避免重复创建生成或支付请求"],
-                "flow": [
-                    {
-                        "title": "确认页面",
-                        "detail": "刷新当前页并检查登录状态"
-                    },
-                    {
-                        "title": "定位环节",
-                        "detail": "区分数据加载、规划、提交或生成失败"
-                    },
-                    {
-                        "title": "阅读提示",
-                        "detail": "根据页面错误和任务状态调整"
-                    },
-                    {
-                        "title": "安全重试",
-                        "detail": "只重试失败项，不重复成功请求"
-                    }
-                ],
-                "steps": [
-                    {
-                        "title": "页面数据长时间不显示",
-                        "description": "先确认网络和登录状态，再使用页面内刷新或重试。不要在加载过程中连续切换和重复点击创建。",
-                        "checklist": ["查看是否出现明确错误提示", "重新打开当前分区", "素材、项目或历史失败时使用对应重试按钮", "仍为空时确认当前账号是否确实有数据"]
-                    },
-                    {
-                        "title": "模型或 Skill 不可选择",
-                        "description": "列表只展示当前可执行能力。Skill 还会按工作区范围过滤，因此不同页面看到的内容可能不同。",
-                        "checklist": ["保持智能规划开启可使用默认能力", "模型列表为空时不要手动填写模型名称", "Skill 不匹配当前工作区时不会显示"]
-                    },
-                    {
-                        "title": "图片或视频无法预览",
-                        "description": "优先点击媒体本体打开预览，再尝试下载。历史媒体需要有效的服务器访问地址和当前用户权限。",
-                        "checklist": ["确认任务状态已经成功", "确认媒体不是仍在处理中", "重新打开历史记录刷新访问地址", "不要把过期临时链接分享为长期素材地址"]
-                    },
-                    {
-                        "title": "生成或支付失败后的重试",
-                        "description": "只对明确失败的任务或未支付订单执行重试。成功任务不要重复提交，支付订单不要重复付款。",
-                        "checklist": ["记录页面显示的错误信息", "生成失败先调整参数或参考素材", "支付失败回到原订单继续，不重复下单", "余额异常时核对积分记录和消费记录"]
-                    }
-                ],
-                "faqs": [
-                    {
-                        "question": "刷新页面会不会丢失项目？",
-                        "answer": "创作会话、Canvas、素材、短剧和生成记录按登录用户保存在服务器。页面刷新会重新加载，不依赖浏览器保存大型业务数据。"
-                    },
-                    {
-                        "question": "什么时候应该重新创建任务？",
-                        "answer": "只有原任务明确失败、取消或需求已经改变时才新建。任务仍在运行时重复提交会增加等待和积分消耗风险。"
-                    }
-                ]
-            }
-        }
+    "checkout": {
+      "providerStripeDesc": "国际银行卡与数字钱包",
+      "providerAlipay": "支付宝",
+      "providerAlipayDesc": "支付宝网页支付",
+      "providerWechat": "微信支付",
+      "providerWechatDesc": "微信扫码支付",
+      "providerPayplyDesc": "自定义支付接口",
+      "providerManual": "人工确认",
+      "providerManualDesc": "线下转账或人工开通",
+      "loadFailed": "支付信息加载失败",
+      "createOrderFailed": "创建支付订单失败",
+      "popupBlocked": "浏览器阻止了支付窗口，请允许弹窗后重试",
+      "needManualConfirm": "该订单需要管理员人工确认",
+      "productNotFound": "套餐不存在或已下架",
+      "backToPlans": "返回套餐中心",
+      "securityBadge": "{brand} 安全结算",
+      "checkoutStepsAriaLabel": "结算步骤",
+      "tabOrderDetail": "订单明细",
+      "tabPaymentMethod": "支付方式",
+      "payTodayLabel": "今日需支付",
+      "unitPriceLabel": "套餐单价",
+      "quantityLabel": "购买数量",
+      "pointsRecharge": "充值积分",
+      "pointsCreative": "创作积分",
+      "pointsValue": "{amount} 积分",
+      "periodLabel": "权益周期",
+      "periodOneTime": "一次性到账",
+      "periodDays": "{days} 天",
+      "periodLongTerm": "长期有效",
+      "orderNote": "订单创建后可在个人中心查看状态；支付成功后套餐与积分自动更新。",
+      "currentOrderLabel": "当前订单",
+      "amountDueLabel": "应付金额",
+      "choosePaymentMethod": "选择支付方式",
+      "secureEncryption": "安全加密",
+      "quantityHint": "积分和权益按数量累计",
+      "decreaseQuantity": "减少购买数量",
+      "decreaseQuantityTitle": "减少数量",
+      "increaseQuantity": "增加购买数量",
+      "increaseQuantityTitle": "增加数量",
+      "confirmAndPay": "确认订单并继续支付",
+      "payHint": "仅创建支付订单，支付成功后才会开通权益。",
+      "orderCreated": "支付订单已创建",
+      "orderNoDisplay": "订单号 {orderNo}",
+      "copyPaymentInfo": "复制支付信息",
+      "paymentInfoCopied": "支付信息已复制",
+      "viewOrderInstructions": "查看订单说明",
+      "goToPay": "前往支付",
+      "backToProfileOrders": "返回个人中心查看订单",
+      "couponsLoadFailed": "优惠券加载失败",
+      "quoteLoadFailed": "结算价格加载失败",
+      "paymentInfoCopiedPaste": "支付信息已复制，请粘贴到浏览器打开",
+      "popupBlockedCopied": "浏览器阻止了支付窗口，已复制支付信息。",
+      "paymentUrlInvalid": "支付地址无效或无法打开，请复制支付信息后手动打开。",
+      "listPriceLabel": "日常价",
+      "promotionDiscountLabel": "活动优惠",
+      "couponLabel": "优惠券",
+      "availableCouponCount": "{count} 张可用",
+      "selectCouponAria": "选择优惠券",
+      "couponFallback": "优惠券",
+      "loading": "读取中",
+      "select": "选择",
+      "quoteRecalculating": "正在核算最新应付金额...",
+      "quoteErrorRetry": "{error}，请刷新后重试。",
+      "pickCouponTitle": "选择优惠券",
+      "refreshCouponsAria": "刷新优惠券",
+      "noCouponOption": "不使用优惠券",
+      "noCouponDetail": "按当前活动价格结算",
+      "noCouponsAvailable": "当前没有可用优惠券",
+      "ruleUnavailable": "规则不可用",
+      "fixedDiscount": "减 ¥{amount}",
+      "percentDiscount": "{percent}% 优惠"
     }
+  },
+  "create": {
+    "allConversations": "全部会话 →",
+    "attachmentUploadFailed": "素材上传失败",
+    "attachmentsUploaded": "已上传 {count} 份素材",
+    "cancelTaskFailed": "停止任务失败",
+    "continueCreating": "继续创作",
+    "continueCreatingHint": "回到最近的会话继续完善",
+    "conversationDeleteFailed": "删除对话失败",
+    "conversationDeleted": "对话已删除",
+    "conversationsDeletedCount": "已删除 {count} 条对话",
+    "createEntrySwitched": "创作入口已切换，请重试",
+    "createRequestFailed": "创作请求失败",
+    "creationHistory": "创作历史",
+    "fileTooLarge": "{name} 超过 20MB",
+    "heroSubtitle": "从一个想法开始",
+    "heroTitle": "今天想创作什么？",
+    "loadingRecent": "正在读取最近创作...",
+    "loadingSkills": "正在加载创作 Skill...",
+    "messageRefilled": "已回填消息，可修改后重新发送",
+    "newConversation": "新建对话",
+    "newConversationTitle": "新对话",
+    "noConversationsYet": "完成第一次创作后，会话会出现在这里",
+    "openConversationFailed": "打开对话失败",
+    "overviewLoadFailed": "工作台概览加载失败",
+    "partialDeleteFailed": "部分对话删除失败，请重试",
+    "projectCreateFailed": "项目创建失败",
+    "promptRequired": "请先描述你的创作需求",
+    "recordNotAgentWorkbench": "该记录不属于创作 Agent 工作台",
+    "regeneratingFailedTask": "正在重新生成失败任务…",
+    "restoreConversationFailed": "恢复对话失败",
+    "retryTaskFailed": "重试任务失败",
+    "titleUpdateFailed": "修改标题失败",
+    "titleUpdated": "标题已更新",
+    "understandingRequest": "正在理解你的需求",
+    "unsupportedFileFormat": "{name} 不是支持的图片、视频或音频格式",
+    "useSkill": "使用 {name} Skill",
+    "composer": {
+      "addAttachment": "添加素材",
+      "autoMatchBySmartPlanning": "默认由智能规划自动匹配",
+      "capabilityAudio": "音频",
+      "capabilityImage": "图片",
+      "capabilityVideo": "视频",
+      "categoryAll": "全部",
+      "categoryCanvas": "画布",
+      "categoryDrama": "短剧",
+      "categoryEdit": "编辑",
+      "categoryImage": "图片",
+      "categoryVideo": "视频",
+      "chooseCreativeSkill": "选择创作 Skill",
+      "clearSelectionRestoreSmart": "清除选择并恢复智能规划",
+      "closeAutoSmartPlanning": "关闭自动智能规划",
+      "disabled": "已关闭",
+      "enabled": "已开启",
+      "generationModel": "生成模型",
+      "inputPlaceholder": "描述你的想法，或添加参考素材",
+      "loadingEllipsis": "正在加载...",
+      "modelCapabilityHint": "{capability}模型 · 可与其他模型同时生成",
+      "noModelsForCapability": "当前未配置可用的{capability}模型",
+      "noSkillsAvailable": "暂无可用 Skill",
+      "noSkillsInCategory": "当前分类暂无可用 Skill",
+      "openAutoSmartPlanning": "开启自动智能规划",
+      "removeAttachmentWithName": "移除{name}",
+      "removeSkill": "移除 Skill",
+      "removeSkillWithName": "移除 Skill {name}",
+      "scrollLeftSkillCategories": "向左查看更多 Skill 分类",
+      "scrollRightSkillCategories": "向右查看更多 Skill 分类",
+      "selectGenerationModel": "选择生成模型",
+      "selectedModelsCount": "已选择 {count} 个模型",
+      "send": "发送",
+      "skillCategoriesAriaLabel": "Skill 分类，可左右滑动查看更多",
+      "smartPlanningOff": "智能规划：已关闭",
+      "smartPlanningOffAria": "智能规划已关闭，点击开启",
+      "smartPlanningOn": "智能规划：已开启",
+      "smartPlanningOnAria": "智能规划已开启，点击关闭",
+      "stopGeneration": "停止生成",
+      "uploading": "上传中"
+    },
+    "conversationList": {
+      "batchDelete": "批量删除",
+      "batchManage": "批量管理",
+      "cancel": "取消",
+      "cancelEdit": "取消修改",
+      "conversationCount": "{count} 条对话",
+      "conversationTitle": "对话标题",
+      "delete": "删除",
+      "deleteConfirmDescription": "删除后会从创作历史中移除，当前对话中的消息和生成记录将不再显示。",
+      "deleteCountConfirmTitle": "删除 {count} 条对话？",
+      "deleteOneConfirmTitle": "删除这条对话？",
+      "exitManage": "退出管理",
+      "loadMoreConversations": "加载更多对话",
+      "loadingEllipsis": "正在读取...",
+      "manageConversation": "管理对话",
+      "manageItem": "管理{title}",
+      "newConversation": "新建对话",
+      "noConversations": "暂无创作会话",
+      "rename": "重命名",
+      "saveTitle": "保存标题",
+      "selectAll": "全选",
+      "selectItem": "选择{title}",
+      "selectedCount": "已选择 {count} 条"
+    },
+    "overview": {
+      "allProjects": "全部项目",
+      "canvasProject": "Canvas 项目",
+      "continueEditing": "继续编辑",
+      "createFirstCanvasProject": "创建第一个 Canvas 项目后，会在这里继续",
+      "imageGeneration": "图片生成",
+      "justNow": "刚刚",
+      "loadingCanvasProjects": "正在读取画布项目...",
+      "loadingOverview": "正在加载工作台概览",
+      "loadingRecentGenerations": "正在读取最近生成...",
+      "loadingRunningTasks": "正在读取运行任务...",
+      "noRecentGenerations": "完成一次图片或视频生成后，结果会出现在这里",
+      "noRunningTasks": "当前没有运行中的任务",
+      "nodeConnectionCount": "{nodes} 个节点 · {connections} 条连线",
+      "projectsAndTasks": "项目与任务",
+      "projectsAndTasksHint": "回到最近的项目，或查看仍在运行的任务",
+      "recentGenerations": "最近生成",
+      "recentGenerationsHint": "点击图片或视频可直接放大查看",
+      "recentlyEdited": "最近编辑 · {time}",
+      "retryLoading": "重新读取",
+      "runningAt": "{time} · 运行中",
+      "runningTasks": "运行任务",
+      "untitledProject": "未命名项目",
+      "videoGeneration": "视频生成",
+      "viewAssetLibrary": "查看素材库"
+    },
+    "messages": {
+      "userFallback": "用户",
+      "loadingConversation": "正在读取会话...",
+      "loadOlderMessages": "加载更早消息",
+      "retryTaskTitle": "重试「{title}」",
+      "retryTaskAria": "重试 {title}",
+      "canvasProject": "画布项目",
+      "dramaProject": "短剧项目",
+      "handoffAssetsReady": "{count} 份资产已交接到{label}",
+      "openProject": "打开",
+      "retry": "重试",
+      "createProject": "创建项目",
+      "generatedAudio": "生成音频",
+      "generatedVideo": "生成视频",
+      "generatedImage": "生成图片",
+      "referenced": "已引用",
+      "referenceAsset": "引用素材",
+      "copyMessage": "复制消息",
+      "messageCopied": "消息已复制",
+      "referenceStripAria": "本轮参考素材",
+      "confirmRetryHint": "仅在你确认后重新请求",
+      "unreference": "取消引用",
+      "unreferenceAsset": "取消引用素材",
+      "reanalyze": "重新分析",
+      "reanalyzeAria": "重新分析本次请求",
+      "retrySubmissionTitle": "重新提交本次请求",
+      "retrySubmissionAria": "重试本次创作请求",
+      "kindVideo": "视频",
+      "kindAudio": "音频",
+      "referenceImageAlt": "参考图",
+      "downloadVideo": "下载视频",
+      "downloadImage": "下载图片"
+    },
+    "promptFilledFromWork": "已填入作品提示词",
+    "promptFilledFromPublic": "已填入公开提示词",
+    "referenceReadFailed": "读取参考素材失败",
+    "referenceFormatUnsupported": "该媒体格式暂不支持作为参考素材",
+    "referencedToAgent": "已引用到 Agent 输入框",
+    "referenceImportFailed": "引用素材失败",
+    "reanalyzeFailed": "重新分析失败",
+    "retryRequestFailed": "重试请求失败",
+    "messageAndAssetsRefilled": "已回填消息和本轮参考素材，可修改后重新发送",
+    "heroTitleWithSite": "{title} 创作 Agent"
+  },
+  "image": {
+    "addedToMyAssets": "已加入我的素材",
+    "addedToReferences": "已加入参考图",
+    "addToAssets": "添加到素材",
+    "addToReferences": "加入参考图",
+    "agentBusy": "Agent 正在处理当前需求，请稍候",
+    "assistantSubtitle": "图片创作助手",
+    "backgroundTasksContinue": "后台生成任务会继续运行，可在历史记录中查看进度",
+    "cancel": "取消",
+    "cleanupMissingCount": "清理丢失 {count}",
+    "clipboardButton": "剪切板",
+    "clipboardImagesReadCount": "已读取 {count} 张参考图",
+    "composerSummary": "{size} · {count} 张",
+    "contactAdminForModel": "请联系管理员在后台配置可用生图模型",
+    "conversationCreateFailed": "创作会话创建失败",
+    "conversationLoadFailed": "完整对话加载失败，已显示当前生成记录",
+    "currentUserRunning": "当前用户运行 {active}/{limit}",
+    "delete": "删除",
+    "deleteLogsConfirm": "确定删除选中的 {count} 条生成记录吗？",
+    "deleteLogsModalTitle": "删除生成记录",
+    "download": "下载",
+    "emptyResultsDescription": "完成一次生成后，结果会按时间保留在这里。",
+    "emptyResultsTitle": "还没有生成图片",
+    "failCount": "失败 {count}",
+    "generate": "生成",
+    "generateAriaLabel": "开始生成，消耗 {cost} 积分",
+    "generationFailed": "生成失败",
+    "generationHistory": "生成记录",
+    "historyRecordOpened": "已打开这条历史生成记录，可以继续修改或重新生成。",
+    "imageCountUnit": "{count} 张",
+    "imageGenerated": "图片已生成",
+    "imageLost": "图片已丢失",
+    "imageRegenerated": "图片已重新生成",
+    "imageUnavailableAsset": "图片不可用，无法加入素材",
+    "imageUnavailableDownload": "图片不可用，无法下载",
+    "imageUnavailableReference": "图片不可用，无法加入参考图",
+    "imageWorkbenchSource": "生图工作台",
+    "logsDeletedCount": "已删除 {count} 条生成记录",
+    "messageRefilled": "已回填消息，可修改后重新发送",
+    "missingImagesCleanedCount": "已清理 {count} 个丢失图片",
+    "modelLabel": "模型",
+    "noClipboardImage": "剪切板里没有可读取的图片",
+    "onlyTextOrImageAssets": "生图工作台只能使用文本或图片素材",
+    "partialCleanupFailed": "记录已移除，部分关联资源删除失败，请稍后重试",
+    "pendingCount": "生成中 {count}",
+    "promptPlaceholder": "今天我们要创作什么，可直接粘贴文字或图片",
+    "promptRequired": "请输入生图提示词",
+    "queuedForGeneration": "已加入当前用户生成队列",
+    "referenceImages": "参考图",
+    "removeReferenceImage": "移除参考图",
+    "requestCancelled": "请求已取消",
+    "resultAltWithIndex": "生成结果 {index}",
+    "resultTitleWithIndex": "生成结果 {index}",
+    "resultsCleanupPartialFailed": "结果已从当前记录移除，部分关联资源清理失败，请稍后重试",
+    "resultsDeletedCount": "已删除 {count} 个结果",
+    "resultsTitle": "生成结果",
+    "retry": "重试",
+    "runningCount": "运行 {active}/{limit}",
+    "selectAll": "全选",
+    "smartPlanningRequired": "当前生图工作台未启用智能规划，请先选择图片模型",
+    "startGeneration": "开始生成",
+    "stopAgentAriaLabel": "停止 Agent 并取消本次生成",
+    "successCount": "成功 {count}",
+    "taskFailedText": "该任务生成失败。",
+    "taskPendingText": "该任务仍在生成中。",
+    "uploadButton": "上传"
+  },
+  "video": {
+    "addedToMyAssets": "已加入我的素材",
+    "addToAssets": "添加到素材",
+    "agentBusy": "Agent 正在处理当前需求，请稍候",
+    "assistantSubtitle": "视频创作助手",
+    "audioSettings": "音频设置",
+    "backgroundTasksContinue": "后台生成任务会继续运行，可在历史记录中查看进度",
+    "cancel": "取消",
+    "clipboardButton": "剪切板",
+    "clipboardImagesReadCount": "已读取 {count} 张参考图",
+    "composerSummary": "{size} · {seconds} 秒",
+    "concurrencyLimitReached": "当前用户视频生成已达到并发上限，请稍后再试",
+    "contactAdminForModel": "请联系管理员在后台配置可用视频模型",
+    "conversationCreateFailed": "创作会话创建失败",
+    "currentUserRunning": "当前用户运行 {active}/{limit}",
+    "delete": "删除",
+    "deleteLogsConfirm": "确定删除选中的 {count} 条生成记录吗？",
+    "deleteLogsModalTitle": "删除生成记录",
+    "download": "下载",
+    "emptyAudioHint": "暂无参考音频，最多 3 个，mp3/wav，单个 15MB 内",
+    "emptyImageHint": "暂无参考图，最多 9 张",
+    "emptyResultsDescription": "完成一次生成后，结果会按时间保留在这里。",
+    "emptyResultsTitle": "还没有生成视频",
+    "emptyVideoHint": "暂无参考视频，最多 3 个",
+    "failureCreateHint": "当前请求未能成功创建生成任务。",
+    "failureCreateTitle": "任务创建失败",
+    "failureDefaultHint": "请检查模型、额度和接口返回。",
+    "failureDefaultTitle": "生成失败",
+    "failurePollHint": "任务已提交后，轮询上游状态失败。",
+    "failurePollTitle": "任务查询失败",
+    "failureUpstreamHint": "任务已创建，但上游生成阶段失败。",
+    "failureUpstreamTitle": "上游生成失败",
+    "generate": "生成",
+    "generateAriaLabel": "开始生成，消耗 {cost} 积分",
+    "generationFailed": "生成失败",
+    "generationHistory": "生成记录",
+    "ignoredAudioOversize": "已忽略超过 15MB 的参考音频",
+    "ignoredImageOversize": "已忽略超过 30MB 的参考图",
+    "ignoredUnsupportedReference": "已忽略不支持的参考素材，请使用图片、mp4/mov 视频或 mp3/wav 音频",
+    "ignoredVideoOversize": "已忽略超过 50MB 的参考视频",
+    "logsDeletedCount": "已删除 {count} 条生成记录",
+    "messageRefilled": "已回填消息，可修改后重新发送",
+    "modelLabel": "模型",
+    "noClipboardImage": "剪切板里没有可读取的图片",
+    "originalTaskMissing": "找不到原任务记录，无法重试",
+    "partialCleanupFailed": "记录已移除，部分关联资源删除失败，请稍后重试",
+    "promptPlaceholder": "今天我们要创作什么，可直接粘贴文字或素材",
+    "promptRequired": "请输入视频提示词",
+    "referenceAudio": "参考音频",
+    "referenceImages": "参考图",
+    "referenceVideos": "参考视频",
+    "removeReferenceAudio": "移除参考音频",
+    "removeReferenceImage": "移除参考图",
+    "removeReferenceVideo": "移除参考视频",
+    "resultTitle": "生成视频",
+    "resultsTitle": "生成结果",
+    "retry": "重试",
+    "runningCount": "运行 {active}/{limit}",
+    "selectAll": "全选",
+    "smartPlanningRequired": "当前视频工作台未启用智能规划，请先选择视频模型",
+    "startGeneration": "开始生成",
+    "statusFailed": "失败",
+    "statusPending": "生成中",
+    "statusSuccess": "成功",
+    "stopAgentAriaLabel": "停止 Agent 并取消本次生成",
+    "timeoutError": "视频生成超时，请稍后重试",
+    "uploadButton": "上传",
+    "videoGenerated": "视频已生成",
+    "videoWorkbenchSource": "视频创作台",
+    "taskFailedText": "该任务生成失败。",
+    "taskPendingText": "该任务仍在生成中。",
+    "historyRecordOpened": "已打开这条历史生成记录，可以继续修改或重新生成。",
+    "ignoredAudioDuration": "已忽略不符合时长要求的参考音频：单个 2-15 秒，总时长不超过 15 秒",
+    "untitled": "未命名",
+    "videoGenerationCompleted": "视频生成完成",
+    "videoGenerationFailed": "视频生成失败",
+    "videoGenerationPending": "视频生成中",
+    "conversationLoadFailed": "完整对话加载失败，已显示当前生成记录",
+    "unknownError": "未知错误",
+    "resultsDeletedCount": "已删除 {count} 个结果"
+  },
+  "profile": {
+    "title": "个人中心",
+    "subtitle": "个人资料、套餐购买、订单记录、消费记录和积分流水统一放在一个用户后台里。",
+    "refresh": "刷新",
+    "refreshRecords": "刷新记录",
+    "planShort": "套餐",
+    "buyPlan": "购买套餐",
+    "metricPlan": "当前套餐",
+    "metricPlanNotLoaded": "未加载",
+    "metricPoints": "积分余额",
+    "metricPointsValue": "{amount} 积分",
+    "metricPointsDetail": "今日 {daily} · 永久 {permanent}",
+    "metricOrders": "充值订单",
+    "metricOrdersValue": "{count} 笔",
+    "metricPointsFlow": "积分流水",
+    "metricPointsFlowValue": "{count} 条",
+    "navAria": "个人中心分区",
+    "currentSection": "当前分区",
+    "switchSectionAria": "切换个人中心分区",
+    "sections": {
+      "overview": {
+        "label": "账户概览",
+        "description": "查看当前套餐、积分余额、最近订单和最近积分流水。",
+        "shortDescription": "资产摘要"
+      },
+      "profile": {
+        "label": "个人资料",
+        "description": "维护登录用户名、显示昵称和绑定邮箱。",
+        "shortDescription": "资料与邮箱"
+      },
+      "billing": {
+        "label": "套餐中心",
+        "description": "在个人中心内选择套餐，支付时进入独立安全结算页。",
+        "shortDescription": "购买套餐"
+      },
+      "orders": {
+        "label": "订单记录",
+        "description": "查看所有充值订单、支付状态和开通结果。",
+        "shortDescription": "收款状态"
+      },
+      "consume": {
+        "label": "消费记录",
+        "description": "查看模型调用、生成任务和接口消费扣除。",
+        "shortDescription": "积分扣除"
+      },
+      "points": {
+        "label": "积分记录",
+        "description": "查看每日积分、充值赠送、退款退回和管理员调整流水。",
+        "shortDescription": "余额流水"
+      },
+      "security": {
+        "label": "账号安全",
+        "description": "修改登录密码，修改后需要重新登录。",
+        "shortDescription": "密码设置"
+      },
+      "coupons": {
+        "label": "我的优惠券",
+        "description": "领取优惠券并查看可用、锁定、已使用和过期状态。",
+        "shortDescription": "领取与状态"
+      },
+      "referrals": {
+        "label": "邀请有礼",
+        "description": "复制邀请码和邀请链接，查看注册、首单与奖励进度。",
+        "shortDescription": "拉新与奖励"
+      }
+    },
+    "billingCenterTitle": "套餐中心",
+    "billingCenterDesc": "选择适合当前创作频率的方案，结算时进入独立安全支付页。",
+    "availablePlans": "可选套餐",
+    "availablePlansDesc": "价格、积分与有效期均同步后台已上架商品。",
+    "plansCount": "共 {count} 个方案",
+    "emptyProductsTitle": "暂无已上架套餐商品",
+    "emptyProductsDesc": "管理员上架商品后会显示在这里。",
+    "recentPointsTitle": "最近积分流水",
+    "recentPointsDesc": "展示最近的积分变化，更多记录在积分记录分区。",
+    "recentOrdersTitle": "最近订单",
+    "recentOrdersDesc": "展示最近的充值订单，支付完成后权益会自动或由管理员确认开通。",
+    "profilePanelTitle": "个人资料",
+    "profilePanelDesc": "修改昵称、绑定邮箱，邮箱可用于找回密码和登录。",
+    "ordersPanelTitle": "订单记录",
+    "ordersPanelDesc": "查看充值订单、支付渠道、订单状态和套餐开通结果。",
+    "consumePanelTitle": "消费记录",
+    "consumePanelDesc": "展示最近扣除积分的模型调用、生成任务和接口消费。",
+    "pointsPanelTitle": "积分记录",
+    "pointsPanelDesc": "每日积分、充值赠送、管理员调整和失败退回都会出现在这里。",
+    "securityPanelTitle": "账号安全",
+    "securityPanelDesc": "修改密码后会退出当前登录，需要重新登录。",
+    "emptyPointsTitle": "暂无积分记录",
+    "emptyPointsDesc": "每日积分、充值和模型消费记录会显示在这里。",
+    "emptyPointsDescAlt": "积分变化会按时间记录在这里。",
+    "emptyConsumeTitle": "暂无消费记录",
+    "emptyConsumeDesc": "产生模型调用或生成任务后会显示在这里。",
+    "emptyOrdersTitle": "暂无订单记录",
+    "emptyOrdersDesc": "购买套餐后可在这里查看支付状态。",
+    "emailBound": "当前绑定邮箱",
+    "emailUnbound": "当前未绑定邮箱",
+    "emailUnboundHint": "绑定邮箱后可用于找回密码和接收验证码。",
+    "usernameLabel": "登录用户名",
+    "displayNameLabel": "显示昵称",
+    "changeEmailLabel": "修改邮箱",
+    "bindEmailLabel": "绑定邮箱",
+    "emailCodeLabel": "邮箱验证码",
+    "emailCodeRequiredPlaceholder": "修改邮箱时必填",
+    "emailCodeOptionalPlaceholder": "邮箱未变化时无需填写",
+    "getEmailCode": "获取验证码",
+    "saveProfile": "保存资料",
+    "balanceAfter": "余额 {amount}",
+    "pointTypeConsume": "模型消费",
+    "pointTypeRefund": "消费退款",
+    "pointTypeCredit": "积分充值",
+    "pointTypeAdjust": "后台调整",
+    "orderStatusPending": "待支付",
+    "orderStatusPaid": "已开通",
+    "orderStatusRefunding": "退款处理中",
+    "orderStatusClosed": "已关闭",
+    "orderStatusCanceled": "已取消",
+    "orderStatusRefunded": "已退款",
+    "saveProfileFailed": "保存个人资料失败",
+    "saveProfileSuccess": "个人资料已保存",
+    "emailUnchanged": "邮箱未变化，无需获取验证码",
+    "codeSendFailed": "验证码发送失败",
+    "codeSendSuccess": "验证码已发送，请查看邮箱",
+    "passwordChangeFailed": "修改密码失败",
+    "passwordChangeSuccess": "密码已修改，请重新登录",
+    "exportSuccess": "个人数据已导出",
+    "exportFailed": "个人数据导出失败",
+    "currentPassword": "当前密码",
+    "newPassword": "新密码",
+    "passwordMinPlaceholder": "至少 8 位",
+    "changePasswordAndRelogin": "修改密码并重新登录",
+    "personalDataTitle": "个人数据",
+    "personalDataDesc": "导出账户、积分、订单和创作记录。媒体原文件与安全凭据不包含在 JSON 中。",
+    "exportMyData": "导出我的数据",
+    "productsLoadFailed": "充值套餐加载失败",
+    "ordersLoadFailed": "订单记录加载失败",
+    "pointsLoadFailed": "积分记录加载失败",
+    "consumeLoadFailed": "消费记录加载失败",
+    "deletion": {
+      "loadFailed": "注销申请状态加载失败",
+      "submitSuccess": "注销申请已提交",
+      "submitFailed": "注销申请提交失败",
+      "withdrawSuccess": "注销申请已撤回",
+      "withdrawFailed": "注销申请撤回失败",
+      "title": "账号注销",
+      "description": "提交后由管理员人工核验。受理只代表进入注销处理，不会立即删除订单、支付记录或仍需保留的数据。",
+      "requestedAt": "申请时间：{time}",
+      "reviewNote": "处理备注：{note}",
+      "withdrawConfirmTitle": "撤回注销申请？",
+      "withdrawConfirmDesc": "撤回后账号继续正常使用，之后仍可重新提交。",
+      "withdrawOk": "撤回",
+      "cancel": "取消",
+      "withdrawButton": "撤回申请",
+      "processing": "已进入处理",
+      "requestButton": "申请注销",
+      "modalTitle": "申请注销账号",
+      "submitButton": "提交申请",
+      "modalWarning": "管理员会核对创作数据、媒体引用和订单保留要求。正式执行前可能需要进一步身份复核。",
+      "passwordPlaceholder": "用于确认是本人操作",
+      "noteLabel": "补充说明（选填）",
+      "notePlaceholder": "可填写注销原因或需要管理员注意的事项",
+      "statusPending": "待处理",
+      "statusAccepted": "已受理",
+      "statusRejected": "已拒绝",
+      "statusWithdrawn": "已撤回"
+    },
+    "couponsLoadFailed": "优惠券加载失败",
+    "couponWallet": {
+      "title": "我的优惠券",
+      "description": "领取并查看可用于套餐结算的优惠券，实际优惠以结算页服务端报价为准。",
+      "refresh": "刷新",
+      "codePlaceholder": "输入优惠券领取码",
+      "claim": "领取优惠券",
+      "claimShort": "领取",
+      "claimSuccess": "优惠券已领取",
+      "claimFailed": "领取优惠券失败",
+      "claimable": "可领取",
+      "campaignCount": "{count} 个活动",
+      "minAmount": "满 ¥{amount} 可用",
+      "noMinimum": "无使用门槛",
+      "until": "至 {date}",
+      "ownedTitle": "已领取优惠券",
+      "ownedCount": "共 {count} 张",
+      "couponFallback": "优惠券",
+      "expiresAt": "有效期至 {date}",
+      "stackWithPromotion": "可叠加活动",
+      "emptyTitle": "暂无优惠券",
+      "emptyDescription": "输入领取码或领取当前开放的优惠券后会显示在这里。",
+      "statusAvailable": "可使用",
+      "statusLocked": "订单锁定",
+      "statusRedeemed": "已使用",
+      "statusExpired": "已过期",
+      "statusRevoked": "已撤销"
+    },
+    "referralCenter": {
+      "title": "邀请有礼",
+      "description": "分享邀请链接，新用户完成首笔有效支付并度过冷静期后发放奖励。",
+      "unavailableDescription": "邀请中心暂时不可用，请稍后重试。",
+      "reload": "重新加载",
+      "refresh": "刷新",
+      "loadFailed": "加载邀请中心失败",
+      "myCode": "我的邀请码",
+      "programActive": "活动进行中",
+      "programInactive": "活动未开启",
+      "riskNote": "禁止自邀、循环邀请和事后改绑；异常关系会暂停结算并进入人工复核。",
+      "copyCode": "复制邀请码",
+      "copyLink": "复制链接",
+      "codeCopied": "邀请码已复制",
+      "linkCopied": "邀请链接已复制",
+      "metricClicks": "链接访问",
+      "metricRegistrations": "成功注册",
+      "metricQualified": "首单触发",
+      "metricSettled": "已发奖励",
+      "inviterReward": "邀请人奖励",
+      "inviteeReward": "新用户奖励",
+      "inviteeCoupon": "新客优惠券",
+      "pointsValue": "{amount} 积分",
+      "settlementRule": "结算条件",
+      "settlementValue": "实付满 ¥{amount} · 冷静期 {days} 天",
+      "progressTitle": "邀请进度",
+      "progressDescription": "只展示脱敏昵称和当前风险状态，不公开受邀用户隐私。",
+      "progressEmpty": "暂无成功注册的受邀用户",
+      "rewardsTitle": "奖励记录",
+      "rewardsDescription": "待结算、已发放、已撤销和人工复核状态均可追踪。",
+      "rewardsEmpty": "暂无邀请奖励记录",
+      "rewardInviter": "邀请人奖励",
+      "rewardInvitee": "新用户奖励",
+      "rewardCoupon": "优惠券",
+      "riskClear": "正常",
+      "riskReview": "待复核",
+      "riskFrozen": "已冻结",
+      "riskRejected": "已拒绝",
+      "rewardPending": "待结算",
+      "rewardSettled": "已发放",
+      "rewardRevoked": "已撤销",
+      "rewardReversalPending": "撤销待复核",
+      "rewardRejected": "已拒绝"
+    }
+  },
+  "help": {
+    "eyebrow": "用户帮助中心",
+    "title": "从操作到交付，按真实流程完成创作",
+    "subtitle": "选择一个任务，查看完整流程、逐步操作、结果处理和常见问题。",
+    "searchPlaceholder": "搜索功能、按钮或问题",
+    "searchAria": "搜索帮助内容",
+    "searchResultsAria": "帮助搜索结果",
+    "searchResultsTitle": "搜索结果",
+    "resultCount": "{count} 项",
+    "emptySearch": "没有找到相关教程，尝试搜索“画布”“参考图”“订单”或“下载”。",
+    "categoriesAria": "帮助分类",
+    "selectTutorial": "选择教程",
+    "flowTitle": "完整流程",
+    "flowDescription": "先看清各阶段，再进入逐步操作。",
+    "stepsTitle": "详细教程",
+    "stepsDescription": "按顺序完成，每一步都包含检查项。",
+    "faqTitle": "常见问题",
+    "faqDescription": "优先按当前功能的真实状态处理。",
+    "flowAria": "操作流程",
+    "articles": {
+      "start": {
+        "label": "快速开始",
+        "title": "从一个想法开始创作",
+        "summary": "第一次使用时，优先从创作 Agent 开始。它会理解目标、参考素材和交付形式，再把任务交给对应的图片、视频、画布或短剧能力。",
+        "routeLabel": "打开创作 Agent",
+        "keywords": [
+          "开始",
+          "新手",
+          "创作",
+          "流程",
+          "结果",
+          "下载"
+        ],
+        "outcomes": [
+          "知道从哪个入口开始",
+          "理解智能规划与手动模型的区别",
+          "能预览、下载并继续引用结果"
+        ],
+        "flow": [
+          {
+            "title": "描述目标",
+            "detail": "说明要做什么、给谁看、用于哪里"
+          },
+          {
+            "title": "添加参考",
+            "detail": "上传人物、商品、风格图或已有素材"
+          },
+          {
+            "title": "确认规划",
+            "detail": "保持智能规划，或选择 Skill 与模型"
+          },
+          {
+            "title": "检查结果",
+            "detail": "预览媒体，下载或引用到下一轮"
+          }
+        ],
+        "steps": [
+          {
+            "title": "把目标写完整",
+            "description": "不要只写一个风格词。至少补充主体、用途、画面或镜头要求以及最终希望得到的内容。",
+            "checklist": [
+              "主体：人物、商品、场景或故事",
+              "用途：电商、社媒、短剧、提案或个人创作",
+              "约束：尺寸、时长、数量、文字、品牌色和必须保留的细节"
+            ],
+            "tip": "不确定参数时保持智能规划开启，Agent 会先给出可验证的选择摘要。"
+          },
+          {
+            "title": "需要一致性时先放参考素材",
+            "description": "点击输入框附件入口上传图片或引用已有素材。人物脸部、商品外观、Logo 和既有画风都应在发送前提供。",
+            "checklist": [
+              "人物一致性：上传清晰正脸或角色设定",
+              "商品一致性：上传多角度实拍或白底图",
+              "风格一致性：选择一到三张最接近目标的参考图"
+            ]
+          },
+          {
+            "title": "选择执行方式",
+            "description": "默认智能规划会自动匹配可执行模型与参数。只有明确知道模型差异时，才关闭智能规划并手动选择一个或多个模型。",
+            "checklist": [
+              "Skill 是执行能力，不会把一段提示词塞进输入框",
+              "手动选择模型会关闭智能规划",
+              "清空手动模型后会恢复智能规划"
+            ]
+          },
+          {
+            "title": "处理生成结果",
+            "description": "点击图片或视频可打开预览。素材操作区提供下载和引用，引用后可以继续要求改版、扩展镜头或制作配套内容。",
+            "checklist": [
+              "先放大检查人物、文字、边缘和运动连贯性",
+              "满意结果直接下载",
+              "需要续作时点击引用素材，再描述下一步变化"
+            ]
+          }
+        ],
+        "faqs": [
+          {
+            "question": "我不知道该选图片、视频还是画布怎么办？",
+            "answer": "直接从创作 Agent 描述最终用途。保持智能规划开启，系统会先判断交付类型并给出选择摘要。"
+          },
+          {
+            "question": "生成以后还能继续修改吗？",
+            "answer": "可以。打开结果预览检查后，使用结果下方的引用素材操作继续对话；需要精确参数时再进入对应专业工作台。"
+          }
+        ]
+      },
+      "agent": {
+        "label": "创作 Agent",
+        "title": "用 Agent 完成从需求到交付",
+        "summary": "适合一句需求、多物料方案和跨图片、视频、画布、短剧的连续创作。对话与结果会保存在服务器会话中。",
+        "routeLabel": "进入 Agent 工作台",
+        "keywords": [
+          "agent",
+          "对话",
+          "skill",
+          "模型",
+          "智能规划",
+          "附件",
+          "历史",
+          "暂停"
+        ],
+        "outcomes": [
+          "会选择 Skill 和智能规划",
+          "会管理会话与历史",
+          "会对生成结果继续迭代"
+        ],
+        "flow": [
+          {
+            "title": "输入需求",
+            "detail": "写明目标、受众、用途和交付物"
+          },
+          {
+            "title": "选择能力",
+            "detail": "按需添加 Skill、参考素材或手动模型"
+          },
+          {
+            "title": "Agent 规划",
+            "detail": "查看方向、模型、参数与产物理由"
+          },
+          {
+            "title": "执行任务",
+            "detail": "对话内生成并持续显示任务状态"
+          },
+          {
+            "title": "继续迭代",
+            "detail": "引用结果、补充约束或编辑原消息"
+          }
+        ],
+        "steps": [
+          {
+            "title": "组织一条可执行需求",
+            "description": "用自然语言说明最终要交付什么。复杂任务可以列清单，但不要自己拆成模型参数。",
+            "checklist": [
+              "目标：例如完成一组新品发布素材",
+              "交付：例如主视觉、三张详情图和一条短视频",
+              "一致性：指定必须复用的人物、商品和色彩",
+              "判断标准：说明什么情况算完成"
+            ]
+          },
+          {
+            "title": "添加 Skill、参考素材与模型",
+            "description": "Skill 位于输入区左侧，选中后显示为可移除卡片。灯泡控制智能规划；模型按钮支持多选可执行模型。",
+            "checklist": [
+              "只有任务需要特定能力时才选 Skill",
+              "默认保持智能规划开启",
+              "手动对比模型时最多选择六个",
+              "参考素材在发送前确认已显示在输入区"
+            ]
+          },
+          {
+            "title": "阅读 Agent 的选择摘要",
+            "description": "Agent 会先解释创作方向以及为什么选择当前模型和参数。若方向不对，先补充约束，不必等待错误方案全部生成。",
+            "checklist": [
+              "检查主体与用途是否理解正确",
+              "检查交付数量和格式",
+              "检查参考素材是否被引用",
+              "检查模型和画幅是否符合任务"
+            ]
+          },
+          {
+            "title": "管理消息和会话",
+            "description": "用户消息提供复制和编辑；重新编辑后可按新要求继续。历史入口用于打开、改名、选择和删除服务器会话。",
+            "checklist": [
+              "复制：复用完整需求",
+              "编辑：修正原需求后重新执行",
+              "新对话：开始不相关项目时使用",
+              "历史：恢复之前的上下文和结果"
+            ]
+          },
+          {
+            "title": "预览、下载与引用媒体",
+            "description": "点击媒体本体打开大图或视频预览。下载按钮位于素材下方；引用按钮把当前结果带回输入区，用于下一轮变化。",
+            "checklist": [
+              "预览后再决定是否下载",
+              "引用时说明保留什么、修改什么",
+              "需要专业参数时进入图片或视频工作台"
+            ]
+          }
+        ],
+        "faqs": [
+          {
+            "question": "Skill 会不会自动改写我的输入？",
+            "answer": "不会。选中的 Skill 作为执行能力单独提交，并在输入框上方显示卡片；你的原始文字保持不变。"
+          },
+          {
+            "question": "为什么选择模型后智能规划关闭了？",
+            "answer": "手动模型代表你明确指定执行范围，因此会关闭自动匹配。清空模型选择即可恢复智能规划。"
+          }
+        ]
+      },
+      "image": {
+        "label": "生图工作台",
+        "title": "生成、精调并复用图片",
+        "summary": "生图工作台适合需要明确画幅、数量、质量和参考图控制的单图或成组图片任务。",
+        "keywords": [
+          "图片",
+          "生图",
+          "参考图",
+          "画幅",
+          "数量",
+          "质量",
+          "历史",
+          "下载"
+        ],
+        "outcomes": [
+          "会使用参考图",
+          "会确认图片参数",
+          "会从历史结果继续创作"
+        ],
+        "flow": [
+          {
+            "title": "描述画面",
+            "detail": "主体、环境、构图、光线和用途"
+          },
+          {
+            "title": "提供参考",
+            "detail": "人物、商品、风格或上一张结果"
+          },
+          {
+            "title": "确认参数",
+            "detail": "模型、画幅、质量与生成数量"
+          },
+          {
+            "title": "生成检查",
+            "detail": "查看 Agent 决策和任务进度"
+          },
+          {
+            "title": "复用结果",
+            "detail": "预览、下载、引用或继续精调"
+          }
+        ],
+        "steps": [
+          {
+            "title": "选择文生图或参考图流程",
+            "description": "没有固定主体时直接描述画面；需要保留人物、商品或构图时先添加参考图。",
+            "checklist": [
+              "人物参考尽量清晰、无遮挡",
+              "商品参考保留真实比例与关键结构",
+              "风格参考不要与主体参考互相冲突"
+            ]
+          },
+          {
+            "title": "让 Agent 先规划",
+            "description": "输入需求后，Agent 会判断是普通单图还是成套任务，并选择匹配模型与参数。",
+            "checklist": [
+              "检查推荐画幅是否匹配投放位置",
+              "检查数量是否满足对比选择",
+              "检查是否需要文字、Logo 或留白区域"
+            ]
+          },
+          {
+            "title": "按需调整生成参数",
+            "description": "设置入口集中展示当前模型、尺寸、质量和数量。手机端参数面板可纵向滚动，不需要横向拖动。",
+            "checklist": [
+              "社媒方图常用 1:1",
+              "封面与横幅优先横向画幅",
+              "人物海报和竖屏内容优先竖向画幅",
+              "批量数量越高，积分消耗通常越高"
+            ]
+          },
+          {
+            "title": "检查并处理结果",
+            "description": "生成完成后点击图片打开预览，检查主体一致性、文字、手部、边缘和材质。",
+            "checklist": [
+              "满意：点击下载",
+              "方向正确但细节不足：引用结果继续修改",
+              "方向错误：回到需求说明中修正目标或参考图"
+            ]
+          }
+        ],
+        "faqs": [
+          {
+            "question": "为什么参考图没有被使用？",
+            "answer": "确认参考素材已经出现在输入区，并在需求中明确说明要保留的人物、商品或构图。只上传但不说明用途时，Agent 可能按风格参考处理。"
+          },
+          {
+            "question": "图片历史在哪里？",
+            "answer": "工作台历史区域会显示当前用户的服务器生成记录。打开历史结果后可预览、下载或作为下一轮参考。"
+          }
+        ],
+        "routeLabel": "打开生图工作台"
+      },
+      "video": {
+        "label": "视频创作台",
+        "title": "完成文生视频与图生视频",
+        "summary": "视频创作台用于控制首帧参考、镜头运动、时长、画幅和音频选项，适合单镜头短视频和图片动效。",
+        "keywords": [
+          "视频",
+          "图生视频",
+          "文生视频",
+          "首帧",
+          "时长",
+          "镜头",
+          "音频",
+          "下载"
+        ],
+        "outcomes": [
+          "会区分文生与图生视频",
+          "会描述镜头和运动",
+          "会处理任务失败与结果下载"
+        ],
+        "flow": [
+          {
+            "title": "选择起点",
+            "detail": "纯文字创作，或添加图片作为首帧"
+          },
+          {
+            "title": "描述运动",
+            "detail": "主体动作、镜头、节奏和禁止变化"
+          },
+          {
+            "title": "确认设置",
+            "detail": "模型、时长、画幅、质量与音频"
+          },
+          {
+            "title": "等待任务",
+            "detail": "查看提交、生成和规范化进度"
+          },
+          {
+            "title": "检查成片",
+            "detail": "播放预览、下载或引用续作"
+          }
+        ],
+        "steps": [
+          {
+            "title": "决定是否使用首帧图片",
+            "description": "希望保留具体人物、商品或构图时使用图生视频；只需要自由生成镜头时使用文生视频。",
+            "checklist": [
+              "首帧比例尽量接近目标视频比例",
+              "避免上传模糊或严重裁切的图片",
+              "图生视频要写清哪些元素保持不变"
+            ]
+          },
+          {
+            "title": "把动作和镜头分开描述",
+            "description": "先说主体发生什么，再说摄影机如何移动，最后补充节奏、光线和禁止项。",
+            "checklist": [
+              "主体动作：转身、行走、表情或产品运动",
+              "镜头：推进、拉远、环绕、跟拍或固定",
+              "节奏：缓慢、自然、快速或分段",
+              "稳定性：禁止变脸、变形、文字漂移或多余物体"
+            ]
+          },
+          {
+            "title": "确认时长、画幅与音频",
+            "description": "设置面板显示当前视频参数；音频区域默认收起，需要声音时再展开。",
+            "checklist": [
+              "竖屏内容选择适合手机的画幅",
+              "时长越长越需要明确分镜变化",
+              "不需要声音时保持音频关闭",
+              "手动模型仅显示当前已启用且可执行的渠道"
+            ]
+          },
+          {
+            "title": "处理任务状态",
+            "description": "视频生成时间通常长于图片。对话暂停会停止当前 Agent 流程；任务失败时按错误提示修改输入或重试。",
+            "checklist": [
+              "不要连续重复提交同一请求",
+              "失败先查看模型、参考图和时长提示",
+              "成功后播放完整视频再下载"
+            ]
+          }
+        ],
+        "faqs": [
+          {
+            "question": "为什么模型列表为空？",
+            "answer": "前端只展示当前真正可执行的视频模型。如果没有可用模型，页面会明确提示暂无已启用的视频能力。"
+          },
+          {
+            "question": "生成时长和设置不一致怎么办？",
+            "answer": "服务器会按目标时长规范化结果；无法规范化时任务会明确失败，不会把错误时长的媒体登记为成功。"
+          }
+        ],
+        "routeLabel": "打开视频创作台"
+      },
+      "canvas": {
+        "label": "我的画布",
+        "title": "用节点连接完整创作流程",
+        "summary": "Canvas 适合把文本、图片、视频、音频和全景图放进同一项目，通过连接关系组织参考、生成和后续编辑。",
+        "keywords": [
+          "画布",
+          "节点",
+          "连接",
+          "双击",
+          "全景",
+          "沉浸",
+          "导入",
+          "agent"
+        ],
+        "outcomes": [
+          "会创建和连接节点",
+          "会调用 Canvas Agent",
+          "会生成并沉浸查看全景图"
+        ],
+        "flow": [
+          {
+            "title": "创建项目",
+            "detail": "从画布列表新建或继续已有项目"
+          },
+          {
+            "title": "添加节点",
+            "detail": "双击空白或从连接菜单选择类型"
+          },
+          {
+            "title": "组织引用",
+            "detail": "连接文本、图片、视频和音频节点"
+          },
+          {
+            "title": "生成编辑",
+            "detail": "使用 Agent 或节点工具执行任务"
+          },
+          {
+            "title": "检查交付",
+            "detail": "预览、下载、复制提示词或继续连接"
+          }
+        ],
+        "steps": [
+          {
+            "title": "创建节点并整理空间",
+            "description": "进入项目后双击画布空白处创建节点，也可以从已有节点的连接入口选择下一种节点。",
+            "checklist": [
+              "文字节点：保存提示词、脚本和说明",
+              "图片节点：导入或生成图片",
+              "视频与音频节点：组织媒体结果",
+              "全景节点：生成 2:1 环境全景"
+            ]
+          },
+          {
+            "title": "用连接表达参考关系",
+            "description": "把参考节点连接到目标节点。目标节点输入中可以使用 @ 引用已连接素材，发送前会按当前连接重新编号。",
+            "checklist": [
+              "先连接，再在目标节点发起生成",
+              "删除连接前确认后续节点不再需要该参考",
+              "复杂项目按上游参考到下游结果的方向排列"
+            ]
+          },
+          {
+            "title": "使用 Canvas Agent",
+            "description": "右上角 Agent 面板支持当前项目上下文、Skill、智能规划和多模型选择，可根据需求创建或更新节点。",
+            "checklist": [
+              "说明要新增还是修改现有节点",
+              "需要引用时点选当前节点或素材",
+              "检查 Agent 的计划与目标节点类型",
+              "暂停对话会统一停止当前执行流程"
+            ]
+          },
+          {
+            "title": "生成并查看全景节点",
+            "description": "选择全景图节点后输入环境描述，系统按 2:1 等距柱状投影生成。成功结果会在节点中提供可拖动的沉浸查看。",
+            "checklist": [
+              "推荐尺寸为 2048×1024",
+              "地平线和场景中心写清楚",
+              "避免普通横幅、鱼眼圆框和明显接缝",
+              "生成后拖动视角检查左右衔接和顶部、地面完整性"
+            ]
+          },
+          {
+            "title": "使用节点结果工具",
+            "description": "选中或悬停媒体节点可预览、下载、复制提示词、局部编辑、放大或继续连接生成。",
+            "checklist": [
+              "重要结果先下载留存",
+              "复制提示词用于复盘参数",
+              "继续生成前保留原节点，便于比较版本"
+            ]
+          }
+        ],
+        "faqs": [
+          {
+            "question": "为什么 @ 列表里没有素材？",
+            "answer": "只有已经连接到当前目标节点的图片或文本才会出现在引用列表中。先建立连接，再打开输入框选择。"
+          },
+          {
+            "question": "全景图为什么不能沉浸查看？",
+            "answer": "全景素材需要接近 2:1 比例并成功登记为全景节点。普通图片节点即使很宽，也不会自动切换为全景查看器。"
+          }
+        ],
+        "routeLabel": "打开我的画布"
+      },
+      "drama": {
+        "label": "短剧项目",
+        "title": "从故事梗概推进到可交付短剧",
+        "summary": "短剧工作区按项目组织剧本结构、角色与场景、分镜审核、镜头生成、配音、字幕和成片导出。",
+        "keywords": [
+          "短剧",
+          "剧本",
+          "角色",
+          "场景",
+          "分镜",
+          "镜头",
+          "配音",
+          "字幕",
+          "导出",
+          "版本"
+        ],
+        "outcomes": [
+          "理解短剧完整阶段",
+          "会审核后再批量生成",
+          "会保存版本并导出字幕或成片"
+        ],
+        "flow": [
+          {
+            "title": "建立项目",
+            "detail": "填写项目目标、受众和故事方向"
+          },
+          {
+            "title": "结构提取",
+            "detail": "Agent 整理剧本、角色、场景和分集"
+          },
+          {
+            "title": "内容审核",
+            "detail": "确认镜头、对白、字幕和视觉方案"
+          },
+          {
+            "title": "批量生产",
+            "detail": "生成分镜、镜头视频和配音"
+          },
+          {
+            "title": "合成导出",
+            "detail": "调整字幕时间轴并输出成片或草稿"
+          }
+        ],
+        "steps": [
+          {
+            "title": "创建项目并明确生产目标",
+            "description": "从短剧列表创建项目，先写清题材、受众、平台、时长和集数。已有故事文本可直接交给短剧 Agent 整理。",
+            "checklist": [
+              "每集目标时长",
+              "主要角色与关系",
+              "故事冲突和结尾方向",
+              "平台画幅与内容限制"
+            ]
+          },
+          {
+            "title": "用 Agent 提取结构",
+            "description": "Agent 会把输入整理为可编辑的项目结构，而不是只返回一段聊天内容。生成后逐项检查角色、场景、分集和镜头。",
+            "checklist": [
+              "角色名称与外观保持唯一",
+              "场景名称避免重复含义",
+              "每集有明确起承转合",
+              "镜头对白和字幕与剧情一致"
+            ]
+          },
+          {
+            "title": "先审核内容，再开始批量生成",
+            "description": "在内容审核阶段修正镜头顺序、景别、动作、对白和视觉提示。确认完整视觉方案后再进入生产。",
+            "checklist": [
+              "镜头是否能在目标时长内完成",
+              "角色和场景引用是否正确",
+              "对白是否适合配音",
+              "字幕是否需要与对白不同"
+            ],
+            "tip": "批量生成前保存一个版本，后续重做时可以快速恢复。"
+          },
+          {
+            "title": "生成分镜、镜头和配音",
+            "description": "可以逐镜头生成，也可以批量生成未完成项。项目内队列会按顺序提交，避免同时创建过多任务。",
+            "checklist": [
+              "先完成分镜图再生成视频镜头",
+              "失败镜头使用重试，不重复新建相同任务",
+              "有对白的镜头再生成配音",
+              "生成期间可取消当前任务"
+            ]
+          },
+          {
+            "title": "处理字幕、版本与导出",
+            "description": "在字幕时间轴中检查每句出现时间，可导出 SRT；所有镜头和必要配音完成后再合成成片。项目还支持版本历史和剪映草稿导出。",
+            "checklist": [
+              "检查字幕是否超出镜头时长",
+              "恢复版本前确认当前修改已保存",
+              "成片生成后完整播放一次",
+              "需要继续剪辑时导出剪映 ZIP 草稿"
+            ]
+          }
+        ],
+        "faqs": [
+          {
+            "question": "为什么不能直接生成成片？",
+            "answer": "成片依赖已审核的镜头视频、必要配音和字幕时间轴。页面会指出尚未完成的生产环节，避免合成缺失素材。"
+          },
+          {
+            "question": "重新生成会覆盖旧版本吗？",
+            "answer": "关键重生成前会保存项目快照，也可以在版本历史中手动保存。需要回退时打开版本历史并恢复指定版本。"
+          }
+        ],
+        "routeLabel": "打开短剧项目"
+      },
+      "assets": {
+        "label": "我的素材",
+        "title": "整理并复用创作素材",
+        "summary": "素材库保存当前用户的文本、图片、视频和音频，可按类型、标题、标签和来源检索，并在画布与创作流程中引用。",
+        "keywords": [
+          "素材",
+          "上传",
+          "标签",
+          "搜索",
+          "预览",
+          "下载",
+          "引用"
+        ],
+        "outcomes": [
+          "会新增和整理素材",
+          "会预览与下载",
+          "会在其他创作流程引用素材"
+        ],
+        "flow": [
+          {
+            "title": "收集素材",
+            "detail": "上传文件、添加 URL 或保存生成结果"
+          },
+          {
+            "title": "补充信息",
+            "detail": "填写标题、来源和可搜索标签"
+          },
+          {
+            "title": "查找预览",
+            "detail": "按类型、关键词和标签筛选"
+          },
+          {
+            "title": "复用交付",
+            "detail": "复制文本、下载媒体或插入画布"
+          }
+        ],
+        "steps": [
+          {
+            "title": "新增正确的素材类型",
+            "description": "新增素材弹窗支持文本、图片、视频和音频。选择类型后再填写对应内容或上传文件。",
+            "checklist": [
+              "标题写成以后能搜索到的名称",
+              "来源说明素材来自上传、生成或项目",
+              "标签使用人物、商品、项目、风格等稳定词",
+              "不要把密钥或隐私信息保存成文本素材"
+            ]
+          },
+          {
+            "title": "预览、编辑和下载",
+            "description": "素材卡提供预览和管理操作。文本可复制，媒体可下载；标题、标签和来源信息可以继续编辑。",
+            "checklist": [
+              "下载前先打开预览确认文件",
+              "编辑只修改素材记录，不会自动修改已引用的历史项目",
+              "删除前确认没有项目继续依赖该素材"
+            ]
+          },
+          {
+            "title": "在创作中引用素材",
+            "description": "Agent 结果下方可直接引用当前媒体；Canvas 的素材选择弹窗会在首次打开时加载当前用户素材。",
+            "checklist": [
+              "引用后确认素材卡出现在输入区",
+              "说明素材用于主体、风格还是首帧",
+              "大型项目使用清晰标签保持检索效率"
+            ]
+          }
+        ],
+        "faqs": [
+          {
+            "question": "素材为什么刚打开还没显示？",
+            "answer": "素材按当前用户从服务器加载。首次打开会显示紧凑加载状态；失败时使用页面提供的重试操作。"
+          },
+          {
+            "question": "删除素材会影响项目吗？",
+            "answer": "服务器会检查创作会话、Canvas、短剧和生成记录引用。仍被使用的媒体不会被直接删除，以免项目出现失效文件。"
+          }
+        ],
+        "routeLabel": "打开我的素材"
+      },
+      "prompts": {
+        "label": "提示词",
+        "title": "查找、保存并复用提示词",
+        "summary": "公共提示词库用于发现结构和灵感；我的提示词用于保存个人模板。两者都支持复制，个人提示词通过弹窗新增。",
+        "keywords": [
+          "提示词",
+          "分类",
+          "标签",
+          "搜索",
+          "复制",
+          "添加提示词",
+          "我的提示词"
+        ],
+        "outcomes": [
+          "会筛选公共提示词",
+          "会保存个人模板",
+          "知道提示词与 Skill 的区别"
+        ],
+        "flow": [
+          {
+            "title": "搜索灵感",
+            "detail": "按标题、分类和标签筛选公共内容"
+          },
+          {
+            "title": "查看详情",
+            "detail": "打开提示词确认结构和适用场景"
+          },
+          {
+            "title": "复制改写",
+            "detail": "替换主体、用途、风格和约束"
+          },
+          {
+            "title": "保存模板",
+            "detail": "在我的提示词弹窗中记录个人版本"
+          }
+        ],
+        "steps": [
+          {
+            "title": "从分类和标签缩小范围",
+            "description": "公共提示词数量较多，先选分类，再用标签和关键词定位具体用途。手机端使用下拉筛选，不需要横向滑动查找。",
+            "checklist": [
+              "先按图片、视频或其他用途选择分类",
+              "用行业、风格和主体标签继续筛选",
+              "打开详情后再复制完整内容"
+            ]
+          },
+          {
+            "title": "把示例改成自己的需求",
+            "description": "公共提示词是结构参考，不应原样提交。替换占位内容，并补充真实主体、参考素材和交付限制。",
+            "checklist": [
+              "替换品牌、人物、商品和场景",
+              "删除不适合当前项目的风格词",
+              "补充画幅、数量、时长和禁止项",
+              "涉及参考图时在创作输入区实际添加素材"
+            ]
+          },
+          {
+            "title": "保存到我的提示词",
+            "description": "进入我的提示词，点击添加提示词打开弹窗，填写标题、分类、标签、正文和备注。",
+            "checklist": [
+              "标题体现用途而不是随意编号",
+              "分类和标签保持统一",
+              "备注记录使用场景或替换规则",
+              "列表操作可复制和编辑已有提示词"
+            ]
+          }
+        ],
+        "faqs": [
+          {
+            "question": "提示词和 Skill 有什么区别？",
+            "answer": "提示词是你输入给模型的文字内容；Skill 是 Agent 的执行能力。选择 Skill 不会把一段固定文字自动填入输入框。"
+          },
+          {
+            "question": "为什么添加提示词不是常驻大表单？",
+            "answer": "添加操作使用弹窗，列表页面保持用于搜索和管理；完成保存或取消后会回到原列表位置。"
+          }
+        ],
+        "routeLabel": "打开提示词库"
+      },
+      "account": {
+        "label": "账户与购买",
+        "title": "管理套餐、积分与订单",
+        "summary": "右上角头像进入个人中心，可查看当前套餐、积分余额、个人资料、套餐购买、订单、消费记录、积分流水和账户安全。",
+        "keywords": [
+          "个人中心",
+          "套餐",
+          "积分",
+          "每日免费积分",
+          "购买",
+          "支付",
+          "订单",
+          "密码"
+        ],
+        "outcomes": [
+          "知道个人中心各分区",
+          "会完成套餐购买",
+          "会核对积分和订单状态"
+        ],
+        "flow": [
+          {
+            "title": "选择商品",
+            "detail": "在个人中心打开套餐中心并比较权益"
+          },
+          {
+            "title": "确认订单",
+            "detail": "选择数量与支付方式，核对金额和积分"
+          },
+          {
+            "title": "完成支付",
+            "detail": "进入安全结算页并按渠道继续"
+          },
+          {
+            "title": "核对权益",
+            "detail": "回到订单、套餐和积分记录确认结果"
+          }
+        ],
+        "steps": [
+          {
+            "title": "从头像进入个人中心",
+            "description": "右上角头像菜单保留个人中心入口。侧边栏底部帮助中心不再重复跳转个人资料。",
+            "checklist": [
+              "账户概览：套餐、余额和最近记录",
+              "个人资料：显示名称和邮箱",
+              "账户安全：修改密码",
+              "订单与积分分区：核对每笔变化"
+            ]
+          },
+          {
+            "title": "选择并购买套餐",
+            "description": "在套餐中心点击升级或购买，先从套餐选择弹层比较价格、积分与权益，再进入独立安全支付页面。",
+            "checklist": [
+              "确认套餐名称和有效权益",
+              "确认购买数量",
+              "确认支付方式和总金额",
+              "只有完成支付后才会开通权益"
+            ]
+          },
+          {
+            "title": "检查支付和积分结果",
+            "description": "支付完成后返回个人中心查看订单状态。到账积分、套餐变更、消费扣除和失败退回会分别进入对应记录。",
+            "checklist": [
+              "订单记录：查看待支付、已支付、已取消或人工确认",
+              "积分记录：查看余额增加与调整",
+              "消费记录：查看生成任务和模型调用扣除",
+              "结果延迟时先刷新记录，不要重复支付同一订单"
+            ]
+          }
+        ],
+        "faqs": [
+          {
+            "question": "为什么升级套餐是弹窗，支付不是弹窗？",
+            "answer": "套餐比较需要快速完成，因此使用工作台内弹层；涉及金额、数量和支付渠道时进入独立安全结算页面，便于完整核对订单。"
+          },
+          {
+            "question": "订单已支付但权益还没变化怎么办？",
+            "answer": "先在订单记录刷新状态。部分支付渠道回调可能稍有延迟，人工渠道则需要等待订单确认；不要为同一需求重复创建多个订单。"
+          }
+        ],
+        "routeLabel": "打开个人中心"
+      },
+      "troubleshooting": {
+        "label": "常见问题",
+        "title": "加载、生成与显示异常排查",
+        "summary": "遇到页面空白、数据加载慢、模型不可选或媒体无法打开时，先按问题所在环节排查，避免重复提交和重复扣费。",
+        "keywords": [
+          "问题",
+          "加载",
+          "失败",
+          "空白",
+          "模型",
+          "媒体",
+          "预览",
+          "重试"
+        ],
+        "outcomes": [
+          "能判断页面问题还是任务问题",
+          "知道何时重试",
+          "避免重复创建生成或支付请求"
+        ],
+        "flow": [
+          {
+            "title": "确认页面",
+            "detail": "刷新当前页并检查登录状态"
+          },
+          {
+            "title": "定位环节",
+            "detail": "区分数据加载、规划、提交或生成失败"
+          },
+          {
+            "title": "阅读提示",
+            "detail": "根据页面错误和任务状态调整"
+          },
+          {
+            "title": "安全重试",
+            "detail": "只重试失败项，不重复成功请求"
+          }
+        ],
+        "steps": [
+          {
+            "title": "页面数据长时间不显示",
+            "description": "先确认网络和登录状态，再使用页面内刷新或重试。不要在加载过程中连续切换和重复点击创建。",
+            "checklist": [
+              "查看是否出现明确错误提示",
+              "重新打开当前分区",
+              "素材、项目或历史失败时使用对应重试按钮",
+              "仍为空时确认当前账号是否确实有数据"
+            ]
+          },
+          {
+            "title": "模型或 Skill 不可选择",
+            "description": "列表只展示当前可执行能力。Skill 还会按工作区范围过滤，因此不同页面看到的内容可能不同。",
+            "checklist": [
+              "保持智能规划开启可使用默认能力",
+              "模型列表为空时不要手动填写模型名称",
+              "Skill 不匹配当前工作区时不会显示"
+            ]
+          },
+          {
+            "title": "图片或视频无法预览",
+            "description": "优先点击媒体本体打开预览，再尝试下载。历史媒体需要有效的服务器访问地址和当前用户权限。",
+            "checklist": [
+              "确认任务状态已经成功",
+              "确认媒体不是仍在处理中",
+              "重新打开历史记录刷新访问地址",
+              "不要把过期临时链接分享为长期素材地址"
+            ]
+          },
+          {
+            "title": "生成或支付失败后的重试",
+            "description": "只对明确失败的任务或未支付订单执行重试。成功任务不要重复提交，支付订单不要重复付款。",
+            "checklist": [
+              "记录页面显示的错误信息",
+              "生成失败先调整参数或参考素材",
+              "支付失败回到原订单继续，不重复下单",
+              "余额异常时核对积分记录和消费记录"
+            ]
+          }
+        ],
+        "faqs": [
+          {
+            "question": "刷新页面会不会丢失项目？",
+            "answer": "创作会话、Canvas、素材、短剧和生成记录按登录用户保存在服务器。页面刷新会重新加载，不依赖浏览器保存大型业务数据。"
+          },
+          {
+            "question": "什么时候应该重新创建任务？",
+            "answer": "只有原任务明确失败、取消或需求已经改变时才新建。任务仍在运行时重复提交会增加等待和积分消耗风险。"
+          }
+        ]
+      }
+    }
+  }
 }

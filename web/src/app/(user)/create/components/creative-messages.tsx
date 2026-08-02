@@ -4,6 +4,7 @@ import { Button, Tooltip } from "antd";
 import { Check, Clapperboard, Copy, Download, ExternalLink, FileAudio2, Film, Link2, LoaderCircle, PanelsTopLeft, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { downloadAgentMedia, type AgentMediaDownload } from "@/components/agent/agent-media-download";
 import { AgentMarkdown } from "@/components/agent/agent-markdown";
@@ -60,11 +61,12 @@ export function CreativeMessages({
     olderLoading?: boolean;
     onLoadOlder?: () => void;
 }) {
+    const t = useTranslations("workspace.create.messages");
     const endRef = useRef<HTMLDivElement>(null);
     const site = usePublicSessionStore((state) => state.payload?.settings?.site) || { title: "JoveCanvas", logoUrl: "/logo.svg" };
     const user = usePublicSessionStore((state) => state.payload?.user || null);
     const avatarUrl = user?.avatarUrl?.trim();
-    const avatarFallback = userAvatarFallback(user?.displayName || user?.username || "用户");
+    const avatarFallback = userAvatarFallback(user?.displayName || user?.username || t("userFallback"));
     const assetsByMessage = useMemo(() => {
         const map = new Map<string, CreativeAsset[]>();
         for (const asset of assets) {
@@ -80,14 +82,14 @@ export function CreativeMessages({
         endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }, [assets.length, messages.at(-1)?.id]);
 
-    if (loading) return <div className="grid flex-1 place-items-center text-sm text-stone-400">正在读取会话...</div>;
+    if (loading) return <div className="grid flex-1 place-items-center text-sm text-stone-400">{t("loadingConversation")}</div>;
 
     return (
         <div className="mx-auto w-full max-w-[1120px] space-y-3 px-3 pb-4 pt-6 sm:space-y-8 sm:px-8 sm:pb-10 sm:pt-20">
             {hasOlder ? (
                 <div className="flex justify-center">
                     <Button type="text" loading={olderLoading} onClick={onLoadOlder}>
-                        加载更早消息
+                        {t("loadOlderMessages")}
                     </Button>
                 </div>
             ) : null}
@@ -96,7 +98,7 @@ export function CreativeMessages({
                 const itemAssets = [...referencedAssets, ...(assetsByMessage.get(item.id) || []), ...(item.runId ? assetsByMessage.get(item.runId) || [] : [])].filter((asset, index, list) => list.findIndex((current) => current.id === asset.id) === index);
                 const handoff = isCreativeProjectHandoff(item.metadata.projectHandoff) ? item.metadata.projectHandoff : null;
                 const displayContent = formatAgentMessageText(item.content);
-                const downloads = agentAssetDownloads(itemAssets);
+                const downloads = agentAssetDownloads(itemAssets, t);
                 const run = item.runId ? runDetails[item.runId] : undefined;
                 const failedTasks = run?.tasks.filter((task) => task.status === "failed") || [];
                 return (
@@ -135,7 +137,7 @@ export function CreativeMessages({
                             ) : null}
                         </div>
                         {item.role === "user" ? (
-                            <span className="mt-1 grid size-7 shrink-0 place-items-center overflow-hidden rounded-full" role="img" aria-label={user?.displayName || user?.username || "用户"}>
+                            <span className="mt-1 grid size-7 shrink-0 place-items-center overflow-hidden rounded-full" role="img" aria-label={user?.displayName || user?.username || t("userFallback")}>
                                 {avatarUrl ? (
                                     <img src={avatarUrl} alt="" className="size-full object-cover" referrerPolicy="no-referrer" />
                                 ) : (
@@ -157,23 +159,25 @@ export function CreativeMessages({
 }
 
 function FailedSubmissionAction({ onRetry }: { onRetry: () => void }) {
+    const t = useTranslations("workspace.create.messages");
     return (
-        <Tooltip title="重新提交本次请求">
+        <Tooltip title={t("retrySubmissionTitle")}>
             <Button
                 type="text"
                 size="small"
                 className="!mt-1 !h-7 !px-1.5 !text-xs !text-red-700 hover:!bg-red-50 hover:!text-red-800 dark:!text-red-300 dark:hover:!bg-red-950/30 dark:hover:!text-red-200"
                 icon={<RotateCcw className="size-3.5" />}
                 onClick={onRetry}
-                aria-label="重试本次创作请求"
+                aria-label={t("retrySubmissionAria")}
             >
-                重试
+                {t("retry")}
             </Button>
         </Tooltip>
     );
 }
 
 function FailedPlanningAction({ onRetry }: { onRetry: () => void }) {
+    const t = useTranslations("workspace.create.messages");
     return (
         <div className="mt-2 flex items-center gap-2">
             <Button
@@ -182,30 +186,31 @@ function FailedPlanningAction({ onRetry }: { onRetry: () => void }) {
                 className="!h-8 !rounded-md !px-2 !text-xs !font-medium !text-red-700 hover:!bg-red-50 hover:!text-red-800 dark:!text-red-300 dark:hover:!bg-red-950/30 dark:hover:!text-red-200"
                 icon={<RotateCcw className="size-3.5" />}
                 onClick={onRetry}
-                aria-label="重新分析本次请求"
+                aria-label={t("reanalyzeAria")}
             >
-                重新分析
+                {t("reanalyze")}
             </Button>
-            <span className="text-xs text-stone-500 dark:text-stone-400">仅在你确认后重新请求</span>
+            <span className="text-xs text-stone-500 dark:text-stone-400">{t("confirmRetryHint")}</span>
         </div>
     );
 }
 
 function CreativeReferenceStrip({ assets }: { assets: CreativeAsset[] }) {
     let imageIndex = 0;
+    const t = useTranslations("workspace.create.messages");
     return (
-        <div className="mb-1.5 flex max-w-full flex-wrap justify-end gap-1.5" aria-label="本轮参考素材">
+        <div className="mb-1.5 flex max-w-full flex-wrap justify-end gap-1.5" aria-label={t("referenceStripAria")}>
             {assets.map((asset) => {
                 const url = assetUrl(asset);
                 if (!url || asset.type === "text") return null;
-                const label = asset.type === "image" ? imageReferenceLabel(imageIndex++) : asset.type === "video" ? "视频" : "音频";
+                const label = asset.type === "image" ? imageReferenceLabel(imageIndex++) : asset.type === "video" ? t("kindVideo") : t("kindAudio");
                 return (
                     <div
                         key={asset.id}
                         className="relative grid size-16 shrink-0 place-items-center overflow-hidden rounded-lg border border-stone-200 bg-stone-100 text-stone-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
                         title={asset.title}
                     >
-                        {asset.type === "image" ? <img src={imagePreviewUrl(url, 192)} alt={asset.title || "参考图"} loading="lazy" className="size-full object-cover" /> : null}
+                        {asset.type === "image" ? <img src={imagePreviewUrl(url, 192)} alt={asset.title || t("referenceImageAlt")} loading="lazy" className="size-full object-cover" /> : null}
                         {asset.type === "video" ? <Film className="size-5" aria-hidden /> : null}
                         {asset.type === "audio" ? <FileAudio2 className="size-5" aria-hidden /> : null}
                         <span className="absolute left-1 top-1 rounded bg-black/65 px-1 py-0.5 text-[9px] font-medium leading-none text-white">{label}</span>
@@ -222,13 +227,14 @@ function messageAssetIds(message: CreativeMessage) {
 }
 
 function FailedTaskActions({ run, onRetryTask }: { run: CreativeAgentRun; onRetryTask: (runId: string, taskId: string) => void }) {
+    const t = useTranslations("workspace.create.messages");
     const failedTasks = run.tasks.filter((task) => task.status === "failed");
     return (
         <div className="mt-3 inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-red-200 bg-red-50 px-2 py-1.5 align-top dark:border-red-900/70 dark:bg-red-950/20">
             {failedTasks.map((task) => (
                 <span key={task.id} className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-xs text-red-700 dark:text-red-200">
                     <span className="max-w-44 truncate">{task.title}</span>
-                    <Tooltip title={`重试「${task.title}」`}>
+                    <Tooltip title={t("retryTaskTitle", { title: task.title })}>
                         <Button
                             type="text"
                             size="small"
@@ -236,7 +242,7 @@ function FailedTaskActions({ run, onRetryTask }: { run: CreativeAgentRun; onRetr
                             className="!size-6 !min-w-6 !text-red-700 hover:!bg-red-100 hover:!text-red-800 dark:!text-red-200 dark:hover:!bg-red-900/50 dark:hover:!text-red-100"
                             icon={<RotateCcw className="size-3.5" />}
                             onClick={() => onRetryTask(run.id, task.id)}
-                            aria-label={`重试 ${task.title}`}
+                            aria-label={t("retryTaskAria", { title: task.title })}
                         />
                     </Tooltip>
                 </span>
@@ -246,8 +252,9 @@ function FailedTaskActions({ run, onRetryTask }: { run: CreativeAgentRun; onRetr
 }
 
 function ProjectHandoffAction({ handoff, project, error, loading, onMaterialize }: { handoff: CreativeProjectHandoff; project?: MaterializedCreativeProject; error?: string; loading: boolean; onMaterialize: () => void }) {
+    const t = useTranslations("workspace.create.messages");
     const Icon = handoff.surface === "canvas" ? PanelsTopLeft : Clapperboard;
-    const label = handoff.surface === "canvas" ? "画布项目" : "短剧项目";
+    const label = handoff.surface === "canvas" ? t("canvasProject") : t("dramaProject");
     return (
         <div className="mt-4 flex min-h-14 items-center gap-3 rounded-md border border-stone-200 bg-stone-50 px-3 py-2.5 dark:border-stone-700 dark:bg-stone-900">
             <span className="grid size-9 shrink-0 place-items-center rounded-md bg-white text-stone-700 dark:bg-stone-800 dark:text-stone-200">
@@ -255,18 +262,20 @@ function ProjectHandoffAction({ handoff, project, error, loading, onMaterialize 
             </span>
             <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium">{handoff.title}</span>
-                <span className={cn("mt-0.5 block text-xs text-stone-500 dark:text-stone-400", error && "text-red-600 dark:text-red-300")}>{error || `${handoff.assets.length} 份资产已交接到${label}`}</span>
+                <span className={cn("mt-0.5 block text-xs text-stone-500 dark:text-stone-400", error && "text-red-600 dark:text-red-300")}>
+                    {error || t("handoffAssetsReady", { count: handoff.assets.length, label })}
+                </span>
             </span>
             {project ? (
                 <Link
                     href={project.href}
                     className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-stone-300 bg-white px-3 text-sm font-medium text-stone-800 transition hover:border-stone-400 hover:bg-stone-100 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100 dark:hover:border-stone-500 dark:hover:bg-stone-700"
                 >
-                    打开 <ExternalLink className="size-3.5" />
+                    {t("openProject")} <ExternalLink className="size-3.5" />
                 </Link>
             ) : (
                 <Button className="!h-9 !shrink-0" loading={loading} onClick={onMaterialize}>
-                    {error ? "重试" : "创建项目"}
+                    {error ? t("retry") : t("createProject")}
                 </Button>
             )}
         </div>
@@ -274,6 +283,7 @@ function ProjectHandoffAction({ handoff, project, error, loading, onMaterialize 
 }
 
 function CreativeAssetGrid({ assets, messageText, selectedAssetIds, onToggleAsset }: { assets: CreativeAsset[]; messageText: string; selectedAssetIds: string[]; onToggleAsset: (id: string) => void }) {
+    const t = useTranslations("workspace.create.messages");
     const [loadedDimensions, setLoadedDimensions] = useState<Record<string, { width: number; height: number }>>({});
     const copyText = useCopyText();
     const media = assets.filter((asset) => asset.type !== "text" && assetUrl(asset));
@@ -293,14 +303,14 @@ function CreativeAssetGrid({ assets, messageText, selectedAssetIds, onToggleAsse
                         <figure className={cn("relative w-full overflow-hidden rounded-md", asset.type === "audio" && "border border-stone-200 bg-stone-50 dark:border-stone-700 dark:bg-stone-900")}>
                             {asset.type === "audio" ? (
                                 <div className="p-3 sm:p-4">
-                                    <AgentMediaPreview type={asset.type} url={url} title={asset.title || "生成音频"} />
+                                    <AgentMediaPreview type={asset.type} url={url} title={asset.title || t("generatedAudio")} />
                                 </div>
                             ) : (
                                 <div style={layout?.media} className={cn("w-full overflow-hidden", !layout && asset.type === "video" && "aspect-video")}>
                                     <AgentMediaPreview
                                         type={asset.type}
                                         url={url}
-                                        title={asset.title || (asset.type === "video" ? "生成视频" : "生成图片")}
+                                        title={asset.title || (asset.type === "video" ? t("generatedVideo") : t("generatedImage"))}
                                         className="size-full"
                                         fit="contain"
                                         onDimensions={(width, height) => updateDimensions(asset.id, width, height)}
@@ -311,10 +321,10 @@ function CreativeAssetGrid({ assets, messageText, selectedAssetIds, onToggleAsse
                         {asset.type === "image" || asset.type === "video" ? (
                             <div className="mt-1 flex min-h-8 items-center justify-end gap-0.5 text-stone-500 dark:text-stone-400">
                                 {asset.status === "ready" ? (
-                                    <Tooltip title={selected ? "取消引用" : "引用素材"}>
+                                    <Tooltip title={selected ? t("unreference") : t("referenceAsset")}>
                                         <button
                                             type="button"
-                                            aria-label={selected ? "取消引用素材" : "引用素材"}
+                                            aria-label={selected ? t("unreferenceAsset") : t("referenceAsset")}
                                             aria-pressed={selected}
                                             className={cn(
                                                 "grid size-8 place-items-center text-current transition hover:text-stone-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 dark:hover:text-white sm:size-7",
@@ -326,23 +336,23 @@ function CreativeAssetGrid({ assets, messageText, selectedAssetIds, onToggleAsse
                                         </button>
                                     </Tooltip>
                                 ) : null}
-                                <Tooltip title={asset.type === "video" ? "下载视频" : "下载图片"}>
+                                <Tooltip title={asset.type === "video" ? t("downloadVideo") : t("downloadImage")}>
                                     <button
                                         type="button"
-                                        aria-label={asset.type === "video" ? "下载视频" : "下载图片"}
+                                        aria-label={asset.type === "video" ? t("downloadVideo") : t("downloadImage")}
                                         className="grid size-8 place-items-center text-current transition hover:text-stone-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 dark:hover:text-white sm:size-7"
-                                        onClick={() => downloadAgentMedia([agentAssetDownload(asset)])}
+                                        onClick={() => downloadAgentMedia([agentAssetDownload(asset, t)])}
                                     >
                                         <Download className="size-3.5" />
                                     </button>
                                 </Tooltip>
                                 {messageText.trim() ? (
-                                    <Tooltip title="复制消息">
+                                    <Tooltip title={t("copyMessage")}>
                                         <button
                                             type="button"
-                                            aria-label="复制消息"
+                                            aria-label={t("copyMessage")}
                                             className="grid size-8 place-items-center text-current transition hover:text-stone-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 dark:hover:text-white sm:size-7"
-                                            onClick={() => copyText(messageText, "消息已复制")}
+                                            onClick={() => copyText(messageText, t("messageCopied"))}
                                         >
                                             <Copy className="size-3.5" />
                                         </button>
@@ -361,18 +371,18 @@ function assetUrl(asset: CreativeAsset) {
     return asset.serverUrl || asset.remoteUrl || "";
 }
 
-function agentAssetDownloads(assets: CreativeAsset[]): AgentMediaDownload[] {
+function agentAssetDownloads(assets: CreativeAsset[], t: (key: string) => string): AgentMediaDownload[] {
     return assets.flatMap((asset) => {
         const url = assetUrl(asset);
-        return url && (asset.type === "image" || asset.type === "video") ? [{ type: asset.type, url, title: asset.title || (asset.type === "video" ? "生成视频" : "生成图片"), mimeType: asset.mimeType }] : [];
+        return url && (asset.type === "image" || asset.type === "video") ? [{ type: asset.type, url, title: asset.title || (asset.type === "video" ? t("generatedVideo") : t("generatedImage")), mimeType: asset.mimeType }] : [];
     });
 }
 
-function agentAssetDownload(asset: CreativeAsset): AgentMediaDownload {
+function agentAssetDownload(asset: CreativeAsset, t: (key: string) => string): AgentMediaDownload {
     return {
         type: asset.type === "video" ? "video" : "image",
         url: assetUrl(asset)!,
-        title: asset.title || (asset.type === "video" ? "生成视频" : "生成图片"),
+        title: asset.title || (asset.type === "video" ? t("generatedVideo") : t("generatedImage")),
         mimeType: asset.mimeType,
     };
 }

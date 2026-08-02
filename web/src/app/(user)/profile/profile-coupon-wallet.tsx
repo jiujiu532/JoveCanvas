@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { App, Button, Input, Tag } from "antd";
 import { Clock3, Gift, RefreshCw, TicketPercent } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { claimBillingCoupon, type CouponTemplate, type UserCoupon } from "@/services/api/billing";
 import { CompactEmptyState } from "@/components/compact-empty-state";
@@ -18,6 +19,8 @@ type CouponWalletSectionProps = {
 };
 
 export function CouponWalletSection({ coupons, templates, total, loading, onRefresh }: CouponWalletSectionProps) {
+    const t = useTranslations("workspace.profile.couponWallet");
+    const locale = useLocale();
     const { message } = App.useApp();
     const [code, setCode] = useState("");
     const [claiming, setClaiming] = useState("");
@@ -26,11 +29,11 @@ export function CouponWalletSection({ coupons, templates, total, loading, onRefr
         setClaiming(key);
         try {
             await claimBillingCoupon(input);
-            message.success("优惠券已领取");
+            message.success(t("claimSuccess"));
             setCode("");
             await onRefresh();
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "领取优惠券失败");
+            message.error(error instanceof Error ? error.message : t("claimFailed"));
         } finally {
             setClaiming("");
         }
@@ -40,11 +43,11 @@ export function CouponWalletSection({ coupons, templates, total, loading, onRefr
         <section className="rounded-lg border border-border bg-card p-2 text-card-foreground sm:rounded-2xl sm:p-6">
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <h2 className="text-lg font-semibold text-stone-950 sm:text-xl dark:text-white">我的优惠券</h2>
-                    <p className="mt-1 text-xs leading-5 text-stone-500 sm:text-sm sm:leading-6 dark:text-stone-400">领取并查看可用于套餐结算的优惠券，实际优惠以结算页服务端报价为准。</p>
+                    <h2 className="text-lg font-semibold text-stone-950 sm:text-xl dark:text-white">{t("title")}</h2>
+                    <p className="mt-1 text-xs leading-5 text-stone-500 sm:text-sm sm:leading-6 dark:text-stone-400">{t("description")}</p>
                 </div>
                 <Button className={`${profileSecondaryButtonClass} shrink-0`} icon={<RefreshCw className="size-4" />} loading={loading} onClick={() => void onRefresh()}>
-                    <span className="hidden sm:inline">刷新</span>
+                    <span className="hidden sm:inline">{t("refresh")}</span>
                 </Button>
             </div>
 
@@ -53,35 +56,35 @@ export function CouponWalletSection({ coupons, templates, total, loading, onRefr
                     value={code}
                     maxLength={40}
                     prefix={<TicketPercent className="size-4 text-stone-400" />}
-                    placeholder="输入优惠券领取码"
+                    placeholder={t("codePlaceholder")}
                     onChange={(event) => setCode(event.target.value.toUpperCase())}
                     onPressEnter={() => (code.trim() ? void claim({ code: code.trim() }, "code") : undefined)}
                 />
                 <Button className={profilePrimaryButtonClass} type="primary" icon={<Gift className="size-4" />} loading={claiming === "code"} disabled={!code.trim()} onClick={() => void claim({ code: code.trim() }, "code")}>
-                    领取优惠券
+                    {t("claim")}
                 </Button>
             </div>
 
             {templates.length ? (
                 <div className="mt-4 sm:mt-5">
                     <div className="mb-2 flex items-center justify-between gap-3">
-                        <h3 className="text-sm font-semibold text-stone-950 dark:text-stone-100">可领取</h3>
-                        <span className="text-xs text-stone-400 dark:text-stone-500">{templates.length} 个活动</span>
+                        <h3 className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("claimable")}</h3>
+                        <span className="text-xs text-stone-400 dark:text-stone-500">{t("campaignCount", { count: templates.length })}</span>
                     </div>
                     <div className="grid gap-2 lg:grid-cols-2">
                         {templates.map((template) => (
                             <article key={template.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-dashed border-rose-200 bg-rose-50/55 p-3 dark:border-rose-900/50 dark:bg-rose-950/15">
                                 <div className="min-w-0">
                                     <div className="flex min-w-0 items-center gap-2">
-                                        <span className="shrink-0 text-base font-semibold text-rose-700 dark:text-rose-200">{discountLabel(template)}</span>
+                                        <span className="shrink-0 text-base font-semibold text-rose-700 dark:text-rose-200">{discountLabel(template, locale)}</span>
                                         <span className="truncate text-sm font-semibold text-stone-950 dark:text-stone-100">{template.name}</span>
                                     </div>
                                     <p className="mt-1 truncate text-xs text-stone-500 dark:text-stone-400">
-                                        {template.minimumAmountCents ? `满 ¥${formatYuan(template.minimumAmountCents)} 可用` : "无使用门槛"} · 至 {formatDate(template.endsAt)}
+                                        {template.minimumAmountCents ? t("minAmount", { amount: formatYuan(template.minimumAmountCents, locale) }) : t("noMinimum")} · {t("until", { date: formatDate(template.endsAt, locale) })}
                                     </p>
                                 </div>
                                 <Button size="small" icon={<Gift className="size-3.5" />} loading={claiming === template.id} onClick={() => void claim({ templateId: template.id }, template.id)}>
-                                    领取
+                                    {t("claimShort")}
                                 </Button>
                             </article>
                         ))}
@@ -91,8 +94,8 @@ export function CouponWalletSection({ coupons, templates, total, loading, onRefr
 
             <div className="mt-4 border-t border-stone-200 pt-4 sm:mt-5 sm:pt-5 dark:border-stone-800">
                 <div className="mb-2 flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-stone-950 dark:text-stone-100">已领取优惠券</h3>
-                    {!loading ? <span className="text-xs text-stone-400 dark:text-stone-500">共 {total} 张</span> : null}
+                    <h3 className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("ownedTitle")}</h3>
+                    {!loading ? <span className="text-xs text-stone-400 dark:text-stone-500">{t("ownedCount", { count: total })}</span> : null}
                 </div>
                 {loading ? (
                     <LoadingBlock />
@@ -102,43 +105,43 @@ export function CouponWalletSection({ coupons, templates, total, loading, onRefr
                             <article key={coupon.id} className="min-w-0 rounded-lg border border-stone-200 bg-stone-50/70 p-3 dark:border-stone-800 dark:bg-stone-900/40 sm:p-4">
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
-                                        <div className="truncate text-sm font-semibold text-stone-950 dark:text-stone-100">{coupon.template?.name || "优惠券"}</div>
+                                        <div className="truncate text-sm font-semibold text-stone-950 dark:text-stone-100">{coupon.template?.name || t("couponFallback")}</div>
                                         <div className="mt-1 font-mono text-xs text-stone-500 dark:text-stone-400">{coupon.template?.code || coupon.templateId}</div>
                                     </div>
                                     <div className="shrink-0 text-right">
-                                        <div className="text-lg font-semibold text-rose-700 dark:text-rose-200">{coupon.template ? discountLabel(coupon.template) : "-"}</div>
+                                        <div className="text-lg font-semibold text-rose-700 dark:text-rose-200">{coupon.template ? discountLabel(coupon.template, locale) : "-"}</div>
                                         <Tag className="m-0 mt-1" color={couponStatusColor(coupon.status)}>
-                                            {couponStatusLabel(coupon.status)}
+                                            {couponStatusLabel(coupon.status, t)}
                                         </Tag>
                                     </div>
                                 </div>
                                 <div className="mt-3 flex items-center gap-2 border-t border-stone-200 pt-3 text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
                                     <Clock3 className="size-3.5 shrink-0" />
-                                    <span>有效期至 {formatDate(coupon.expiresAt)}</span>
-                                    {coupon.template?.stackWithPromotion ? <span className="ml-auto shrink-0 text-emerald-700 dark:text-emerald-300">可叠加活动</span> : null}
+                                    <span>{t("expiresAt", { date: formatDate(coupon.expiresAt, locale) })}</span>
+                                    {coupon.template?.stackWithPromotion ? <span className="ml-auto shrink-0 text-emerald-700 dark:text-emerald-300">{t("stackWithPromotion")}</span> : null}
                                 </div>
                             </article>
                         ))}
                     </div>
                 ) : (
-                    <CompactEmptyState title="暂无优惠券" description="输入领取码或领取当前开放的优惠券后会显示在这里。" />
+                    <CompactEmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
                 )}
             </div>
         </section>
     );
 }
 
-function discountLabel(template: CouponTemplate) {
-    if (template.discountType === "fixed") return `¥${formatYuan(template.discountValue)}`;
-    return `${(template.discountValue / 100).toLocaleString("zh-CN", { maximumFractionDigits: 2 })}%`;
+function discountLabel(template: CouponTemplate, locale: string) {
+    if (template.discountType === "fixed") return `¥${formatYuan(template.discountValue, locale)}`;
+    return `${(template.discountValue / 100).toLocaleString(locale === "en" ? "en-US" : "zh-CN", { maximumFractionDigits: 2 })}%`;
 }
 
-function couponStatusLabel(status: UserCoupon["status"]) {
-    if (status === "available") return "可使用";
-    if (status === "locked") return "订单锁定";
-    if (status === "redeemed") return "已使用";
-    if (status === "expired") return "已过期";
-    return "已撤销";
+function couponStatusLabel(status: UserCoupon["status"], t: ReturnType<typeof useTranslations>) {
+    if (status === "available") return t("statusAvailable");
+    if (status === "locked") return t("statusLocked");
+    if (status === "redeemed") return t("statusRedeemed");
+    if (status === "expired") return t("statusExpired");
+    return t("statusRevoked");
 }
 
 function couponStatusColor(status: UserCoupon["status"]) {
@@ -148,11 +151,13 @@ function couponStatusColor(status: UserCoupon["status"]) {
     return "default";
 }
 
-function formatYuan(amountCents: number) {
-    return (Math.max(0, amountCents) / 100).toLocaleString("zh-CN", { minimumFractionDigits: amountCents % 100 ? 2 : 0, maximumFractionDigits: 2 });
+function formatYuan(amountCents: number, locale: string) {
+    return (Math.max(0, amountCents) / 100).toLocaleString(locale === "en" ? "en-US" : "zh-CN", { minimumFractionDigits: amountCents % 100 ? 2 : 0, maximumFractionDigits: 2 });
 }
 
-function formatDate(value: string) {
+function formatDate(value: string, locale: string) {
     const date = new Date(value);
-    return Number.isFinite(date.getTime()) ? date.toLocaleString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }) : "-";
+    return Number.isFinite(date.getTime())
+        ? date.toLocaleString(locale === "en" ? "en-US" : "zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })
+        : "-";
 }

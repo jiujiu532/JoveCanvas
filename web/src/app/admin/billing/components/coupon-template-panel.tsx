@@ -5,6 +5,7 @@ import { App, Button, DatePicker, Form, Input, InputNumber, Modal, Pagination, S
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { Gift, Pencil, Plus, RefreshCw, Save, Send, TicketPercent, Trash2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { AdminUserSearchSelect } from "@/components/admin/admin-user-identity";
 import type { BillingProduct, CouponTemplate } from "@/services/api/billing";
@@ -29,7 +30,12 @@ type CouponFormValue = {
     productIds: string[];
 };
 
+type CouponT = ReturnType<typeof useTranslations<"admin.billingOps.coupons">>;
+
 export function CouponTemplatePanel({ products, productsLoading }: { products: BillingProduct[]; productsLoading: boolean }) {
+    const t = useTranslations("admin.billingOps.coupons");
+    const locale = useLocale();
+    const numberLocale = locale === "en" ? "en-US" : "zh-CN";
     const { message, modal } = App.useApp();
     const [form] = Form.useForm<CouponFormValue>();
     const [grantForm] = Form.useForm<{ userId: string; templateId: string }>();
@@ -52,11 +58,11 @@ export function CouponTemplatePanel({ products, productsLoading }: { products: B
             setTemplates(result.templates);
             setTotal(result.total);
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "加载优惠券模板失败");
+            message.error(error instanceof Error ? error.message : t("loadFailed"));
         } finally {
             setLoading(false);
         }
-    }, [message, page]);
+    }, [message, page, t]);
 
     useEffect(() => {
         void load();
@@ -127,13 +133,13 @@ export function CouponTemplatePanel({ products, productsLoading }: { products: B
             };
             if (editing) await updateAdminCouponTemplate(editing.id, input);
             else await createAdminCouponTemplate(input);
-            message.success(editing ? "优惠券模板已更新" : "优惠券模板已创建");
+            message.success(editing ? t("updated") : t("created"));
             setOpen(false);
             setEditing(null);
             form.resetFields();
             await load();
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "保存优惠券模板失败");
+            message.error(error instanceof Error ? error.message : t("saveFailed"));
         } finally {
             setSaving(false);
         }
@@ -143,12 +149,12 @@ export function CouponTemplatePanel({ products, productsLoading }: { products: B
         setGranting(true);
         try {
             await grantAdminCoupon({ userId: value.userId.trim(), templateId: value.templateId });
-            message.success("优惠券已发放");
+            message.success(t("granted"));
             setGrantOpen(false);
             grantForm.resetFields();
             await load();
         } catch (error) {
-            message.error(error instanceof Error ? error.message : "发放优惠券失败");
+            message.error(error instanceof Error ? error.message : t("grantFailed"));
         } finally {
             setGranting(false);
         }
@@ -156,20 +162,20 @@ export function CouponTemplatePanel({ products, productsLoading }: { products: B
 
     const remove = (template: CouponTemplate) => {
         modal.confirm({
-            title: `删除“${template.name}”？`,
-            content: "已发放的模板会受到保护；停止领取或使用时请改为停用。",
-            okText: "确认删除",
-            cancelText: "取消",
+            title: t("deleteTitle", { name: template.name }),
+            content: t("deleteContent"),
+            okText: t("deleteConfirm"),
+            cancelText: t("cancel"),
             okButtonProps: { danger: true },
             onOk: async () => {
                 setDeletingId(template.id);
                 try {
                     await deleteAdminCouponTemplate(template.id);
-                    message.success("优惠券模板已删除");
+                    message.success(t("deleted"));
                     if (templates.length === 1 && page > 1) setPage((current) => current - 1);
                     else await load();
                 } catch (error) {
-                    message.error(error instanceof Error ? error.message : "删除优惠券模板失败");
+                    message.error(error instanceof Error ? error.message : t("deleteFailed"));
                     throw error;
                 } finally {
                     setDeletingId("");
@@ -182,27 +188,27 @@ export function CouponTemplatePanel({ products, productsLoading }: { products: B
         <section className="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm shadow-stone-200/40 dark:border-stone-800 dark:bg-stone-950 dark:shadow-black/20">
             <div className="flex items-start justify-between gap-3 border-b border-stone-200 p-3 sm:items-center sm:p-4 dark:border-stone-800">
                 <div className="min-w-0">
-                    <h2 className="text-base font-semibold text-stone-950 dark:text-stone-100">优惠券</h2>
-                    <p className="mt-1 text-xs leading-5 text-stone-500 sm:text-sm dark:text-stone-400">管理优惠规则、领取范围和发行库存，并向指定用户发放优惠券。</p>
+                    <h2 className="text-base font-semibold text-stone-950 dark:text-stone-100">{t("title")}</h2>
+                    <p className="mt-1 text-xs leading-5 text-stone-500 sm:text-sm dark:text-stone-400">{t("description")}</p>
                 </div>
                 <div className="flex shrink-0 flex-wrap justify-end gap-2">
                     <Button icon={<Send className="size-4" />} disabled={!templates.length} onClick={() => setGrantOpen(true)}>
-                        <span className="hidden sm:inline">定向发券</span>
+                        <span className="hidden sm:inline">{t("grantTargeted")}</span>
                     </Button>
-                    <Button icon={<RefreshCw className="size-4" />} loading={loading} aria-label="刷新优惠券" title="刷新优惠券" onClick={() => void load()} />
+                    <Button icon={<RefreshCw className="size-4" />} loading={loading} aria-label={t("refreshAria")} title={t("refreshAria")} onClick={() => void load()} />
                     <Button type="primary" icon={<Plus className="size-4" />} disabled={productsLoading} onClick={showCreate}>
-                        <span className="hidden sm:inline">创建优惠券</span>
-                        <span className="sm:hidden">新建</span>
+                        <span className="hidden sm:inline">{t("create")}</span>
+                        <span className="sm:hidden">{t("createShort")}</span>
                     </Button>
                 </div>
             </div>
 
             <div className="grid min-w-0 gap-2 p-3 sm:gap-3 sm:p-4 lg:grid-cols-2">
                 {loading && !templates.length ? (
-                    <Loading />
+                    <Loading label={t("loading")} />
                 ) : templates.length ? (
                     templates.map((template) => {
-                        const state = templateState(template);
+                        const state = templateState(template, t);
                         return (
                             <article key={template.id} className="min-w-0 rounded-lg border border-stone-200 bg-stone-50/70 p-3 dark:border-stone-800 dark:bg-stone-900/40 sm:p-4">
                                 <div className="flex items-start justify-between gap-3">
@@ -217,44 +223,50 @@ export function CouponTemplatePanel({ products, productsLoading }: { products: B
                                         <div className="mt-2 font-mono text-xs text-stone-500 dark:text-stone-400">{template.code}</div>
                                     </div>
                                     <div className="shrink-0 text-right">
-                                        <div className="text-lg font-semibold tabular-nums text-stone-950 dark:text-stone-100">{discountLabel(template)}</div>
-                                        <div className="mt-0.5 text-[11px] text-stone-500 dark:text-stone-400">{template.minimumAmountCents ? `满 ¥${formatYuan(template.minimumAmountCents)} 可用` : "无使用门槛"}</div>
+                                        <div className="text-lg font-semibold tabular-nums text-stone-950 dark:text-stone-100">{discountLabel(template, numberLocale)}</div>
+                                        <div className="mt-0.5 text-[11px] text-stone-500 dark:text-stone-400">
+                                            {template.minimumAmountCents ? t("minSpend", { amount: formatYuan(template.minimumAmountCents, numberLocale) }) : t("noMinSpend")}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="mt-3 grid grid-cols-3 gap-2 border-y border-stone-200 py-3 text-center dark:border-stone-800">
-                                    <Fact label="已发行" value={`${template.issuedCount}${template.totalLimit ? ` / ${template.totalLimit}` : ""}`} />
-                                    <Fact label="已核销" value={String(template.redeemedCount)} />
-                                    <Fact label="每人限领" value={`${template.perUserLimit} 张`} />
+                                    <Fact label={t("factIssued")} value={`${template.issuedCount}${template.totalLimit ? ` / ${template.totalLimit}` : ""}`} />
+                                    <Fact label={t("factRedeemed")} value={String(template.redeemedCount)} />
+                                    <Fact label={t("factPerUser")} value={t("perUserCount", { count: template.perUserLimit })} />
                                 </div>
                                 <div className="mt-3 flex min-w-0 flex-wrap gap-1.5">
-                                    <Tag className="m-0">{template.productIds.length ? `${template.productIds.length} 个指定商品` : "全部商品"}</Tag>
+                                    <Tag className="m-0">{template.productIds.length ? t("productsCount", { count: template.productIds.length }) : t("allProducts")}</Tag>
                                     <Tag className="m-0" color={template.stackWithPromotion ? "green" : "default"}>
-                                        {template.stackWithPromotion ? "可叠加活动" : "不叠加活动"}
+                                        {template.stackWithPromotion ? t("stackable") : t("notStackable")}
                                     </Tag>
                                     <Tag className="m-0" color={template.claimable ? "blue" : "default"}>
-                                        {template.claimable ? "可主动领取" : "仅后台发放"}
+                                        {template.claimable ? t("claimOpen") : t("claimAdminOnly")}
                                     </Tag>
                                 </div>
-                                {template.productIds.length ? <p className="mt-2 truncate text-xs text-stone-500 dark:text-stone-400">适用：{template.productIds.map((id) => adminProductLabel(products, id)).join("、")}</p> : null}
+                                {template.productIds.length ? (
+                                    <p className="mt-2 truncate text-xs text-stone-500 dark:text-stone-400">
+                                        {t("applicable", { list: template.productIds.map((id) => adminProductLabel(products, id)).join(t("listJoin")) })}
+                                    </p>
+                                ) : null}
                                 <div className="mt-3 flex justify-end gap-2 border-t border-stone-200 pt-3 dark:border-stone-800">
                                     <Button size="small" icon={<Pencil className="size-3.5" />} onClick={() => showEdit(template)}>
-                                        编辑
+                                        {t("edit")}
                                     </Button>
                                     <Button danger size="small" icon={<Trash2 className="size-3.5" />} loading={deletingId === template.id} onClick={() => remove(template)}>
-                                        删除
+                                        {t("delete")}
                                     </Button>
                                 </div>
                             </article>
                         );
                     })
                 ) : (
-                    <Empty />
+                    <Empty label={t("empty")} />
                 )}
             </div>
             {total > PAGE_SIZE ? <Pagination className="px-3 pb-4 sm:px-4" size="small" current={page} pageSize={PAGE_SIZE} total={total} showSizeChanger={false} onChange={setPage} /> : null}
 
             <Modal
-                title={editing ? "编辑优惠券" : "创建优惠券"}
+                title={editing ? t("editTitle") : t("createTitle")}
                 open={open}
                 width={820}
                 centered
@@ -263,41 +275,41 @@ export function CouponTemplatePanel({ products, productsLoading }: { products: B
                 styles={{ body: { maxHeight: "min(72dvh, 720px)", overflowY: "auto", paddingTop: 8 } }}
                 footer={[
                     <Button key="cancel" disabled={saving} onClick={() => setOpen(false)}>
-                        取消
+                        {t("cancel")}
                     </Button>,
                     <Button key="save" type="primary" icon={<Save className="size-4" />} loading={saving} onClick={() => form.submit()}>
-                        保存优惠券
+                        {t("save")}
                     </Button>,
                 ]}
             >
                 <Form form={form} layout="vertical" onFinish={(value) => void save(value)}>
                     {editing?.issuedCount ? (
                         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
-                            优惠券已经发行，折扣、门槛、范围和有效期不可修改，只能调整说明、开关和发行总量。
+                            {t("issuedLockedHint")}
                         </div>
                     ) : null}
                     <div className="grid gap-x-3 sm:grid-cols-2">
-                        <Form.Item name="name" label="优惠券名称" rules={[{ required: true, message: "请填写优惠券名称" }]}>
-                            <Input maxLength={80} placeholder="例如：新用户立减券" />
+                        <Form.Item name="name" label={t("name")} rules={[{ required: true, message: t("nameRequired") }]}>
+                            <Input maxLength={80} placeholder={t("namePlaceholder")} />
                         </Form.Item>
-                        <Form.Item name="code" label="领取码" rules={[{ required: true, message: "请填写领取码" }]}>
-                            <Input disabled={Boolean(editing?.issuedCount)} maxLength={40} placeholder="例如：WELCOME20" />
+                        <Form.Item name="code" label={t("code")} rules={[{ required: true, message: t("codeRequired") }]}>
+                            <Input disabled={Boolean(editing?.issuedCount)} maxLength={40} placeholder={t("codePlaceholder")} />
                         </Form.Item>
                     </div>
-                    <Form.Item name="description" label="用户端说明">
-                        <Input.TextArea rows={2} maxLength={300} placeholder="简要说明优惠券用途" />
+                    <Form.Item name="description" label={t("descriptionLabel")}>
+                        <Input.TextArea rows={2} maxLength={300} placeholder={t("descriptionPlaceholder")} />
                     </Form.Item>
                     <div className="grid gap-x-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <Form.Item name="discountType" label="优惠类型">
+                        <Form.Item name="discountType" label={t("discountType")}>
                             <Select
                                 disabled={Boolean(editing?.issuedCount)}
                                 options={[
-                                    { label: "固定金额", value: "fixed" },
-                                    { label: "比例折扣", value: "percentage" },
+                                    { label: t("discountFixed"), value: "fixed" },
+                                    { label: t("discountPercentage"), value: "percentage" },
                                 ]}
                             />
                         </Form.Item>
-                        <Form.Item name="discountValue" label={discountType === "fixed" ? "优惠金额" : "优惠比例"} rules={[{ required: true, message: "请填写优惠值" }]}>
+                        <Form.Item name="discountValue" label={discountType === "fixed" ? t("discountAmount") : t("discountRate")} rules={[{ required: true, message: t("discountValueRequired") }]}>
                             <InputNumber
                                 disabled={Boolean(editing?.issuedCount)}
                                 className="w-full"
@@ -308,43 +320,43 @@ export function CouponTemplatePanel({ products, productsLoading }: { products: B
                                 suffix={discountType === "percentage" ? "%" : undefined}
                             />
                         </Form.Item>
-                        <Form.Item name="minimumAmountYuan" label="使用门槛">
+                        <Form.Item name="minimumAmountYuan" label={t("minimumAmount")}>
                             <InputNumber disabled={Boolean(editing?.issuedCount)} className="w-full" min={0} precision={2} prefix="¥" />
                         </Form.Item>
-                        <Form.Item name="maximumDiscountYuan" label="最高优惠" extra="0 表示不封顶">
+                        <Form.Item name="maximumDiscountYuan" label={t("maximumDiscount")} extra={t("maximumDiscountExtra")}>
                             <InputNumber disabled={Boolean(editing?.issuedCount)} className="w-full" min={0} precision={2} prefix="¥" />
                         </Form.Item>
                     </div>
-                    <Form.Item name="range" label="有效期" rules={[{ required: true, message: "请选择有效期" }]}>
+                    <Form.Item name="range" label={t("validity")} rules={[{ required: true, message: t("validityRequired") }]}>
                         <DatePicker.RangePicker disabled={Boolean(editing?.issuedCount)} className="w-full" showTime />
                     </Form.Item>
                     <div className="grid gap-x-3 sm:grid-cols-2 lg:grid-cols-3">
-                        <Form.Item name="totalLimit" label="发行总量" extra="0 表示不限量">
+                        <Form.Item name="totalLimit" label={t("totalLimit")} extra={t("totalLimitExtra")}>
                             <InputNumber className="w-full" min={editing?.issuedCount || 0} precision={0} />
                         </Form.Item>
-                        <Form.Item name="perUserLimit" label="每用户限领">
+                        <Form.Item name="perUserLimit" label={t("perUserLimit")}>
                             <InputNumber disabled={Boolean(editing?.issuedCount)} className="w-full" min={1} max={100} precision={0} />
                         </Form.Item>
-                        <Form.Item name="productIds" label="适用商品" extra="不选择表示全部商品">
+                        <Form.Item name="productIds" label={t("productIds")} extra={t("productIdsExtra")}>
                             <Select disabled={Boolean(editing?.issuedCount)} mode="multiple" optionFilterProp="label" options={products.map((product) => ({ value: product.id, label: product.name }))} />
                         </Form.Item>
                     </div>
                     <div className="grid gap-x-3 sm:grid-cols-3">
-                        <Form.Item name="stackWithPromotion" label="与活动叠加" valuePropName="checked">
-                            <Switch disabled={Boolean(editing?.issuedCount)} checkedChildren="允许" unCheckedChildren="不允许" />
+                        <Form.Item name="stackWithPromotion" label={t("stackWithPromotion")} valuePropName="checked">
+                            <Switch disabled={Boolean(editing?.issuedCount)} checkedChildren={t("allow")} unCheckedChildren={t("disallow")} />
                         </Form.Item>
-                        <Form.Item name="claimable" label="用户主动领取" valuePropName="checked">
-                            <Switch checkedChildren="允许" unCheckedChildren="关闭" />
+                        <Form.Item name="claimable" label={t("claimable")} valuePropName="checked">
+                            <Switch checkedChildren={t("allow")} unCheckedChildren={t("claimableOff")} />
                         </Form.Item>
-                        <Form.Item name="enabled" label="模板状态" valuePropName="checked">
-                            <Switch checkedChildren="启用" unCheckedChildren="停用" />
+                        <Form.Item name="enabled" label={t("templateStatus")} valuePropName="checked">
+                            <Switch checkedChildren={t("enabled")} unCheckedChildren={t("disabled")} />
                         </Form.Item>
                     </div>
                 </Form>
             </Modal>
 
             <Modal
-                title="向用户发放优惠券"
+                title={t("grantTitle")}
                 open={grantOpen}
                 width={520}
                 centered
@@ -352,18 +364,18 @@ export function CouponTemplatePanel({ products, productsLoading }: { products: B
                 onCancel={() => (granting ? undefined : setGrantOpen(false))}
                 footer={[
                     <Button key="cancel" disabled={granting} onClick={() => setGrantOpen(false)}>
-                        取消
+                        {t("cancel")}
                     </Button>,
                     <Button key="grant" type="primary" icon={<Gift className="size-4" />} loading={granting} onClick={() => grantForm.submit()}>
-                        确认发放
+                        {t("grantConfirm")}
                     </Button>,
                 ]}
             >
                 <Form form={grantForm} layout="vertical" onFinish={(value) => void grant(value)}>
-                    <Form.Item name="userId" label="发放用户" extra="可按昵称、用户名、邮箱或公开用户 ID 搜索" rules={[{ required: true, message: "请选择用户" }]}>
+                    <Form.Item name="userId" label={t("grantUser")} extra={t("grantUserExtra")} rules={[{ required: true, message: t("grantUserRequired") }]}>
                         <AdminUserSearchSelect activeOnly />
                     </Form.Item>
-                    <Form.Item name="templateId" label="优惠券" rules={[{ required: true, message: "请选择优惠券" }]}>
+                    <Form.Item name="templateId" label={t("grantCoupon")} rules={[{ required: true, message: t("grantCouponRequired") }]}>
                         <Select optionFilterProp="label" options={templates.filter((item) => item.enabled).map((item) => ({ value: item.id, label: `${item.name} · ${item.code}` }))} />
                     </Form.Item>
                 </Form>
@@ -372,26 +384,26 @@ export function CouponTemplatePanel({ products, productsLoading }: { products: B
     );
 }
 
-function templateState(template: CouponTemplate) {
+function templateState(template: CouponTemplate, t: CouponT) {
     const now = Date.now();
-    if (!template.enabled) return { label: "已停用", color: "default" };
-    if (Date.parse(template.startsAt) > now) return { label: "待生效", color: "blue" };
-    if (Date.parse(template.endsAt) <= now) return { label: "已过期", color: "default" };
-    if (template.totalLimit > 0 && template.issuedCount >= template.totalLimit) return { label: "已领完", color: "orange" };
-    return { label: "发行中", color: "green" };
+    if (!template.enabled) return { label: t("stateDisabled"), color: "default" };
+    if (Date.parse(template.startsAt) > now) return { label: t("statePending"), color: "blue" };
+    if (Date.parse(template.endsAt) <= now) return { label: t("stateExpired"), color: "default" };
+    if (template.totalLimit > 0 && template.issuedCount >= template.totalLimit) return { label: t("stateSoldOut"), color: "orange" };
+    return { label: t("stateActive"), color: "green" };
 }
 
-function discountLabel(template: CouponTemplate) {
-    if (template.discountType === "fixed") return `¥ ${formatYuan(template.discountValue)}`;
-    return `${formatNumber(template.discountValue / 100)}%`;
+function discountLabel(template: CouponTemplate, numberLocale: string) {
+    if (template.discountType === "fixed") return `¥ ${formatYuan(template.discountValue, numberLocale)}`;
+    return `${formatNumber(template.discountValue / 100, numberLocale)}%`;
 }
 
-function formatYuan(amountCents: number) {
-    return (Math.max(0, amountCents) / 100).toLocaleString("zh-CN", { minimumFractionDigits: amountCents % 100 ? 2 : 0, maximumFractionDigits: 2 });
+function formatYuan(amountCents: number, numberLocale: string) {
+    return (Math.max(0, amountCents) / 100).toLocaleString(numberLocale, { minimumFractionDigits: amountCents % 100 ? 2 : 0, maximumFractionDigits: 2 });
 }
 
-function formatNumber(value: number) {
-    return value.toLocaleString("zh-CN", { maximumFractionDigits: 2 });
+function formatNumber(value: number, numberLocale: string) {
+    return value.toLocaleString(numberLocale, { maximumFractionDigits: 2 });
 }
 
 function Fact({ label, value }: { label: string; value: string }) {
@@ -403,14 +415,14 @@ function Fact({ label, value }: { label: string; value: string }) {
     );
 }
 
-function Loading() {
+function Loading({ label }: { label: string }) {
     return (
         <div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-stone-200 px-3 py-10 text-sm text-stone-500 lg:col-span-2 dark:border-stone-800 dark:text-stone-400">
-            <RefreshCw className="size-4 animate-spin" /> 正在加载优惠券
+            <RefreshCw className="size-4 animate-spin" /> {label}
         </div>
     );
 }
 
-function Empty() {
-    return <div className="rounded-lg border border-dashed border-stone-200 px-3 py-10 text-center text-sm text-stone-500 lg:col-span-2 dark:border-stone-800 dark:text-stone-400">暂无优惠券模板</div>;
+function Empty({ label }: { label: string }) {
+    return <div className="rounded-lg border border-dashed border-stone-200 px-3 py-10 text-center text-sm text-stone-500 lg:col-span-2 dark:border-stone-800 dark:text-stone-400">{label}</div>;
 }

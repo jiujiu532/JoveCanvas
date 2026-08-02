@@ -238,7 +238,10 @@
       "chooseDesc": "Confirm your plan to continue to the secure checkout page.",
       "loadFailed": "Failed to load plans",
       "empty": "No plans are available yet"
-    }
+    },
+    "listPrice": "List ¥ {amount}",
+    "saveAmount": "Save ¥ {amount}",
+    "brandPass": "JOVECANVAS PASS · {index}"
   },
   "agent": {
     "errors": {
