@@ -120,7 +120,16 @@
             "ecommerce": "电商商品",
             "portrait": "人像摄影",
             "poster": "海报设计",
-            "uiSocial": "UI与社交媒体"
+            "uiSocial": "UI与社交媒体",
+            "product": "商品",
+            "infographic": "信息图",
+            "other": "其他",
+            "storyboard": "分镜",
+            "game": "游戏",
+            "illustration": "插画",
+            "threeD": "3D",
+            "photo": "摄影",
+            "logo": "Logo"
         }
     },
     "billing": {

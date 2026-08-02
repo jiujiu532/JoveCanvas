@@ -6,10 +6,12 @@ import { useTranslations } from "next-intl";
 
 import { LazyMediaImage } from "@/components/media/lazy-media-image";
 import { imagePreviewUrl } from "@/lib/media-image-url";
+import { promptTagLabel } from "@/lib/prompts/prompt-category-labels";
 import { formatPromptDate, type Prompt } from "@/services/api/prompts";
 
 export function PromptDetailDialog({ prompt, previewUrl, onClose, onCopy, onSaveAsset }: { prompt: Prompt | null; previewUrl?: string; onClose: () => void; onCopy: (prompt: string) => void; onSaveAsset?: (prompt: Prompt) => void }) {
     const t = useTranslations("layout");
+    const tPrompts = useTranslations("workspace.prompts");
     return (
         <>
             <Modal title={prompt?.title} open={Boolean(prompt)} onCancel={onClose} footer={null} width={1000}>
@@ -34,7 +36,7 @@ export function PromptDetailDialog({ prompt, previewUrl, onClose, onCopy, onSave
                                 <div className="flex flex-wrap gap-1.5">
                                     {prompt.tags.map((tag) => (
                                         <Tag key={tag} className="m-0">
-                                            {tag}
+                                            {promptTagLabel(tag, tPrompts)}
                                         </Tag>
                                     ))}
                                 </div>

@@ -120,7 +120,16 @@
             "ecommerce": "E-commerce",
             "portrait": "Portrait",
             "poster": "Poster design",
-            "uiSocial": "UI & social"
+            "uiSocial": "UI & social",
+            "product": "Product",
+            "infographic": "Infographic",
+            "other": "Other",
+            "storyboard": "Storyboard",
+            "game": "Game",
+            "illustration": "Illustration",
+            "threeD": "3D",
+            "photo": "Photo",
+            "logo": "Logo"
         }
     },
     "billing": {

@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 
 import { ALL_PROMPTS_OPTION } from "@/services/api/prompts";
 import { cn } from "@/lib/utils";
-import { promptCategoryLabel } from "@/lib/prompts/prompt-category-labels";
+import { promptCategoryLabel, promptTagLabel } from "@/lib/prompts/prompt-category-labels";
 import { PromptCard } from "./prompt-card";
 import { usePromptList } from "./use-prompt-list";
 
@@ -59,7 +59,7 @@ export function PromptSelectDialog({ open, onOpenChange, onSelect }: { open: boo
                                 const active = tag === selectedTag;
                                 return (
                                     <Tag.CheckableTag key={tag} checked={active} className={cn("prompt-filter-tag", active && "is-active")} onChange={() => toggleTag(tag)}>
-                                        {tag === ALL_PROMPTS_OPTION ? tPrompts("filterAll") : tag}
+                                        {promptTagLabel(tag, tPrompts)}
                                     </Tag.CheckableTag>
                                 );
                             })}
