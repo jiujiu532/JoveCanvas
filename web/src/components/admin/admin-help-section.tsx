@@ -9,16 +9,7 @@ import { useDeferredValue, useMemo, useState } from "react";
 import type { AdminSectionKey } from "@/components/admin/admin-sections";
 import { cn } from "@/lib/utils";
 
-import {
-    ADMIN_HELP_ARTICLE_IDS,
-    buildAdminHelpArticles,
-    findAdminHelpArticle,
-    searchAdminHelpArticles,
-    type AdminHelpArticle,
-    type AdminHelpArticleId,
-    type AdminHelpLink,
-    type AdminHelpTranslate,
-} from "./admin-help-content";
+import { ADMIN_HELP_ARTICLE_IDS, buildAdminHelpArticles, findAdminHelpArticle, searchAdminHelpArticles, type AdminHelpArticle, type AdminHelpArticleId, type AdminHelpLink, type AdminHelpTranslate } from "./admin-help-content";
 import { buildAdminHelpGuidance, type AdminHelpTroubleshooting } from "./admin-help-guidance";
 
 const articleIcons: Record<AdminHelpArticleId, LucideIcon> = {
@@ -172,12 +163,7 @@ export function AdminHelpSection({ onOpenSection }: { onOpenSection: (section: A
                                         <div className="min-w-0">
                                             <h4 className="text-sm font-semibold text-zinc-950 sm:text-base dark:text-zinc-100">{step.title}</h4>
                                             <p className="mt-1 text-sm leading-6 text-zinc-500 dark:text-zinc-400">{step.description}</p>
-                                            <StepGuidance
-                                                actions={activeGuidance.stepActions[index]}
-                                                checks={step.checks}
-                                                actionsLabel={t("stepActionsLabel")}
-                                                criteriaLabel={t("completionCriteriaLabel")}
-                                            />
+                                            <StepGuidance actions={activeGuidance.stepActions[index]} checks={step.checks} actionsLabel={t("stepActionsLabel")} criteriaLabel={t("completionCriteriaLabel")} />
                                         </div>
                                     </div>
                                 ))}
@@ -236,17 +222,7 @@ export function AdminHelpSection({ onOpenSection }: { onOpenSection: (section: A
     );
 }
 
-function StepGuidance({
-    actions,
-    checks,
-    actionsLabel,
-    criteriaLabel,
-}: {
-    actions: string[];
-    checks?: string[];
-    actionsLabel: string;
-    criteriaLabel: string;
-}) {
+function StepGuidance({ actions, checks, actionsLabel, criteriaLabel }: { actions: string[]; checks?: string[]; actionsLabel: string; criteriaLabel: string }) {
     return (
         <div className="mt-3 space-y-3">
             <div className="border-l-2 border-cyan-500/50 pl-3">
@@ -277,21 +253,7 @@ function StepGuidance({
     );
 }
 
-function TroubleshootingSection({
-    items,
-    title,
-    description,
-    symptomLabel,
-    causeLabel,
-    remedyLabel,
-}: {
-    items: AdminHelpTroubleshooting[];
-    title: string;
-    description: string;
-    symptomLabel: string;
-    causeLabel: string;
-    remedyLabel: string;
-}) {
+function TroubleshootingSection({ items, title, description, symptomLabel, causeLabel, remedyLabel }: { items: AdminHelpTroubleshooting[]; title: string; description: string; symptomLabel: string; causeLabel: string; remedyLabel: string }) {
     return (
         <section className="mt-8 sm:mt-10">
             <SectionHeading title={title} description={description} />

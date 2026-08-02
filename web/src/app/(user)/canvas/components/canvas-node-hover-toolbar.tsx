@@ -169,8 +169,12 @@ export function CanvasNodeHoverToolbar({
         ...(isText ? [{ id: "decreaseFont", title: t("hover.decreaseFont"), label: t("hover.decreaseFontLabel"), icon: <Minus className="size-4" />, onClick: () => onDecreaseFont(node) }] : []),
         ...(isText ? [{ id: "increaseFont", title: t("hover.increaseFont"), label: t("hover.increaseFontLabel"), icon: <Plus className="size-4" />, onClick: () => onIncreaseFont(node) }] : []),
         ...(isImage && !hasImage ? [{ id: "uploadImage", title: t("actions.uploadImage"), label: t("actions.uploadImage"), icon: <Upload className="size-4" />, onClick: () => onUpload(node) }] : []),
-        ...(isVideo ? [{ id: "uploadVideo", title: hasVideo ? t("actions.replaceVideo") : t("actions.uploadVideo"), label: hasVideo ? t("actions.replaceVideo") : t("actions.uploadVideo"), icon: <Video className="size-4" />, onClick: () => onUpload(node) }] : []),
-        ...(isAudio ? [{ id: "uploadAudio", title: hasAudio ? t("actions.replaceAudio") : t("actions.uploadAudio"), label: hasAudio ? t("actions.replaceAudio") : t("actions.uploadAudio"), icon: <Music2 className="size-4" />, onClick: () => onUpload(node) }] : []),
+        ...(isVideo
+            ? [{ id: "uploadVideo", title: hasVideo ? t("actions.replaceVideo") : t("actions.uploadVideo"), label: hasVideo ? t("actions.replaceVideo") : t("actions.uploadVideo"), icon: <Video className="size-4" />, onClick: () => onUpload(node) }]
+            : []),
+        ...(isAudio
+            ? [{ id: "uploadAudio", title: hasAudio ? t("actions.replaceAudio") : t("actions.uploadAudio"), label: hasAudio ? t("actions.replaceAudio") : t("actions.uploadAudio"), icon: <Music2 className="size-4" />, onClick: () => onUpload(node) }]
+            : []),
         ...(hasImage && !isPanorama ? imageTools.map((tool) => ({ id: tool.id, title: tool.title, label: tool.label, icon: tool.icon, active: tool.active, onClick: tool.onClick })) : []),
     ];
     const toolbarTools = hasImage ? [...baseToolbarTools, ...nodeToolbarTools].filter((tool) => quickImageToolIdSet.has(tool.id as ImageQuickToolId)) : [...baseToolbarTools, ...nodeToolbarTools];

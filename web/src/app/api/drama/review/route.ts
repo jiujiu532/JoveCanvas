@@ -12,7 +12,8 @@ import { localizeErrorMessage, serverMessage } from "@/lib/server/server-message
 export async function POST(request: Request) {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ code: 401, data: null, msg: await serverMessage("common.pleaseLogin") }, { status: 401 });
-    if (!(await checkRateLimit(`drama-review:${user.id}`, { maxRequests: 8, windowMs: 60_000 })).allowed) return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.visualReview") }) }, { status: 429 });
+    if (!(await checkRateLimit(`drama-review:${user.id}`, { maxRequests: 8, windowMs: 60_000 })).allowed)
+        return NextResponse.json({ code: 429, data: null, msg: await serverMessage("common.rateLimitedFeatureRetry", { feature: await serverMessage("features.visualReview") }) }, { status: 429 });
     let body: unknown;
     try {
         body = await readJsonBody(request, 2 * 1024 * 1024);

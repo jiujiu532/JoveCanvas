@@ -223,11 +223,15 @@ export function useAdminDashboardTableModel({ state, data, settingsActions }: { 
                     </div>
                     <div className="mt-2 space-y-1 text-xs text-stone-500 sm:hidden dark:text-stone-400">
                         <div>
-                            {t("users.table.total")} <span className="font-semibold text-stone-950 dark:text-stone-100">{formatCreditAmount(record.pointsBalance)}</span> · {t("users.table.today")} {formatCreditAmount(record.dailyPointsBalance)} · {t("users.table.permanent")}{" "}
-                            {formatCreditAmount(record.permanentPointsBalance)}
+                            {t("users.table.total")} <span className="font-semibold text-stone-950 dark:text-stone-100">{formatCreditAmount(record.pointsBalance)}</span> · {t("users.table.today")} {formatCreditAmount(record.dailyPointsBalance)} ·{" "}
+                            {t("users.table.permanent")} {formatCreditAmount(record.permanentPointsBalance)}
                         </div>
-                        <div>{t("users.table.registered")} {formatAdminLogTime(record.createdAt)}</div>
-                        <div>{t("users.table.active")} {record.lastLoginAt ? formatAdminLogTime(record.lastLoginAt) : t("users.table.neverLoggedIn")}</div>
+                        <div>
+                            {t("users.table.registered")} {formatAdminLogTime(record.createdAt)}
+                        </div>
+                        <div>
+                            {t("users.table.active")} {record.lastLoginAt ? formatAdminLogTime(record.lastLoginAt) : t("users.table.neverLoggedIn")}
+                        </div>
                     </div>
                 </div>
             ),
@@ -267,7 +271,9 @@ export function useAdminDashboardTableModel({ state, data, settingsActions }: { 
             responsive: ["sm"],
             render: (pointsBalance: number, record) => (
                 <div className="text-xs text-stone-500 dark:text-stone-400">
-                    <div className="font-semibold text-stone-950 dark:text-stone-100">{t("users.table.total")} {formatCreditAmount(pointsBalance)}</div>
+                    <div className="font-semibold text-stone-950 dark:text-stone-100">
+                        {t("users.table.total")} {formatCreditAmount(pointsBalance)}
+                    </div>
                     <div className="mt-1">
                         {t("users.table.today")} {formatCreditAmount(record.dailyPointsBalance)} · {t("users.table.permanent")} {formatCreditAmount(record.permanentPointsBalance)}
                     </div>
@@ -346,7 +352,14 @@ export function useAdminDashboardTableModel({ state, data, settingsActions }: { 
             width: 90,
             render: (_, record) => (
                 <Popconfirm title={t("prompts.table.deleteConfirmTitle")} okText={t("prompts.table.deleteOk")} cancelText={t("prompts.table.deleteCancel")} onConfirm={() => deletePrompt(record.id)}>
-                    <Button size="small" danger loading={deletingPromptId === record.id} icon={<Trash2 className="size-3.5" />} aria-label={t("prompts.table.deleteAriaLabel", { name: record.title })} title={t("prompts.table.deleteAriaLabel", { name: record.title })} />
+                    <Button
+                        size="small"
+                        danger
+                        loading={deletingPromptId === record.id}
+                        icon={<Trash2 className="size-3.5" />}
+                        aria-label={t("prompts.table.deleteAriaLabel", { name: record.title })}
+                        title={t("prompts.table.deleteAriaLabel", { name: record.title })}
+                    />
                 </Popconfirm>
             ),
         },
@@ -466,9 +479,7 @@ export function useAdminDashboardTableModel({ state, data, settingsActions }: { 
             render: (_, code) => (
                 <div className="text-sm leading-6 text-stone-700 dark:text-stone-200">
                     <div>{t("cdk.table.points", { count: formatCreditAmount(code.points) })}</div>
-                    <div className="text-xs text-stone-500 dark:text-stone-400">
-                        {t("cdk.table.redeemed", { count: code.redeemedCount, max: code.maxRedemptions })}
-                    </div>
+                    <div className="text-xs text-stone-500 dark:text-stone-400">{t("cdk.table.redeemed", { count: code.redeemedCount, max: code.maxRedemptions })}</div>
                 </div>
             ),
         },

@@ -78,9 +78,7 @@ export function BillingResultPage({ mode, orderId }: { mode: "success" | "cancel
                                 <Icon className="size-6 sm:size-8" />
                             </span>
                             <h1 className="mt-3 text-xl font-semibold sm:mt-5 sm:text-2xl">{paid ? t("successTitle") : canceled ? t("canceledTitle") : t("pendingTitle")}</h1>
-                            <p className="mt-2 text-sm leading-6 text-stone-500 dark:text-stone-400">
-                                {error || (paid ? t("successDesc") : canceled ? t("canceledDesc") : t("pendingDesc"))}
-                            </p>
+                            <p className="mt-2 text-sm leading-6 text-stone-500 dark:text-stone-400">{error || (paid ? t("successDesc") : canceled ? t("canceledDesc") : t("pendingDesc"))}</p>
                             {order ? (
                                 <div className="mt-4 rounded-xl border border-stone-200 bg-stone-50 p-3.5 text-left sm:mt-6 sm:p-4 dark:border-stone-800 dark:bg-stone-900/55">
                                     <div className="flex items-center justify-between gap-3 text-sm">

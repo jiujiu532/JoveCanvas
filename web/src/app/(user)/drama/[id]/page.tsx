@@ -748,7 +748,11 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                     <div className="flex flex-wrap items-center gap-2">
                                                         <span className="font-semibold">{t("render.review.title")}</span>
                                                         <Tag color={episode.visualReview.status === "passed" ? "success" : episode.visualReview.status === "needs_revision" ? "warning" : "default"}>
-                                                            {episode.visualReview.status === "passed" ? t("render.review.status.passed") : episode.visualReview.status === "needs_revision" ? t("render.review.status.needsRevision") : t("render.review.status.pending")}
+                                                            {episode.visualReview.status === "passed"
+                                                                ? t("render.review.status.passed")
+                                                                : episode.visualReview.status === "needs_revision"
+                                                                  ? t("render.review.status.needsRevision")
+                                                                  : t("render.review.status.pending")}
                                                         </Tag>
                                                         {typeof episode.visualReview.score === "number" ? <span className="text-sm tabular-nums text-muted-foreground">{t("render.review.scoreValue", { score: episode.visualReview.score })}</span> : null}
                                                     </div>
@@ -777,9 +781,7 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                         </div>
                                     ) : null}
                                 </div>
-                                {!audioReady ? (
-                                    <p className="mt-6 border-l-2 border-amber-400 pl-3 text-sm leading-6 text-amber-700 dark:border-amber-300 dark:text-amber-200">{t("render.audioUnavailableHint")}</p>
-                                ) : null}
+                                {!audioReady ? <p className="mt-6 border-l-2 border-amber-400 pl-3 text-sm leading-6 text-amber-700 dark:border-amber-300 dark:text-amber-200">{t("render.audioUnavailableHint")}</p> : null}
                                 {renderTask ? (
                                     <div className="mt-4 rounded-xl border border-border/80 bg-background/65 p-4 sm:mt-6 sm:rounded-2xl sm:p-6">
                                         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -789,7 +791,13 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                     {t("render.task.title")}
                                                 </div>
                                                 <p className="mt-1 text-sm text-muted-foreground">
-                                                    {renderTask.status === "success" ? t("render.task.status.success") : renderTask.status === "error" ? renderTask.error || t("render.task.status.error") : renderTask.status === "cancelled" ? t("render.task.status.cancelled") : t("render.task.status.inProgress")}
+                                                    {renderTask.status === "success"
+                                                        ? t("render.task.status.success")
+                                                        : renderTask.status === "error"
+                                                          ? renderTask.error || t("render.task.status.error")
+                                                          : renderTask.status === "cancelled"
+                                                            ? t("render.task.status.cancelled")
+                                                            : t("render.task.status.inProgress")}
                                                 </p>
                                             </div>
                                             {["pending", "running"].includes(renderTask.status) ? (
@@ -853,7 +861,9 @@ function DramaProjectEditor({ project }: { project: DramaProject }) {
                                                     {shot.storyboardImageUrl ? (
                                                         <div className="mt-4 flex max-w-xl gap-2 overflow-x-auto">
                                                             <DramaMediaThumbnail media={{ type: "image", url: shot.storyboardImageUrl, title: `${shot.title}${t("storyboard.startFrameFileSuffix")}` }} onOpen={setPreviewMedia} />
-                                                            {shot.storyboardEndImageUrl ? <DramaMediaThumbnail media={{ type: "image", url: shot.storyboardEndImageUrl, title: `${shot.title}${t("storyboard.endFrameFileSuffix")}` }} onOpen={setPreviewMedia} /> : null}
+                                                            {shot.storyboardEndImageUrl ? (
+                                                                <DramaMediaThumbnail media={{ type: "image", url: shot.storyboardEndImageUrl, title: `${shot.title}${t("storyboard.endFrameFileSuffix")}` }} onOpen={setPreviewMedia} />
+                                                            ) : null}
                                                         </div>
                                                     ) : null}
                                                     {shot.videoUrl ? (

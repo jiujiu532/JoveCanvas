@@ -66,9 +66,7 @@ export default function DramaPage() {
                             {t("list.eyebrow")}
                         </div>
                         <h1 className="mt-1.5 text-xl font-semibold sm:mt-2 sm:text-2xl">{t("list.title")}</h1>
-                        <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm">
-                            {t("list.summaryDetailed", { total: projectTotal, loaded: projects.length, episodes: episodeCount, pending: pendingCount })}
-                        </p>
+                        <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm">{t("list.summaryDetailed", { total: projectTotal, loaded: projects.length, episodes: episodeCount, pending: pendingCount })}</p>
                     </div>
                     <Button type="primary" className="!h-9 !shrink-0 !px-3 sm:!px-4" icon={<Plus className="size-4" />} disabled={!hydrated} onClick={() => setOpen(true)}>
                         {t("list.createButton")}

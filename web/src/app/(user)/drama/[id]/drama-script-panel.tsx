@@ -38,13 +38,7 @@ export function DramaScriptPanel({
             </div>
             <input ref={sourceFileInputRef} type="file" accept=".txt,.md,text/plain,text/markdown" className="hidden" onChange={(event) => void onImportSourceBook(event.target.files?.[0])} />
             <div className="mt-4 grid gap-3 sm:mt-6 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-                <Input.TextArea
-                    className="!h-52 !rounded-lg !bg-background !p-2.5 sm:!h-auto sm:!p-4"
-                    value={episode.script}
-                    onChange={(event) => onUpdateEpisode({ script: event.target.value })}
-                    rows={18}
-                    placeholder={t("script.scriptPlaceholder")}
-                />
+                <Input.TextArea className="!h-52 !rounded-lg !bg-background !p-2.5 sm:!h-auto sm:!p-4" value={episode.script} onChange={(event) => onUpdateEpisode({ script: event.target.value })} rows={18} placeholder={t("script.scriptPlaceholder")} />
                 <div className="space-y-4 rounded-lg border border-border bg-background p-3 sm:space-y-5 sm:p-5">
                     <label className="block space-y-2.5">
                         <span className="text-sm font-medium">{t("script.episodeTitleLabel")}</span>

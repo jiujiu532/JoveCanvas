@@ -183,13 +183,7 @@ function buildNodeConfig(globalConfig: AiConfig, node: CanvasNodeData, mode: Can
     return node.type === CanvasNodeType.Panorama ? { ...config, size: PANORAMA_IMAGE_SIZE } : config;
 }
 
-function promptPlaceholder(
-    mode: CanvasNodeGenerationMode,
-    hasImageContent: boolean,
-    hasTextContent: boolean,
-    isPanorama: boolean,
-    t: ReturnType<typeof useTranslations<"canvas">>,
-) {
+function promptPlaceholder(mode: CanvasNodeGenerationMode, hasImageContent: boolean, hasTextContent: boolean, isPanorama: boolean, t: ReturnType<typeof useTranslations<"canvas">>) {
     if (mode === "video") return t("promptPanel.placeholderVideo");
     if (mode === "audio") return t("promptPanel.placeholderAudio");
     if (isPanorama) return hasImageContent ? t("promptPanel.placeholderPanoramaEdit") : t("promptPanel.placeholderPanorama");

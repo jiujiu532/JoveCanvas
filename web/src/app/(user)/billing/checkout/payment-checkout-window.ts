@@ -8,11 +8,7 @@ type WindowOpen = (url?: string | URL, target?: string, features?: string) => Wi
 
 const defaultOpenWindow: WindowOpen = (url, target, features) => window.open(url, target, features);
 
-export function openPaymentCheckoutWindow(
-    checkout: PaymentCheckout,
-    openWindowOrLabels: WindowOpen | PaymentCheckoutWindowLabels = defaultOpenWindow,
-    maybeLabels: PaymentCheckoutWindowLabels = {},
-): PaymentCheckoutOpenResult {
+export function openPaymentCheckoutWindow(checkout: PaymentCheckout, openWindowOrLabels: WindowOpen | PaymentCheckoutWindowLabels = defaultOpenWindow, maybeLabels: PaymentCheckoutWindowLabels = {}): PaymentCheckoutOpenResult {
     const openWindow = typeof openWindowOrLabels === "function" ? openWindowOrLabels : defaultOpenWindow;
     const labels = typeof openWindowOrLabels === "function" ? maybeLabels : openWindowOrLabels;
     const fallbackValue = checkout.qrContent || checkout.url || checkout.orderNo;

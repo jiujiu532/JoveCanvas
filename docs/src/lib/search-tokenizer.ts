@@ -29,9 +29,16 @@ function addChineseTokens(tokens: string[], value: string) {
   }
 }
 
+/**
+ * Custom bilingual tokenizer for docs search.
+ * `language` on the tokenizer object is required by Orama's type, but
+ * fumadocs i18n must not also pass a top-level create `language` option
+ * (NO_LANGUAGE_WITH_CUSTOM_TOKENIZER) — route.ts uses localeMap for that.
+ */
 export function createDocsSearchTokenizer(): OramaTokenizer {
   return {
-    language: 'zh-CN',
+    // Dummy stemmer language; actual splitting is fully custom below.
+    language: 'english',
     normalizationCache: new Map(),
     tokenize(raw) {
       if (typeof raw !== 'string') return [raw];

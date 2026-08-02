@@ -77,11 +77,7 @@ export class PromptsRepository {
         const tags = input.tags?.map((tag) => tag.trim().toLowerCase()).filter(Boolean) || [];
         const preferLocale = !input.random && (input.preferLocale === "zh" || input.preferLocale === "en") ? input.preferLocale : null;
         // preferLocale 仅影响排序优先级，不按语言过滤
-        const orderBy = input.random
-            ? "random()"
-            : preferLocale
-              ? `CASE WHEN locale = $7 THEN 0 WHEN locale = 'mixed' THEN 1 WHEN locale IS NULL OR locale = '' THEN 2 ELSE 3 END, updated_at DESC`
-              : "updated_at DESC";
+        const orderBy = input.random ? "random()" : preferLocale ? `CASE WHEN locale = $7 THEN 0 WHEN locale = 'mixed' THEN 1 WHEN locale IS NULL OR locale = '' THEN 2 ELSE 3 END, updated_at DESC` : "updated_at DESC";
         const params = preferLocale
             ? [input.scope, input.ownerUserId || null, keyword, `%${keyword}%`, input.category || "", tags.length ? tags : null, preferLocale, pageSize, (page - 1) * pageSize]
             : [input.scope, input.ownerUserId || null, keyword, `%${keyword}%`, input.category || "", tags.length ? tags : null, pageSize, (page - 1) * pageSize];

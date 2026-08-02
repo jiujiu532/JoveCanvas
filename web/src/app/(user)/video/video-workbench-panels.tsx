@@ -69,7 +69,7 @@ export function selectVideoModel(config: AiConfig, options = selectableModelsByC
     return candidates.find((candidate) => options.includes(candidate)) || "";
 }
 
-export function GenerationSettings({config, model, updateConfig, openConfigDialog, hideModel = false }: { config: AiConfig; model: string; updateConfig: UpdateAiConfig; openConfigDialog: (shouldPromptContinue?: boolean) => void; hideModel?: boolean }) {
+export function GenerationSettings({ config, model, updateConfig, openConfigDialog, hideModel = false }: { config: AiConfig; model: string; updateConfig: UpdateAiConfig; openConfigDialog: (shouldPromptContinue?: boolean) => void; hideModel?: boolean }) {
     const t = useTranslations("workspace.video");
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
     const [audioOpen, setAudioOpen] = useState(false);
@@ -129,8 +129,12 @@ export function ResultVideoCard({
                     <span>{formatDuration(video.durationMs)}</span>
                 </div>
                 <div className="flex shrink-0 gap-1">
-                    <Button size="small" icon={<FolderPlus className="size-3.5" />} onClick={() => onSaveAsset(video)}>{t("addToAssets")}</Button>
-                    <Button size="small" icon={<Download className="size-3.5" />} onClick={() => onDownload(video)}>{t("download")}</Button>
+                    <Button size="small" icon={<FolderPlus className="size-3.5" />} onClick={() => onSaveAsset(video)}>
+                        {t("addToAssets")}
+                    </Button>
+                    <Button size="small" icon={<Download className="size-3.5" />} onClick={() => onDownload(video)}>
+                        {t("download")}
+                    </Button>
                 </div>
             </div>
         </div>
@@ -142,7 +146,7 @@ export function PendingVideoCard() {
     return <WorkbenchGenerationPlaceholder kind="video" className="h-[144px] sm:aspect-video sm:h-auto" />;
 }
 
-export function FailedVideoCard({error, retryable, selected, onSelectedChange, onRetry }: { error: string; retryable?: boolean; selected?: boolean; onSelectedChange?: (checked: boolean) => void; onRetry: () => void }) {
+export function FailedVideoCard({ error, retryable, selected, onSelectedChange, onRetry }: { error: string; retryable?: boolean; selected?: boolean; onSelectedChange?: (checked: boolean) => void; onRetry: () => void }) {
     const t = useTranslations("workspace.video");
     const failure = videoFailureDisplay(error, t);
     return (
@@ -157,7 +161,9 @@ export function FailedVideoCard({error, retryable, selected, onSelectedChange, o
             </div>
             {retryable ? (
                 <div className="flex justify-end border-t border-red-200 p-2 sm:p-3 dark:border-red-950">
-                    <Button size="small" danger onClick={onRetry}>{t("retry")}</Button>
+                    <Button size="small" danger onClick={onRetry}>
+                        {t("retry")}
+                    </Button>
                 </div>
             ) : null}
         </div>

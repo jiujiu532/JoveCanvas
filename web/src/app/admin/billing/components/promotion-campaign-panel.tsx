@@ -223,24 +223,14 @@ export function PromotionCampaignPanel({ products, productsLoading }: { products
                         <DatePicker.RangePicker className="w-full" showTime />
                     </Form.Item>
                     <Form.Item name="productIds" label={t("products")} rules={[{ required: true, message: t("productsRequired") }]}>
-                        <Select
-                            mode="multiple"
-                            optionFilterProp="label"
-                            placeholder={t("productsPlaceholder")}
-                            options={products.map((product) => ({ value: product.id, label: `${product.name} · ¥${formatYuan(product.amountCents, numberLocale)}` }))}
-                        />
+                        <Select mode="multiple" optionFilterProp="label" placeholder={t("productsPlaceholder")} options={products.map((product) => ({ value: product.id, label: `${product.name} · ¥${formatYuan(product.amountCents, numberLocale)}` }))} />
                     </Form.Item>
                     {productIds.length ? (
                         <div className="grid gap-x-3 rounded-lg border border-stone-200 bg-stone-50/70 p-3 sm:grid-cols-2 dark:border-stone-800 dark:bg-stone-900/45">
                             {productIds.map((productId) => {
                                 const product = products.find((item) => item.id === productId);
                                 return (
-                                    <Form.Item
-                                        key={productId}
-                                        name={["prices", productId]}
-                                        label={t("promoPriceLabel", { name: product?.name || productId })}
-                                        rules={[{ required: true, message: t("promoPriceRequired") }]}
-                                    >
+                                    <Form.Item key={productId} name={["prices", productId]} label={t("promoPriceLabel", { name: product?.name || productId })} rules={[{ required: true, message: t("promoPriceRequired") }]}>
                                         <InputNumber className="w-full" min={0.01} max={Math.max(0.01, (product?.amountCents || 1) / 100 - 0.01)} precision={2} prefix="¥" />
                                     </Form.Item>
                                 );

@@ -64,9 +64,7 @@ export function DramaShotsPanel({
     return (
         <div>
             {episode.reviewStatus !== "visual_ready" ? (
-                <p className="mb-4 border-l-2 border-amber-400 pl-3 text-sm leading-5 text-amber-700 sm:mb-6 sm:leading-6 dark:text-amber-200">
-                    {t("render.needReviewHint", { stage: t("editor.stages.review") })}
-                </p>
+                <p className="mb-4 border-l-2 border-amber-400 pl-3 text-sm leading-5 text-amber-700 sm:mb-6 sm:leading-6 dark:text-amber-200">{t("render.needReviewHint", { stage: t("editor.stages.review") })}</p>
             ) : null}
             <div className="mb-4 grid grid-cols-2 gap-px overflow-hidden border border-border bg-border sm:mb-6 sm:grid-cols-4">
                 {[
@@ -124,15 +122,9 @@ export function DramaShotsPanel({
                                 <div className="flex flex-wrap items-center gap-2">
                                     <span className="font-semibold">{t("render.review.title")}</span>
                                     <Tag color={episode.visualReview.status === "passed" ? "success" : episode.visualReview.status === "needs_revision" ? "warning" : "default"}>
-                                        {episode.visualReview.status === "passed"
-                                            ? t("render.review.status.passed")
-                                            : episode.visualReview.status === "needs_revision"
-                                              ? t("render.review.status.needsRevision")
-                                              : t("render.review.status.pending")}
+                                        {episode.visualReview.status === "passed" ? t("render.review.status.passed") : episode.visualReview.status === "needs_revision" ? t("render.review.status.needsRevision") : t("render.review.status.pending")}
                                     </Tag>
-                                    {typeof episode.visualReview.score === "number" ? (
-                                        <span className="text-sm tabular-nums text-muted-foreground">{t("render.review.scoreValue", { score: episode.visualReview.score })}</span>
-                                    ) : null}
+                                    {typeof episode.visualReview.score === "number" ? <span className="text-sm tabular-nums text-muted-foreground">{t("render.review.scoreValue", { score: episode.visualReview.score })}</span> : null}
                                 </div>
                                 <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{episode.visualReview.summary}</p>
                             </div>
@@ -255,7 +247,13 @@ export function DramaShotsPanel({
                                         {t("render.buttons.cancelVoiceover")}
                                     </Button>
                                 ) : shot.subtitle || shot.dialogue ? (
-                                    <Button className={generationActionButtonClass} disabled={!audioReady} title={audioReady ? undefined : t("render.tooltips.audioModelMissing")} icon={<Volume2 className="size-4" />} onClick={() => onQueueAudio([shot.id])}>
+                                    <Button
+                                        className={generationActionButtonClass}
+                                        disabled={!audioReady}
+                                        title={audioReady ? undefined : t("render.tooltips.audioModelMissing")}
+                                        icon={<Volume2 className="size-4" />}
+                                        onClick={() => onQueueAudio([shot.id])}
+                                    >
                                         {shot.audioStatus === "error" ? t("render.buttons.retryVoiceover") : shot.audioMode === "voiceover" ? t("render.buttons.generateVoiceover") : t("render.buttons.switchToAiVoiceover")}
                                     </Button>
                                 ) : null}

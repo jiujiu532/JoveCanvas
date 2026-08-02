@@ -90,12 +90,7 @@ const DEFAULT_PROGRESS_MESSAGE_LABELS: WorkbenchAgentProgressMessageLabels = {
     withoutReferences: (media) => `收到，我会按你的要求完成这次${media}。`,
 };
 
-export function createWorkbenchAgentProgressMessage(
-    id: string,
-    hasReferences: boolean,
-    mediaLabel = "创作需求",
-    labels: WorkbenchAgentProgressMessageLabels = DEFAULT_PROGRESS_MESSAGE_LABELS,
-): WorkbenchAgentMessage {
+export function createWorkbenchAgentProgressMessage(id: string, hasReferences: boolean, mediaLabel = "创作需求", labels: WorkbenchAgentProgressMessageLabels = DEFAULT_PROGRESS_MESSAGE_LABELS): WorkbenchAgentMessage {
     return {
         id,
         role: "assistant",

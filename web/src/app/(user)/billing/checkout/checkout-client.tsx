@@ -318,13 +318,7 @@ export function BillingCheckoutPage({ productId }: { productId: string }) {
                                                     aria-label={t("selectCouponAria")}
                                                     aria-expanded={couponOpen}
                                                 >
-                                                    <span className="truncate">
-                                                        {selectedCoupon
-                                                            ? `${selectedCoupon.template?.name || t("couponFallback")} · ${couponDiscountLabel(selectedCoupon, t)}`
-                                                            : couponsLoading
-                                                              ? t("loading")
-                                                              : t("select")}
-                                                    </span>
+                                                    <span className="truncate">{selectedCoupon ? `${selectedCoupon.template?.name || t("couponFallback")} · ${couponDiscountLabel(selectedCoupon, t)}` : couponsLoading ? t("loading") : t("select")}</span>
                                                     <ChevronDown className={`size-3.5 shrink-0 text-stone-400 transition ${couponOpen ? "rotate-180" : ""}`} />
                                                 </button>
                                             </Popover>

@@ -32,7 +32,6 @@ type Props = {
     onPersist: (settings: ChannelWorkspaceSettings, successText: string) => Promise<boolean>;
 };
 
-
 export function AdminChannelOnboardingDrawer({ open, initialProtocol, settings, fetchingModelId, testingChannelKey, healthResults, saving, onClose, onChange, onFetchModels, onTestAll, onPersist }: Props) {
     const t = useTranslations("admin");
     const steps = [
@@ -212,9 +211,7 @@ export function AdminChannelOnboardingDrawer({ open, initialProtocol, settings, 
         >
             <div className="mb-5 md:hidden">
                 <div className="mb-2 flex items-center justify-between gap-3">
-                    <span className="text-xs font-medium text-stone-500 dark:text-stone-400">
-                        {t("channelOnboarding.stepOf", { current: step + 1, total: steps.length })}
-                    </span>
+                    <span className="text-xs font-medium text-stone-500 dark:text-stone-400">{t("channelOnboarding.stepOf", { current: step + 1, total: steps.length })}</span>
                     <span className="text-sm font-semibold text-stone-950 dark:text-stone-100">{steps[step].title}</span>
                 </div>
                 <div className="grid grid-cols-6 gap-1" role="progressbar" aria-label={t("channelOnboarding.progressAria", { title: steps[step].title })} aria-valuemin={1} aria-valuemax={steps.length} aria-valuenow={step + 1}>
@@ -283,15 +280,7 @@ function OnboardingProgress({ current }: { current: number }) {
     );
 }
 
-function ProtocolSelection({
-    protocols,
-    selected,
-    onSelect,
-}: {
-    protocols: Array<{ value: SystemChannelProtocol; label: string; description: string }>;
-    selected: SystemChannelProtocol;
-    onSelect: (protocol: SystemChannelProtocol) => void;
-}) {
+function ProtocolSelection({ protocols, selected, onSelect }: { protocols: Array<{ value: SystemChannelProtocol; label: string; description: string }>; selected: SystemChannelProtocol; onSelect: (protocol: SystemChannelProtocol) => void }) {
     const t = useTranslations("admin");
     return (
         <div>
@@ -320,11 +309,11 @@ function ProtocolSelection({
                                         className={`rounded border px-1.5 py-0.5 text-[11px] ${active ? "border-stone-400 bg-white text-stone-800 dark:border-stone-600 dark:bg-stone-950 dark:text-stone-200" : "border-stone-200 text-stone-700 dark:border-stone-700 dark:text-stone-300"}`}
                                     >
                                         {capabilityLabel(capability, {
-                                        text: t("channelEditor.kinds.text"),
-                                        image: t("channelEditor.kinds.image"),
-                                        video: t("channelEditor.kinds.video"),
-                                        audio: t("channelEditor.kinds.audio"),
-                                    })}
+                                            text: t("channelEditor.kinds.text"),
+                                            image: t("channelEditor.kinds.image"),
+                                            video: t("channelEditor.kinds.video"),
+                                            audio: t("channelEditor.kinds.audio"),
+                                        })}
                                     </span>
                                 ))}
                             </div>
@@ -426,12 +415,14 @@ function ModelStep({ channel, fetching, onChange, onFetch }: { channel: SystemMo
                 {channel.models.map((model) => (
                     <div key={model} className="flex min-w-0 items-center justify-between gap-3 py-2.5">
                         <span className="min-w-0 truncate text-sm font-medium text-stone-900 dark:text-stone-100">{model}</span>
-                        <Tag className="m-0">{capabilityLabel(channelModelCapability(channel, model), {
-                            text: t("channelEditor.kinds.text"),
-                            image: t("channelEditor.kinds.image"),
-                            video: t("channelEditor.kinds.video"),
-                            audio: t("channelEditor.kinds.audio"),
-                        })}</Tag>
+                        <Tag className="m-0">
+                            {capabilityLabel(channelModelCapability(channel, model), {
+                                text: t("channelEditor.kinds.text"),
+                                image: t("channelEditor.kinds.image"),
+                                video: t("channelEditor.kinds.video"),
+                                audio: t("channelEditor.kinds.audio"),
+                            })}
+                        </Tag>
                     </div>
                 ))}
                 {!channel.models.length ? <div className="py-8 text-center text-sm text-stone-500 dark:text-stone-400">{t("channelOnboarding.noModelsYet")}</div> : null}
@@ -460,12 +451,14 @@ function ValidationStep({ channel, entries, testing, onTest }: { channel: System
                     return (
                         <div key={kind} className="flex items-center justify-between gap-3 py-3">
                             <div>
-                                <div className="text-sm font-medium text-stone-900 dark:text-stone-100">{capabilityLabel(kind, {
-                                    text: t("channelEditor.kinds.text"),
-                                    image: t("channelEditor.kinds.image"),
-                                    video: t("channelEditor.kinds.video"),
-                                    audio: t("channelEditor.kinds.audio"),
-                                })}</div>
+                                <div className="text-sm font-medium text-stone-900 dark:text-stone-100">
+                                    {capabilityLabel(kind, {
+                                        text: t("channelEditor.kinds.text"),
+                                        image: t("channelEditor.kinds.image"),
+                                        video: t("channelEditor.kinds.video"),
+                                        audio: t("channelEditor.kinds.audio"),
+                                    })}
+                                </div>
                                 <div className="mt-0.5 text-xs text-stone-500 dark:text-stone-400">{result?.model || t("channelOnboarding.awaitTest")}</div>
                             </div>
                             <Tag color={result ? (result.ok ? "success" : "error") : "default"}>{result ? (result.ok ? t("channelOnboarding.pass") : t("channelOnboarding.fail")) : t("channelOnboarding.notTested")}</Tag>
@@ -481,12 +474,18 @@ function ValidationStep({ channel, entries, testing, onTest }: { channel: System
                     message={t("channelOnboarding.partialFail")}
                     description={entries
                         .filter(({ result }) => !result.ok)
-                        .map(({ result }) => result.error || t("channelOnboarding.testFailed", { capability: capabilityLabel(result.kind, {
-                            text: t("channelEditor.kinds.text"),
-                            image: t("channelEditor.kinds.image"),
-                            video: t("channelEditor.kinds.video"),
-                            audio: t("channelEditor.kinds.audio"),
-                        }) }))
+                        .map(
+                            ({ result }) =>
+                                result.error ||
+                                t("channelOnboarding.testFailed", {
+                                    capability: capabilityLabel(result.kind, {
+                                        text: t("channelEditor.kinds.text"),
+                                        image: t("channelEditor.kinds.image"),
+                                        video: t("channelEditor.kinds.video"),
+                                        audio: t("channelEditor.kinds.audio"),
+                                    }),
+                                }),
+                        )
                         .join("; ")}
                 />
             ) : null}
@@ -533,12 +532,15 @@ function BindingStep({
                     <Select showSearch optionFilterProp="label" className="w-full" value={selectedUpstreamModel || undefined} options={channel.models.map((model) => ({ label: model, value: model }))} onChange={onSelectUpstream} />
                 </LabeledControl>
                 <LabeledControl label={t("channelOnboarding.detectedCapability")}>
-                    <Input value={capabilityLabel(capability, {
-                        text: t("channelEditor.kinds.text"),
-                        image: t("channelEditor.kinds.image"),
-                        video: t("channelEditor.kinds.video"),
-                        audio: t("channelEditor.kinds.audio"),
-                    })} disabled />
+                    <Input
+                        value={capabilityLabel(capability, {
+                            text: t("channelEditor.kinds.text"),
+                            image: t("channelEditor.kinds.image"),
+                            video: t("channelEditor.kinds.video"),
+                            audio: t("channelEditor.kinds.audio"),
+                        })}
+                        disabled
+                    />
                 </LabeledControl>
             </div>
             <div className="border-y border-stone-200 py-4 dark:border-stone-800">
@@ -566,12 +568,16 @@ function BindingStep({
                 ) : null}
             </div>
             <div className="flex min-h-10 items-center justify-between gap-3 border-b border-stone-200 pb-4 dark:border-stone-800">
-                <span className="text-sm text-stone-700 dark:text-stone-300">{t("channelOnboarding.setDefault", { capability: capabilityLabel(capability, {
-                    text: t("channelEditor.kinds.text"),
-                    image: t("channelEditor.kinds.image"),
-                    video: t("channelEditor.kinds.video"),
-                    audio: t("channelEditor.kinds.audio"),
-                }) })}</span>
+                <span className="text-sm text-stone-700 dark:text-stone-300">
+                    {t("channelOnboarding.setDefault", {
+                        capability: capabilityLabel(capability, {
+                            text: t("channelEditor.kinds.text"),
+                            image: t("channelEditor.kinds.image"),
+                            video: t("channelEditor.kinds.video"),
+                            audio: t("channelEditor.kinds.audio"),
+                        }),
+                    })}
+                </span>
                 <Switch checked={setAsDefault} onChange={onSetAsDefault} />
             </div>
             <Button type="primary" icon={<Link2 className="size-4" />} onClick={onBind}>

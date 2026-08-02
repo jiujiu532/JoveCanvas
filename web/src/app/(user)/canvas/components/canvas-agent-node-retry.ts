@@ -11,15 +11,19 @@ export async function retryCanvasAgentNode(node: CanvasNodeData, applyOps: (ops?
 
     await retryCreativeAgentTask(runId, taskId);
     let failure = "";
-    await watchCanvasAgentRun(runId, {
-        onPlan: (ops) => applyOps(ops),
-        onAssistant: (text, detail) => {
-            if (detail?.runId) failure = text;
+    await watchCanvasAgentRun(
+        runId,
+        {
+            onPlan: (ops) => applyOps(ops),
+            onAssistant: (text, detail) => {
+                if (detail?.runId) failure = text;
+            },
+            onStage: () => undefined,
+            onPaused: () => undefined,
+            onOps: (ops) => applyOps(ops),
         },
-        onStage: () => undefined,
-        onPaused: () => undefined,
-        onOps: (ops) => applyOps(ops),
-    }, labels);
+        labels,
+    );
     if (failure) throw new Error(failure);
     return true;
 }

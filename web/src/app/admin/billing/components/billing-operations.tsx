@@ -408,9 +408,7 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
             render: (_, order) => (
                 <div className="text-sm text-stone-600 dark:text-stone-300">
                     <div>{t("orderPermanentPoints", { count: order.pointsAmount })}</div>
-                    <div className="text-xs text-stone-500 dark:text-stone-400">
-                        {t("orderDailyPeriod", { daily: order.dailyPoints, period: order.periodDays ? t("periodDaysValue", { count: order.periodDays }) : t("orderLongTerm") })}
-                    </div>
+                    <div className="text-xs text-stone-500 dark:text-stone-400">{t("orderDailyPeriod", { daily: order.dailyPoints, period: order.periodDays ? t("periodDaysValue", { count: order.periodDays }) : t("orderLongTerm") })}</div>
                 </div>
             ),
         },
@@ -593,7 +591,9 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="min-w-0">
                                                     <div className="truncate text-sm font-semibold text-stone-950 dark:text-stone-100">{product.name}</div>
-                                                    <div className="mt-1 line-clamp-2 text-xs leading-5 text-stone-500 dark:text-stone-400">{product.description || (product.productKind === "points" ? t("products.pointsProduct") : product.planId || t("products.noPlan"))}</div>
+                                                    <div className="mt-1 line-clamp-2 text-xs leading-5 text-stone-500 dark:text-stone-400">
+                                                        {product.description || (product.productKind === "points" ? t("products.pointsProduct") : product.planId || t("products.noPlan"))}
+                                                    </div>
                                                     {product.pricing.discountCents > 0 ? (
                                                         <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5 text-xs">
                                                             <Tag className="m-0" color="red">
@@ -651,9 +651,7 @@ export function BillingOperations({ initialTab = "orders", initialPaymentConfig,
                         ]}
                     >
                         <Form form={productForm} layout="vertical" initialValues={defaultProductFormValue(products.length + 1)} onFinish={(value) => void saveProduct(value)}>
-                            <div className="mb-4 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm leading-6 text-stone-500 dark:border-stone-800 dark:bg-stone-900/50 dark:text-stone-400">
-                                {t("products.modalHint")}
-                            </div>
+                            <div className="mb-4 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm leading-6 text-stone-500 dark:border-stone-800 dark:bg-stone-900/50 dark:text-stone-400">{t("products.modalHint")}</div>
                             <Form.Item name="id" hidden>
                                 <Input />
                             </Form.Item>

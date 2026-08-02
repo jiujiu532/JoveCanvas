@@ -401,18 +401,8 @@ export function isHiddenBatchConnectionEndpoint(node: CanvasNodeData, nodes: Can
 
 export function buildAngleLabel(params: CanvasImageAngleParams) {
     const t = canvasT();
-    const horizontal =
-        params.horizontalAngle === 0
-            ? t("angle.front")
-            : params.horizontalAngle > 0
-              ? t("angle.rotateRight", { degrees: params.horizontalAngle })
-              : t("angle.rotateLeft", { degrees: Math.abs(params.horizontalAngle) });
-    const pitch =
-        params.pitchAngle === 0
-            ? t("angle.level")
-            : params.pitchAngle > 0
-              ? t("angle.pitchDown", { degrees: params.pitchAngle })
-              : t("angle.pitchUp", { degrees: Math.abs(params.pitchAngle) });
+    const horizontal = params.horizontalAngle === 0 ? t("angle.front") : params.horizontalAngle > 0 ? t("angle.rotateRight", { degrees: params.horizontalAngle }) : t("angle.rotateLeft", { degrees: Math.abs(params.horizontalAngle) });
+    const pitch = params.pitchAngle === 0 ? t("angle.level") : params.pitchAngle > 0 ? t("angle.pitchDown", { degrees: params.pitchAngle }) : t("angle.pitchUp", { degrees: Math.abs(params.pitchAngle) });
     return t("angle.labelTemplate", {
         horizontal,
         pitch,

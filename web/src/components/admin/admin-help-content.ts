@@ -163,10 +163,7 @@ export function buildAdminHelpArticles(t: AdminHelpTranslate): AdminHelpArticle[
         const root = `articles.${id}`;
         const keywords = readStringArray(t.raw(`${root}.keywords`));
         const checks = Array.from({ length: structure.checkCount }, (_, index) => readString(t, `${root}.checks.${index}`));
-        const warnings =
-            structure.warningCount > 0
-                ? Array.from({ length: structure.warningCount }, (_, index) => readString(t, `${root}.warnings.${index}`))
-                : undefined;
+        const warnings = structure.warningCount > 0 ? Array.from({ length: structure.warningCount }, (_, index) => readString(t, `${root}.warnings.${index}`)) : undefined;
 
         return {
             id,

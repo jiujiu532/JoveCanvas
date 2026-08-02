@@ -40,9 +40,7 @@ export function DramaProjectCard({ project }: { project: DramaProjectSummary }) 
                 </div>
             </div>
             <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                <div className="text-xs leading-5 text-muted-foreground">
-                    {t("card.stats", { episodes: project.episodeCount, characters: project.characterCount, scenes: project.sceneCount, shots: project.shotCount })}
-                </div>
+                <div className="text-xs leading-5 text-muted-foreground">{t("card.stats", { episodes: project.episodeCount, characters: project.characterCount, scenes: project.sceneCount, shots: project.shotCount })}</div>
                 <div className="flex justify-end gap-2">
                     <Popconfirm title={t("card.deleteConfirmTitle")} onConfirm={() => deleteProject(project.id).catch((error) => message.error(error instanceof Error ? error.message : t("card.deleteFailed")))}>
                         <Button type="text" shape="circle" danger className="!size-8" icon={<Trash2 className="size-4" />} aria-label={t("card.deleteAria")} />

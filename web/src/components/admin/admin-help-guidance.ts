@@ -108,14 +108,10 @@ function readString(t: AdminHelpTranslate, key: string): string {
 export function buildAdminHelpGuidance(t: AdminHelpTranslate): Record<AdminHelpArticleId, AdminHelpGuidance> {
     const result = {} as Record<AdminHelpArticleId, AdminHelpGuidance>;
 
-    for (const [articleId, structure] of Object.entries(ADMIN_HELP_GUIDANCE_STRUCTURE) as Array<
-        [AdminHelpArticleId, (typeof ADMIN_HELP_GUIDANCE_STRUCTURE)[AdminHelpArticleId]]
-    >) {
+    for (const [articleId, structure] of Object.entries(ADMIN_HELP_GUIDANCE_STRUCTURE) as Array<[AdminHelpArticleId, (typeof ADMIN_HELP_GUIDANCE_STRUCTURE)[AdminHelpArticleId]]>) {
         const root = `articles.${articleId}`;
         result[articleId] = {
-            stepActions: structure.stepActionCounts.map((actionCount, stepIndex) =>
-                Array.from({ length: actionCount }, (_, actionIndex) => readString(t, `${root}.stepActions.${stepIndex}.${actionIndex}`)),
-            ),
+            stepActions: structure.stepActionCounts.map((actionCount, stepIndex) => Array.from({ length: actionCount }, (_, actionIndex) => readString(t, `${root}.stepActions.${stepIndex}.${actionIndex}`))),
             troubleshooting: structure.troubleshooting.map((item, itemIndex) => {
                 const base = `${root}.troubleshooting.${itemIndex}`;
                 return {

@@ -171,9 +171,24 @@ export function AdminAnnouncementsSection({ controller }: { controller: AdminDas
                                         <Button size="small" href={`/announcements#${announcement.id}`} target="_blank" icon={<ExternalLink className="size-3.5" />}>
                                             {t("content.announcements.view")}
                                         </Button>
-                                        <Switch checked={announcement.enabled} checkedChildren={t("content.announcements.show")} unCheckedChildren={t("content.announcements.stop")} onChange={(enabled) => void updateAnnouncementById(announcement, { enabled })} />
-                                        <Switch checked={announcement.popupHome} checkedChildren={t("content.announcements.home")} unCheckedChildren={t("content.announcements.home")} onChange={(popupHome) => void updateAnnouncementById(announcement, { popupHome })} />
-                                        <Switch checked={announcement.popupAfterLogin} checkedChildren={t("content.announcements.login")} unCheckedChildren={t("content.announcements.login")} onChange={(popupAfterLogin) => void updateAnnouncementById(announcement, { popupAfterLogin })} />
+                                        <Switch
+                                            checked={announcement.enabled}
+                                            checkedChildren={t("content.announcements.show")}
+                                            unCheckedChildren={t("content.announcements.stop")}
+                                            onChange={(enabled) => void updateAnnouncementById(announcement, { enabled })}
+                                        />
+                                        <Switch
+                                            checked={announcement.popupHome}
+                                            checkedChildren={t("content.announcements.home")}
+                                            unCheckedChildren={t("content.announcements.home")}
+                                            onChange={(popupHome) => void updateAnnouncementById(announcement, { popupHome })}
+                                        />
+                                        <Switch
+                                            checked={announcement.popupAfterLogin}
+                                            checkedChildren={t("content.announcements.login")}
+                                            unCheckedChildren={t("content.announcements.login")}
+                                            onChange={(popupAfterLogin) => void updateAnnouncementById(announcement, { popupAfterLogin })}
+                                        />
                                         <Popconfirm title={t("content.announcements.deleteConfirm")} okText={t("common.delete")} cancelText={t("common.cancel")} onConfirm={() => void deleteAnnouncementById(announcement.id)}>
                                             <Button danger icon={<Trash2 className="size-4" />}>
                                                 {t("common.delete")}
@@ -214,9 +229,7 @@ export function AdminAnnouncementsSection({ controller }: { controller: AdminDas
                     </Button>,
                 ]}
             >
-                <div className="mb-4 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm leading-6 text-stone-500 dark:border-stone-800 dark:bg-stone-900/50 dark:text-stone-400">
-                    {t("content.announcements.modalHint")}
-                </div>
+                <div className="mb-4 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm leading-6 text-stone-500 dark:border-stone-800 dark:bg-stone-900/50 dark:text-stone-400">{t("content.announcements.modalHint")}</div>
                 <div className="grid gap-3 sm:grid-cols-2">
                     <div className="sm:col-span-2">
                         <LabeledControl label={t("content.announcements.fieldTitle")}>
@@ -245,7 +258,13 @@ export function AdminAnnouncementsSection({ controller }: { controller: AdminDas
                     </LabeledControl>
                     <div className="sm:col-span-2">
                         <LabeledControl label={t("content.announcements.content")}>
-                            <Input.TextArea value={announcementDraft.content} rows={5} maxLength={3000} placeholder={t("content.announcements.contentPlaceholder")} onChange={(event) => setAnnouncementDraft((current) => ({ ...current, content: event.target.value }))} />
+                            <Input.TextArea
+                                value={announcementDraft.content}
+                                rows={5}
+                                maxLength={3000}
+                                placeholder={t("content.announcements.contentPlaceholder")}
+                                onChange={(event) => setAnnouncementDraft((current) => ({ ...current, content: event.target.value }))}
+                            />
                         </LabeledControl>
                     </div>
                 </div>
@@ -308,7 +327,9 @@ export function AdminPromptsSection({ controller }: { controller: AdminDashboard
                             <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">{t("content.prompts.listDesc")}</p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
-                            <span className="rounded-md bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600 dark:bg-white/10 dark:text-stone-300">{promptListTotal ? t("content.prompts.rangeCount", { from: promptListStart, to: promptListEnd, total: promptListTotal }) : t("content.prompts.zeroCount")}</span>
+                            <span className="rounded-md bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600 dark:bg-white/10 dark:text-stone-300">
+                                {promptListTotal ? t("content.prompts.rangeCount", { from: promptListStart, to: promptListEnd, total: promptListTotal }) : t("content.prompts.zeroCount")}
+                            </span>
                             <Button size="small" icon={<Plus className="size-3.5" />} onClick={openPromptModal}>
                                 {t("content.prompts.addShort")}
                             </Button>

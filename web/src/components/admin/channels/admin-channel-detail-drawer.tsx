@@ -151,12 +151,14 @@ function ChannelModels({ channel }: { channel: SystemModelChannel }) {
             {channel.models.map((model) => (
                 <div key={model} className="flex min-w-0 items-center justify-between gap-3 py-3">
                     <span className="min-w-0 truncate text-sm font-medium text-stone-950 dark:text-stone-100">{model}</span>
-                    <Tag className="m-0">{capabilityLabel(channelModelCapability(channel, model), {
-                        text: t("channelEditor.kinds.text"),
-                        image: t("channelEditor.kinds.image"),
-                        video: t("channelEditor.kinds.video"),
-                        audio: t("channelEditor.kinds.audio"),
-                    })}</Tag>
+                    <Tag className="m-0">
+                        {capabilityLabel(channelModelCapability(channel, model), {
+                            text: t("channelEditor.kinds.text"),
+                            image: t("channelEditor.kinds.image"),
+                            video: t("channelEditor.kinds.video"),
+                            audio: t("channelEditor.kinds.audio"),
+                        })}
+                    </Tag>
                 </div>
             ))}
             {!channel.models.length ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("channelDetail.noModels")} /> : null}

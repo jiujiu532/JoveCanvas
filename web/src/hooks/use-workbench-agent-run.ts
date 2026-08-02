@@ -119,10 +119,17 @@ export function useWorkbenchAgentRun({
             agentRequestRef.current = { messageId: progressId, controller, stage: "planning" };
             if (appendRequest) {
                 setPrompt("");
-                setAgentMessages((items) => appendWorkbenchAgentRequest(items, text, submittedAttachments, createWorkbenchAgentProgressMessage(progressId, hasReferences, mediaLabel, {
-                    withReferences: (media) => t("agent.workbenchRun.receivedWithReferences", { media }),
-                    withoutReferences: (media) => t("agent.workbenchRun.receivedWithoutReferences", { media }),
-                })));
+                setAgentMessages((items) =>
+                    appendWorkbenchAgentRequest(
+                        items,
+                        text,
+                        submittedAttachments,
+                        createWorkbenchAgentProgressMessage(progressId, hasReferences, mediaLabel, {
+                            withReferences: (media) => t("agent.workbenchRun.receivedWithReferences", { media }),
+                            withoutReferences: (media) => t("agent.workbenchRun.receivedWithoutReferences", { media }),
+                        }),
+                    ),
+                );
                 onRequestSent?.();
             } else {
                 setAgentMessages((items) =>

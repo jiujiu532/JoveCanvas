@@ -224,9 +224,7 @@ export function CouponTemplatePanel({ products, productsLoading }: { products: B
                                     </div>
                                     <div className="shrink-0 text-right">
                                         <div className="text-lg font-semibold tabular-nums text-stone-950 dark:text-stone-100">{discountLabel(template, numberLocale)}</div>
-                                        <div className="mt-0.5 text-[11px] text-stone-500 dark:text-stone-400">
-                                            {template.minimumAmountCents ? t("minSpend", { amount: formatYuan(template.minimumAmountCents, numberLocale) }) : t("noMinSpend")}
-                                        </div>
+                                        <div className="mt-0.5 text-[11px] text-stone-500 dark:text-stone-400">{template.minimumAmountCents ? t("minSpend", { amount: formatYuan(template.minimumAmountCents, numberLocale) }) : t("noMinSpend")}</div>
                                     </div>
                                 </div>
                                 <div className="mt-3 grid grid-cols-3 gap-2 border-y border-stone-200 py-3 text-center dark:border-stone-800">
@@ -244,9 +242,7 @@ export function CouponTemplatePanel({ products, productsLoading }: { products: B
                                     </Tag>
                                 </div>
                                 {template.productIds.length ? (
-                                    <p className="mt-2 truncate text-xs text-stone-500 dark:text-stone-400">
-                                        {t("applicable", { list: template.productIds.map((id) => adminProductLabel(products, id)).join(t("listJoin")) })}
-                                    </p>
+                                    <p className="mt-2 truncate text-xs text-stone-500 dark:text-stone-400">{t("applicable", { list: template.productIds.map((id) => adminProductLabel(products, id)).join(t("listJoin")) })}</p>
                                 ) : null}
                                 <div className="mt-3 flex justify-end gap-2 border-t border-stone-200 pt-3 dark:border-stone-800">
                                     <Button size="small" icon={<Pencil className="size-3.5" />} onClick={() => showEdit(template)}>
@@ -284,9 +280,7 @@ export function CouponTemplatePanel({ products, productsLoading }: { products: B
             >
                 <Form form={form} layout="vertical" onFinish={(value) => void save(value)}>
                     {editing?.issuedCount ? (
-                        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
-                            {t("issuedLockedHint")}
-                        </div>
+                        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">{t("issuedLockedHint")}</div>
                     ) : null}
                     <div className="grid gap-x-3 sm:grid-cols-2">
                         <Form.Item name="name" label={t("name")} rules={[{ required: true, message: t("nameRequired") }]}>

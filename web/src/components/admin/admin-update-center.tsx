@@ -29,7 +29,10 @@ export function UpdateCenterPanel() {
                                 <h3 className="mt-2 text-2xl font-semibold tracking-normal sm:mt-4 sm:text-3xl">{t("updates.hero.title")}</h3>
                                 <div className="mt-2 max-w-2xl text-xs leading-5 text-white/68 sm:mt-3 sm:text-sm sm:leading-6 dark:text-stone-600">{t("updates.hero.description")}</div>
                                 <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:flex sm:flex-wrap">
-                                    <VersionReleaseModal className="admin-update-primary-button inline-flex h-9 items-center justify-center rounded-lg px-3 text-xs font-semibold transition sm:h-10 sm:rounded-xl sm:px-4 sm:text-sm" label={t("updates.hero.viewChangelog")} />
+                                    <VersionReleaseModal
+                                        className="admin-update-primary-button inline-flex h-9 items-center justify-center rounded-lg px-3 text-xs font-semibold transition sm:h-10 sm:rounded-xl sm:px-4 sm:text-sm"
+                                        label={t("updates.hero.viewChangelog")}
+                                    />
                                     <a
                                         href="https://github.com/jiujiu532/JoveCanvas/releases"
                                         target="_blank"

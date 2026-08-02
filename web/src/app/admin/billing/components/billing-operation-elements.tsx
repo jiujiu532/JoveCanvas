@@ -193,9 +193,7 @@ export function PaymentConfigPanel({ paymentConfig, loading, embedded, onRefresh
                                             {activeProvider.id === "alipay" ? alipayPresentation?.description || activeProvider.description : activeProvider.description}
                                         </div>
                                         <div className="mt-3 flex flex-wrap gap-2 text-xs text-stone-500 dark:text-stone-400">
-                                            <span className="rounded-full bg-stone-100 px-2.5 py-1 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
-                                                {t("requiredProgress", { ready: requiredReady, total: requiredFields.length })}
-                                            </span>
+                                            <span className="rounded-full bg-stone-100 px-2.5 py-1 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">{t("requiredProgress", { ready: requiredReady, total: requiredFields.length })}</span>
                                             <span className="rounded-full bg-stone-100 px-2.5 py-1 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">{activeProvider.checkoutReady ? t("checkoutConfigured") : t("checkoutPending")}</span>
                                             <span className="rounded-full bg-stone-100 px-2.5 py-1 ring-1 ring-stone-200 dark:bg-stone-900 dark:ring-stone-800">
                                                 {activeProvider.webhookOptional ? t("webhookOptional") : activeProvider.webhookReady ? t("webhookConfigured") : t("webhookPending")}
@@ -240,10 +238,7 @@ export function PaymentConfigPanel({ paymentConfig, loading, embedded, onRefresh
                                     ))}
                                 </PaymentFieldSection>
                                 {routeFields.length ? (
-                                    <PaymentFieldSection
-                                        title={isAlipayFaceToFace ? t("asyncCallback") : t("routeConfig")}
-                                        description={isAlipayFaceToFace ? t("alipayFaceToFaceRouteDesc") : t("routeSystemDefaultDesc")}
-                                    >
+                                    <PaymentFieldSection title={isAlipayFaceToFace ? t("asyncCallback") : t("routeConfig")} description={isAlipayFaceToFace ? t("alipayFaceToFaceRouteDesc") : t("routeSystemDefaultDesc")}>
                                         {sortedRouteFields.map((field) => (
                                             <PaymentConfigFieldControl key={field.key} field={field} providerEnabled={formEnabled} />
                                         ))}
@@ -286,17 +281,7 @@ export function PaymentConfigPanel({ paymentConfig, loading, embedded, onRefresh
     );
 }
 
-export function PaymentProviderCard({
-    provider,
-    active,
-    onSelect,
-    readinessLabel,
-}: {
-    provider: PaymentProviderConfig;
-    active: boolean;
-    onSelect: () => void;
-    readinessLabel: (ready: boolean, checkoutReady: boolean) => string;
-}) {
+export function PaymentProviderCard({ provider, active, onSelect, readinessLabel }: { provider: PaymentProviderConfig; active: boolean; onSelect: () => void; readinessLabel: (ready: boolean, checkoutReady: boolean) => string }) {
     const Icon = providerIcon(provider.id);
     return (
         <button

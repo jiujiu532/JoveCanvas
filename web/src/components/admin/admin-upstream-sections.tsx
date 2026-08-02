@@ -156,7 +156,9 @@ export function AdminSkillsSection({ controller }: { controller: AdminDashboardC
                     <>
                         <Button
                             icon={<Plus className="size-4" />}
-                            onClick={() => setSettings((current) => ({ ...current, agentSkills: [...current.agentSkills, { id: nanoid(), name: t("upstreamSections.skills.newSkillName"), description: "", instructions: "", enabled: true, keywords: [] }] }))}
+                            onClick={() =>
+                                setSettings((current) => ({ ...current, agentSkills: [...current.agentSkills, { id: nanoid(), name: t("upstreamSections.skills.newSkillName"), description: "", instructions: "", enabled: true, keywords: [] }] }))
+                            }
                         >
                             {t("upstreamSections.skills.addSkill")}
                         </Button>

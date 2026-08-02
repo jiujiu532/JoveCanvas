@@ -225,85 +225,88 @@ export function useCanvasTaskRuntime({ state }: { state: CanvasPageState }) {
         [modal, stopGenerationByRunningId, t],
     );
 
-    const completeVideoTask = useCallback(async (nodeId: string, generationConfig: AiConfig, task: NonNullable<CanvasNodeMetadata["videoTask"]>, controller: AbortController, prompt?: string) => {
-        const video = await storeGeneratedVideo(await waitForVideoGenerationTask(generationConfig, task, { signal: controller.signal }));
-        const finalPrompt = prompt || "";
-        const loggedAssetPromise = recordGenerationLog({
-            id: `canvas-video:${task.id || nodeId}`,
-            taskId: task.id,
-            kind: "video",
-            source: "canvas",
-            status: "success",
-            title: finalPrompt.slice(0, 36) || t("defaults.canvasVideo"),
-            prompt: finalPrompt,
-            model: modelOptionName(generationConfig.model || generationConfig.videoModel),
-            summary: t("generation.videoCompleteSummary"),
-            durationMs: video.durationMs,
-            count: 1,
-            successCount: 1,
-            failCount: 0,
-            assets:
-                video.serverUrl || (video.url && !video.url.startsWith("blob:") ? video.url : "") || video.remoteUrl || ""
-                    ? [
-                          {
-                              type: "video",
-                              url: video.serverUrl || video.url || video.remoteUrl || "",
-                              remoteUrl: video.remoteUrl,
-                              serverUrl: video.serverUrl,
-                              mimeType: video.mimeType,
-                              width: video.width,
-                              height: video.height,
-                              bytes: video.bytes,
-                          },
-                      ]
-                    : [],
-            completedAt: Date.now(),
-        })
-            .then((log) => log.assets[0])
-            .catch(() => undefined);
-        setNodes((prev) =>
-            prev.map((node) => {
-                if (node.id !== nodeId) return node;
-                const videoSize = fitNodeSize(video.width || node.width, video.height || node.height, VIDEO_NODE_MAX_WIDTH, VIDEO_NODE_MAX_HEIGHT);
-                return {
-                    ...node,
-                    width: videoSize.width,
-                    height: videoSize.height,
-                    position: { x: node.position.x + node.width / 2 - videoSize.width / 2, y: node.position.y + node.height / 2 - videoSize.height / 2 },
-                    metadata: {
-                        ...node.metadata,
-                        ...videoMetadata(video),
-                        prompt: prompt || node.metadata?.prompt,
-                        model: generationConfig.model,
-                        size: generationConfig.size,
-                        seconds: generationConfig.videoSeconds,
-                        vquality: generationConfig.vquality,
-                        generateAudio: generationConfig.videoGenerateAudio,
-                        watermark: generationConfig.videoWatermark,
-                        videoTask: undefined,
-                        errorDetails: undefined,
-                    },
-                };
-            }),
-        );
-        void loggedAssetPromise.then((asset) => {
-            if (!asset?.serverUrl && !asset?.remoteUrl) return;
-            setNodes((prev) =>
-                prev.map((node) =>
-                    node.id === nodeId
-                        ? {
-                              ...node,
-                              metadata: {
-                                  ...node.metadata,
-                                  remoteUrl: asset.remoteUrl || node.metadata?.remoteUrl,
-                                  serverUrl: asset.serverUrl || node.metadata?.serverUrl,
+    const completeVideoTask = useCallback(
+        async (nodeId: string, generationConfig: AiConfig, task: NonNullable<CanvasNodeMetadata["videoTask"]>, controller: AbortController, prompt?: string) => {
+            const video = await storeGeneratedVideo(await waitForVideoGenerationTask(generationConfig, task, { signal: controller.signal }));
+            const finalPrompt = prompt || "";
+            const loggedAssetPromise = recordGenerationLog({
+                id: `canvas-video:${task.id || nodeId}`,
+                taskId: task.id,
+                kind: "video",
+                source: "canvas",
+                status: "success",
+                title: finalPrompt.slice(0, 36) || t("defaults.canvasVideo"),
+                prompt: finalPrompt,
+                model: modelOptionName(generationConfig.model || generationConfig.videoModel),
+                summary: t("generation.videoCompleteSummary"),
+                durationMs: video.durationMs,
+                count: 1,
+                successCount: 1,
+                failCount: 0,
+                assets:
+                    video.serverUrl || (video.url && !video.url.startsWith("blob:") ? video.url : "") || video.remoteUrl || ""
+                        ? [
+                              {
+                                  type: "video",
+                                  url: video.serverUrl || video.url || video.remoteUrl || "",
+                                  remoteUrl: video.remoteUrl,
+                                  serverUrl: video.serverUrl,
+                                  mimeType: video.mimeType,
+                                  width: video.width,
+                                  height: video.height,
+                                  bytes: video.bytes,
                               },
-                          }
-                        : node,
-                ),
+                          ]
+                        : [],
+                completedAt: Date.now(),
+            })
+                .then((log) => log.assets[0])
+                .catch(() => undefined);
+            setNodes((prev) =>
+                prev.map((node) => {
+                    if (node.id !== nodeId) return node;
+                    const videoSize = fitNodeSize(video.width || node.width, video.height || node.height, VIDEO_NODE_MAX_WIDTH, VIDEO_NODE_MAX_HEIGHT);
+                    return {
+                        ...node,
+                        width: videoSize.width,
+                        height: videoSize.height,
+                        position: { x: node.position.x + node.width / 2 - videoSize.width / 2, y: node.position.y + node.height / 2 - videoSize.height / 2 },
+                        metadata: {
+                            ...node.metadata,
+                            ...videoMetadata(video),
+                            prompt: prompt || node.metadata?.prompt,
+                            model: generationConfig.model,
+                            size: generationConfig.size,
+                            seconds: generationConfig.videoSeconds,
+                            vquality: generationConfig.vquality,
+                            generateAudio: generationConfig.videoGenerateAudio,
+                            watermark: generationConfig.videoWatermark,
+                            videoTask: undefined,
+                            errorDetails: undefined,
+                        },
+                    };
+                }),
             );
-        });
-    }, [t]);
+            void loggedAssetPromise.then((asset) => {
+                if (!asset?.serverUrl && !asset?.remoteUrl) return;
+                setNodes((prev) =>
+                    prev.map((node) =>
+                        node.id === nodeId
+                            ? {
+                                  ...node,
+                                  metadata: {
+                                      ...node.metadata,
+                                      remoteUrl: asset.remoteUrl || node.metadata?.remoteUrl,
+                                      serverUrl: asset.serverUrl || node.metadata?.serverUrl,
+                                  },
+                              }
+                            : node,
+                    ),
+                );
+            });
+        },
+        [t],
+    );
 
     const completeImageTask = useCallback(async (nodeId: string, generationConfig: AiConfig, task: NonNullable<CanvasNodeMetadata["imageTask"]> | ImageGenerationTask, controller: AbortController, prompt?: string) => {
         const image = await waitForImageGenerationTask(generationConfig, task, { signal: controller.signal });
@@ -369,28 +372,31 @@ export function useCanvasTaskRuntime({ state }: { state: CanvasPageState }) {
         [completeImageTask, t],
     );
 
-    const completeTextTask = useCallback(async (nodeId: string, generationConfig: AiConfig, task: TextGenerationTask, controller: AbortController, prompt?: string) => {
-        const answer = await waitForTextGenerationTask(generationConfig, task, { signal: controller.signal });
-        setNodes((prev) =>
-            prev.map((node) =>
-                node.id === nodeId
-                    ? {
-                          ...node,
-                          type: CanvasNodeType.Text,
-                          metadata: {
-                              ...node.metadata,
-                              content: answer || t("generation.emptyResponse"),
-                              prompt: prompt || node.metadata?.prompt,
-                              status: NODE_STATUS_SUCCESS,
-                              textTask: undefined,
-                              errorDetails: undefined,
-                          },
-                      }
-                    : node,
-            ),
-        );
-        return answer || t("generation.emptyResponse");
-    }, [t]);
+    const completeTextTask = useCallback(
+        async (nodeId: string, generationConfig: AiConfig, task: TextGenerationTask, controller: AbortController, prompt?: string) => {
+            const answer = await waitForTextGenerationTask(generationConfig, task, { signal: controller.signal });
+            setNodes((prev) =>
+                prev.map((node) =>
+                    node.id === nodeId
+                        ? {
+                              ...node,
+                              type: CanvasNodeType.Text,
+                              metadata: {
+                                  ...node.metadata,
+                                  content: answer || t("generation.emptyResponse"),
+                                  prompt: prompt || node.metadata?.prompt,
+                                  status: NODE_STATUS_SUCCESS,
+                                  textTask: undefined,
+                                  errorDetails: undefined,
+                              },
+                          }
+                        : node,
+                ),
+            );
+            return answer || t("generation.emptyResponse");
+        },
+        [t],
+    );
 
     const completeAudioTask = useCallback(async (nodeId: string, generationConfig: AiConfig, task: NonNullable<CanvasNodeMetadata["audioTask"]>, controller: AbortController, prompt?: string) => {
         const audio = await storeGeneratedAudio(await waitForAudioGenerationTask(generationConfig, task, { signal: controller.signal }), generationConfig.audioFormat);

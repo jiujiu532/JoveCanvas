@@ -237,7 +237,14 @@ export function AdminExternalStorage() {
                     actions={
                         <>
                             <Tooltip title={t("externalStorage.testConnection")}>
-                                <Button aria-label={t("externalStorage.testConnectionAria")} className="!w-8 !px-0 sm:!w-auto sm:!px-3" icon={<ShieldCheck className="size-4" />} loading={testing} disabled={!settings?.bucket} onClick={() => void testConnection()}>
+                                <Button
+                                    aria-label={t("externalStorage.testConnectionAria")}
+                                    className="!w-8 !px-0 sm:!w-auto sm:!px-3"
+                                    icon={<ShieldCheck className="size-4" />}
+                                    loading={testing}
+                                    disabled={!settings?.bucket}
+                                    onClick={() => void testConnection()}
+                                >
                                     <span className="hidden sm:inline">{t("externalStorage.testConnection")}</span>
                                 </Button>
                             </Tooltip>
@@ -315,7 +322,13 @@ export function AdminExternalStorage() {
                                     <span className="hidden sm:inline">{t("externalStorage.refresh")}</span>
                                 </Button>
                             </Tooltip>
-                            <Popconfirm title={t("externalStorage.bulkDeleteTitle", { count: selectedKeys.length })} description={t("externalStorage.bulkDeleteDesc")} okText={t("externalStorage.bulkDelete")} cancelText={t("externalStorage.cancel")} onConfirm={() => void remove(selectedKeys)}>
+                            <Popconfirm
+                                title={t("externalStorage.bulkDeleteTitle", { count: selectedKeys.length })}
+                                description={t("externalStorage.bulkDeleteDesc")}
+                                okText={t("externalStorage.bulkDelete")}
+                                cancelText={t("externalStorage.cancel")}
+                                onConfirm={() => void remove(selectedKeys)}
+                            >
                                 <Tooltip title={t("externalStorage.bulkDeleteTooltip")}>
                                     <Button danger aria-label={t("externalStorage.bulkDeleteAria")} className="!w-8 !px-0 sm:!w-auto sm:!px-3" icon={<Trash2 className="size-4" />} disabled={!selectedKeys.length} loading={deleting}>
                                         <span className="hidden sm:inline">{t("externalStorage.bulkDelete")}</span>
@@ -417,7 +430,8 @@ export function AdminExternalStorage() {
                                 <div className="min-w-0 flex-1">
                                     <div className="truncate text-sm font-medium">{file.originalName || file.name}</div>
                                     <div className="mt-1 text-xs text-zinc-500">
-                                        {managedMediaTypeLabel(file.type)} · {formatBytes(file.bytes)} · {file.storageKey ? t("externalStorage.table.references", { count: file.referenceCount }) : file.variant ? t("externalStorage.table.previewVariant") : t("externalStorage.table.standalone")}
+                                        {managedMediaTypeLabel(file.type)} · {formatBytes(file.bytes)} ·{" "}
+                                        {file.storageKey ? t("externalStorage.table.references", { count: file.referenceCount }) : file.variant ? t("externalStorage.table.previewVariant") : t("externalStorage.table.standalone")}
                                     </div>
                                     <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-zinc-500">
                                         <span className="truncate">{file.ownerDisplayName || file.ownerUsername || (file.ownerUserId ? t("externalStorage.userUnavailable") : t("externalStorage.table.unregistered"))}</span>

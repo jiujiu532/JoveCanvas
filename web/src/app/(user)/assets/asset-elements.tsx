@@ -31,7 +31,12 @@ export function AssetCard({
     const action = (label: string) => `${label} ${asset.title}`;
     return (
         <article className="group min-w-0 overflow-hidden rounded-xl border border-border bg-card transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-foreground/30">
-            <button type="button" aria-label={t("viewWithTitle", { title: asset.title })} className="relative block w-full overflow-hidden bg-muted text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" onClick={onOpen}>
+            <button
+                type="button"
+                aria-label={t("viewWithTitle", { title: asset.title })}
+                className="relative block w-full overflow-hidden bg-muted text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                onClick={onOpen}
+            >
                 {cover ? (
                     <img src={imagePreviewUrl(cover, 800)} alt={asset.title} className="aspect-[16/10] w-full object-cover transition-transform duration-300 group-hover:scale-[1.025]" />
                 ) : (
@@ -114,7 +119,9 @@ export function AssetPreviewModal({ asset, onClose, onCopy, onDownload }: { asse
                         </Space>
                     </div>
                     <div className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
-                        <Typography.Text type="secondary" className="block text-xs">{t("content")}</Typography.Text>
+                        <Typography.Text type="secondary" className="block text-xs">
+                            {t("content")}
+                        </Typography.Text>
                         {asset.kind === "text" ? (
                             <Typography.Paragraph className="mt-2 whitespace-pre-wrap">{asset.data.content}</Typography.Paragraph>
                         ) : asset.kind === "video" ? (

@@ -242,13 +242,7 @@ export function SystemChannelEditor({
                                     {t("channelEditor.applyExample")}
                                 </Button>
                             </div>
-                            <Input.TextArea
-                                className="mt-3"
-                                value={exampleText}
-                                rows={5}
-                                placeholder={t("channelEditor.examplePlaceholder")}
-                                onChange={(event) => setExampleText(event.target.value)}
-                            />
+                            <Input.TextArea className="mt-3" value={exampleText} rows={5} placeholder={t("channelEditor.examplePlaceholder")} onChange={(event) => setExampleText(event.target.value)} />
                         </div>
                     ) : null}
                     {advanced.protocol === "globalaiopc" ? (
@@ -322,11 +316,21 @@ export function SystemChannelEditor({
                                 </LabeledControl>
                             ) : null}
                             <LabeledControl label={t("channelEditor.fallbackCreatePath")}>
-                                <Input disabled={multipleGlobalPresets} value={advanced.createPath} placeholder={multipleGlobalPresets ? t("channelEditor.autoRoute") : "/video/generations"} onChange={(event) => updateAdvanced({ createPath: event.target.value })} />
+                                <Input
+                                    disabled={multipleGlobalPresets}
+                                    value={advanced.createPath}
+                                    placeholder={multipleGlobalPresets ? t("channelEditor.autoRoute") : "/video/generations"}
+                                    onChange={(event) => updateAdvanced({ createPath: event.target.value })}
+                                />
                             </LabeledControl>
                             {detectedCapabilities.has("image") ? (
                                 <LabeledControl label={t("channelEditor.fallbackEditPath")}>
-                                    <Input disabled={multipleGlobalPresets} value={advanced.editPath} placeholder={multipleGlobalPresets ? t("channelEditor.autoRoute") : "/images/edits"} onChange={(event) => updateAdvanced({ editPath: event.target.value })} />
+                                    <Input
+                                        disabled={multipleGlobalPresets}
+                                        value={advanced.editPath}
+                                        placeholder={multipleGlobalPresets ? t("channelEditor.autoRoute") : "/images/edits"}
+                                        onChange={(event) => updateAdvanced({ editPath: event.target.value })}
+                                    />
                                 </LabeledControl>
                             ) : null}
                             {detectedCapabilities.has("video") ? (
@@ -381,9 +385,7 @@ export function SystemChannelEditor({
                             </div>
                         </>
                     ) : (
-                        <div className="md:col-span-2 text-xs leading-5 text-stone-500 dark:text-stone-400">
-                            {t("channelEditor.fixedProtocolHint", { capability: t("channelEditor.referenceCapability") })}
-                        </div>
+                        <div className="md:col-span-2 text-xs leading-5 text-stone-500 dark:text-stone-400">{t("channelEditor.fixedProtocolHint", { capability: t("channelEditor.referenceCapability") })}</div>
                     )}
                     <div className="flex flex-wrap gap-2 md:col-span-2">
                         <Button size="small" icon={<RefreshCw className="size-3.5" />} loading={fetching} onClick={onFetchModels}>
@@ -477,15 +479,7 @@ function ModelRouteConfigEditor({ channel, advanced, onChange }: { channel: Syst
                             <Select className="w-full" allowClear placeholder={t("settingsActions.channelFallback")} value={config.protocol} options={protocolOptions} onChange={selectProtocol} />
                         </LabeledControl>
                         <LabeledControl
-                            label={
-                                config.capability === "text"
-                                    ? t("channelEditor.pathText")
-                                    : config.capability === "image"
-                                      ? t("channelEditor.pathImage")
-                                      : config.capability === "video"
-                                        ? t("channelEditor.pathVideo")
-                                        : t("channelEditor.pathAudio")
-                            }
+                            label={config.capability === "text" ? t("channelEditor.pathText") : config.capability === "image" ? t("channelEditor.pathImage") : config.capability === "video" ? t("channelEditor.pathVideo") : t("channelEditor.pathAudio")}
                         >
                             <Input
                                 disabled={definition.strict}
@@ -635,7 +629,7 @@ function ChannelCapabilitySummary({ channel, results }: { channel: SystemModelCh
 
 function healthStateText(result?: ChannelHealthResult, t?: ReturnType<typeof useTranslations<"admin">>) {
     if (!result) return t ? t("channelEditor.state.notTested") : "未检测";
-    return result.ok ? (t ? t("channelEditor.state.available") : "可用") : (t ? t("channelEditor.state.needsCheck") : "需检查");
+    return result.ok ? (t ? t("channelEditor.state.available") : "可用") : t ? t("channelEditor.state.needsCheck") : "需检查";
 }
 
 function healthStateTone(result?: ChannelHealthResult) {
@@ -647,8 +641,8 @@ function referenceImageText(result: ChannelHealthResult | undefined, advanced: S
     if (!result) return t ? t("channelEditor.state.notTested") : "未检测";
     if (!result.ok) return t ? t("channelEditor.state.needsCheck") : "需检查";
     if (!advanced.supportsReferenceImage) return t ? t("channelEditor.state.unsupported") : "不支持";
-    if (result.referenceImageTest) return result.referenceImageTest.ok ? (t ? t("channelEditor.state.available") : "可用") : (t ? t("channelEditor.state.needsCheck") : "需检查");
-    return needsPublicReference ? (t ? t("channelEditor.state.needsPublicImage") : "需公网图，未实测") : (t ? t("channelEditor.state.notMeasured") : "未实测");
+    if (result.referenceImageTest) return result.referenceImageTest.ok ? (t ? t("channelEditor.state.available") : "可用") : t ? t("channelEditor.state.needsCheck") : "需检查";
+    return needsPublicReference ? (t ? t("channelEditor.state.needsPublicImage") : "需公网图，未实测") : t ? t("channelEditor.state.notMeasured") : "未实测";
 }
 
 function referenceVideoText(result: ChannelHealthResult | undefined, advanced: SystemChannelAdvancedConfig, needsPublicReference: boolean, t?: ReturnType<typeof useTranslations<"admin">>) {

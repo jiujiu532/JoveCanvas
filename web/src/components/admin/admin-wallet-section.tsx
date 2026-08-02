@@ -39,13 +39,7 @@ export function AdminWalletSection({ controller }: { controller: AdminDashboardC
                     icon={<RefreshCw className="size-5" />}
                     tone="blue"
                 />
-                <Metric
-                    label={t("wallet.metrics.userBalance")}
-                    value={formatCreditAmount(walletSummary.totalBalance)}
-                    detail={t("wallet.metrics.userBalanceDetail")}
-                    icon={<WalletCards className="size-5" />}
-                    tone="slate"
-                />
+                <Metric label={t("wallet.metrics.userBalance")} value={formatCreditAmount(walletSummary.totalBalance)} detail={t("wallet.metrics.userBalanceDetail")} icon={<WalletCards className="size-5" />} tone="slate" />
             </section>
             <Panel>
                 <PanelHeader
@@ -92,11 +86,7 @@ export function AdminWalletSection({ controller }: { controller: AdminDashboardC
                             <FinanceMiniRow
                                 label={t("wallet.mini.reconciliationIssuesLabel")}
                                 value={t("wallet.mini.reconciliationIssues", {
-                                    count: billingSummary
-                                        ? billingSummary.reconciliation.paidOrdersWithoutSucceededPayment +
-                                          billingSummary.reconciliation.succeededPaymentsWithoutPaidOrder +
-                                          billingSummary.reconciliation.amountMismatchPayments
-                                        : 0,
+                                    count: billingSummary ? billingSummary.reconciliation.paidOrdersWithoutSucceededPayment + billingSummary.reconciliation.succeededPaymentsWithoutPaidOrder + billingSummary.reconciliation.amountMismatchPayments : 0,
                                 })}
                             />
                             <FinanceMiniRow label={t("wallet.mini.plansOnSaleLabel")} value={t("wallet.mini.plansOnSale", { count: walletSummary.enabledPlans })} />

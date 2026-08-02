@@ -239,7 +239,13 @@ export function AdminLogsSection({ controller }: { controller: AdminDashboardCon
                         <Button className="w-full sm:w-auto" onClick={resetGenerationLogFilters}>
                             {t("logs.section.clearFilters")}
                         </Button>
-                        <Popconfirm title={t("logs.section.bulkDeleteConfirmTitle")} description={t("logs.section.bulkDeleteConfirmDescription")} okText={t("logs.table.deleteOk")} cancelText={t("logs.table.deleteCancel")} onConfirm={() => void deleteGenerationLogsByIds(selectedGenerationLogIds)}>
+                        <Popconfirm
+                            title={t("logs.section.bulkDeleteConfirmTitle")}
+                            description={t("logs.section.bulkDeleteConfirmDescription")}
+                            okText={t("logs.table.deleteOk")}
+                            cancelText={t("logs.table.deleteCancel")}
+                            onConfirm={() => void deleteGenerationLogsByIds(selectedGenerationLogIds)}
+                        >
                             <Button className="w-full sm:w-auto" danger disabled={!selectedGenerationLogIds.length} loading={bulkDeletingGenerationLogs} icon={<Trash2 className="size-4" />}>
                                 {t("logs.section.deleteSelected")}
                             </Button>

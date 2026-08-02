@@ -83,7 +83,7 @@ export function CreateWorkbenchOverview({ onUseAsset }: { onUseAsset: (asset: Cr
     );
 }
 
-function LatestProjectCard({project, loading, error, onRetry }: { project?: ReturnType<typeof useCreateWorkbenchOverview>["latestProject"]; loading: boolean; error?: string; onRetry: () => void }) {
+function LatestProjectCard({ project, loading, error, onRetry }: { project?: ReturnType<typeof useCreateWorkbenchOverview>["latestProject"]; loading: boolean; error?: string; onRetry: () => void }) {
     const t = useTranslations("workspace.create.overview");
     if (loading)
         return (
@@ -122,9 +122,7 @@ function LatestProjectCard({project, loading, error, onRetry }: { project?: Retu
                 <div className="min-w-0">
                     <p className="text-[11px] text-[#8b949f] dark:text-[#7f8996]">{t("recentlyEdited", { time: formatRecentTime(project.updatedAt, t("justNow")) })}</p>
                     <h3 className="mt-1.5 truncate text-sm font-semibold text-[#20242a] sm:text-base dark:text-[#f3f5f7]">{project.title || t("untitledProject")}</h3>
-                    <p className="mt-1.5 text-[11px] text-[#697381] sm:text-xs dark:text-[#9aa3af]">
-                        {t("nodeConnectionCount", { nodes: project.nodeCount, connections: project.connectionCount })}
-                    </p>
+                    <p className="mt-1.5 text-[11px] text-[#697381] sm:text-xs dark:text-[#9aa3af]">{t("nodeConnectionCount", { nodes: project.nodeCount, connections: project.connectionCount })}</p>
                 </div>
                 <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-[#20242a] px-2.5 py-1.5 text-xs font-semibold text-white transition group-hover:bg-[#343b44] dark:bg-[#f3f5f7] dark:text-[#20242a] dark:group-hover:bg-white">
                     {t("continueEditing")} <ArrowUpRight className="size-3.5" />
@@ -187,7 +185,7 @@ function RecentAssetCard({ asset, importing, onUse }: { asset: CreateOverviewAss
     );
 }
 
-function RunningTasksCard({tasks, loading, error, onRetry }: { tasks: CreateOverviewTask[]; loading: boolean; error?: string; onRetry: () => void }) {
+function RunningTasksCard({ tasks, loading, error, onRetry }: { tasks: CreateOverviewTask[]; loading: boolean; error?: string; onRetry: () => void }) {
     const t = useTranslations("workspace.create.overview");
     return (
         <div className={cn(panelClass, "flex h-32 min-h-0 flex-col p-3 sm:h-44 sm:p-4")}>

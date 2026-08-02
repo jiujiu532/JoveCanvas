@@ -71,7 +71,14 @@ export function CanvasNodeCropDialog({ dataUrl, open, onClose, onConfirm }: { da
                             <div className="pointer-events-none absolute inset-y-0 left-1/3 border-l border-white/50" />
                             <div className="pointer-events-none absolute inset-y-0 left-2/3 border-l border-white/50" />
                             {handles.map((handle) => (
-                                <button key={handle} type="button" className="absolute size-3 rounded-full border border-black bg-white" style={handleStyle(handle)} onPointerDown={(event) => startDrag("resize", event, handle)} aria-label={t("crop.resizeHandle")} />
+                                <button
+                                    key={handle}
+                                    type="button"
+                                    className="absolute size-3 rounded-full border border-black bg-white"
+                                    style={handleStyle(handle)}
+                                    onPointerDown={(event) => startDrag("resize", event, handle)}
+                                    aria-label={t("crop.resizeHandle")}
+                                />
                             ))}
                         </div>
                     </div>

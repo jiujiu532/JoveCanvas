@@ -315,7 +315,12 @@ export function AgentChatComposer({
                                     </span>
                                 ) : null}
                                 {item.status === "failed" && onRetryAttachment ? (
-                                    <button type="button" className="absolute inset-0 grid place-items-center bg-red-950/55 text-white transition hover:bg-red-950/65" onClick={() => onRetryAttachment(item.id)} aria-label={t("chat.retryUploadName", { name: item.name })}>
+                                    <button
+                                        type="button"
+                                        className="absolute inset-0 grid place-items-center bg-red-950/55 text-white transition hover:bg-red-950/65"
+                                        onClick={() => onRetryAttachment(item.id)}
+                                        aria-label={t("chat.retryUploadName", { name: item.name })}
+                                    >
                                         <RotateCcw className="size-5" />
                                     </button>
                                 ) : null}
@@ -492,9 +497,17 @@ function toolCardState(title: string, text: string, detail: unknown | undefined,
     if (objectField(detail, "status") === "noop" || /未生效|无需|没有找到|没有.*可|已存在/.test(raw))
         return { label: t("chat.statusNoop"), color: "#d97706", softBorder: "rgba(217,119,6,.22)", softBg: "rgba(217,119,6,.04)", icon: <CircleAlert className="size-4" />, isError: false };
     if (/拒绝|取消/.test(raw) || lower.includes("rejected")) return { label: t("chat.statusRejected"), color: "#dc2626", softBorder: "rgba(220,38,38,.20)", softBg: "rgba(220,38,38,.04)", icon: <XCircle className="size-4" />, isError: true };
-    if (/失败|错误/.test(raw) || lower.includes("failed") || lower.includes("error")) return { label: t("chat.statusFailed"), color: "#dc2626", softBorder: "rgba(220,38,38,.20)", softBg: "rgba(220,38,38,.04)", icon: <XCircle className="size-4" />, isError: true };
+    if (/失败|错误/.test(raw) || lower.includes("failed") || lower.includes("error"))
+        return { label: t("chat.statusFailed"), color: "#dc2626", softBorder: "rgba(220,38,38,.20)", softBg: "rgba(220,38,38,.04)", icon: <XCircle className="size-4" />, isError: true };
     if (/完成|成功/.test(raw) || lower.includes("completed") || lower.includes("succeeded"))
-        return { label: tool === "canvas_apply_ops" || /画布操作/.test(title) ? t("chat.statusApproved") : t("chat.statusCompleted"), color: "#16a34a", softBorder: "rgba(22,163,74,.20)", softBg: "rgba(22,163,74,.04)", icon: <CheckCircle2 className="size-4" />, isError: false };
+        return {
+            label: tool === "canvas_apply_ops" || /画布操作/.test(title) ? t("chat.statusApproved") : t("chat.statusCompleted"),
+            color: "#16a34a",
+            softBorder: "rgba(22,163,74,.20)",
+            softBg: "rgba(22,163,74,.04)",
+            icon: <CheckCircle2 className="size-4" />,
+            isError: false,
+        };
     return { label: t("chat.toolCall"), color: "#2563eb", softBorder: "rgba(37,99,235,.20)", softBg: "rgba(37,99,235,.04)", icon: <Wrench className="size-4" />, isError: false };
 }
 

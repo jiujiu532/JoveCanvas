@@ -131,14 +131,7 @@ export function AdminAccountDeletionSection({ active }: { active: boolean }) {
                 }
             />
             <div className="grid gap-3 border-b border-zinc-200 bg-zinc-50/50 p-3 sm:grid-cols-[minmax(0,1fr)_180px_auto] sm:p-5 dark:border-zinc-800 dark:bg-zinc-900/20">
-                <Input
-                    allowClear
-                    prefix={<Search className="size-4 text-zinc-400" />}
-                    placeholder={t("accountDeletion.searchPlaceholder")}
-                    value={keyword}
-                    onChange={(event) => setKeyword(event.target.value)}
-                    onPressEnter={() => void load(1)}
-                />
+                <Input allowClear prefix={<Search className="size-4 text-zinc-400" />} placeholder={t("accountDeletion.searchPlaceholder")} value={keyword} onChange={(event) => setKeyword(event.target.value)} onPressEnter={() => void load(1)} />
                 <Select
                     allowClear
                     placeholder={t("accountDeletion.statusAll")}
@@ -157,13 +150,7 @@ export function AdminAccountDeletionSection({ active }: { active: boolean }) {
             </div>
 
             {screens.md ? (
-                <Table
-                    rowKey="id"
-                    columns={columns}
-                    dataSource={items}
-                    loading={loading}
-                    pagination={{ current: page, pageSize: PAGE_SIZE, total, showSizeChanger: false, hideOnSinglePage: true, onChange: (nextPage) => void load(nextPage) }}
-                />
+                <Table rowKey="id" columns={columns} dataSource={items} loading={loading} pagination={{ current: page, pageSize: PAGE_SIZE, total, showSizeChanger: false, hideOnSinglePage: true, onChange: (nextPage) => void load(nextPage) }} />
             ) : (
                 <div className="space-y-2 p-3">
                     {items.map((item) => (
@@ -208,19 +195,10 @@ export function AdminAccountDeletionSection({ active }: { active: boolean }) {
                 }}
             >
                 <div className="space-y-3 pt-2">
-                    <div className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                        {reviewing?.status === "accepted" ? t("accountDeletion.modal.acceptHint") : t("accountDeletion.modal.rejectHint")}
-                    </div>
+                    <div className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">{reviewing?.status === "accepted" ? t("accountDeletion.modal.acceptHint") : t("accountDeletion.modal.rejectHint")}</div>
                     <label className="block space-y-2">
                         <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{t("accountDeletion.modal.reviewNoteLabel")}</span>
-                        <Input.TextArea
-                            value={reviewNote}
-                            maxLength={1000}
-                            rows={4}
-                            showCount
-                            placeholder={t("accountDeletion.modal.reviewNotePlaceholder")}
-                            onChange={(event) => setReviewNote(event.target.value)}
-                        />
+                        <Input.TextArea value={reviewNote} maxLength={1000} rows={4} showCount placeholder={t("accountDeletion.modal.reviewNotePlaceholder")} onChange={(event) => setReviewNote(event.target.value)} />
                     </label>
                 </div>
             </Modal>

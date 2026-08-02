@@ -435,11 +435,7 @@ export default function VideoPage() {
                                     <span>{t("startGeneration")}</span>
                                 </span>
                             </Button>
-                            {activeVideoCount ? (
-                                <div className="mt-2 text-center text-xs text-stone-500 dark:text-stone-400">
-                                    {t("currentUserRunning", { active: activeVideoCount, limit: videoConcurrencyLimit })}
-                                </div>
-                            ) : null}
+                            {activeVideoCount ? <div className="mt-2 text-center text-xs text-stone-500 dark:text-stone-400">{t("currentUserRunning", { active: activeVideoCount, limit: videoConcurrencyLimit })}</div> : null}
                         </div>
                     </div>
 
@@ -454,11 +450,7 @@ export default function VideoPage() {
                                     {t("deleteCount", { count: selectedVisibleResultIds.length ? ` ${selectedVisibleResultIds.length}` : "" })}
                                 </Button>
                                 {previewPendingCount ? <WorkbenchGenerationActivity kind="video" count={previewPendingCount} /> : null}
-                                {activeVideoCount ? (
-                                    <Tag className="m-0 px-2 py-1">
-                                        {t("runningCount", { active: activeVideoCount, limit: videoConcurrencyLimit })}
-                                    </Tag>
-                                ) : null}
+                                {activeVideoCount ? <Tag className="m-0 px-2 py-1">{t("runningCount", { active: activeVideoCount, limit: videoConcurrencyLimit })}</Tag> : null}
                             </div>
                         </div>
                         {results.length ? (

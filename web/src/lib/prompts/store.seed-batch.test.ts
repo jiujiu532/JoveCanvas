@@ -49,10 +49,7 @@ describe("replaceLibrarySeedBatch", () => {
         mocks.isPostgres.mockReturnValue(false);
         mocks.readJson.mockResolvedValue({
             version: 1,
-            prompts: [
-                samplePrompt("original-1", "vozeb-pro/original-author-prompts:v4"),
-                samplePrompt("youmind-skill-old", "vozeb-pro/youmind-skill:v0"),
-            ],
+            prompts: [samplePrompt("original-1", "vozeb-pro/original-author-prompts:v4"), samplePrompt("youmind-skill-old", "vozeb-pro/youmind-skill:v0")],
             seedSources: ["vozeb-pro/original-author-prompts:v4", "vozeb-pro/youmind-skill:v0"],
         });
         mocks.writeJson.mockResolvedValue(undefined);

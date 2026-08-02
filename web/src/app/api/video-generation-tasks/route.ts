@@ -164,10 +164,13 @@ export async function POST(request: Request) {
                 const message = await localizeSafeGenerationError(error, createFailedFallback);
                 if (!(error instanceof SafeCandidateFailure)) {
                     await scheduleGenerationTask("video", localTask.id, { executionPhase: "needs_review", nextPollAt: undefined, lastUpstreamStatus: "submission_outcome_unknown" });
-                    return NextResponse.json({
-                        task: { ...publicTask({ ...localTask, attempts }), needsReview: true },
-                        warning: await serverMessage("tasks.videoCreatePendingConfirm", { message }),
-                    }, { status: 202 });
+                    return NextResponse.json(
+                        {
+                            task: { ...publicTask({ ...localTask, attempts }), needsReview: true },
+                            warning: await serverMessage("tasks.videoCreatePendingConfirm", { message }),
+                        },
+                        { status: 202 },
+                    );
                 }
                 await transitionVideoTask(localTask, { status: "error", error: message, retryable: true });
                 await scheduleGenerationTask("video", localTask.id, { executionPhase: "completed", nextPollAt: undefined, lastUpstreamStatus: "create_failed" });
@@ -175,19 +178,25 @@ export async function POST(request: Request) {
             }
         }
         if (!lastError && capabilityError) {
-            return NextResponse.json({
-                error: capabilityError instanceof Error ? await localizeErrorMessage(capabilityError) : await serverMessage("tasks.channelRefNotSupported"),
-            }, { status: 400 });
+            return NextResponse.json(
+                {
+                    error: capabilityError instanceof Error ? await localizeErrorMessage(capabilityError) : await serverMessage("tasks.channelRefNotSupported"),
+                },
+                { status: 400 },
+            );
         }
         if (localTask && lastError) {
             const message = await localizeSafeGenerationError(lastError, await serverMessage("tasks.videoCreateFailed"));
             await transitionVideoTask(localTask, { status: "error", error: message, retryable: lastError instanceof SafeCandidateFailure });
             await scheduleGenerationTask("video", localTask.id, { executionPhase: "completed", nextPollAt: undefined, lastUpstreamStatus: "create_failed" });
         }
-        return NextResponse.json({
-            error: await localizeSafeGenerationError(lastError, await serverMessage("tasks.videoCreateFailed")),
-            canRetry: lastError instanceof SafeCandidateFailure,
-        }, { status: 502 });
+        return NextResponse.json(
+            {
+                error: await localizeSafeGenerationError(lastError, await serverMessage("tasks.videoCreateFailed")),
+                canRetry: lastError instanceof SafeCandidateFailure,
+            },
+            { status: 502 },
+        );
     });
     return response || NextResponse.json({ error: await serverMessage("tasks.videoConcurrencyLimit") }, { status: 429 });
 }

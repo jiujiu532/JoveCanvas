@@ -276,7 +276,9 @@ export function WorkPublicationEditor({
                                     })}
                                 </div>
                             ) : (
-                                <div className="mt-3 grid min-h-24 place-items-center rounded-md border border-dashed border-stone-300 px-3 text-center text-sm text-stone-500 dark:border-stone-700 dark:text-stone-400">{t("editorSelectSourceForMedia")}</div>
+                                <div className="mt-3 grid min-h-24 place-items-center rounded-md border border-dashed border-stone-300 px-3 text-center text-sm text-stone-500 dark:border-stone-700 dark:text-stone-400">
+                                    {t("editorSelectSourceForMedia")}
+                                </div>
                             )}
                         </section>
 

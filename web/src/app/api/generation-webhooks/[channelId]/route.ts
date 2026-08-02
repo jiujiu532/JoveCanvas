@@ -36,11 +36,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ cha
             resultUrl: readProviderString(payload, channel.advancedConfig?.resultField, RESULT_KEYS),
             rawBody,
         });
-        const msg = result.duplicate
-            ? await serverMessage("tasks.webhookDuplicate")
-            : result.matched
-              ? await serverMessage("tasks.webhookMatched")
-              : await serverMessage("tasks.webhookRegistered");
+        const msg = result.duplicate ? await serverMessage("tasks.webhookDuplicate") : result.matched ? await serverMessage("tasks.webhookMatched") : await serverMessage("tasks.webhookRegistered");
         return NextResponse.json({ code: 0, data: result, msg });
     } catch (error) {
         if (error instanceof RequestBodyTooLargeError || error instanceof GenerationWebhookError) return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage(error) }, { status: error.status });

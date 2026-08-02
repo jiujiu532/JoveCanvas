@@ -233,11 +233,7 @@ export function GenerationOperationsClient() {
 
                 {data?.agentPerformance.sampleSize ? (
                     <Panel>
-                        <PanelHeader
-                            title={t("agentPerfTitle")}
-                            description={t("agentPerfDescription")}
-                            actions={<Tag className={generationOperationThemeClasses.neutralTag}>{t("agentPerfSamples", { count: data.agentPerformance.sampleSize })}</Tag>}
-                        />
+                        <PanelHeader title={t("agentPerfTitle")} description={t("agentPerfDescription")} actions={<Tag className={generationOperationThemeClasses.neutralTag}>{t("agentPerfSamples", { count: data.agentPerformance.sampleSize })}</Tag>} />
                         <section className="grid grid-cols-2 gap-px bg-zinc-200 dark:bg-zinc-800 sm:grid-cols-4 xl:grid-cols-7">
                             <PerformanceValue label={t("agentPerf.planningP50")} value={data.agentPerformance.planningP50Ms} detail={t("agentPerf.planningP50Detail")} t={t} />
                             <PerformanceValue label={t("agentPerf.planningP95")} value={data.agentPerformance.planningP95Ms} detail={t("agentPerf.planningP95Detail")} t={t} />
@@ -370,11 +366,7 @@ export function GenerationOperationsClient() {
                                         ) : (
                                             <span>{t("noPlanningSample")}</span>
                                         )}
-                                        {state && !state.loading ? (
-                                            <Tag className={generationOperationStatusTagClass(state.ok ? "success" : "error")}>
-                                                {state.ok ? t("probeOk", { status: state.status || "" }) : state.error || t("probeError")}
-                                            </Tag>
-                                        ) : null}
+                                        {state && !state.loading ? <Tag className={generationOperationStatusTagClass(state.ok ? "success" : "error")}>{state.ok ? t("probeOk", { status: state.status || "" }) : state.error || t("probeError")}</Tag> : null}
                                     </div>
                                 </article>
                             );
@@ -591,9 +583,7 @@ function surfaceLabel(value: string | undefined, t: GenerationOpsTranslator) {
 
 function formatDuration(ms: number, t: GenerationOpsTranslator) {
     if (!ms) return t("duration.zero");
-    return ms < 60_000
-        ? t("duration.seconds", { count: Math.max(1, Math.round(ms / 1000)) })
-        : t("duration.minutesSeconds", { minutes: Math.floor(ms / 60_000), seconds: Math.round((ms % 60_000) / 1000) });
+    return ms < 60_000 ? t("duration.seconds", { count: Math.max(1, Math.round(ms / 1000)) }) : t("duration.minutesSeconds", { minutes: Math.floor(ms / 60_000), seconds: Math.round((ms % 60_000) / 1000) });
 }
 
 function channelKey(channel: AdminGenerationChannel) {

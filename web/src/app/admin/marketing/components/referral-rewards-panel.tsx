@@ -258,10 +258,7 @@ export function ReferralRewardsPanel() {
                             <Select
                                 className="w-full"
                                 value={rewardStatus}
-                                options={[
-                                    { value: "", label: t("allStatuses") },
-                                    ...(["pending", "settled", "revoked", "rejected", "reversal_pending"] as const).map((value) => ({ value, label: rewardStatusLabel(value, t) })),
-                                ]}
+                                options={[{ value: "", label: t("allStatuses") }, ...(["pending", "settled", "revoked", "rejected", "reversal_pending"] as const).map((value) => ({ value, label: rewardStatusLabel(value, t) }))]}
                                 onChange={(value) => {
                                     setRewardPage(1);
                                     setRewardStatus(value);
@@ -373,17 +370,7 @@ function RuleFact({ label, value }: { label: string; value: string }) {
     );
 }
 
-function RelationshipRow({
-    item,
-    t,
-    numberLocale,
-    onRiskChange,
-}: {
-    item: ReferralRelationship;
-    t: ReferralT;
-    numberLocale: string;
-    onRiskChange: (item: ReferralRelationship, next: ReferralRiskStatus) => void;
-}) {
+function RelationshipRow({ item, t, numberLocale, onRiskChange }: { item: ReferralRelationship; t: ReferralT; numberLocale: string; onRiskChange: (item: ReferralRelationship, next: ReferralRiskStatus) => void }) {
     const inviter = item.inviterDisplayName || item.inviterUsername || t("userUnavailable");
     const invitee = item.inviteeDisplayName || item.inviteeUsername || t("userUnavailable");
     return (
@@ -399,9 +386,7 @@ function RelationshipRow({
                         {riskLabel(item.riskStatus, t)}
                     </Tag>
                 </div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                    {t("inviteCodeMeta", { code: item.code || "-", time: formatTime(item.registeredAt, numberLocale), source: item.attributionSource || "-" })}
-                </div>
+                <div className="mt-1 text-xs text-muted-foreground">{t("inviteCodeMeta", { code: item.code || "-", time: formatTime(item.registeredAt, numberLocale), source: item.attributionSource || "-" })}</div>
             </div>
             <div className="flex shrink-0 gap-2">
                 {item.riskStatus === "clear" ? (

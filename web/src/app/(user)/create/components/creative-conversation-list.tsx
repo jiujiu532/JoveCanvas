@@ -153,7 +153,12 @@ export function CreativeConversationList({ items, activeId, loading, onNew, onOp
                                 ) : (
                                     <>
                                         {managing ? (
-                                            <Checkbox className="ml-2 shrink-0" checked={checked} aria-label={t("selectItem", { title: item.title })} onChange={() => setSelectedIds((current) => (checked ? current.filter((id) => id !== item.id) : [...current, item.id]))} />
+                                            <Checkbox
+                                                className="ml-2 shrink-0"
+                                                checked={checked}
+                                                aria-label={t("selectItem", { title: item.title })}
+                                                onChange={() => setSelectedIds((current) => (checked ? current.filter((id) => id !== item.id) : [...current, item.id]))}
+                                            />
                                         ) : null}
                                         <button
                                             type="button"

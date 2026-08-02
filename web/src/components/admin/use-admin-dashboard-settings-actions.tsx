@@ -444,7 +444,11 @@ export function useAdminDashboardSettingsActions({ state, data }: { state: Admin
                     }),
                 }));
             }
-            const failedChannels = results.flatMap((result, index) => (result.status === "rejected" ? [t("settingsActions.channelFetchFailed", { name: runnable[index].name || t("channelEditor.unnamedChannel"), error: result.reason instanceof Error ? result.reason.message : t("dashboardElements.pullModelsFailed") })] : []));
+            const failedChannels = results.flatMap((result, index) =>
+                result.status === "rejected"
+                    ? [t("settingsActions.channelFetchFailed", { name: runnable[index].name || t("channelEditor.unnamedChannel"), error: result.reason instanceof Error ? result.reason.message : t("dashboardElements.pullModelsFailed") })]
+                    : [],
+            );
             if (!failedChannels.length) message.success(t("settingsActions.modelsListPulled"));
             else if (modelMap.size) message.warning(t("settingsActions.modelsPartialUpdate", { failures: failedChannels.join("；") }));
             else message.error(failedChannels.join("；"));

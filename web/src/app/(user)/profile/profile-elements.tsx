@@ -44,7 +44,6 @@ export function useProfileSections() {
     }));
 }
 
-
 export const profilePrimaryButtonClass = "profile-primary-button";
 export const profileSecondaryButtonClass = "profile-secondary-button";
 export const profileDangerButtonClass = "profile-danger-button";
@@ -129,7 +128,8 @@ export function BillingCenterSection({ products, productsLoading, onRefresh, onC
     );
 }
 
-export function ProfileForm({user,
+export function ProfileForm({
+    user,
     displayName,
     bio,
     savingProfile,
@@ -291,7 +291,7 @@ export function LoadingBlock() {
     );
 }
 
-export function RecordList({records }: { records: PointRecord[] }) {
+export function RecordList({ records }: { records: PointRecord[] }) {
     const t = useTranslations("workspace.profile");
     return (
         <div className="divide-y divide-stone-200 dark:divide-stone-800">

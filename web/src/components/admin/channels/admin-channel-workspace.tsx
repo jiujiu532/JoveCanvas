@@ -95,7 +95,12 @@ export function AdminChannelWorkspace({ settings, fetchingModelId, testingChanne
         },
         { title: t("channelWorkspace.columns.protocol"), key: "protocol", width: 190, render: (_, channel) => <span className="text-sm">{channelProtocolLabel(channel, t)}</span> },
         { title: t("channelWorkspace.columns.models"), key: "models", width: 90, align: "center", render: (_, channel) => channel.models.length },
-        { title: t("channelWorkspace.columns.capabilities"), key: "capabilities", width: 170, render: (_, channel) => <span className="text-xs text-stone-600 dark:text-stone-300">{channelCapabilityLabels(channel, capabilityLabels).join(" / ") || t("channelWorkspace.pendingDetect")}</span> },
+        {
+            title: t("channelWorkspace.columns.capabilities"),
+            key: "capabilities",
+            width: 170,
+            render: (_, channel) => <span className="text-xs text-stone-600 dark:text-stone-300">{channelCapabilityLabels(channel, capabilityLabels).join(" / ") || t("channelWorkspace.pendingDetect")}</span>,
+        },
         { title: t("channelWorkspace.columns.bindings"), key: "bindings", width: 80, align: "center", render: (_, channel) => channelBindingCount(channel.id, settings) },
         {
             title: t("channelWorkspace.columns.enabled"),
@@ -113,8 +118,22 @@ export function AdminChannelWorkspace({ settings, fetchingModelId, testingChanne
                     <Button size="small" onClick={() => setDetailId(channel.id)}>
                         {t("channelWorkspace.view")}
                     </Button>
-                    <Button size="small" icon={<RefreshCw className="size-3.5" />} loading={fetchingModelId === channel.id} aria-label={t("channelWorkspace.syncModelsAria", { name: channel.name })} title={t("channelWorkspace.syncModelsTitle")} onClick={() => void onFetchModels(channel)} />
-                    <Button size="small" icon={<FlaskConical className="size-3.5" />} loading={testingChannelKey === `${channel.id}:all`} aria-label={t("channelWorkspace.testChannelAria", { name: channel.name })} title={t("channelWorkspace.testChannelTitle")} onClick={() => void onTestAll(channel)} />
+                    <Button
+                        size="small"
+                        icon={<RefreshCw className="size-3.5" />}
+                        loading={fetchingModelId === channel.id}
+                        aria-label={t("channelWorkspace.syncModelsAria", { name: channel.name })}
+                        title={t("channelWorkspace.syncModelsTitle")}
+                        onClick={() => void onFetchModels(channel)}
+                    />
+                    <Button
+                        size="small"
+                        icon={<FlaskConical className="size-3.5" />}
+                        loading={testingChannelKey === `${channel.id}:all`}
+                        aria-label={t("channelWorkspace.testChannelAria", { name: channel.name })}
+                        title={t("channelWorkspace.testChannelTitle")}
+                        onClick={() => void onTestAll(channel)}
+                    />
                     <Popconfirm title={t("channelWorkspace.deleteTitle")} description={t("channelWorkspace.deleteDesc")} okText={t("channelWorkspace.delete")} cancelText={t("channelWorkspace.cancel")} onConfirm={() => onDeleteChannel(channel.id)}>
                         <Button size="small" danger icon={<Trash2 className="size-3.5" />} aria-label={t("channelWorkspace.deleteAria", { name: channel.name })} title={t("channelWorkspace.deleteAria", { name: channel.name })} />
                     </Popconfirm>
@@ -297,7 +316,12 @@ function ChannelList({
                         />
                     </div>
                     <div className="min-w-0 md:w-44">
-                        <Select className="w-full" value={protocolFilter} options={[{ label: t("channelWorkspace.protocolAll"), value: "all" }, ...channelProtocolDefinitions.map((definition) => ({ label: t(`channelEditor.protocols.${definition.id}.label`), value: definition.id }))]} onChange={onProtocol} />
+                        <Select
+                            className="w-full"
+                            value={protocolFilter}
+                            options={[{ label: t("channelWorkspace.protocolAll"), value: "all" }, ...channelProtocolDefinitions.map((definition) => ({ label: t(`channelEditor.protocols.${definition.id}.label`), value: definition.id }))]}
+                            onChange={onProtocol}
+                        />
                     </div>
                 </div>
             </div>
@@ -327,12 +351,14 @@ function ChannelList({
                         </div>
                         <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-500 dark:text-stone-400">
                             <span>{t("channelWorkspace.modelCount", { count: channel.models.length })}</span>
-                            <span>{channelCapabilityLabels(channel, {
-                                text: t("channelEditor.kinds.text"),
-                                image: t("channelEditor.kinds.image"),
-                                video: t("channelEditor.kinds.video"),
-                                audio: t("channelEditor.kinds.audio"),
-                            }).join(" / ") || t("channelWorkspace.capabilityPending")}</span>
+                            <span>
+                                {channelCapabilityLabels(channel, {
+                                    text: t("channelEditor.kinds.text"),
+                                    image: t("channelEditor.kinds.image"),
+                                    video: t("channelEditor.kinds.video"),
+                                    audio: t("channelEditor.kinds.audio"),
+                                }).join(" / ") || t("channelWorkspace.capabilityPending")}
+                            </span>
                             <span>{t("channelWorkspace.bindingCount", { count: channelBindingCount(channel.id, settings) })}</span>
                         </div>
                         <div className="mt-3 flex items-center gap-2 border-t border-stone-100 pt-3 dark:border-stone-900">
@@ -381,12 +407,14 @@ function ProtocolCenter({ settings, onCreate, onOpenChannel }: { settings: Chann
                                 </div>
                                 <div className="mt-3 flex flex-wrap items-center gap-1.5">
                                     {definition.capabilities.map((capability) => (
-                                        <Tag key={capability}>{capabilityLabel(capability, {
-                                            text: t("channelEditor.kinds.text"),
-                                            image: t("channelEditor.kinds.image"),
-                                            video: t("channelEditor.kinds.video"),
-                                            audio: t("channelEditor.kinds.audio"),
-                                        })}</Tag>
+                                        <Tag key={capability}>
+                                            {capabilityLabel(capability, {
+                                                text: t("channelEditor.kinds.text"),
+                                                image: t("channelEditor.kinds.image"),
+                                                video: t("channelEditor.kinds.video"),
+                                                audio: t("channelEditor.kinds.audio"),
+                                            })}
+                                        </Tag>
                                     ))}
                                     <span className="ml-auto text-xs text-stone-500 dark:text-stone-400">{t("channelWorkspace.usedBy", { count: used })}</span>
                                 </div>
@@ -440,7 +468,8 @@ function ValidationRecords({ settings, healthResults, onOpen }: { settings: Chan
                     <button key={key} type="button" className="flex w-full min-w-0 flex-col gap-2 py-3 text-left hover:bg-stone-50 sm:flex-row sm:items-center sm:justify-between dark:hover:bg-stone-900/60" onClick={() => onOpen(channel.id)}>
                         <div className="min-w-0 px-2">
                             <div className="truncate text-sm font-medium text-stone-950 dark:text-stone-100">
-                                {channel.name} · {capabilityLabel(result.kind, {
+                                {channel.name} ·{" "}
+                                {capabilityLabel(result.kind, {
                                     text: t("channelEditor.kinds.text"),
                                     image: t("channelEditor.kinds.image"),
                                     video: t("channelEditor.kinds.video"),

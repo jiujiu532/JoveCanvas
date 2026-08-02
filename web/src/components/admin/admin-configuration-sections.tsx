@@ -158,9 +158,7 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                                 </div>
                             </LabeledControl>
                         </div>
-                        <div className="rounded-md border border-dashed border-stone-300 bg-white p-3 text-xs leading-5 text-stone-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-400">
-                            {t("siteSettings.mediaHint")}
-                        </div>
+                        <div className="rounded-md border border-dashed border-stone-300 bg-white p-3 text-xs leading-5 text-stone-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-400">{t("siteSettings.mediaHint")}</div>
 
                         <div className="border-t border-stone-200 pt-5 dark:border-stone-800">
                             <SectionTitle icon={<Search className="size-4" />} title={t("siteSettings.seoInfo")} />
@@ -222,7 +220,14 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                                             <div className="min-w-0 space-y-3">
                                                 <div className="flex items-center justify-between gap-3">
                                                     <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{t("siteSettings.showcaseItem", { index: index + 1 })}</div>
-                                                    <Button size="small" danger icon={<Trash2 className="size-3.5" />} aria-label={t("siteSettings.deleteShowcaseAria")} title={t("siteSettings.deleteShowcaseAria")} onClick={() => deleteHomeShowcaseItem(item.id)} />
+                                                    <Button
+                                                        size="small"
+                                                        danger
+                                                        icon={<Trash2 className="size-3.5" />}
+                                                        aria-label={t("siteSettings.deleteShowcaseAria")}
+                                                        title={t("siteSettings.deleteShowcaseAria")}
+                                                        onClick={() => deleteHomeShowcaseItem(item.id)}
+                                                    />
                                                 </div>
                                                 <div className="grid gap-3 md:grid-cols-2">
                                                     <Input value={item.title} maxLength={80} placeholder={t("siteSettings.showcaseTitlePlaceholder")} onChange={(event) => updateHomeShowcaseItem(item.id, { title: event.target.value })} />
@@ -242,7 +247,13 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                                                         })
                                                     }
                                                 />
-                                                <Input.TextArea value={item.prompt} rows={3} maxLength={3000} placeholder={t("siteSettings.showcasePromptPlaceholder")} onChange={(event) => updateHomeShowcaseItem(item.id, { prompt: event.target.value })} />
+                                                <Input.TextArea
+                                                    value={item.prompt}
+                                                    rows={3}
+                                                    maxLength={3000}
+                                                    placeholder={t("siteSettings.showcasePromptPlaceholder")}
+                                                    onChange={(event) => updateHomeShowcaseItem(item.id, { prompt: event.target.value })}
+                                                />
                                             </div>
                                         </div>
                                     ))}
@@ -252,9 +263,7 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                                 </div>
                             </div>
                         ) : (
-                            <div className="mt-5 rounded-lg border border-dashed border-stone-200 bg-white px-4 py-5 text-sm leading-6 text-stone-600 dark:border-stone-800 dark:bg-stone-950/60 dark:text-stone-300">
-                                {t("siteSettings.randomModeHint")}
-                            </div>
+                            <div className="mt-5 rounded-lg border border-dashed border-stone-200 bg-white px-4 py-5 text-sm leading-6 text-stone-600 dark:border-stone-800 dark:bg-stone-950/60 dark:text-stone-300">{t("siteSettings.randomModeHint")}</div>
                         )}
                     </div>
 
@@ -312,7 +321,14 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                                                 <div className="text-sm font-semibold text-stone-950 dark:text-stone-100">{link.label || t("siteSettings.friendLinkFallback")}</div>
                                                 <div className="flex items-center gap-2">
                                                     <Switch checked={link.enabled} checkedChildren={t("siteSettings.show")} unCheckedChildren={t("siteSettings.hide")} onChange={(enabled) => updateFriendLink(link.id, { enabled })} />
-                                                    <Button size="small" danger icon={<Trash2 className="size-3.5" />} aria-label={t("siteSettings.deleteFriendLinkAria")} title={t("siteSettings.deleteFriendLinkAria")} onClick={() => deleteFriendLink(link.id)} />
+                                                    <Button
+                                                        size="small"
+                                                        danger
+                                                        icon={<Trash2 className="size-3.5" />}
+                                                        aria-label={t("siteSettings.deleteFriendLinkAria")}
+                                                        title={t("siteSettings.deleteFriendLinkAria")}
+                                                        onClick={() => deleteFriendLink(link.id)}
+                                                    />
                                                 </div>
                                             </div>
                                             <div className="grid gap-3 md:grid-cols-[160px_minmax(0,1fr)]">
@@ -321,7 +337,9 @@ export function AdminSiteSection({ controller }: { controller: AdminDashboardCon
                                             </div>
                                         </div>
                                     ))}
-                                    {!settings.site.friendLinks?.length ? <div className="rounded-md border border-dashed border-stone-200 px-3 py-6 text-center text-sm text-stone-500 dark:border-stone-800">{t("siteSettings.friendLinksEmpty")}。</div> : null}
+                                    {!settings.site.friendLinks?.length ? (
+                                        <div className="rounded-md border border-dashed border-stone-200 px-3 py-6 text-center text-sm text-stone-500 dark:border-stone-800">{t("siteSettings.friendLinksEmpty")}。</div>
+                                    ) : null}
                                 </div>
                             </div>
                         </div>
@@ -394,7 +412,13 @@ export function AdminSettingsSection({ controller }: { controller: AdminDashboar
             />
             <div className="space-y-3 p-3 sm:space-y-5 sm:p-5">
                 <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                    <SettingsStatusTile icon={<UserCog className="size-4" />} label={t("systemSettings.accountEntry")} value={settings.registrationEnabled ? t("systemSettings.registrationOpen") : t("systemSettings.registrationClosed")} detail={settings.emailRegistrationEnabled ? t("systemSettings.emailRegistrationEnabled") : t("systemSettings.emailRegistrationDisabled")} tone="cyan" />
+                    <SettingsStatusTile
+                        icon={<UserCog className="size-4" />}
+                        label={t("systemSettings.accountEntry")}
+                        value={settings.registrationEnabled ? t("systemSettings.registrationOpen") : t("systemSettings.registrationClosed")}
+                        detail={settings.emailRegistrationEnabled ? t("systemSettings.emailRegistrationEnabled") : t("systemSettings.emailRegistrationDisabled")}
+                        tone="cyan"
+                    />
                     <SettingsStatusTile
                         icon={<Sparkles className="size-4" />}
                         label={t("systemSettings.generationControl")}
@@ -460,7 +484,13 @@ export function AdminSettingsSection({ controller }: { controller: AdminDashboar
                                             <LabeledControl label={t("systemSettings.port")}>
                                                 <InputNumber className="w-full" min={1} max={65535} precision={0} value={settings.mail.port} onChange={(value) => updateMailSetting("port", Number(value) || 465)} />
                                             </LabeledControl>
-                                            <SettingInlineToggle title="SSL" checked={settings.mail.secure} checkedChildren={t("systemSettings.on")} unCheckedChildren={t("systemSettings.close")} onChange={(secure) => updateMailSetting("secure", secure)} />
+                                            <SettingInlineToggle
+                                                title="SSL"
+                                                checked={settings.mail.secure}
+                                                checkedChildren={t("systemSettings.on")}
+                                                unCheckedChildren={t("systemSettings.close")}
+                                                onChange={(secure) => updateMailSetting("secure", secure)}
+                                            />
                                         </div>
                                         <div className="grid gap-3 lg:grid-cols-2">
                                             <LabeledControl label={t("systemSettings.mailAccount")}>
@@ -481,8 +511,7 @@ export function AdminSettingsSection({ controller }: { controller: AdminDashboar
                                         <LabeledControl label={t("systemSettings.testTo")}>
                                             <Input value={mailTestTo} placeholder={t("systemSettings.testToPlaceholder")} onChange={(event) => setMailTestTo(event.target.value)} />
                                         </LabeledControl>
-                                        <div className="rounded-lg border border-cyan-200/70 bg-cyan-50/80 px-3 py-2 text-xs leading-5 text-cyan-900 dark:border-cyan-900/50 dark:bg-cyan-950/30 dark:text-cyan-100">
-                                            {t("systemSettings.mailHint")}</div>
+                                        <div className="rounded-lg border border-cyan-200/70 bg-cyan-50/80 px-3 py-2 text-xs leading-5 text-cyan-900 dark:border-cyan-900/50 dark:bg-cyan-950/30 dark:text-cyan-100">{t("systemSettings.mailHint")}</div>
                                     </div>
                                 </div>
                             </div>

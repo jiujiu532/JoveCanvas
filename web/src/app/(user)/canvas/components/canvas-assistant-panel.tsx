@@ -253,25 +253,29 @@ export function CanvasAssistantPanel({
     const waitForBackendAgent = async (runId: string, sessionId: string, assistantId: string, retryTaskId?: string, replaceFirstFailure = false) => {
         await withCanvasAgentRunWatch(watchingRunIdsRef.current, runId, async () => {
             try {
-                await watchCanvasAgentRun(runId, {
-                    onPlan: (ops, reply) => {
-                        onApplyOps(ops);
-                        upsertMessage(sessionId, { id: assistantId, role: "assistant", text: reply });
+                await watchCanvasAgentRun(
+                    runId,
+                    {
+                        onPlan: (ops, reply) => {
+                            onApplyOps(ops);
+                            upsertMessage(sessionId, { id: assistantId, role: "assistant", text: reply });
+                        },
+                        onAssistant: (text, detail) => {
+                            if (detail?.runId && detail.taskId) {
+                                const replace = detail.taskId === retryTaskId || (replaceFirstFailure && !retryTaskId);
+                                const failure = { id: replace ? assistantId : nanoid(), role: "error" as const, title: detail.title || t("panel.taskFailed"), text, detail };
+                                if (replace) upsertMessage(sessionId, failure);
+                                else appendMessage(sessionId, failure);
+                                return;
+                            }
+                            upsertMessage(sessionId, { id: assistantId, role: detail?.runId ? "error" : "assistant", title: detail?.title, text, ...(detail?.nodeIds?.length || detail?.runId ? { detail } : {}) });
+                        },
+                        onStage: setRunStage,
+                        onPaused: setRunPaused,
+                        onOps: onApplyOps,
                     },
-                    onAssistant: (text, detail) => {
-                        if (detail?.runId && detail.taskId) {
-                            const replace = detail.taskId === retryTaskId || (replaceFirstFailure && !retryTaskId);
-                            const failure = { id: replace ? assistantId : nanoid(), role: "error" as const, title: detail.title || t("panel.taskFailed"), text, detail };
-                            if (replace) upsertMessage(sessionId, failure);
-                            else appendMessage(sessionId, failure);
-                            return;
-                        }
-                        upsertMessage(sessionId, { id: assistantId, role: detail?.runId ? "error" : "assistant", title: detail?.title, text, ...(detail?.nodeIds?.length || detail?.runId ? { detail } : {}) });
-                    },
-                    onStage: setRunStage,
-                    onPaused: setRunPaused,
-                    onOps: onApplyOps,
-                }, runLabels);
+                    runLabels,
+                );
             } finally {
                 await refreshUserPointsIfSystem("system");
                 setIsRunning(false);
@@ -302,7 +306,9 @@ export function CanvasAssistantPanel({
                 setActiveRunId(run.id);
                 setRunPaused(run.status === "paused");
                 setIsRunning(true);
-                void waitForBackendAgent(run.id, session.id, assistantId).catch((error) => appendMessage(session.id, { id: nanoid(), role: "error", title: t("panel.restoreFailed"), text: friendlyAgentError(error, t("panel.restoreFailedDetail"), formatLabels) }));
+                void waitForBackendAgent(run.id, session.id, assistantId).catch((error) =>
+                    appendMessage(session.id, { id: nanoid(), role: "error", title: t("panel.restoreFailed"), text: friendlyAgentError(error, t("panel.restoreFailedDetail"), formatLabels) }),
+                );
             });
         return () => {
             cancelled = true;

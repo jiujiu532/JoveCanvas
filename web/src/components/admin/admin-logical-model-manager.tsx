@@ -151,14 +151,22 @@ export function AdminLogicalModelManager({ channels, logicalModels, defaultModel
                                         <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-500 dark:text-stone-400">
                                             <span>ID：{model.id}</span>
                                             <span>{t("logicalModels.bindingCount", { count: model.bindings.length })}</span>
-                                            <span className={resolved ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}>{resolved ? `${resolved.channel.name} / ${resolved.binding.upstreamModel}` : t("logicalModels.noChannel")}</span>
+                                            <span className={resolved ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}>
+                                                {resolved ? `${resolved.channel.name} / ${resolved.binding.upstreamModel}` : t("logicalModels.noChannel")}
+                                            </span>
                                         </div>
                                     </div>
                                     <Space className="shrink-0">
                                         <Button size="small" icon={<Pencil className="size-3.5" />} onClick={() => openEdit(model)}>
                                             {t("logicalModels.edit")}
                                         </Button>
-                                        <Popconfirm title={t("logicalModels.deleteTitle")} description={isDefault ? t("logicalModels.deleteDefaultDesc") : t("logicalModels.deleteDesc")} okText={t("logicalModels.delete")} cancelText={t("logicalModels.cancel")} onConfirm={() => removeModel(model)}>
+                                        <Popconfirm
+                                            title={t("logicalModels.deleteTitle")}
+                                            description={isDefault ? t("logicalModels.deleteDefaultDesc") : t("logicalModels.deleteDesc")}
+                                            okText={t("logicalModels.delete")}
+                                            cancelText={t("logicalModels.cancel")}
+                                            onConfirm={() => removeModel(model)}
+                                        >
                                             <Button size="small" danger icon={<Trash2 className="size-3.5" />} aria-label={t("logicalModels.deleteAria", { name: model.name })} />
                                         </Popconfirm>
                                     </Space>
@@ -193,7 +201,13 @@ export function AdminLogicalModelManager({ channels, logicalModels, defaultModel
                                     />
                                     <div className={`mt-1 flex items-center gap-1 text-xs ${resolved ? "text-stone-500 dark:text-stone-400" : "text-amber-600 dark:text-amber-400"}`}>
                                         {!resolved ? <AlertTriangle className="size-3.5 shrink-0" /> : null}
-                                        <span>{resolved ? t("logicalModels.actualRoute", { route: `${resolved.channel.name} / ${resolved.binding.upstreamModel}` }) : defaultModels[key] ? t("logicalModels.defaultUnresolved") : t("logicalModels.defaultUnset")}</span>
+                                        <span>
+                                            {resolved
+                                                ? t("logicalModels.actualRoute", { route: `${resolved.channel.name} / ${resolved.binding.upstreamModel}` })
+                                                : defaultModels[key]
+                                                  ? t("logicalModels.defaultUnresolved")
+                                                  : t("logicalModels.defaultUnset")}
+                                        </span>
                                     </div>
                                 </LabeledControl>
                             );
@@ -307,7 +321,15 @@ function BindingEditor({
                 />
             </LabeledControl>
             <LabeledControl label={t("logicalModels.upstreamModel")}>
-                <Select className="w-full" showSearch optionFilterProp="label" value={binding.upstreamModel || undefined} placeholder={t("logicalModels.selectFetchedModel")} options={modelOptions} onChange={(upstreamModel) => onChange({ upstreamModel })} />
+                <Select
+                    className="w-full"
+                    showSearch
+                    optionFilterProp="label"
+                    value={binding.upstreamModel || undefined}
+                    placeholder={t("logicalModels.selectFetchedModel")}
+                    options={modelOptions}
+                    onChange={(upstreamModel) => onChange({ upstreamModel })}
+                />
             </LabeledControl>
             <LabeledControl label={t("logicalModels.priority")}>
                 <InputNumber className="w-full" min={1} max={10000} precision={0} value={binding.priority} onChange={(priority) => onChange({ priority: Number(priority) || 1 })} />
@@ -364,15 +386,7 @@ function BindingEditor({
                         <Input value={profile.aspectRatios?.join(", ") || ""} placeholder="1:1, 16:9, 9:16" onChange={(event) => updateList("aspectRatios", event.target.value)} />
                     </LabeledControl>
                     <LabeledControl label={t("logicalModels.timeoutMs")}>
-                        <InputNumber
-                            className="w-full"
-                            min={5}
-                            max={1800}
-                            precision={0}
-                            value={timeoutSeconds}
-                            placeholder={String(defaultTimeoutSeconds)}
-                            onChange={(value) => updateProfile({ timeoutMs: value ? Number(value) * 1000 : undefined })}
-                        />
+                        <InputNumber className="w-full" min={5} max={1800} precision={0} value={timeoutSeconds} placeholder={String(defaultTimeoutSeconds)} onChange={(value) => updateProfile({ timeoutMs: value ? Number(value) * 1000 : undefined })} />
                     </LabeledControl>
                     <LabeledControl label={t("logicalModels.concurrency")}>
                         <InputNumber className="w-full" min={1} max={1000} precision={0} value={profile.concurrencyLimit} onChange={(value) => updateProfile({ concurrencyLimit: Number(value) || 1 })} />
@@ -413,7 +427,8 @@ function validateDraft(draft: LogicalModel, models: LogicalModel[], channels: Sy
     for (const binding of draft.bindings) {
         const channel = channels.find((item) => item.id === binding.channelId);
         if (!channel) return t("logicalModels.validate.channelRequired");
-        if (!binding.upstreamModel || !channel.models.some((model) => normalizeModelName(model) === normalizeModelName(binding.upstreamModel))) return t("logicalModels.validate.upstreamMissing", { channel: channel.name, model: binding.upstreamModel || t("logicalModels.validate.emptyModel") });
+        if (!binding.upstreamModel || !channel.models.some((model) => normalizeModelName(model) === normalizeModelName(binding.upstreamModel)))
+            return t("logicalModels.validate.upstreamMissing", { channel: channel.name, model: binding.upstreamModel || t("logicalModels.validate.emptyModel") });
         const key = `${binding.channelId}:${normalizeModelName(binding.upstreamModel)}`;
         if (seen.has(key)) return t("logicalModels.validate.duplicateBinding");
         seen.add(key);

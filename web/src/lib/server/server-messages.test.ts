@@ -79,9 +79,7 @@ describe("server-messages", () => {
     it("localizes rate-limit feature templates", async () => {
         const feature = await serverMessage("features.login");
         await expect(serverMessage("common.rateLimitedFeatureRetry", { feature })).resolves.toBe("登录请求过于频繁，请稍后重试");
-        await expect(
-            serverMessage("common.rateLimitedWithSeconds", { feature: await serverMessage("features.apiTest"), seconds: 12 }),
-        ).resolves.toBe("接口测试过于频繁，请 12 秒后再试");
+        await expect(serverMessage("common.rateLimitedWithSeconds", { feature: await serverMessage("features.apiTest"), seconds: 12 })).resolves.toBe("接口测试过于频繁，请 12 秒后再试");
     });
 
     it("keeps zh/en leaf keys in parity", () => {
@@ -116,13 +114,9 @@ describe("server-messages", () => {
 
         await expect(enServerMessage("agent.requirementEmpty")).resolves.toBe("Creative requirement cannot be empty");
         await expect(enServerMessage("agent.executionFailed")).resolves.toBe("Agent execution failed");
-        await expect(enServerMessage("agent.concurrencyLimit", { limit: 2 })).resolves.toBe(
-            "At most 2 Agent tasks can run at the same time",
-        );
+        await expect(enServerMessage("agent.concurrencyLimit", { limit: 2 })).resolves.toBe("At most 2 Agent tasks can run at the same time");
         await expect(enLocalize({ message: "创作需求不能为空" })).resolves.toBe("Creative requirement cannot be empty");
-        await expect(enLocalize({ message: "fallback", messageKey: "agent.invalidCreationPlan" })).resolves.toBe(
-            "The model returned an invalid creation plan",
-        );
+        await expect(enLocalize({ message: "fallback", messageKey: "agent.invalidCreationPlan" })).resolves.toBe("The model returned an invalid creation plan");
     });
 
     it("resolves English works/commerce messages when getLocale returns en", async () => {
@@ -136,19 +130,13 @@ describe("server-messages", () => {
         await expect(enLocalize({ message: "作品不存在" })).resolves.toBe("Work not found");
         await expect(enLocalize({ message: "优惠券已领完" })).resolves.toBe("Coupon is sold out");
         await expect(enLocalize({ message: "邀请码无效或已停用" })).resolves.toBe("Referral code is invalid or disabled");
-        await expect(enLocalize({ message: "仅支持 PNG、JPG 或 WebP 头像" })).resolves.toBe(
-            "Only PNG, JPG, or WebP avatars are supported",
-        );
+        await expect(enLocalize({ message: "仅支持 PNG、JPG 或 WebP 头像" })).resolves.toBe("Only PNG, JPG, or WebP avatars are supported");
         await expect(enLocalize({ message: "创建作品失败" })).resolves.toBe("Failed to create work");
     });
 
     it("localizes Seedance special validation errors via message reverse lookup and messageKey", async () => {
-        await expect(localizeErrorMessage({ message: "Seedance 2.0 特价版模型不在接口文档允许列表中" })).resolves.toBe(
-            "Seedance 2.0 特价版模型不在接口文档允许列表中",
-        );
-        await expect(localizeErrorMessage({ message: "当前 Seedance 模型要求至少一个参考视频" })).resolves.toBe(
-            "当前 Seedance 模型要求至少一个参考视频",
-        );
+        await expect(localizeErrorMessage({ message: "Seedance 2.0 特价版模型不在接口文档允许列表中" })).resolves.toBe("Seedance 2.0 特价版模型不在接口文档允许列表中");
+        await expect(localizeErrorMessage({ message: "当前 Seedance 模型要求至少一个参考视频" })).resolves.toBe("当前 Seedance 模型要求至少一个参考视频");
         await expect(
             localizeErrorMessage({
                 message: "Seedance 2.0 特价版不支持画幅 2:1",
@@ -170,12 +158,8 @@ describe("server-messages", () => {
         }));
         const { localizeErrorMessage: enLocalize, serverMessage: enServerMessage } = await import("./server-messages");
 
-        await expect(enLocalize({ message: "Seedance 2.0 特价版模型不在接口文档允许列表中" })).resolves.toBe(
-            "Seedance 2.0 special model is not in the documented allowlist",
-        );
-        await expect(enLocalize({ message: "Seedance 参考音频不能单独使用，请同时添加参考图片或参考视频" })).resolves.toBe(
-            "Seedance reference audio cannot be used alone; add a reference image or video as well",
-        );
+        await expect(enLocalize({ message: "Seedance 2.0 特价版模型不在接口文档允许列表中" })).resolves.toBe("Seedance 2.0 special model is not in the documented allowlist");
+        await expect(enLocalize({ message: "Seedance 参考音频不能单独使用，请同时添加参考图片或参考视频" })).resolves.toBe("Seedance reference audio cannot be used alone; add a reference image or video as well");
         await expect(
             enLocalize({
                 message: "Seedance 2.0 特价版不支持画幅 2:1",

@@ -158,9 +158,7 @@ export async function POST(request: Request) {
         await persistHealthResult(savedChannel?.id, result);
         return NextResponse.json({ result });
     } catch (error) {
-        const message = isProviderTimeoutError(error)
-            ? await serverMessage("admin.upstreamTimeout")
-            : sanitizeProviderMessage(error instanceof Error ? await localizeErrorMessage(error) : await serverMessage("admin.apiTestFailed"), [apiKey]);
+        const message = isProviderTimeoutError(error) ? await serverMessage("admin.upstreamTimeout") : sanitizeProviderMessage(error instanceof Error ? await localizeErrorMessage(error) : await serverMessage("admin.apiTestFailed"), [apiKey]);
         const result = { ok: false, kind, model, status: 0, error: message } satisfies HealthResult;
         await persistHealthResult(savedChannel?.id, result);
         return NextResponse.json({ result }, { status: 200 });

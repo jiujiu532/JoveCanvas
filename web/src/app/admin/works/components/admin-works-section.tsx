@@ -223,7 +223,14 @@ function AdminWorkReviewSection() {
                 ) : null}
                 {canFeature ? (
                     <Tooltip title={work.isFeatured ? t("unfeature") : t("feature")}>
-                        <Button type="text" size="small" aria-label={work.isFeatured ? t("unfeature") : t("feature")} icon={<Star className={`size-3.5 ${work.isFeatured ? "fill-current" : ""}`} />} onClick={() => void toggleFeatured(work)} loading={busy} />
+                        <Button
+                            type="text"
+                            size="small"
+                            aria-label={work.isFeatured ? t("unfeature") : t("feature")}
+                            icon={<Star className={`size-3.5 ${work.isFeatured ? "fill-current" : ""}`} />}
+                            onClick={() => void toggleFeatured(work)}
+                            loading={busy}
+                        />
                     </Tooltip>
                 ) : null}
                 {pending ? (
@@ -427,14 +434,7 @@ function AdminWorkReviewSection() {
                 }}
             >
                 <p className="mb-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{reasonAction?.kind === "reject" ? t("rejectHint") : t("takeDownHint")}</p>
-                <Input.TextArea
-                    value={reason}
-                    rows={4}
-                    maxLength={500}
-                    showCount
-                    placeholder={reasonAction?.kind === "reject" ? t("rejectPlaceholder") : t("takeDownPlaceholder")}
-                    onChange={(event) => setReason(event.target.value)}
-                />
+                <Input.TextArea value={reason} rows={4} maxLength={500} showCount placeholder={reasonAction?.kind === "reject" ? t("rejectPlaceholder") : t("takeDownPlaceholder")} onChange={(event) => setReason(event.target.value)} />
             </Modal>
             <Modal title={t("detailModalTitle")} open={Boolean(viewingWork)} width={760} footer={null} destroyOnHidden onCancel={() => setViewingWork(undefined)}>
                 {viewingWork ? <AdminWorkDetail work={viewingWork} /> : null}

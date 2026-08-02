@@ -249,7 +249,13 @@ export function CreativeComposer({
                             </div>
                         }
                     >
-                        <Button type="text" shape="circle" className={cn("!size-9 !min-w-9", selectedSkill && "!bg-[#eef1f4] !text-[#20242a] dark:!bg-[#292f37] dark:!text-white")} icon={<Boxes className="size-4" />} aria-label={t("chooseCreativeSkill")} />
+                        <Button
+                            type="text"
+                            shape="circle"
+                            className={cn("!size-9 !min-w-9", selectedSkill && "!bg-[#eef1f4] !text-[#20242a] dark:!bg-[#292f37] dark:!text-white")}
+                            icon={<Boxes className="size-4" />}
+                            aria-label={t("chooseCreativeSkill")}
+                        />
                     </Popover>
                     <span className="min-w-0 flex-1" />
                     <Tooltip title={smartPlanning ? t("smartPlanningOn") : t("smartPlanningOff")}>
@@ -325,7 +331,9 @@ export function CreativeComposer({
                                     })}
                                 </div>
                                 <div className="hide-scrollbar mt-2 max-h-52 space-y-1 overflow-y-auto sm:max-h-64">
-                                    {!models.some((model) => model.capability === modelCategory) ? <p className="px-2 py-5 text-center text-xs text-[#8b949f] dark:text-[#7f8996]">{t("noModelsForCapability", { capability: capabilityLabel(modelCategory, t) })}</p> : null}
+                                    {!models.some((model) => model.capability === modelCategory) ? (
+                                        <p className="px-2 py-5 text-center text-xs text-[#8b949f] dark:text-[#7f8996]">{t("noModelsForCapability", { capability: capabilityLabel(modelCategory, t) })}</p>
+                                    ) : null}
                                     {models
                                         .filter((model) => model.capability === modelCategory)
                                         .map((model) => {

@@ -153,7 +153,11 @@ export function AdminLocalMediaStorage() {
                     </div>
                 ),
             },
-            { title: t("localMedia.table.retention"), width: 170, render: (_, asset) => <span className={asset.expiresAt && Date.parse(asset.expiresAt) <= Date.now() ? "text-red-600 dark:text-red-300" : "text-zinc-500 dark:text-zinc-400"}>{formatRetention(asset, t)}</span> },
+            {
+                title: t("localMedia.table.retention"),
+                width: 170,
+                render: (_, asset) => <span className={asset.expiresAt && Date.parse(asset.expiresAt) <= Date.now() ? "text-red-600 dark:text-red-300" : "text-zinc-500 dark:text-zinc-400"}>{formatRetention(asset, t)}</span>,
+            },
             { title: t("localMedia.table.createdAt"), dataIndex: "createdAt", width: 180, render: (value: string) => formatTime(value) },
             {
                 title: t("localMedia.table.actions"),
@@ -192,7 +196,13 @@ export function AdminLocalMediaStorage() {
                                 </Button>
                             </Tooltip>
                         </Popconfirm>
-                        <Popconfirm title={t("localMedia.bulkDeleteTitle", { count: selectedIds.length })} description={t("localMedia.bulkDeleteDesc")} okText={t("localMedia.bulkDelete")} cancelText={t("localMedia.cancel")} onConfirm={() => void remove(selectedIds)}>
+                        <Popconfirm
+                            title={t("localMedia.bulkDeleteTitle", { count: selectedIds.length })}
+                            description={t("localMedia.bulkDeleteDesc")}
+                            okText={t("localMedia.bulkDelete")}
+                            cancelText={t("localMedia.cancel")}
+                            onConfirm={() => void remove(selectedIds)}
+                        >
                             <Tooltip title={t("localMedia.bulkDeleteTooltip")}>
                                 <Button danger aria-label={t("localMedia.bulkDeleteAria")} className="!w-8 !px-0 sm:!w-auto sm:!px-3" disabled={!selectedIds.length} loading={deletingId === "bulk"} icon={<Trash2 className="size-4" />}>
                                     <span className="hidden sm:inline">{t("localMedia.bulkDelete")}</span>
@@ -277,7 +287,11 @@ export function AdminLocalMediaStorage() {
                     </Checkbox>
                     {(data?.items || []).map((asset) => (
                         <div key={asset.id} className="flex min-w-0 items-center gap-3 rounded-md border border-zinc-200 p-3 dark:border-zinc-800">
-                            <Checkbox checked={selectedIds.includes(asset.id)} onChange={(event) => setSelectedIds((current) => (event.target.checked ? [...current, asset.id] : current.filter((id) => id !== asset.id)))} aria-label={t("localMedia.selectAria")} />
+                            <Checkbox
+                                checked={selectedIds.includes(asset.id)}
+                                onChange={(event) => setSelectedIds((current) => (event.target.checked ? [...current, asset.id] : current.filter((id) => id !== asset.id)))}
+                                aria-label={t("localMedia.selectAria")}
+                            />
                             <MediaThumbnail asset={asset} onPreview={setPreviewAsset} />
                             <div className="min-w-0 flex-1">
                                 <div className="truncate text-sm font-medium">{asset.originalName || asset.name}</div>

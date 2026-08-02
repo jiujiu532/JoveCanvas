@@ -363,7 +363,17 @@ export default function AssetsPage() {
                 </div>
             </main>
 
-            <Modal title={editingAsset ? t("editModalTitle") : t("addButton")} open={isAssetOpen} width={980} onCancel={() => setIsAssetOpen(false)} onOk={() => void saveAsset()} confirmLoading={saving} okText={t("save")} cancelText={t("cancel")} destroyOnHidden>
+            <Modal
+                title={editingAsset ? t("editModalTitle") : t("addButton")}
+                open={isAssetOpen}
+                width={980}
+                onCancel={() => setIsAssetOpen(false)}
+                onOk={() => void saveAsset()}
+                confirmLoading={saving}
+                okText={t("save")}
+                cancelText={t("cancel")}
+                destroyOnHidden
+            >
                 <div className="grid gap-3 pt-1 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
                     <Form form={form} layout="vertical" requiredMark={false} initialValues={{ kind: "text", tags: [] }}>
                         <Form.Item name="kind" label={t("typeLabel")}>
@@ -506,7 +516,16 @@ export default function AssetsPage() {
 
             <input ref={assetInputRef} type="file" accept="application/zip,.zip" className="hidden" onChange={(event) => void importAssetZip(event.target.files?.[0])} />
 
-            <Modal title={t("deleteModalTitle")} open={Boolean(deletingAsset)} onCancel={() => setDeletingAsset(null)} onOk={() => void confirmDelete()} confirmLoading={deleting} okText={t("delete")} okButtonProps={{ danger: true }} cancelText={t("cancel")}>
+            <Modal
+                title={t("deleteModalTitle")}
+                open={Boolean(deletingAsset)}
+                onCancel={() => setDeletingAsset(null)}
+                onOk={() => void confirmDelete()}
+                confirmLoading={deleting}
+                okText={t("delete")}
+                okButtonProps={{ danger: true }}
+                cancelText={t("cancel")}
+            >
                 {t("deleteConfirm", { title: deletingAsset?.title || "" })}
             </Modal>
         </div>

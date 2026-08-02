@@ -227,9 +227,7 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
                                 >
                                     {t("cdk.section.result.selectAll")}
                                 </Checkbox>
-                                <span className="text-xs text-stone-500 dark:text-stone-400">
-                                    {t("cdk.section.result.selectedSummary", { selected: selectedCreatedCdkIds.length, total: createdCdkCodes.length })}
-                                </span>
+                                <span className="text-xs text-stone-500 dark:text-stone-400">{t("cdk.section.result.selectedSummary", { selected: selectedCreatedCdkIds.length, total: createdCdkCodes.length })}</span>
                             </div>
                         ) : null}
                         <div className="mt-4 max-h-72 space-y-2 overflow-y-auto">
@@ -255,7 +253,13 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
                                             <Button size="small" onClick={() => void navigator.clipboard?.writeText(code.code).then(() => message.success(t("cdk.section.result.copied")))}>
                                                 {t("cdk.table.copy")}
                                             </Button>
-                                            <Popconfirm title={t("cdk.table.deleteConfirmTitle")} description={t("cdk.section.result.deleteSingleConfirmDescription")} okText={t("cdk.table.deleteOk")} cancelText={t("cdk.table.deleteCancel")} onConfirm={() => void deleteCreatedCdkCodes([code.id])}>
+                                            <Popconfirm
+                                                title={t("cdk.table.deleteConfirmTitle")}
+                                                description={t("cdk.section.result.deleteSingleConfirmDescription")}
+                                                okText={t("cdk.table.deleteOk")}
+                                                cancelText={t("cdk.table.deleteCancel")}
+                                                onConfirm={() => void deleteCreatedCdkCodes([code.id])}
+                                            >
                                                 <Button size="small" danger icon={<Trash2 className="size-3.5" />}>
                                                     {t("cdk.table.deleteOk")}
                                                 </Button>
@@ -309,7 +313,13 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
                                     ]}
                                 />
                             </div>
-                            <Popconfirm title={t("cdk.section.management.bulkDeleteConfirmTitle")} description={t("cdk.table.deleteConfirmDescription")} okText={t("cdk.table.deleteOk")} cancelText={t("cdk.table.deleteCancel")} onConfirm={() => void bulkDeleteCdkCodes()}>
+                            <Popconfirm
+                                title={t("cdk.section.management.bulkDeleteConfirmTitle")}
+                                description={t("cdk.table.deleteConfirmDescription")}
+                                okText={t("cdk.table.deleteOk")}
+                                cancelText={t("cdk.table.deleteCancel")}
+                                onConfirm={() => void bulkDeleteCdkCodes()}
+                            >
                                 <Button danger disabled={!selectedCdkIds.length} loading={bulkDeletingCdk} icon={<Trash2 className="size-4" />}>
                                     {t("cdk.section.management.bulkDelete")}
                                 </Button>
@@ -413,9 +423,7 @@ export function AdminCdkSection({ controller }: { controller: AdminDashboardCont
                             />
                         </div>
                         <div className="flex flex-col gap-3 border-t border-stone-200 px-3 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-stone-800">
-                            <div className="text-sm text-stone-500 dark:text-stone-400">
-                                {t("cdk.section.management.footerSummary", { selected: selectedCdkIds.length, page: cdkCodes.length, total: cdkTotal })}
-                            </div>
+                            <div className="text-sm text-stone-500 dark:text-stone-400">{t("cdk.section.management.footerSummary", { selected: selectedCdkIds.length, page: cdkCodes.length, total: cdkTotal })}</div>
                             <Pagination current={cdkPage} pageSize={CDK_PAGE_SIZE} total={cdkTotal} showSizeChanger={false} onChange={(page) => setCdkPage(page)} />
                         </div>
                     </div>

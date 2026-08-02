@@ -232,12 +232,7 @@ function ResourcePreview({ input }: { input: NodeGenerationInput }) {
     );
 }
 
-function createReferenceChip(
-    input: NodeGenerationInput,
-    theme: (typeof canvasThemes)[keyof typeof canvasThemes],
-    onImagePreview: (url: string) => void,
-    _t: ReturnType<typeof useTranslations<"canvas">>,
-) {
+function createReferenceChip(input: NodeGenerationInput, theme: (typeof canvasThemes)[keyof typeof canvasThemes], onImagePreview: (url: string) => void, _t: ReturnType<typeof useTranslations<"canvas">>) {
     const wrapper = document.createElement("span");
     wrapper.contentEditable = "false";
     wrapper.dataset.referenceNodeId = input.nodeId;

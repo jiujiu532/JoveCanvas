@@ -116,9 +116,7 @@ export function AccountDeletionPanel() {
                 }}
             >
                 <div className="space-y-4 pt-2">
-                    <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-6 text-red-800 dark:border-red-950 dark:bg-red-950/35 dark:text-red-200">
-                        {t("modalWarning")}
-                    </div>
+                    <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-6 text-red-800 dark:border-red-950 dark:bg-red-950/35 dark:text-red-200">{t("modalWarning")}</div>
                     <label className="block space-y-2">
                         <span className="text-sm font-medium text-stone-700 dark:text-stone-200">{t("currentPassword")}</span>
                         <Input.Password value={currentPassword} autoComplete="current-password" placeholder={t("passwordPlaceholder")} onChange={(event) => setCurrentPassword(event.target.value)} />

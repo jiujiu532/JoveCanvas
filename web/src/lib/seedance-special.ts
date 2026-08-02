@@ -56,16 +56,7 @@ const REFERENCE_LABELS_ZH: Record<SeedanceReferenceKind, string> = {
     audios: "参考音频",
 };
 
-export function buildSeedanceSpecialRequest(input: {
-    model: string;
-    prompt: string;
-    ratio: string;
-    duration: number;
-    generateAudio?: boolean;
-    returnLastFrame?: boolean;
-    seed?: number;
-    references?: SeedanceSpecialReferences;
-}) {
+export function buildSeedanceSpecialRequest(input: { model: string; prompt: string; ratio: string; duration: number; generateAudio?: boolean; returnLastFrame?: boolean; seed?: number; references?: SeedanceSpecialReferences }) {
     const model = input.model.trim();
     if (!SEEDANCE_SPECIAL_MODELS.some(([id]) => id === model)) {
         fail("Seedance 2.0 特价版模型不在接口文档允许列表中", "tasks.seedance.modelNotAllowed");

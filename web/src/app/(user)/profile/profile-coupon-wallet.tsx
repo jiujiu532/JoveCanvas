@@ -157,7 +157,5 @@ function formatYuan(amountCents: number, locale: string) {
 
 function formatDate(value: string, locale: string) {
     const date = new Date(value);
-    return Number.isFinite(date.getTime())
-        ? date.toLocaleString(locale === "en" ? "en-US" : "zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })
-        : "-";
+    return Number.isFinite(date.getTime()) ? date.toLocaleString(locale === "en" ? "en-US" : "zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }) : "-";
 }

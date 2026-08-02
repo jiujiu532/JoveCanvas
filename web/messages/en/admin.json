@@ -2424,52 +2424,28 @@
                 "category": "Getting started",
                 "title": "First-time configuration and go-live order",
                 "summary": "Complete first-time admin configuration in dependency order, from database initialization to models, products, payments, and storage.",
-                "keywords": [
-                    "initialization",
-                    "first-time setup",
-                    "go-live",
-                    "installation",
-                    "database",
-                    "administrator",
-                    "configuration order"
-                ],
+                "keywords": ["initialization", "first-time setup", "go-live", "installation", "database", "administrator", "configuration order"],
                 "purpose": "First build a minimal working loop that can log in, call models, bill, save, and recover; only then open registration and payments, so users don't reach features that aren't ready.",
                 "steps": [
                     {
                         "title": "Complete the install wizard",
                         "description": "Confirm the PostgreSQL connection, encryption key, and schema status are healthy, then create the first administrator.",
-                        "checks": [
-                            "Database status is healthy",
-                            "Schema has been explicitly initialized",
-                            "The first administrator can log in to the admin console"
-                        ]
+                        "checks": ["Database status is healthy", "Schema has been explicitly initialized", "The first administrator can log in to the admin console"]
                     },
                     {
                         "title": "Configure site and model capabilities",
                         "description": "Set the site name and JoveCanvas Logo first, then configure upstream channels, logical models, and the default text model.",
-                        "checks": [
-                            "Branding is consistent across front-end, login page, and admin",
-                            "Text capability check succeeds",
-                            "A default text logical model is set"
-                        ]
+                        "checks": ["Branding is consistent across front-end, login page, and admin", "Text capability check succeeds", "A default text logical model is set"]
                     },
                     {
                         "title": "Configure products, points, and payments",
                         "description": "Create sellable plans or points products, verify model pricing, then enable payment channels according to actual merchant credentials.",
-                        "checks": [
-                            "At least one product is enabled",
-                            "Model base points have a clear rule",
-                            "Payment callback URL matches the site's HTTPS domain"
-                        ]
+                        "checks": ["At least one product is enabled", "Model base points have a clear rule", "Payment callback URL matches the site's HTTPS domain"]
                     },
                     {
                         "title": "Decide storage and recovery plan",
                         "description": "Choose local media or S3-compatible storage, and decide how to back up and restore both PostgreSQL and media files.",
-                        "checks": [
-                            "Media write test succeeds",
-                            "Data directory or bucket is persisted",
-                            "A reproducible recovery drill has been completed"
-                        ]
+                        "checks": ["Media write test succeeds", "Data directory or bucket is persisted", "A reproducible recovery drill has been completed"]
                     }
                 ],
                 "checks": [
@@ -2529,27 +2505,18 @@
                     {
                         "symptom": "Code has changed, but port 3000 still shows the old page or still redirects to GitHub",
                         "cause": "Port 3000 is still running an old `next start` production build, or the reverse proxy still points to an old container, old port, or old static directory.",
-                        "actions": [
-                            "Check which process listens on 3000 and its start command; use `npm run dev` during development.",
-                            "In production mode rebuild and restart the current instance, then confirm the proxy target and browser cache."
-                        ],
+                        "actions": ["Check which process listens on 3000 and its start command; use `npm run dev` during development.", "In production mode rebuild and restart the current instance, then confirm the proxy target and browser cache."],
                         "caution": "Changing source code alone will not update an already-running production build; do not let multiple project instances compete for the same port."
                     },
                     {
                         "symptom": "The administrator can log in, but Agent, image, or video calls fail immediately",
                         "cause": "The default logical model is not set, no binding is enabled, or the upstream Base URL, API Key, protocol, and model type don't match.",
-                        "actions": [
-                            "Test the default text logical model first, then test image and video capabilities separately.",
-                            "In call records, verify the logical model, the real upstream model, the request URL, and the first error."
-                        ]
+                        "actions": ["Test the default text logical model first, then test image and video capabilities separately.", "In call records, verify the logical model, the real upstream model, the request URL, and the first error."]
                     },
                     {
                         "symptom": "The payment page accepts orders, but no points or plan arrive after successful payment",
                         "cause": "The payment callback never arrived, signature verification failed, the order number doesn't match, or callback handling didn't complete idempotent entitlement granting.",
-                        "actions": [
-                            "Verify the public HTTPS callback URL, merchant keys, and channel event records.",
-                            "Confirm the callback status in orders and financial ledger before deciding on compensation; do not edit balances directly first."
-                        ]
+                        "actions": ["Verify the public HTTPS callback URL, merchant keys, and channel event records.", "Confirm the callback status in orders and financial ledger before deciding on compensation; do not edit balances directly first."]
                     }
                 ]
             },
@@ -2557,64 +2524,32 @@
                 "category": "Business analytics",
                 "title": "Dashboard, users, and generation operations",
                 "summary": "View platform trends, manage user entitlements, and locate generation task and upstream call issues.",
-                "keywords": [
-                    "dashboard",
-                    "user operations",
-                    "call records",
-                    "generation operations",
-                    "tasks",
-                    "logs",
-                    "users",
-                    "failure reasons"
-                ],
+                "keywords": ["dashboard", "user operations", "call records", "generation operations", "tasks", "logs", "users", "failure reasons"],
                 "purpose": "Use the summary to judge whether the platform is healthy, then drill down layer by layer through users, tasks, and call records; don't judge business health from a single success rate or request volume.",
                 "steps": [
                     {
                         "title": "Start with the dashboard",
                         "description": "Watch for abnormal changes in active users, revenue, points liability, request trends, success rate, and model distribution.",
-                        "checks": [
-                            "The statistics time range is explicit",
-                            "Revenue and order metrics use the same definition",
-                            "Abnormal spikes can be located to a date and model"
-                        ]
+                        "checks": ["The statistics time range is explicit", "Revenue and order metrics use the same definition", "Abnormal spikes can be located to a date and model"]
                     },
                     {
                         "title": "Verify permissions and entitlements per user",
                         "description": "In user operations, view account status, roles, plans, and points; confirm the business reason before any manual adjustment.",
-                        "checks": [
-                            "Administrator roles were not changed by mistake",
-                            "Plan and points adjustments have a clear reason",
-                            "Banned users cannot create new tasks"
-                        ]
+                        "checks": ["Administrator roles were not changed by mistake", "Plan and points adjustments have a clear reason", "Banned users cannot create new tasks"]
                     },
                     {
                         "title": "Locate a single request in call records",
                         "description": "Filter by user, type, source, status, and time to view model, duration, errors, and related media.",
-                        "checks": [
-                            "Logical model and real upstream model confirmed",
-                            "Creation failures and query failures are distinguished",
-                            "Whether a failure has been refunded is verified"
-                        ]
+                        "checks": ["Logical model and real upstream model confirmed", "Creation failures and query failures are distinguished", "Whether a failure has been refunded is verified"]
                     },
                     {
                         "title": "Handle tasks in generation operations",
                         "description": "View tasks, sessions, projects, channel health, and points costs in one place; only recreate an upstream task when the user explicitly retries.",
-                        "checks": [
-                            "No duplicate upstream tasks of the same kind were created",
-                            "Failure records remain auditable",
-                            "Cancel, timeout, and refund states are consistent"
-                        ]
+                        "checks": ["No duplicate upstream tasks of the same kind were created", "Failure records remain auditable", "Cancel, timeout, and refund states are consistent"]
                     }
                 ],
-                "checks": [
-                    "Business metrics can drill down to real orders or tasks",
-                    "No obvious mismatch between user permissions, plans, and balances",
-                    "Failed tasks have an error, a refund, and a user-visible status"
-                ],
-                "warnings": [
-                    "Do not delete records still needed for auditing, refunds, or media references just to clean up the list.",
-                    "Manually adding points changes financial liability; keep the reason and reconcile the ledger at the same time."
-                ],
+                "checks": ["Business metrics can drill down to real orders or tasks", "No obvious mismatch between user permissions, plans, and balances", "Failed tasks have an error, a refund, and a user-visible status"],
+                "warnings": ["Do not delete records still needed for auditing, refunds, or media references just to clean up the list.", "Manually adding points changes financial liability; keep the reason and reconcile the ledger at the same time."],
                 "links": [
                     {
                         "label": "Dashboard",
@@ -2655,18 +2590,12 @@
                     {
                         "symptom": "The dashboard shows 0, but users, orders, or tasks actually exist",
                         "cause": "The statistics time range, database provider, timezone, or aggregation query doesn't match the currently running instance.",
-                        "actions": [
-                            "Confirm the page time range and server timezone.",
-                            "Verify the data source with the raw lists of orders, users, or call records, then check which database the current instance is connected to."
-                        ]
+                        "actions": ["Confirm the page time range and server timezone.", "Verify the data source with the raw lists of orders, users, or call records, then check which database the current instance is connected to."]
                     },
                     {
                         "symptom": "One generation request produced multiple upstream tasks or duplicate charges",
                         "cause": "The page was submitted repeatedly, a recovery flow created the task again, or the server lacks a stable idempotency key.",
-                        "actions": [
-                            "Compare duplicate records by user, session, Run, and upstream task ID.",
-                            "Keep failure evidence and stop automatic recreation; start a new task only on explicit user retry."
-                        ],
+                        "actions": ["Compare duplicate records by user, session, Run, and upstream task ID.", "Keep failure evidence and stop automatic recreation; start a new task only on explicit user retry."],
                         "caution": "Do not delete duplicate records to hide the problem; reconcile points, plan quota, and upstream costs first."
                     },
                     {
@@ -2683,67 +2612,33 @@
                 "category": "Product operations",
                 "title": "Plans, promotions, coupons, referrals, and orders",
                 "summary": "Configure real regular and campaign prices, manage coupons and referral rewards, and handle payment and after-sales from the order snapshot.",
-                "keywords": [
-                    "plans",
-                    "products",
-                    "promotions",
-                    "campaign price",
-                    "regular price",
-                    "strikethrough",
-                    "coupons",
-                    "referrals",
-                    "invite codes",
-                    "cooling-off period",
-                    "risk control",
-                    "orders",
-                    "refunds"
-                ],
+                "keywords": ["plans", "products", "promotions", "campaign price", "regular price", "strikethrough", "coupons", "referrals", "invite codes", "cooling-off period", "risk control", "orders", "refunds"],
                 "purpose": "Show users real, explainable discounts, build revocable single-level referral growth, and ensure orders are unaffected by later product, promotion, or coupon changes once created.",
                 "steps": [
                     {
                         "title": "Create products and regular prices first",
                         "description": "Set the product name, price, points or plan entitlement, validity period, and display status; the regular price must be a real sellable price.",
-                        "checks": [
-                            "Price unit and entitlement quantities are correct",
-                            "Product enable/disable matches the launch plan",
-                            "Purchasing grants the corresponding points or plan"
-                        ]
+                        "checks": ["Price unit and entitlement quantities are correct", "Product enable/disable matches the launch plan", "Purchasing grants the corresponding points or plan"]
                     },
                     {
                         "title": "Configure limited-time promotions",
                         "description": "For products that already have a regular price, set the campaign period, campaign label, and campaign price; a product must not have overlapping campaigns.",
-                        "checks": [
-                            "Campaign price is below the real regular price",
-                            "Start and end times are correct",
-                            "The front-end shows the strikethrough only when conditions are met"
-                        ]
+                        "checks": ["Campaign price is below the real regular price", "Start and end times are correct", "The front-end shows the strikethrough only when conditions are met"]
                     },
                     {
                         "title": "Create and issue coupons",
                         "description": "Configure fixed-amount or percentage discounts, applicable products, thresholds, validity, stock, and per-user limits, then decide between self-claim or targeted distribution.",
-                        "checks": [
-                            "Discount scope doesn't conflict with campaign rules",
-                            "Stock and per-user limits are reasonable",
-                            "For issued templates, only change the description, toggle, and total quantity that are allowed to change"
-                        ]
+                        "checks": ["Discount scope doesn't conflict with campaign rules", "Stock and per-user limits are reasonable", "For issued templates, only change the description, toggle, and total quantity that are allowed to change"]
                     },
                     {
                         "title": "Configure referral rewards",
                         "description": "In marketing, set inviter points, new-user points or coupons, minimum first-order payment, cooling-off period, monthly/campaign caps, and risk-freeze policy, then enable the program.",
-                        "checks": [
-                            "Rewards and thresholds match the acquisition-cost budget",
-                            "Coupon validity covers the expected settlement time",
-                            "The maintenance task and manual settlement entry are available"
-                        ]
+                        "checks": ["Rewards and thresholds match the acquisition-cost budget", "Coupon validity covers the expected settlement time", "The maintenance task and manual settlement entry are available"]
                     },
                     {
                         "title": "Handle after-sales from the order snapshot",
                         "description": "Verify the regular price, campaign discount, coupon discount, and amount actually paid, then perform manual confirmation, closure, or full-order refund.",
-                        "checks": [
-                            "Paid amount matches the order's amount due",
-                            "Coupons locked by pending orders are released after cancellation or timeout",
-                            "Post-refund entitlement and coupon states follow the rules"
-                        ]
+                        "checks": ["Paid amount matches the order's amount due", "Coupons locked by pending orders are released after cancellation or timeout", "Post-refund entitlement and coupon states follow the rules"]
                     }
                 ],
                 "checks": [
@@ -2805,27 +2700,18 @@
                     {
                         "symptom": "The front-end doesn't show the discount strikethrough or campaign price",
                         "cause": "The campaign is not enabled, the time hasn't taken effect, the campaign price is not below the regular price, or the product is not in the campaign scope.",
-                        "actions": [
-                            "Verify the server time, campaign start/end times, and product binding.",
-                            "Compare the product's regular price with the current transaction price, and refresh the plans and checkout pages to confirm."
-                        ],
+                        "actions": ["Verify the server time, campaign start/end times, and product binding.", "Compare the product's regular price with the current transaction price, and refresh the plans and checkout pages to confirm."],
                         "caution": "Do not temporarily raise the regular price just to show a strikethrough; the original price must be a long-term real sellable price."
                     },
                     {
                         "symptom": "A user clearly claimed a coupon, but it's unavailable at checkout",
                         "cause": "The threshold isn't met, the product isn't applicable, it's expired, stock or the user's claim count is exhausted, or the coupon is locked by another pending order.",
-                        "actions": [
-                            "In coupon records, verify the status, applicable scope, and locking order.",
-                            "Cancel the old order or wait for it to time out, confirm the lock is released, then check out again."
-                        ]
+                        "actions": ["In coupon records, verify the status, applicable scope, and locking order.", "Cancel the old order or wait for it to time out, confirm the lock is released, then check out again."]
                     },
                     {
                         "symptom": "After a refund, the amount, coupon, and user entitlements don't add up",
                         "cause": "Only the order status was updated; the payment refund, entitlement revocation, or coupon status is not yet complete.",
-                        "actions": [
-                            "Reconcile against the price and discount snapshot saved when the order was created.",
-                            "Check in turn the payment refund ledger, points or plan revocation, and coupon refund rules."
-                        ]
+                        "actions": ["Reconcile against the price and discount snapshot saved when the order was created.", "Check in turn the payment refund ledger, points or plan revocation, and coupon refund rules."]
                     },
                     {
                         "symptom": "An invited user has paid, but the reward wasn't granted",
@@ -2842,63 +2728,31 @@
                 "category": "Finance",
                 "title": "Points, payment channels, CDKs, and financial ledger",
                 "summary": "Reconcile model pricing, payment configuration, redemption codes, and fund/points ledger in one place.",
-                "keywords": [
-                    "points",
-                    "model pricing",
-                    "multiplier",
-                    "payment channels",
-                    "Stripe",
-                    "Alipay",
-                    "WeChat Pay",
-                    "PayPly",
-                    "CDK",
-                    "ledger",
-                    "reconciliation"
-                ],
+                "keywords": ["points", "model pricing", "multiplier", "payment channels", "Stripe", "Alipay", "WeChat Pay", "PayPly", "CDK", "ledger", "reconciliation"],
                 "purpose": "Ensure every purchase, generation, refund, or redemption can be cross-checked across orders, payment ledger, points ledger, and plan usage.",
                 "steps": [
                     {
                         "title": "Establish unified points rules",
                         "description": "Configure base points per logical model, and set parameter multipliers such as image count, video duration, and resolution.",
-                        "checks": [
-                            "The user's estimated points and the server's actual charge use the same rule",
-                            "Free calls also record idempotent ledger entries and plan quota usage",
-                            "Failed tasks can reverse points and plan usage"
-                        ]
+                        "checks": ["The user's estimated points and the server's actual charge use the same rule", "Free calls also record idempotent ledger entries and plan quota usage", "Failed tasks can reverse points and plan usage"]
                     },
                     {
                         "title": "Configure and test payment channels",
                         "description": "Enable only channels that have merchant credentials, keys, certificates, and an HTTPS callback, and complete a test payment for each.",
-                        "checks": [
-                            "Callback signature verification passes",
-                            "Duplicate and out-of-order events don't grant entitlements twice",
-                            "Refunds write back to orders and ledger"
-                        ]
+                        "checks": ["Callback signature verification passes", "Duplicate and out-of-order events don't grant entitlements twice", "Refunds write back to orders and ledger"]
                     },
                     {
                         "title": "Issue and track CDKs",
                         "description": "Generate points or plan redemption codes for campaigns or after-sales scenarios, with usage count, validity, and notes; export plaintext only once at generation time.",
-                        "checks": [
-                            "Distribution scope and quantity are traceable",
-                            "Expired or disabled codes cannot be redeemed",
-                            "Redeeming user and time can be verified"
-                        ]
+                        "checks": ["Distribution scope and quantity are traceable", "Expired or disabled codes cannot be redeemed", "Redeeming user and time can be verified"]
                     },
                     {
                         "title": "Reconcile the financial ledger daily",
                         "description": "Compare orders, actual channel receipts, refunds, points liability, and abnormal reconciliation items; keep evidence first when a discrepancy is found.",
-                        "checks": [
-                            "Paid orders have a successful payment ledger entry",
-                            "Refunded orders' refund ledger and entitlement states are consistent",
-                            "Manual adjustments have a note and a responsible person"
-                        ]
+                        "checks": ["Paid orders have a successful payment ledger entry", "Refunded orders' refund ledger and entitlement states are consistent", "Manual adjustments have a note and a responsible person"]
                     }
                 ],
-                "checks": [
-                    "Payment callbacks have idempotency evidence",
-                    "Points balance matches the ledger sum",
-                    "Order amount, actual payment received, and refund amount can be cross-checked"
-                ],
+                "checks": ["Payment callbacks have idempotency evidence", "Points balance matches the ledger sum", "Order amount, actual payment received, and refund amount can be cross-checked"],
                 "warnings": [
                     "API Keys, private keys, certificates, and webhook secrets may only be stored in server-side configuration or environment variables.",
                     "Do not fix accounting by editing the database directly; use the existing business entries and keep an audit trail."
@@ -2943,26 +2797,17 @@
                     {
                         "symptom": "The front-end estimated points don't match the actual charge",
                         "cause": "The front-end prices by logical model while the server prices by upstream alias, or parameter multipliers don't use the same resolution rule.",
-                        "actions": [
-                            "In call records, confirm the logical model ID, upstream model, and resolved pointsCost.",
-                            "Always read from the logical model pricing rule; for free calls, also check plan quota and idempotent ledger entries."
-                        ]
+                        "actions": ["In call records, confirm the logical model ID, upstream model, and resolved pointsCost.", "Always read from the logical model pricing rule; for free calls, also check plan quota and idempotent ledger entries."]
                     },
                     {
                         "symptom": "A user received duplicate entitlements after a payment channel's repeated callbacks",
                         "cause": "Callback events or order entitlement granting lack idempotency constraints, so repeated events were treated as new payments.",
-                        "actions": [
-                            "Check for duplicate records by channel event ID, order number, and payment ledger.",
-                            "Pause manual re-granting, fix the idempotency state first, then reverse the extra entitlements with an audit trail."
-                        ]
+                        "actions": ["Check for duplicate records by channel event ID, order number, and payment ledger.", "Pause manual re-granting, fix the idempotency state first, then reverse the extra entitlements with an audit trail."]
                     },
                     {
                         "symptom": "A CDK can't be redeemed, or its plaintext can't be found in the admin console",
                         "cause": "The code is expired, disabled, or has reached its usage limit, and the system stores only a secure digest, not the plaintext long-term.",
-                        "actions": [
-                            "Check redemption records by batch, status, and notes.",
-                            "If the plaintext is lost, generate a new batch and disable the old one; do not try to recover it from the database."
-                        ]
+                        "actions": ["Check redemption records by batch, status, and notes.", "If the plaintext is lost, generate a new batch and disable the old one; do not try to recover it from the database."]
                     }
                 ]
             },
@@ -2970,19 +2815,7 @@
                 "category": "Upstream configuration",
                 "title": "Model channels, logical models, and Agent Skills",
                 "summary": "Wrap real upstream models into stable logical capabilities, and configure executable professional Skills for the Agent.",
-                "keywords": [
-                    "model channels",
-                    "upstream",
-                    "API Key",
-                    "Base URL",
-                    "protocol center",
-                    "custom protocol",
-                    "logical models",
-                    "default model",
-                    "capability check",
-                    "Agent Skills",
-                    "Skill"
-                ],
+                "keywords": ["model channels", "upstream", "API Key", "Base URL", "protocol center", "custom protocol", "logical models", "default model", "capability check", "Agent Skills", "Skill"],
                 "purpose": "Let regular users choose only stable product capabilities, while the server handles upstream channels, model aliases, priority, and failover — keeping keys and vendor details away from the browser.",
                 "steps": [
                     {
@@ -2999,29 +2832,17 @@
                     {
                         "title": "Create logical models and bindings",
                         "description": "Set name, type, and enable state for user-facing capabilities, then bind channels, real models, and priority.",
-                        "checks": [
-                            "Logical model type matches the upstream capability",
-                            "At least one enabled binding is available",
-                            "The base points key uses the logical model ID"
-                        ]
+                        "checks": ["Logical model type matches the upstream capability", "At least one enabled binding is available", "The base points key uses the logical model ID"]
                     },
                     {
                         "title": "Set system default models",
                         "description": "The default text model serves the workbench Agent, Canvas planning, internal analysis, and creation review — verify it first.",
-                        "checks": [
-                            "The default text model responds reliably",
-                            "Image, video, and audio defaults point to the corresponding capabilities",
-                            "Disabled channels are no longer selected"
-                        ]
+                        "checks": ["The default text model responds reliably", "Image, video, and audio defaults point to the corresponding capabilities", "Disabled channels are no longer selected"]
                     },
                     {
                         "title": "Configure Agent Skills",
                         "description": "Set name, category, trigger words, capability constraints, and execution rules for professional capabilities, keeping each Skill matched to real available models.",
-                        "checks": [
-                            "Trigger descriptions are clear and don't conflict",
-                            "Skills don't include capabilities unavailable to users",
-                            "After enable/disable, the user-side selection state is correct"
-                        ]
+                        "checks": ["Trigger descriptions are clear and don't conflict", "Skills don't include capabilities unavailable to users", "After enable/disable, the user-side selection state is correct"]
                     }
                 ],
                 "checks": [
@@ -3074,26 +2895,17 @@
                     {
                         "symptom": "Channel checks return 404, path not found, or protocol errors",
                         "cause": "The Base URL already contains /v1 but the request template appends it again, or the selected protocol doesn't match the vendor's API format.",
-                        "actions": [
-                            "Check the base address and final request path against the vendor's documentation.",
-                            "Switch to the correct protocol supported by the project and re-pull models; don't trial-and-error by concatenating paths."
-                        ]
+                        "actions": ["Check the base address and final request path against the vendor's documentation.", "Switch to the correct protocol supported by the project and re-pull models; don't trial-and-error by concatenating paths."]
                     },
                     {
                         "symptom": "The model list can be pulled, but real calls still fail",
                         "cause": "The account lacks permission for that model, the model type is wrong, the binding isn't enabled, or the model supports only some parameters.",
-                        "actions": [
-                            "Use the channel check to send a minimal request to the target model.",
-                            "Read the upstream status code and response summary in call records, then adjust bindings and parameters."
-                        ]
+                        "actions": ["Use the channel check to send a minimal request to the target model.", "Read the upstream status code and response summary in call records, then adjust bindings and parameters."]
                     },
                     {
                         "symptom": "Agent text works, but image or video is never available",
                         "cause": "Only the default text model was verified; the image or video logical model has no available binding, default value, or corresponding billing rule.",
-                        "actions": [
-                            "Run image and video capability checks separately.",
-                            "Confirm the logical type, default model, upstream binding, and points rule all use the same logical model ID."
-                        ]
+                        "actions": ["Run image and video capability checks separately.", "Confirm the logical type, default model, upstream binding, and points rule all use the same logical model ID."]
                     }
                 ]
             },
@@ -3101,62 +2913,31 @@
                 "category": "System administration",
                 "title": "Site profile, basic settings, and user rights",
                 "summary": "Manage branding, registration and email, generation defaults, account deletion, and version information in one place.",
-                "keywords": [
-                    "site profile",
-                    "Logo",
-                    "ICO",
-                    "SEO",
-                    "registration",
-                    "SMTP",
-                    "email",
-                    "default parameters",
-                    "deletion requests",
-                    "version updates"
-                ],
+                "keywords": ["site profile", "Logo", "ICO", "SEO", "registration", "SMTP", "email", "default parameters", "deletion requests", "version updates"],
                 "purpose": "Keep branding consistent across public pages, the user workspace, and the admin console, and give registration, email, default generation settings, and user-rights handling clear operational boundaries.",
                 "steps": [
                     {
                         "title": "Maintain site profile and branding",
                         "description": "Set the site name, SEO, social links, homepage content, and JoveCanvas Logo; the browser icon and assistant avatar use the same brand source.",
-                        "checks": [
-                            "Logo, ICO, favicon, and admin identity are consistent",
-                            "Neither the default nor the fallback icon is the triangle brand",
-                            "Clear and readable on both light and dark backgrounds"
-                        ]
+                        "checks": ["Logo, ICO, favicon, and admin identity are consistent", "Neither the default nor the fallback icon is the triangle brand", "Clear and readable on both light and dark backgrounds"]
                     },
                     {
                         "title": "Configure registration, SMTP, and generation defaults",
                         "description": "Test SMTP first, then enable email-dependent registration, recovery, and re-binding flows; set generation default parameters according to real model capabilities.",
-                        "checks": [
-                            "The test email arrives successfully",
-                            "Registration policy matches the operations plan",
-                            "Default parameters don't exceed what the upstream supports"
-                        ]
+                        "checks": ["The test email arrives successfully", "Registration policy matches the operations plan", "Default parameters don't exceed what the upstream supports"]
                     },
                     {
                         "title": "Handle deletion requests",
                         "description": "Verify the applicant's identity, business records, and retention obligations, record the accept/reject reason, and handle public content and personal data per the rules.",
-                        "checks": [
-                            "Request status and notes are complete",
-                            "Financial and audit data are retained per policy",
-                            "Public content and media permissions are updated in sync"
-                        ]
+                        "checks": ["Request status and notes are complete", "Financial and audit data are retained per policy", "Public content and media permissions are updated in sync"]
                     },
                     {
                         "title": "Review version and upgrade information",
                         "description": "Before upgrading, read the version changes and deployment requirements, back up the database and media, then update per the release process.",
-                        "checks": [
-                            "Current and target versions are explicit",
-                            "The pre-upgrade backup is restorable",
-                            "Core pages and capabilities are regression-tested after the upgrade"
-                        ]
+                        "checks": ["Current and target versions are explicit", "The pre-upgrade backup is restorable", "Core pages and capabilities are regression-tested after the upgrade"]
                     }
                 ],
-                "checks": [
-                    "All brand entry points use the JoveCanvas Logo",
-                    "Registration, verification codes, and password recovery flows match the SMTP state",
-                    "Deletion and upgrade operations both have traceable records"
-                ],
+                "checks": ["All brand entry points use the JoveCanvas Logo", "Registration, verification codes, and password recovery flows match the SMTP state", "Deletion and upgrade operations both have traceable records"],
                 "warnings": [
                     "After changing the Logo, also check favicon, manifest, metadata, login page, user app, admin, and assistant avatar.",
                     "Before enabling email registration, a real inbox test must pass, or users won't be able to log in or recover passwords."
@@ -3201,27 +2982,18 @@
                     {
                         "symptom": "The JoveCanvas Logo was uploaded, but some pages still show the old icon or a triangle",
                         "cause": "The admin configuration, /logo.svg, /icon.svg, favicon, manifest, metadata, or assistant avatar still has independent hardcoding, plus browser cache.",
-                        "actions": [
-                            "Check each brand source and the actual request URLs one by one.",
-                            "Clean old builds and restart, hard-refresh the browser, then verify light mode, dark mode, and logged-out state."
-                        ],
+                        "actions": ["Check each brand source and the actual request URLs one by one.", "Clean old builds and restart, hard-refresh the browser, then verify light mode, dark mode, and logged-out state."],
                         "caution": "Functional triangle icons such as play or alert may be kept, but must not be used as the brand Logo, default placeholder, or fallback."
                     },
                     {
                         "symptom": "The SMTP test succeeds, but users don't receive verification or recovery emails",
                         "cause": "The business toggle isn't enabled, the sender doesn't match the authenticated account, mail lands in spam, or a sending rate limit is triggered.",
-                        "actions": [
-                            "Check the registration policy, email task errors, and the target mailbox's spam folder.",
-                            "Verify the From address, DNS records, and SMTP provider limits, then retest with different mailboxes."
-                        ]
+                        "actions": ["Check the registration policy, email task errors, and the target mailbox's spam folder.", "Verify the From address, DNS records, and SMTP provider limits, then retest with different mailboxes."]
                     },
                     {
                         "symptom": "Light mode looks fine, but after switching to dark mode text, buttons, or icons become unreadable",
                         "cause": "The component only set the background, without explicitly setting dark-mode text, border, hover, or icon colors.",
-                        "actions": [
-                            "Check all clickable states of the component and Ant Design Portal overlays.",
-                            "Provide readable contrast separately for light, dark, hover, active, and disabled states."
-                        ]
+                        "actions": ["Check all clickable states of the component and Ant Design Portal overlays.", "Provide readable contrast separately for light, dark, hover, active, and disabled states."]
                     }
                 ]
             },
@@ -3229,62 +3001,31 @@
                 "category": "Storage and backup",
                 "title": "Local media, external storage, and data backup",
                 "summary": "Manage where media is actually stored, historical providers, reference protection, migration, and recovery boundaries.",
-                "keywords": [
-                    "local media",
-                    "S3",
-                    "OSS",
-                    "COS",
-                    "MinIO",
-                    "external storage",
-                    "migration",
-                    "backup",
-                    "recovery",
-                    "media deletion"
-                ],
+                "keywords": ["local media", "S3", "OSS", "COS", "MinIO", "external storage", "migration", "backup", "recovery", "media deletion"],
                 "purpose": "Ensure new media has a clear write location, historical media always stays readable, deletion never breaks business references, and the database and media can be recovered as a set.",
                 "steps": [
                     {
                         "title": "Inspect local media",
                         "description": "View server media by type, source, user, and retention period; before deleting, confirm references from creative sessions, assets, Canvas, dramas, and generation records.",
-                        "checks": [
-                            "Media records user ownership and source",
-                            "Temporary and permanent file boundaries are clear",
-                            "Referenced files cannot be force-deleted"
-                        ]
+                        "checks": ["Media records user ownership and source", "Temporary and permanent file boundaries are clear", "Referenced files cannot be force-deleted"]
                     },
                     {
                         "title": "Configure S3-compatible storage",
                         "description": "Fill in Endpoint, Region, Bucket, credentials, object prefix, and path-style; enable only after the connection test succeeds.",
-                        "checks": [
-                            "Upload, read, and delete permissions follow least privilege",
-                            "External access uses short-lived signed URLs",
-                            "Business records store only the stable storageKey"
-                        ]
+                        "checks": ["Upload, read, and delete permissions follow least privilege", "External access uses short-lived signed URLs", "Business records store only the stable storageKey"]
                     },
                     {
                         "title": "Migrate historical media",
                         "description": "Migrate in batches and verify object upload, registration, and in-site reads item by item; delete local source files only after confirming external objects are usable.",
-                        "checks": [
-                            "Migration tasks are retryable and don't double-register",
-                            "Historical records are still read via their original storage_provider",
-                            "The current toggle doesn't change where historical media lives"
-                        ]
+                        "checks": ["Migration tasks are retryable and don't double-register", "Historical records are still read via their original storage_provider", "The current toggle doesn't change where historical media lives"]
                     },
                     {
                         "title": "Establish complete backups",
                         "description": "Business data export cannot replace database and media backups; production recovery must cover PostgreSQL, media or bucket, configuration, and the encryption key together.",
-                        "checks": [
-                            "Backup files are desensitized and stored under control",
-                            "Recovery steps have a clear order",
-                            "Sample restores or full drills are performed regularly"
-                        ]
+                        "checks": ["Backup files are desensitized and stored under control", "Recovery steps have a clear order", "Sample restores or full drills are performed regularly"]
                     }
                 ],
-                "checks": [
-                    "Both local and external media can be read via their registered provider",
-                    "Referenced media cannot be deleted by admin cleanup by mistake",
-                    "The recovery environment can re-read users, tasks, and media"
-                ],
+                "checks": ["Both local and external media can be read via their registered provider", "Referenced media cannot be deleted by admin cleanup by mistake", "The recovery environment can re-read users, tasks, and media"],
                 "warnings": [
                     "The external storage toggle only decides where new media is written; it cannot be used to switch where historical media is read from.",
                     "Do not use force to bypass media reference protection; a file deleted while business records still point to it is a data incident."
@@ -3325,26 +3066,17 @@
                     {
                         "symptom": "After switching to external storage, historical images or videos suddenly won't open",
                         "cause": "The read logic incorrectly follows the current storage toggle instead of reading via each media record's registered storage_provider.",
-                        "actions": [
-                            "Inspect the failing media's provider, storageKey, and registration record.",
-                            "Restore reading by historical provider; the storage toggle only affects new writes from then on."
-                        ]
+                        "actions": ["Inspect the failing media's provider, storageKey, and registration record.", "Restore reading by historical provider; the storage toggle only affects new writes from then on."]
                     },
                     {
                         "symptom": "S3 connection or upload succeeds, but user pages still can't display the media",
                         "cause": "The signed URL, public/private Endpoint choice, server time, object permissions, or response Content-Type is incorrect.",
-                        "actions": [
-                            "Get a fresh signed URL from the in-site media API and check the status code.",
-                            "Verify server time, object key, signature validity, and minimal read permission."
-                        ]
+                        "actions": ["Get a fresh signed URL from the in-site media API and check the status code.", "Verify server time, object key, signature validity, and minimal read permission."]
                     },
                     {
                         "symptom": "The admin console says the media is referenced and can't be deleted",
                         "cause": "The file is still associated with creative sessions, the asset library, Canvas, dramas, or generation records — reference protection is working.",
-                        "actions": [
-                            "Follow the reference list into the corresponding business records to confirm whether they can be unlinked.",
-                            "Take down or delete the business entities first, then delete the media again."
-                        ],
+                        "actions": ["Follow the reference list into the corresponding business records to confirm whether they can be unlinked.", "Take down or delete the business entities first, then delete the media again."],
                         "caution": "Do not use force to bypass reference protection, or you'll get a data incident where records are visible but the file won't open."
                     }
                 ]
@@ -3353,51 +3085,26 @@
                 "category": "Content operations",
                 "title": "Announcements and public prompt operations",
                 "summary": "Publish in-site notifications and public creation assets while controlling reach, content quality, and takedown cadence.",
-                "keywords": [
-                    "content operations",
-                    "announcements",
-                    "notifications",
-                    "popups",
-                    "prompts",
-                    "public prompts",
-                    "tags",
-                    "covers"
-                ],
+                "keywords": ["content operations", "announcements", "notifications", "popups", "prompts", "public prompts", "tags", "covers"],
                 "purpose": "Use announcements to convey necessary information and public prompts to lower the creation barrier; both should serve real operational goals — avoid unrestrained popups and piles of low-quality content.",
                 "steps": [
                     {
                         "title": "Create and preview announcements",
                         "description": "Write a clear title and body, decide whether to enable it and whether it pops up on the homepage or after login, then check reading length on mobile.",
-                        "checks": [
-                            "Publish time and reach scope are correct",
-                            "Important links open",
-                            "Popups don't block users from logging in or creating"
-                        ]
+                        "checks": ["Publish time and reach scope are correct", "Important links open", "Popups don't block users from logging in or creating"]
                     },
                     {
                         "title": "Control the announcement lifecycle",
                         "description": "Take down old announcements promptly after campaigns end, incidents recover, or rules expire, so users don't keep acting on outdated information.",
-                        "checks": [
-                            "Pinned content is still valid",
-                            "Duplicate announcements are merged",
-                            "After takedown, users no longer see the popup"
-                        ]
+                        "checks": ["Pinned content is still valid", "Duplicate announcements are merged", "After takedown, users no longer see the popup"]
                     },
                     {
                         "title": "Maintain public prompts",
                         "description": "Configure title, body, category, tags, cover, and preview for reusable prompts, and confirm they execute in the target model or workbench.",
-                        "checks": [
-                            "Prompts contain no keys or internal planning",
-                            "Categories and tags are searchable",
-                            "Example results match the description"
-                        ]
+                        "checks": ["Prompts contain no keys or internal planning", "Categories and tags are searchable", "Example results match the description"]
                     }
                 ],
-                "checks": [
-                    "Announcements and prompts show only enabled content",
-                    "Titles, bodies, and buttons don't overflow on mobile",
-                    "Content doesn't leak user data, upstream keys, or the platform's internal prompts"
-                ],
+                "checks": ["Announcements and prompts show only enabled content", "Titles, bodies, and buttons don't overflow on mobile", "Content doesn't leak user data, upstream keys, or the platform's internal prompts"],
                 "warnings": [
                     "Post-login popups should be used only for genuinely necessary information; frequent interruptions reduce users' likelihood of finishing creations and paying.",
                     "Public prompts should pass content-safety and real-model availability checks before publishing."
@@ -3430,26 +3137,17 @@
                     {
                         "symptom": "A user sees the same announcement repeatedly on every login",
                         "cause": "The announcement keeps the post-login popup enabled, or the user's acknowledgment state, announcement version, and identity association aren't saved correctly.",
-                        "actions": [
-                            "Confirm whether the announcement still needs forced reach.",
-                            "Check user acknowledgment records and the announcement version; disable expired content directly instead of stacking new announcements to fix it."
-                        ]
+                        "actions": ["Confirm whether the announcement still needs forced reach.", "Check user acknowledgment records and the announcement version; disable expired content directly instead of stacking new announcements to fix it."]
                     },
                     {
                         "symptom": "A prompt tests fine in the admin console, but users can't find it or it fails to execute",
                         "cause": "The prompt isn't enabled, the category filter doesn't match, or the example uses a model capability not enabled on the user side.",
-                        "actions": [
-                            "Check enable state, category, and search keywords as a regular user.",
-                            "Re-run on a logical model users can actually select, and fix the copy and preview."
-                        ]
+                        "actions": ["Check enable state, category, and search keywords as a regular user.", "Re-run on a logical model users can actually select, and fix the copy and preview."]
                     },
                     {
                         "symptom": "Announcements or prompts scroll horizontally on mobile and buttons get cut off",
                         "cause": "The body contains very long URLs, fixed widths, desktop card padding, or non-wrapping text.",
-                        "actions": [
-                            "Check the page and inner scroll containers at 390px and 430px.",
-                            "Make long links and body text wrap, use compact spacing on mobile, and shorten action copy."
-                        ]
+                        "actions": ["Check the page and inner scroll containers at 390px and 430px.", "Make long links and body text wrap, use compact spacing on mobile, and shorten action copy."]
                     }
                 ]
             },
@@ -3457,62 +3155,31 @@
                 "category": "Daily maintenance",
                 "title": "Daily inspection and troubleshooting",
                 "summary": "Check users, tasks, channels, accounting, storage, and versions in a fixed order to narrow down failures quickly.",
-                "keywords": [
-                    "inspection",
-                    "troubleshooting",
-                    "incidents",
-                    "errors",
-                    "failures",
-                    "refunds",
-                    "channel health",
-                    "disk",
-                    "backup",
-                    "monitoring"
-                ],
+                "keywords": ["inspection", "troubleshooting", "incidents", "errors", "failures", "refunds", "channel health", "disk", "backup", "monitoring"],
                 "purpose": "Judge the blast radius and data consistency first, then locate the single user, task, channel, or infrastructure piece — avoid repeatedly changing configuration without enough evidence.",
                 "steps": [
                     {
                         "title": "Confirm the blast radius",
                         "description": "Determine whether all users, one capability class, one channel, or a single task is affected, and record the start time and reproducible steps.",
-                        "checks": [
-                            "Whether login and normal pages work",
-                            "Whether text, image, and video fail at the same time",
-                            "Whether only new tasks or historical media are affected"
-                        ]
+                        "checks": ["Whether login and normal pages work", "Whether text, image, and video fail at the same time", "Whether only new tasks or historical media are affected"]
                     },
                     {
                         "title": "Check tasks and channels",
                         "description": "From generation operations, enter call records and verify the logical model, upstream model, request status, error, duration, and channel check.",
-                        "checks": [
-                            "Only one upstream task was created",
-                            "Polling queries the same task ID",
-                            "Failure refunds and plan quota reversals are correct"
-                        ]
+                        "checks": ["Only one upstream task was created", "Polling queries the same task ID", "Failure refunds and plan quota reversals are correct"]
                     },
                     {
                         "title": "Check accounting and storage",
                         "description": "For generation failures reconcile the points ledger; for payment failures reconcile orders and payment ledger; for media failures verify storage_provider, objects, or local files.",
-                        "checks": [
-                            "No duplicate charges or entitlement grants",
-                            "Refunds don't depend on the page being opened again",
-                            "Media URLs don't leak object keys or permanent upstream addresses"
-                        ]
+                        "checks": ["No duplicate charges or entitlement grants", "Refunds don't depend on the page being opened again", "Media URLs don't leak object keys or permanent upstream addresses"]
                     },
                     {
                         "title": "Post-recovery review",
                         "description": "Verify the user main flow, record the root cause, fix, affected data, and preventive items; when data is involved, back up before any batch processing.",
-                        "checks": [
-                            "Functionality recovered on desktop and mobile",
-                            "Historical tasks and media are still readable",
-                            "Similar incidents have tests, alerts, or documentation as prevention"
-                        ]
+                        "checks": ["Functionality recovered on desktop and mobile", "Historical tasks and media are still readable", "Similar incidents have tests, alerts, or documentation as prevention"]
                     }
                 ],
-                "checks": [
-                    "Incident timeline, blast radius, and evidence are complete",
-                    "Final states of tasks, accounting, and media are consistent",
-                    "At least one real user-path verification is completed after recovery"
-                ],
+                "checks": ["Incident timeline, blast radius, and evidence are complete", "Final states of tasks, accounting, and media are consistent", "At least one real user-path verification is completed after recovery"],
                 "warnings": [
                     "Do not delete failure records to make the success rate look normal; they are the basis for refunds, auditing, and review.",
                     "Without database, media, and configuration backups, do not perform batch fixes, migrations, or upgrades."
@@ -3561,34 +3228,22 @@
                     {
                         "symptom": "After changing a model or channel, all new generation tasks fail at once",
                         "cause": "The default logical model, enabled bindings, upstream credentials, or request protocol was broken.",
-                        "actions": [
-                            "Stop making further changes and keep the first failed request.",
-                            "Check the default logical model, binding priority, channel check, and call records in turn; don't change multiple variables at once."
-                        ]
+                        "actions": ["Stop making further changes and keep the first failed request.", "Check the default logical model, binding priority, channel check, and call records in turn; don't change multiple variables at once."]
                     },
                     {
                         "symptom": "Generation succeeds, but new or historical media can't be displayed",
                         "cause": "The media registration, storage_provider, file write, object signing, or in-site media API link is broken.",
-                        "actions": [
-                            "Test one new media item and one historical media item separately.",
-                            "Verify the database registration, the real file or object, and the media API response to confirm whether the problem is on write or read."
-                        ]
+                        "actions": ["Test one new media item and one historical media item separately.", "Verify the database registration, the real file or object, and the media API response to confirm whether the problem is on write or read."]
                     },
                     {
                         "symptom": "Orders, points balance, plan quota, or refund statistics disagree with each other",
                         "cause": "Payment callbacks are delayed or duplicated, failure refunds were missed, manual adjustments went unrecorded, or the statistics use different time ranges.",
-                        "actions": [
-                            "Build a timeline from a single order or consumption ledger ID.",
-                            "Compare order, payment, points, and plan ledgers before reversing, and record the reason and responsible person."
-                        ]
+                        "actions": ["Build a timeline from a single order or consumption ledger ID.", "Compare order, payment, points, and plan ledgers before reversing, and record the reason and responsible person."]
                     },
                     {
                         "symptom": "After deployment or a code update, pages don't change",
                         "cause": "An old production build, old container, or old reverse-proxy target is still running; the browser isn't opening the instance you just modified.",
-                        "actions": [
-                            "Check which host, port, and process start command the accessed domain ultimately proxies to.",
-                            "Use `npm run dev` in development; in production rebuild, restart, and verify the version information."
-                        ]
+                        "actions": ["Check which host, port, and process start command the accessed domain ultimately proxies to.", "Use `npm run dev` in development; in production rebuild, restart, and verify the version information."]
                     }
                 ]
             }

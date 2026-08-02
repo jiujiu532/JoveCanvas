@@ -381,11 +381,7 @@ export default function ImagePage() {
                                     <span>{t("startGeneration")}</span>
                                 </span>
                             </Button>
-                            {activeImageTasks ? (
-                                <div className="mt-2 text-center text-xs text-stone-500 dark:text-stone-400">
-                                    {t("currentUserRunning", { active: activeImageTasks, limit: imageConcurrencyLimit })}
-                                </div>
-                            ) : null}
+                            {activeImageTasks ? <div className="mt-2 text-center text-xs text-stone-500 dark:text-stone-400">{t("currentUserRunning", { active: activeImageTasks, limit: imageConcurrencyLimit })}</div> : null}
                         </div>
                     </div>
 

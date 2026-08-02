@@ -41,19 +41,7 @@ export function AdminUserIdentity({ displayName, username, accountId, avatarUrl,
     );
 }
 
-export function AdminUserSearchSelect({
-    value,
-    onChange,
-    activeOnly = false,
-    placeholder,
-    className = "w-full",
-}: {
-    value?: string;
-    onChange?: (value?: string) => void;
-    activeOnly?: boolean;
-    placeholder?: string;
-    className?: string;
-}) {
+export function AdminUserSearchSelect({ value, onChange, activeOnly = false, placeholder, className = "w-full" }: { value?: string; onChange?: (value?: string) => void; activeOnly?: boolean; placeholder?: string; className?: string }) {
     const t = useTranslations("admin");
     const resolvedPlaceholder = placeholder || t("userIdentity.searchPlaceholder");
     const requestIdRef = useRef(0);

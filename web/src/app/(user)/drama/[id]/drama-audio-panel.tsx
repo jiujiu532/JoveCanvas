@@ -30,13 +30,7 @@ export function DramaAudioPanel({
 
     return (
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:justify-end">
-            <Button
-                className={generationActionButtonClass}
-                icon={<Volume2 className="size-4" />}
-                disabled={!audioReady || !hasVoiceoverTarget}
-                title={audioReady ? undefined : t("render.tooltips.audioModelMissing")}
-                onClick={onBatchAudio}
-            >
+            <Button className={generationActionButtonClass} icon={<Volume2 className="size-4" />} disabled={!audioReady || !hasVoiceoverTarget} title={audioReady ? undefined : t("render.tooltips.audioModelMissing")} onClick={onBatchAudio}>
                 {t("render.buttons.batchVoiceover")}
             </Button>
             <Button className={generationActionButtonClass} icon={<Captions className="size-4" />} disabled={!hasSubtitle} onClick={onOpenSubtitle}>

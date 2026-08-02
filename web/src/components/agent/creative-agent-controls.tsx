@@ -130,7 +130,9 @@ export function CreativeAgentControls({
             <div className="flex items-center justify-between gap-3 px-2 pb-2 pt-1">
                 <div className="min-w-0">
                     <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">{t("agent.models.chooseTitle")}</p>
-                    <p className="mt-0.5 truncate text-[11px] text-stone-500 dark:text-stone-400">{selectedModels.length ? t("agent.models.selectedCount", { count: selectedModels.length }) : smartPlanning ? t("agent.models.smartDefault") : t("agent.models.manualRequired")}</p>
+                    <p className="mt-0.5 truncate text-[11px] text-stone-500 dark:text-stone-400">
+                        {selectedModels.length ? t("agent.models.selectedCount", { count: selectedModels.length }) : smartPlanning ? t("agent.models.smartDefault") : t("agent.models.manualRequired")}
+                    </p>
                 </div>
                 <button
                     type="button"

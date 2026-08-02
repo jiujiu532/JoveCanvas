@@ -76,13 +76,7 @@ export async function getAdminSetupSummary(input?: { settings?: AuthSettings; us
     return buildAdminSetupSummary({ settings, userSummary, products, paymentConfig, locale });
 }
 
-function buildAdminSetupSummary(input: {
-    settings: AuthSettings;
-    userSummary: PublicUserSummary;
-    products?: BillingProductRecord[];
-    paymentConfig: Awaited<ReturnType<typeof getPaymentConfigSummary>>;
-    locale: AppLocale;
-}): AdminSetupSummary {
+function buildAdminSetupSummary(input: { settings: AuthSettings; userSummary: PublicUserSummary; products?: BillingProductRecord[]; paymentConfig: Awaited<ReturnType<typeof getPaymentConfigSummary>>; locale: AppLocale }): AdminSetupSummary {
     const { settings, userSummary, locale } = input;
     const t = (key: string, params?: Record<string, string | number>) => setupMessage(locale, key, params);
     const products = input.products || [];

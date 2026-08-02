@@ -189,7 +189,16 @@ function WorkbenchMessageAttachments({ attachments }: { attachments: WorkbenchAg
 function WorkbenchAgentProgressMessage({ message, onRetry }: { message: WorkbenchAgentMessage; onRetry?: () => void }) {
     const t = useTranslations("layout");
     const progress = message.progress!;
-    const label = progress.phase === "planning" ? t("agent.progress.thinking") : progress.phase === "submitting" ? t("agent.progress.submitting") : progress.phase === "failed" ? message.text || t("agent.progress.shortFailed") : progress.phase === "cancelled" ? message.text || t("agent.progress.cancelled") : t("agent.progress.completed");
+    const label =
+        progress.phase === "planning"
+            ? t("agent.progress.thinking")
+            : progress.phase === "submitting"
+              ? t("agent.progress.submitting")
+              : progress.phase === "failed"
+                ? message.text || t("agent.progress.shortFailed")
+                : progress.phase === "cancelled"
+                  ? message.text || t("agent.progress.cancelled")
+                  : t("agent.progress.completed");
     return (
         <div className="flex flex-col items-start gap-1 text-sm text-current">
             <div className="flex items-start gap-2">
@@ -200,7 +209,9 @@ function WorkbenchAgentProgressMessage({ message, onRetry }: { message: Workbenc
                 <span>{label}</span>
             </div>
             {progress.phase === "failed" && onRetry ? (
-                <Button type="text" size="small" className="!h-7 !px-1.5" icon={<RotateCcw className="size-3.5" />} onClick={onRetry}>{t("agent.progress.retry")}</Button>
+                <Button type="text" size="small" className="!h-7 !px-1.5" icon={<RotateCcw className="size-3.5" />} onClick={onRetry}>
+                    {t("agent.progress.retry")}
+                </Button>
             ) : null}
         </div>
     );

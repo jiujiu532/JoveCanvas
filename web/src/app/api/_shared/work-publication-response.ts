@@ -12,16 +12,10 @@ export async function workPublicationOk<T>(data: T, msg = "OK", status = 200) {
 
 export async function workPublicationError(error: unknown, fallback: string, context: string) {
     if (error instanceof WorkPublicationServiceError || error instanceof WorkGovernanceServiceError || error instanceof WorkCommunityServiceError) {
-        return NextResponse.json(
-            { code: error.status, data: null, msg: await localizeErrorMessage({ message: error.message }) },
-            { status: error.status },
-        );
+        return NextResponse.json({ code: error.status, data: null, msg: await localizeErrorMessage({ message: error.message }) }, { status: error.status });
     }
     console.error(context, error);
-    return NextResponse.json(
-        { code: 500, data: null, msg: await localizeErrorMessage({ message: fallback }) },
-        { status: 500 },
-    );
+    return NextResponse.json({ code: 500, data: null, msg: await localizeErrorMessage({ message: fallback }) }, { status: 500 });
 }
 
 export async function unauthorized() {

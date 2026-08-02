@@ -87,11 +87,7 @@ export function ProfileReferralCenter() {
 
                 <div className="mt-3 grid gap-2 text-xs sm:mt-5 sm:grid-cols-3">
                     <Rule icon={<UserPlus className="size-4" />} label={t("inviterReward")} value={t("pointsValue", { amount: data.program.inviterPoints })} />
-                    <Rule
-                        icon={<Gift className="size-4" />}
-                        label={t("inviteeReward")}
-                        value={data.program.inviteeRewardType === "coupon" ? t("inviteeCoupon") : t("pointsValue", { amount: data.program.inviteePoints })}
-                    />
+                    <Rule icon={<Gift className="size-4" />} label={t("inviteeReward")} value={data.program.inviteeRewardType === "coupon" ? t("inviteeCoupon") : t("pointsValue", { amount: data.program.inviteePoints })} />
                     <Rule
                         icon={<ShieldCheck className="size-4" />}
                         label={t("settlementRule")}

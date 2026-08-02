@@ -520,7 +520,7 @@ export default function HomePage() {
                                             <span>{t("landing.creativePromptLabel")}</span>
                                             <strong>{t("landing.creativePromptValue")}</strong>
                                         </div>
-<em>{t("landing.creativeResultsCount", { count: 12 })}</em>
+                                        <em>{t("landing.creativeResultsCount", { count: 12 })}</em>
                                     </div>
 
                                     <div className="landing-creative-pipeline">

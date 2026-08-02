@@ -116,7 +116,9 @@ export default function PromptsPage() {
                             </div>
                             <div className="col-span-2 flex min-h-8 items-center justify-between gap-2 sm:col-span-1 sm:justify-end">
                                 <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{t("totalCount", { total: totalPrompts })}</span>
-                                <Button aria-label={t("clearFiltersAria")} icon={<RotateCcw className="size-3.5" />} disabled={!hasFilters} onClick={clearFilters}>{t("clearFilters")}</Button>
+                                <Button aria-label={t("clearFiltersAria")} icon={<RotateCcw className="size-3.5" />} disabled={!hasFilters} onClick={clearFilters}>
+                                    {t("clearFilters")}
+                                </Button>
                             </div>
                         </div>
                     </section>
@@ -139,7 +141,9 @@ export default function PromptsPage() {
                                         }}
                                         onCopy={() => copyText(item.prompt, t("promptCopied"))}
                                         extraAction={
-                                            <Button size="small" icon={<FolderPlus className="size-3.5" />} onClick={() => savePromptAsset(item)}>{t("addToMyAssets")}</Button>
+                                            <Button size="small" icon={<FolderPlus className="size-3.5" />} onClick={() => savePromptAsset(item)}>
+                                                {t("addToMyAssets")}
+                                            </Button>
                                         }
                                     />
                                 ))}

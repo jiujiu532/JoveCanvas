@@ -263,9 +263,7 @@ function ProjectHandoffAction({ handoff, project, error, loading, onMaterialize 
             </span>
             <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium">{handoff.title}</span>
-                <span className={cn("mt-0.5 block text-xs text-stone-500 dark:text-stone-400", error && "text-red-600 dark:text-red-300")}>
-                    {error || t("handoffAssetsReady", { count: handoff.assets.length, label })}
-                </span>
+                <span className={cn("mt-0.5 block text-xs text-stone-500 dark:text-stone-400", error && "text-red-600 dark:text-red-300")}>{error || t("handoffAssetsReady", { count: handoff.assets.length, label })}</span>
             </span>
             {project ? (
                 <Link
